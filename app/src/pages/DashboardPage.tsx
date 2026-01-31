@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, Plus } from 'lucide-react';
 import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '@/context/DataContext';
 import DayPanel from '@/components/dashboard/DayPanel';
 import CashflowCard from '@/components/dashboard/CashflowCard';
 import PipelineCard from '@/components/dashboard/PipelineCard';
@@ -11,20 +12,21 @@ import AlertsCard from '@/components/dashboard/AlertsCard';
 import NeuralLinkCard from '@/components/dashboard/NeuralLinkCard';
 import ProductionHours from '@/components/dashboard/ProductionHours';
 import ActiveProjects from '@/components/dashboard/ActiveProjects';
-import type { TeamMember, Project } from '@/types';
+import type { TeamMember } from '@/types';
 
-// Mock data - would come from API in production
 const mockTeam: TeamMember[] = [
   { id: '1', name: 'CEO', role: 'Diretor', targetHours: 40, loggedHours: 0, email: 'ceo@fa360.pt' },
   { id: '2', name: 'JÉSSICA', role: 'Arquiteta', targetHours: 40, loggedHours: 0, email: 'jessica@fa360.pt' },
   { id: '3', name: 'SOFIA', role: 'Arquiteta', targetHours: 40, loggedHours: 0, email: 'sofia@fa360.pt' },
 ];
 
-const mockProjects: Project[] = [];
-
 export default function DashboardPage() {
   const { greeting } = useTime();
   const navigate = useNavigate();
+  const { projects } = useData();
+  const activeProjects = projects.filter((p) =>
+    ['lead', 'negotiation', 'active'].includes(p.status)
+  );
 
   return (
     <div className="space-y-6">
@@ -46,7 +48,7 @@ export default function DashboardPage() {
         </div>
         <button
           onClick={() => navigate('/proposals')}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-fit"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
           <span>Nova Proposta</span>
@@ -75,8 +77,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ProductionHours team={mockTeam} delay={6} />
         <ActiveProjects
-          projects={mockProjects}
-          onNewProject={() => navigate('/proposals')}
+          projects={activeProjects}
+          onNewProject={() => navigate('/projects')}
           delay={7}
         />
       </div>

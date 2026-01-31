@@ -1,16 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import PDFPreview from '@/components/proposals/PDFPreview';
-
-interface ProposalPhase {
-  id: string;
-  name: string;
-  description: string;
-  value: number;
-  selected: boolean;
-}
+import { useData } from '@/context/DataContext';
+import type { Proposal, ProposalPhase } from '@/types';
 
 const projectTypes = [
   { id: 'obra-nova', label: 'Obra Nova', icon: Building2 },
@@ -30,7 +25,11 @@ const defaultPhases: ProposalPhase[] = [
 ];
 
 export default function ProposalsManagementPage() {
+  const navigate = useNavigate();
+  const { clients, addClient, addProposal, addProject, proposals } = useData();
   const [step, setStep] = useState(1);
+  const [useExistingClient, setUseExistingClient] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [clientData, setClientData] = useState({
     name: '',
     email: '',
@@ -89,6 +88,7 @@ export default function ProposalsManagementPage() {
 
   const canProceed = () => {
     if (step === 1) {
+      if (useExistingClient) return !!selectedClientId;
       return clientData.name && clientData.email && clientData.phone;
     }
     if (step === 2) {
@@ -99,6 +99,8 @@ export default function ProposalsManagementPage() {
 
   const resetForm = () => {
     setStep(1);
+    setUseExistingClient(false);
+    setSelectedClientId('');
     setClientData({
       name: '',
       email: '',
@@ -107,8 +109,80 @@ export default function ProposalsManagementPage() {
       municipality: '',
     });
     setProjectType('');
-    setPhases(defaultPhases.map(p => ({ ...p, selected: false })));
+    setPhases(defaultPhases.map((p) => ({ ...p, selected: false })));
     setShowPDFPreview(false);
+  };
+
+  const createProjectFromProposal = (p: Proposal) => {
+    const client = clients.find((c) => c.id === p.clientId);
+    if (!client) {
+      toast.error('Cliente não encontrado');
+      return;
+    }
+    const projectTypeLabel = projectTypes.find((t) => t.id === p.projectType)?.label || p.projectType;
+    const deadline = new Date();
+    deadline.setMonth(deadline.getMonth() + 6);
+    const newProject = {
+      id: `project-${Date.now()}`,
+      name: `${projectTypeLabel} - ${p.clientName}`,
+      client: p.clientName,
+      status: 'negotiation' as const,
+      phase: 'Fase Comercial',
+      startDate: new Date().toISOString().split('T')[0],
+      deadline: deadline.toISOString().split('T')[0],
+      budget: p.totalValue,
+      hoursLogged: 0,
+      team: ['CEO'],
+      description: `Projeto criado a partir da proposta ${p.id}`,
+    };
+    addProject(newProject);
+    toast.success('Projeto criado! Redirecionando...');
+    navigate(`/projects/${newProject.id}`);
+  };
+
+  const handleFinalize = () => {
+    const proposalId = `prop-${Date.now()}`;
+    let clientId = '';
+    let clientName = '';
+
+    if (useExistingClient && selectedClientId) {
+      const c = clients.find((x) => x.id === selectedClientId);
+      if (c) {
+        clientId = c.id;
+        clientName = c.name;
+      }
+    } else {
+      const newClient = {
+        id: `client-${Date.now()}`,
+        name: clientData.name.trim(),
+        email: clientData.email.trim(),
+        phone: clientData.phone.trim(),
+        address: clientData.address.trim() || undefined,
+        municipality: clientData.municipality.trim() || undefined,
+        projects: [],
+        createdAt: new Date().toISOString().split('T')[0],
+      };
+      addClient(newClient);
+      clientId = newClient.id;
+      clientName = newClient.name;
+    }
+
+    const proposal: Proposal = {
+      id: proposalId,
+      clientId,
+      clientName,
+      projectType,
+      phases: selectedPhases.map((p) => ({ ...p, selected: true })),
+      totalValue: subtotal,
+      vatRate,
+      totalWithVat: total,
+      status: 'draft',
+      createdAt: new Date().toISOString().split('T')[0],
+      validUntil: calculateValidUntil(),
+    };
+    addProposal(proposal);
+    toast.success('Proposta guardada com sucesso');
+    resetForm();
   };
 
   return (
@@ -134,6 +208,57 @@ export default function ProposalsManagementPage() {
           <span>Nova Proposta</span>
         </button>
       </motion.div>
+
+      {/* Proposals List */}
+      {proposals.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card border border-border rounded-xl p-4 shadow-card"
+        >
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
+            Propostas guardadas ({proposals.length})
+          </h3>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {proposals.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors group"
+              >
+                <div>
+                  <p className="font-medium">{p.clientName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {projectTypes.find((t) => t.id === p.projectType)?.label} •{' '}
+                    {new Intl.NumberFormat('pt-PT', {
+                      style: 'currency',
+                      currency: 'EUR',
+                    }).format(p.totalWithVat)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      p.status === 'draft'
+                        ? 'bg-muted-foreground/20 text-muted-foreground'
+                        : 'bg-success/20 text-success'
+                    }`}
+                  >
+                    {p.status === 'draft' ? 'Rascunho' : p.status}
+                  </span>
+                  <button
+                    onClick={() => createProjectFromProposal(p)}
+                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-all"
+                    title="Criar projeto a partir desta proposta"
+                  >
+                    <ArrowRight className="w-3 h-3" />
+                    Projeto
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Progress Steps */}
       <div className="flex items-center gap-2">
@@ -163,6 +288,55 @@ export default function ProposalsManagementPage() {
         {step === 1 && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Dados do Cliente</h2>
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setUseExistingClient(true);
+                  setClientData({ name: '', email: '', phone: '', address: '', municipality: '' });
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  useExistingClient
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+              >
+                Cliente existente
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setUseExistingClient(false);
+                  setSelectedClientId('');
+                }}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  !useExistingClient
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
+              >
+                Novo cliente
+              </button>
+            </div>
+
+            {useExistingClient ? (
+              <div>
+                <label className="block text-sm font-medium mb-2">Seleciona o cliente *</label>
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  className="w-full h-10 px-4 py-2 rounded-lg border border-border bg-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">— Escolhe um cliente —</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} — {c.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Nome *</label>
@@ -215,6 +389,7 @@ export default function ProposalsManagementPage() {
                 />
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -302,7 +477,11 @@ export default function ProposalsManagementPage() {
               <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
                 <div>
                   <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-medium">{clientData.name}</p>
+                  <p className="font-medium">
+                    {useExistingClient && selectedClientId
+                      ? clients.find((c) => c.id === selectedClientId)?.name || ''
+                      : clientData.name}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Tipo de Projeto</p>
@@ -351,14 +530,25 @@ export default function ProposalsManagementPage() {
           >
             Anterior
           </button>
-          <button
-            onClick={() => setStep((s) => Math.min(3, s + 1))}
-            disabled={!canProceed()}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span>{step === 3 ? 'Finalizar' : 'Próximo'}</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          {step === 3 ? (
+            <button
+              onClick={handleFinalize}
+              disabled={!canProceed()}
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Check className="w-4 h-4" />
+              <span>Guardar Proposta</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setStep((s) => Math.min(3, s + 1))}
+              disabled={!canProceed()}
+              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span>Próximo</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </motion.div>
 

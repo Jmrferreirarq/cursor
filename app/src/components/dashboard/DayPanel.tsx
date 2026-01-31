@@ -36,7 +36,7 @@ export default function DayPanel({ delayed, sevenDays, rec, delay = 0 }: DayPane
             <p className="text-lg font-semibold">
               {allGood ? 'Tudo em dia' : 'Atrasos pendentes'}
             </p>
-            <p className="text-xs text-muted-foreground">Today Ops</p>
+            <p className="text-xs text-muted-foreground">Painel Operacional</p>
           </div>
         </div>
 

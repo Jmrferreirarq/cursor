@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
+import { DataProvider } from './context/DataContext';
 import Navbar from './components/common/Navbar';
 import CommandBar from './components/common/CommandBar';
 import GlobalUtilities from './components/common/GlobalUtilities';
@@ -43,7 +44,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <Navbar />
       <CommandBar />
       <GlobalUtilities />
-      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-24 max-w-[2400px] mx-auto">
+      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 max-w-[2400px] mx-auto">
         {children}
       </main>
     </div>
@@ -55,6 +56,7 @@ function App() {
     <ThemeProvider>
       <LanguageProvider>
         <TimeProvider>
+          <DataProvider>
           <Router>
             <AppLayout>
               <Routes>
@@ -77,6 +79,7 @@ function App() {
               </Routes>
             </AppLayout>
           </Router>
+          </DataProvider>
         </TimeProvider>
       </LanguageProvider>
     </ThemeProvider>

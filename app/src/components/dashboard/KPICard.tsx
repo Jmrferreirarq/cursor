@@ -28,7 +28,7 @@ export default function KPICard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: delay * 0.05, ease: [0.4, 0, 0.2, 1] }}
       whileHover={{ scale: 1.01 }}
-      className={`bg-card border border-border rounded-xl p-5 transition-all duration-200 hover:border-muted-foreground/30 ${className}`}
+      className={`bg-card border border-border rounded-xl p-5 shadow-card transition-all duration-200 hover:border-primary/20 hover:shadow-card-hover ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">

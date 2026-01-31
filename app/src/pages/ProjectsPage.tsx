@@ -1,38 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, Plus, Search, Filter, MoreVertical, Calendar, Users, Euro } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FolderKanban, Plus, Search, MoreVertical, Calendar, Users, Euro } from 'lucide-react';
 import type { Project } from '@/types';
-
-const mockProjects: Project[] = [
-  {
-    id: '1',
-    name: 'Casa Douro',
-    client: 'João Silva',
-    status: 'active',
-    phase: 'Projeto Execução',
-    startDate: '2024-01-15',
-    deadline: '2024-06-30',
-    budget: 45000,
-    hoursLogged: 120,
-    team: ['CEO', 'JÉSSICA'],
-    address: 'Rua do Douro, 123',
-    municipality: 'Porto',
-  },
-  {
-    id: '2',
-    name: 'Escritório Central',
-    client: 'TechCorp Lda',
-    status: 'negotiation',
-    phase: 'Fase Comercial',
-    startDate: '2024-02-01',
-    deadline: '2024-08-15',
-    budget: 78000,
-    hoursLogged: 15,
-    team: ['CEO', 'SOFIA'],
-    address: 'Avenida da Liberdade, 500',
-    municipality: 'Lisboa',
-  },
-];
+import NewProjectDialog from '@/components/projects/NewProjectDialog';
+import { useData } from '@/context/DataContext';
 
 const statusColors = {
   lead: 'bg-muted-foreground/20 text-muted-foreground',
@@ -53,10 +25,13 @@ const statusLabels = {
 };
 
 export default function ProjectsPage() {
+  const navigate = useNavigate();
+  const { projects, addProject, clients } = useData();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [newProjectOpen, setNewProjectOpen] = useState(false);
 
-  const filteredProjects = mockProjects.filter(
+  const filteredProjects = projects.filter(
     (project) =>
       (project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.client.toLowerCase().includes(searchQuery.toLowerCase())) &&
@@ -78,7 +53,10 @@ export default function ProjectsPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">Projetos</h1>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-fit">
+        <button
+          onClick={() => setNewProjectOpen(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors w-fit"
+        >
           <Plus className="w-4 h-4" />
           <span>Novo Projeto</span>
         </button>
@@ -93,13 +71,13 @@ export default function ProjectsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Pesquisar projetos..."
-            className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+            className="input-base"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+          className="px-4 py-2.5 bg-muted/50 border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
         >
           <option value="all">Todos os estados</option>
           <option value="lead">Lead</option>
@@ -118,7 +96,8 @@ export default function ProjectsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-card border border-border rounded-xl p-5 hover:border-muted-foreground/30 transition-colors group cursor-pointer"
+            onClick={() => navigate(`/projects/${project.id}`)}
+            className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 hover:shadow-card-hover transition-all duration-200 group cursor-pointer"
           >
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -167,11 +146,25 @@ export default function ProjectsPage() {
       </div>
 
       {filteredProjects.length === 0 && (
-        <div className="text-center py-12">
-          <FolderKanban className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhum projeto encontrado</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-16 px-6 rounded-xl border border-dashed border-border bg-muted/20"
+        >
+          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+            <FolderKanban className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground font-medium">Nenhum projeto encontrado</p>
+          <p className="text-sm text-muted-foreground/80 mt-1">Tenta ajustar os filtros ou cria um novo projeto</p>
+        </motion.div>
       )}
+
+      <NewProjectDialog
+        open={newProjectOpen}
+        onOpenChange={setNewProjectOpen}
+        onSuccess={addProject}
+        clients={clients}
+      />
     </div>
   );
 }

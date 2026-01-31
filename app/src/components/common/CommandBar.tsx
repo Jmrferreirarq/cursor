@@ -133,15 +133,15 @@ export default function CommandBar() {
   return (
     <>
       {/* Command Bar Trigger */}
-      <div className="fixed bottom-0 left-0 right-0 h-14 bg-card border-t border-border z-40">
+      <div className="fixed bottom-0 left-0 right-0 h-14 bg-card/95 backdrop-blur-sm border-t border-border z-40">
         <div className="h-full max-w-[2400px] mx-auto px-4 flex items-center justify-center">
           <button
             onClick={() => setIsOpen(true)}
-            className="flex items-center gap-3 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors w-full max-w-md"
+            className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/40 hover:bg-muted/70 border border-border/50 hover:border-border transition-all w-full max-w-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
             <Search className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground flex-1 text-left">
-              Comando Operacional - Digite um comando ou pesquise...
+              Comando Operacional — Pressione ⌘K para pesquisar...
             </span>
             <kbd className="hidden sm:flex items-center gap-1 px-2 py-1 rounded bg-muted text-xs text-muted-foreground">
               <Command className="w-3 h-3" />
@@ -167,7 +167,7 @@ export default function CommandBar() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-              className="w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+              className="w-full max-w-xl bg-popover border border-border rounded-2xl shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Search Input */}

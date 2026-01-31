@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Plus, ArrowRight } from 'lucide-react';
 import type { Project } from '@/types';
 import KPICard from './KPICard';
@@ -10,6 +11,7 @@ interface ActiveProjectsProps {
 }
 
 export default function ActiveProjects({ projects, onNewProject, delay = 0 }: ActiveProjectsProps) {
+  const navigate = useNavigate();
   const getStatusColor = (status: Project['status']) => {
     const colors = {
       lead: 'bg-muted-foreground',
@@ -38,7 +40,7 @@ export default function ActiveProjects({ projects, onNewProject, delay = 0 }: Ac
     <KPICard
       title="PROJETOS ATIVOS"
       icon={FolderKanban}
-      action={{ label: 'Ver Todos →', onClick: () => {} }}
+      action={{ label: 'Ver Todos →', onClick: () => navigate('/projects') }}
       delay={delay}
       className="col-span-full lg:col-span-2"
     >
@@ -49,14 +51,14 @@ export default function ActiveProjects({ projects, onNewProject, delay = 0 }: Ac
               <FolderKanban className="w-8 h-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground mb-4">
-              Sem projetos ativos. Cria uma proposta para iniciar pipeline.
+              Sem projetos ativos. Cria uma proposta ou um projeto para iniciar.
             </p>
             <button
               onClick={onNewProject}
               className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
-              <span>Nova Proposta</span>
+              <span>Novo Projeto</span>
             </button>
           </div>
         ) : (
@@ -64,6 +66,7 @@ export default function ActiveProjects({ projects, onNewProject, delay = 0 }: Ac
             {projects.map((project) => (
               <div
                 key={project.id}
+                onClick={() => navigate(`/projects/${project.id}`)}
                 className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-3">

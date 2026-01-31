@@ -1,48 +1,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Plus, Search, Phone, Mail, MapPin, FolderKanban } from 'lucide-react';
-import type { Client } from '@/types';
-
-const mockClients: Client[] = [
-  {
-    id: '1',
-    name: 'João Silva',
-    email: 'joao.silva@email.pt',
-    phone: '+351 912 345 678',
-    address: 'Rua do Douro, 123',
-    municipality: 'Porto',
-    nif: '123456789',
-    projects: ['1'],
-    createdAt: '2024-01-10',
-  },
-  {
-    id: '2',
-    name: 'TechCorp Lda',
-    email: 'geral@techcorp.pt',
-    phone: '+351 223 456 789',
-    address: 'Avenida da Liberdade, 500',
-    municipality: 'Lisboa',
-    nif: '987654321',
-    projects: ['2'],
-    createdAt: '2024-01-15',
-  },
-  {
-    id: '3',
-    name: 'Maria Santos',
-    email: 'maria.santos@email.pt',
-    phone: '+351 934 567 890',
-    address: 'Rua da Alegria, 45',
-    municipality: 'Braga',
-    nif: '456789123',
-    projects: [],
-    createdAt: '2024-02-01',
-  },
-];
+import { useNavigate } from 'react-router-dom';
+import { Users, Plus, Search, Phone, MapPin, FolderKanban } from 'lucide-react';
+import NewClientDialog from '@/components/clients/NewClientDialog';
+import { useData } from '@/context/DataContext';
 
 export default function ClientsPage() {
+  const navigate = useNavigate();
+  const { clients, addClient } = useData();
   const [searchQuery, setSearchQuery] = useState('');
+  const [newClientOpen, setNewClientOpen] = useState(false);
 
-  const filteredClients = mockClients.filter(
+  const filteredClients = clients.filter(
     (client) =>
       client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       client.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -64,7 +33,10 @@ export default function ClientsPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">Clientes</h1>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-fit">
+        <button
+          onClick={() => setNewClientOpen(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors w-fit"
+        >
           <Plus className="w-4 h-4" />
           <span>Novo Cliente</span>
         </button>
@@ -78,12 +50,12 @@ export default function ClientsPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Pesquisar clientes..."
-          className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+          className="input-base"
         />
       </div>
 
       {/* Clients List */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -102,7 +74,8 @@ export default function ClientsPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.05 }}
-                  className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/clients/${client.id}`)}
+                  className="border-b border-border last:border-0 hover:bg-muted/40 transition-colors cursor-pointer"
                 >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -145,12 +118,21 @@ export default function ClientsPage() {
         </div>
 
         {filteredClients.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">Nenhum cliente encontrado</p>
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground font-medium">Nenhum cliente encontrado</p>
+            <p className="text-sm text-muted-foreground/80 mt-1">Tenta uma pesquisa diferente</p>
           </div>
         )}
       </div>
+
+      <NewClientDialog
+        open={newClientOpen}
+        onOpenChange={setNewClientOpen}
+        onSuccess={addClient}
+      />
     </div>
   );
 }
