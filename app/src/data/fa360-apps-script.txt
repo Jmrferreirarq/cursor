@@ -1,0 +1,2 @@
+Copia todo o conteúdo do ficheiro app/scripts/FA360-AppsScript.gs do teu projeto e cola no Apps Script.
+Ou abre o ficheiro FA360-AppsScript.gs no Cursor e copia tudo (Ctrl+A, Ctrl+C).

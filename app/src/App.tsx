@@ -25,6 +25,7 @@ import MaterialLibraryPage from './pages/MaterialLibraryPage';
 import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
 import CalculatorPage from './pages/CalculatorPage';
+import PropostaPublicPage from './pages/PropostaPublicPage';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -53,10 +54,10 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <TimeProvider>
-          <DataProvider>
+    <DataProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <TimeProvider>
           <Router>
             <AppLayout>
               <Routes>
@@ -76,13 +77,14 @@ function App() {
                 <Route path="/inbox" element={<StudioInboxPage />} />
                 <Route path="/brand" element={<BrandIdentityPage />} />
                 <Route path="/calculator" element={<CalculatorPage />} />
+                <Route path="/public/proposta" element={<PropostaPublicPage />} />
               </Routes>
             </AppLayout>
           </Router>
-          </DataProvider>
-        </TimeProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+          </TimeProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </DataProvider>
   );
 }
 

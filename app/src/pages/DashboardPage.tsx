@@ -70,7 +70,7 @@ export default function DashboardPage() {
           delay={3}
         />
         <AlertsCard hasAlerts={false} delay={4} />
-        <NeuralLinkCard isOnline={false} message="Conexão Sheets pendente" delay={5} />
+        <NeuralLinkCard delay={5} />
       </div>
 
       {/* Production Hours & Active Projects */}
