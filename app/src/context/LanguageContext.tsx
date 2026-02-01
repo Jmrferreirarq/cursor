@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { t as tLocale } from '../locales';
 
-type Language = 'pt' | 'en';
+export type Language = 'pt' | 'en';
 
 interface Translations {
   [key: string]: string | Translations;
@@ -164,6 +165,8 @@ interface LanguageContextType {
   toggleLanguage: () => void;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string | Translations;
+  /** Traduz usando idioma específico (útil para proposta partilhada) */
+  tKey: (key: string, lang?: Language) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -204,8 +207,12 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return value || key;
   };
 
+  const tKey = (key: string, lang?: Language): string => {
+    return tLocale(key, lang ?? language);
+  };
+
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t, tKey }}>
       {children}
     </LanguageContext.Provider>
   );
