@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -9,15 +9,17 @@ import {
   TrendingUp,
   Euro,
   RotateCcw,
-  Percent,
   FileText,
   FileDown,
   Link2,
+  Lock,
 } from 'lucide-react';
-import { encodeProposalPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { ProposalDocument } from '../components/proposals/ProposalDocument';
+import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
+import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
 import { t, formatDate, formatCurrency as formatCurrencyLocale } from '../locales';
-import html2pdf from 'html2pdf.js';
 import { toast } from 'sonner';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
@@ -99,13 +101,12 @@ const ESPECIALIDADES: { id: string; name: string }[] = [
 ];
 
 // Extras opcionais (serviços adicionais que o cliente pode optar por incluir)
-const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'por_visita' | 'por_avenca'; valorSugerido: number; taxaPorM2?: number; taxaPorVisita?: number; taxaPorMes?: number; tetoMinimo?: number; categoria: 'arq' | 'esp' }[] = [
+const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'por_visita' | 'por_avenca'; valorSugerido: number; taxaPorM2?: number; taxaPorVisita?: number; taxaPorMes?: number; tetoMinimo?: number; unitLabel?: string; categoria: 'arq' | 'esp' }[] = [
   { id: 'projeto_execucao_completo', nome: 'Projeto de Execução (completo)', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 2500, taxaPorM2: 15, categoria: 'arq' },
   { id: 'orcamentacao', nome: 'Orçamentação e medição', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 250, taxaPorM2: 3.5, categoria: 'arq' },
   { id: 'maquete', nome: 'Maquete física ou virtual', tipo: 'fixo', valorSugerido: 1500, categoria: 'arq' },
   { id: 'renderizacoes', nome: 'Renderizações / imagens 3D', tipo: 'fixo', valorSugerido: 400, categoria: 'arq' },
   { id: 'fotografia_obra', nome: 'Fotografia de obra', tipo: 'fixo', valorSugerido: 1250, categoria: 'arq' },
-  { id: 'acompanhamento_concurso', nome: 'Acompanhamento de concurso de empreitada', tipo: 'fixo', valorSugerido: 2500, categoria: 'arq' },
   { id: 'estudo_viabilidade', nome: 'Estudo de viabilidade', tipo: 'fixo', valorSugerido: 1500, categoria: 'arq' },
   { id: 'relatorio_tecnico', nome: 'Relatório técnico / parecer', tipo: 'fixo', valorSugerido: 800, categoria: 'arq' },
   { id: 'plantas_asbuilt', nome: 'Plantas as-built / levantamento', tipo: 'por_m2', valorSugerido: 0, taxaPorM2: 3, categoria: 'arq' },
@@ -113,6 +114,7 @@ const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'po
   { id: 'fiscalizacao_avenca', nome: 'Fiscalização de obra – por avença', tipo: 'por_avenca', valorSugerido: 600, taxaPorMes: 600, categoria: 'arq' },
   { id: 'alteracao_projeto_obra', nome: 'Alteração de projeto durante o decurso da obra', tipo: 'fixo', valorSugerido: 1500, categoria: 'arq' },
   { id: 'consulta_processo_camarario', nome: 'Consulta processo camarário', tipo: 'fixo', valorSugerido: 200, categoria: 'arq' },
+  { id: 'reunioes_adicionais', nome: 'Reuniões adicionais', tipo: 'por_visita', valorSugerido: 150, taxaPorVisita: 150, unitLabel: 'reunião', categoria: 'arq' },
   { id: 'deslocacoes', nome: 'Deslocações fora da área acordada', tipo: 'fixo', valorSugerido: 150, categoria: 'arq' },
   { id: 'certificacao_energetica', nome: 'Certificação energética', tipo: 'fixo', valorSugerido: 350, categoria: 'arq' },
   { id: 'fotogrametria', nome: 'Fotogrametria / levantamento aéreo', tipo: 'fixo', valorSugerido: 1500, categoria: 'arq' },
@@ -127,7 +129,6 @@ const EXTRAS_DESCRICOES: Record<string, string> = {
   maquete: 'Maquete física ou modelo 3D para estudo ou apresentação.',
   renderizacoes: 'Imagens fotorrealistas e vistas 3D para divulgação ou aprovação.',
   fotografia_obra: 'Registo fotográfico final da obra concluída (sessão única). Realizado pelo fotógrafo Ivo Tavares (ivotavares.net). Valor indicativo entre 1000€ e 1500€ conforme âmbito.',
-  acompanhamento_concurso: 'Apoio na elaboração de caderno de encargos e análise de propostas.',
   estudo_viabilidade: 'Análise preliminar de viabilidade técnica, regulamentar ou económica.',
   relatorio_tecnico: 'Relatório, parecer ou diagnose técnica conforme solicitação.',
   plantas_asbuilt: 'Levantamento e plantas do edificado existente.',
@@ -135,6 +136,7 @@ const EXTRAS_DESCRICOES: Record<string, string> = {
   fiscalizacao_avenca: 'Fiscalização de obra por avença mensal.',
   alteracao_projeto_obra: 'Alterações ao projeto de arquitetura solicitadas pelo cliente durante o decurso da obra. 1500€ para projetos até 250 m²; superior a 250 m² sob consulta prévia.',
   consulta_processo_camarario: 'Consulta ao processo camarário e respetiva sugestão de valor (análise de viabilidade, parecer sobre licenciamento ou documentação municipal).',
+  reunioes_adicionais: 'Reuniões adicionais além das incluídas no âmbito (apresentações, validações ou diligências). Valor por reunião.',
   deslocacoes: 'Deslocações fora da área previamente acordada.',
   certificacao_energetica: 'Certificado de desempenho energético do edifício.',
   fotogrametria: 'Levantamento topográfico ou fotogramétrico por via aérea.',
@@ -147,8 +149,9 @@ const NOTA_BIM = 'Todo o processo é desenvolvido em metodologia BIM (Building I
 
 
 // Formatar duração em semanas e meses (4 semanas ≈ 1 mês)
-function formatarDuracaoSemanasMeses(d: { min: number; max: number; label?: string }, lang: 'pt' | 'en' = 'pt'): string {
-  if (d.label) return lang === 'en' ? 'As per notification' : 'Conforme notificação';
+function formatarDuracaoSemanasMeses(d: { min: number; max: number; labelKey?: string }, lang: 'pt' | 'en' = 'pt', t?: (key: string, l: 'pt' | 'en') => string): string {
+  if (d.labelKey && t) return t(`duration.${d.labelKey}`, lang);
+  if (d.labelKey) return lang === 'en' ? (d.labelKey === 'conformeAnaliseCamara' ? 'As per Council analysis' : 'As per notification') : (d.labelKey === 'conformeAnaliseCamara' ? 'Conforme análise da Câmara' : 'Conforme notificação');
   if (d.min <= 0 && d.max <= 0) return '';
   const sep = lang === 'en' ? '.' : ',';
   const fmt = (n: number) => (n % 1 === 0 ? String(n) : parseFloat(n.toFixed(2)).toString().replace('.', sep));
@@ -162,12 +165,12 @@ function formatarDuracaoSemanasMeses(d: { min: number; max: number; label?: stri
 }
 
 // Duração estimada por fase (semanas) – margem para os projetistas
-const DURACAO_ESTIMADA_FASES: { id: string; min: number; max: number; label?: string }[] = [
+const DURACAO_ESTIMADA_FASES: { id: string; min: number; max: number; labelKey?: string }[] = [
   { id: 'estudo', min: 2, max: 3 },
   { id: 'ante', min: 3, max: 4 },
   { id: 'licenciamento_entrega', min: 2, max: 6 },
-  { id: 'licenciamento_notificacao', min: 2, max: 4 },
-  { id: 'aprovacao_final', min: 0, max: 0, label: 'Conforme notificação' },
+  { id: 'licenciamento_notificacao', min: 0, max: 0, labelKey: 'conformeAnaliseCamara' },
+  { id: 'aprovacao_final', min: 0, max: 0, labelKey: 'conformeNotificacao' },
 ];
 
 // Exclusões genéricas de arquitetura (aplicadas por defeito; exceções por tipologia/categoria abaixo)
@@ -416,45 +419,6 @@ const ESCALOES_DECRESCIMENTO: [number, number][] = [
   [Infinity, 0.75],
 ];
 
-// Fases de pagamento (até licenciamento aprovado; fiscalização e Projeto de Execução completo são extras)
-const ICHPOP_PHASES = [
-  {
-    id: 'estudo',
-    name: 'Estudo prévio | PIP / Adjudicação',
-    pct: 25,
-    desc: 'Análise e conceito',
-    descricao: 'Fase inicial de exploração de soluções arquitetónicas e conceitos. O arquiteto desenvolve diferentes alternativas para o layout funcional, circulação, distribuição de espaços, relação com o meio envolvente, estética e aspetos conceptuais, podendo incluir esboços, maquetes, imagens 3D ou outros meios de representação. Entrega ao cliente para decisão e adjudicação.',
-  },
-  {
-    id: 'ante',
-    name: 'Ante-Projeto | Início Arquitetura',
-    pct: 20,
-    desc: 'Esquema e volumetria',
-    descricao: 'Desenvolvimento do esquema aprovado em estudo prévio, definindo volumetria, implantação, fachadas e elementos de composição. Inclui plantas, cortes e alçados preliminares para validação com o cliente e entidades. Marca o início formal do projeto de arquitetura.',
-  },
-  {
-    id: 'licenciamento_entrega',
-    name: 'Projeto Licenciamento | Entrega',
-    pct: 25,
-    desc: 'Entrega na Câmara',
-    descricao: 'Elaboração completa do projeto para submissão à Câmara Municipal. Inclui elementos gráficos e documentais exigidos pela lei e regulamentos, assim como desenhos de pormenor genéricos (3 a 6) desenvolvidos com o licenciamento. Entrega do processo na Câmara.',
-  },
-  {
-    id: 'licenciamento_notificacao',
-    name: 'Projeto Licenciamento | Notificação',
-    pct: 20,
-    desc: 'Em análise na Câmara',
-    descricao: 'Período de análise do projeto pela Câmara Municipal. O arquiteto acompanha o processo, responde a diligências e assegura o cumprimento dos requisitos até à decisão da entidade licenciadora.',
-  },
-  {
-    id: 'aprovacao_final',
-    name: 'Aprovação Final',
-    pct: 10,
-    desc: 'Licença obtida',
-    descricao: 'Conclusão do processo com a obtenção da licença de utilização ou construção. Entrega da documentação final ao cliente.',
-  },
-];
-
 // Descrições das especialidades (para a proposta)
 const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   estruturas: 'Projeto de estruturas e fundações, análise e dimensionamento para garantir segurança e durabilidade, em conformidade com as normas em vigor (s/ estudo sísmico).',
@@ -553,6 +517,7 @@ export default function CalculatorPage() {
   const [especialidadesValores, setEspecialidadesValores] = useState<Record<string, string>>({});
   const [exclusoesSelecionadas, setExclusoesSelecionadas] = useState<Set<string>>(new Set());
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
+  const [propostaFechada, setPropostaFechada] = useState(false);
   const pdfRef = useRef<HTMLDivElement>(null);
 
   // Áreas
@@ -702,6 +667,23 @@ export default function CalculatorPage() {
     }
   }, [projectType, activeCalculator]);
 
+  // Atualiza extras com fórmula (tetoMinimo + taxaPorM2) quando a área muda
+  useEffect(() => {
+    if (activeCalculator !== 'honorarios') return;
+    const areaRef = honorMode === 'area' ? parseFloat(area) || 0 : Math.round((parseFloat(valorObra) || 0) / 1000);
+    if (areaRef <= 0) return;
+    const next: Record<string, string> = {};
+    for (const e of EXTRAS_PROPOSTA) {
+      if (e.tipo !== 'por_m2' || e.taxaPorM2 == null) continue;
+      const base = e.tetoMinimo ?? 0;
+      const val = Math.round((base + areaRef * e.taxaPorM2) / 50) * 50;
+      if (val > 0) next[e.id] = String(val);
+    }
+    if (Object.keys(next).length > 0) {
+      setExtrasValores((prev) => ({ ...prev, ...next }));
+    }
+  }, [area, valorObra, honorMode, activeCalculator]);
+
   const preencherSugestoesExclusoes = () => {
     const next = new Set<string>(getExclusoesArquiteturaParaTipologia(projectType));
     const espIds = (TIPOLOGIA_ESPECIALIDADES[projectType] ?? []).filter(
@@ -783,11 +765,37 @@ export default function CalculatorPage() {
 
   const referenciaExibida = referenciaProposta.trim() || gerarReferenciaAuto();
 
+  const validarProposta = (): boolean => {
+    if (!clienteNome.trim()) {
+      toast.error(t('proposalValidation.clientRequired', lang));
+      return false;
+    }
+    if (honorMode === 'area') {
+      const areaNum = parseFloat(area) || 0;
+      if (areaNum <= 0) {
+        toast.error(t('proposalValidation.areaRequired', lang));
+        return false;
+      }
+    } else {
+      const obra = parseFloat(valorObra) || 0;
+      if (obra <= 0) {
+        toast.error(t('proposalValidation.valorObraRequired', lang));
+        return false;
+      }
+    }
+    if (!projectType) {
+      toast.error(t('proposalValidation.typologyRequired', lang));
+      return false;
+    }
+    return true;
+  };
+
   const exportHonorariosPDF = async () => {
     if (!pdfRef.current) return;
+    if (!validarProposta()) return;
     const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
     const opt = {
-      margin: [15, 15, 15, 15],
+      margin: [0, 0, 0, 0] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
@@ -795,7 +803,20 @@ export default function CalculatorPage() {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
     };
     try {
-      await html2pdf().set(opt).from(pdfRef.current).save();
+      const html2pdf = (await import('html2pdf.js')).default;
+      const pageOfFormat = t('proposalPageOf', lang);
+      const pdf = await html2pdf().set(opt).from(pdfRef.current).toPdf().get('pdf');
+      const total = pdf.internal.getNumberOfPages();
+      const w = pdf.internal.pageSize.getWidth();
+      const h = pdf.internal.pageSize.getHeight();
+      for (let i = 1; i <= total; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(9);
+        pdf.setTextColor(89);
+        const label = pageOfFormat.replace('{page}', String(i)).replace('{total}', String(total));
+        pdf.text(label, w / 2, h - 8, { align: 'center' });
+      }
+      pdf.save(opt.filename);
       toast.success('PDF guardado');
     } catch (e) {
       toast.error('Erro ao gerar PDF');
@@ -804,18 +825,22 @@ export default function CalculatorPage() {
 
   const LOCALIZACAO_LABELS: Record<string, string> = { lisboa: 'Lisboa (+15%)', litoral: 'Litoral (+5%)', interior: 'Interior (−12%)' };
 
-  const obterLinkProposta = () => {
+  const buildProposalPayload = (): ProposalPayload => {
     const soma = Array.from(fasesIncluidas).reduce((s, i) => s + (ICHPOP_PHASES.find((x) => x.id === i)?.pct ?? 0), 0);
-    const fasesPagamento = Array.from(fasesIncluidas).map((id) => {
-      const p = ICHPOP_PHASES.find((x) => x.id === id);
-      if (!p) return null;
-      const v = soma > 0 ? (valorArq * p.pct) / soma : 0;
-      const nome = t(`phases.${id}_name`, lang);
-      return { nome, pct: p.pct, valor: v };
-    }).filter(Boolean) as { nome: string; pct: number; valor: number }[];
+    const fasesPagamento: { nome: string; pct?: number; valor?: number; isHeader?: boolean }[] = [
+      { nome: `${t('proposal.paymentPhasesArq', lang)} — 100%`, isHeader: true },
+      ...Array.from(fasesIncluidas).map((id) => {
+        const p = ICHPOP_PHASES.find((x) => x.id === id);
+        if (!p) return null;
+        const v = soma > 0 ? (valorArq * p.pct) / soma : 0;
+        const nome = t(`phases.${id}_name`, lang);
+        return { nome, pct: p.pct, valor: v };
+      }).filter(Boolean) as { nome: string; pct: number; valor: number }[],
+    ];
     if (valorEsp > 0) {
-      fasesPagamento.push({ nome: 'Projeto de especialidades – 1.ª entrega', pct: 50, valor: valorEsp * 0.5 });
-      fasesPagamento.push({ nome: 'Projeto de especialidades – 2.ª entrega', pct: 50, valor: valorEsp * 0.5 });
+      fasesPagamento.push({ nome: `${t('proposal.paymentPhasesEsp', lang)} — 100%`, isHeader: true });
+      fasesPagamento.push({ nome: t('specialties.deliver1', lang), pct: 50, valor: valorEsp * 0.5 });
+      fasesPagamento.push({ nome: t('specialties.deliver2', lang), pct: 50, valor: valorEsp * 0.5 });
     }
     const espComValor = ((TIPOLOGIA_ESPECIALIDADES[projectType] ?? []) as string[])
       .filter((id) => parseFloat(especialidadesValores[id] || '0') > 0)
@@ -877,6 +902,7 @@ export default function CalculatorPage() {
       fasesPagamento,
       descricaoFases,
       notaBim: t('longText.notaBim', lang),
+      notaReunioes: honorMode === 'pct' ? t('longText.reunioesModoPct', lang) : areaRef <= 150 ? t('longText.reunioesAte150', lang) : areaRef <= 300 ? t('longText.reunioes150a300', lang) : t('longText.reunioesAcima300', lang),
       apresentacao: t('longText.apresentacao', lang),
       especialidadesDescricoes,
       exclusoes: exclusoesLabels,
@@ -889,7 +915,7 @@ export default function CalculatorPage() {
         t('notes.pormenoresNote', lang),
       ],
       duracaoEstimada: DURACAO_ESTIMADA_FASES.map((d) => {
-        const duracao = formatarDuracaoSemanasMeses(d, lang);
+        const duracao = formatarDuracaoSemanasMeses(d, lang, t);
         const nome = t(`phases.${d.id}_name`, lang);
         return { nome, duracao };
       }).filter((x) => x.duracao),
@@ -901,7 +927,7 @@ export default function CalculatorPage() {
           const taxa = execExtra?.taxaPorM2 ?? 15;
           const valorCalculado = areaRef > 0 ? Math.round((teto + areaRef * taxa) / 50) * 50 : 0;
           const valor = areaRef > 0 ? valorCalculado : valorInput;
-          const formula = valor > 0 && areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrency(valorCalculado, lang)}` : undefined;
+          const formula = valor > 0 && areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}` : undefined;
           return {
             id: 'projeto_execucao_completo',
             nome: t('extras.execucaoCompleto', lang),
@@ -920,7 +946,7 @@ export default function CalculatorPage() {
           const valorCalculado = areaRef > 0 ? Math.round((teto + areaRef * taxa) / 50) * 50 : 0;
           const valor = areaRef > 0 ? valorCalculado : valorInput;
           if (valor <= 0) return [];
-          const formula = areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrency(valorCalculado, lang)}` : undefined;
+          const formula = areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}` : undefined;
           return [{
             id: 'orcamentacao',
             nome: t('extras.orcamentacaoMedicao', lang),
@@ -932,6 +958,7 @@ export default function CalculatorPage() {
           }];
         })(),
         ...EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_completo' && e.id !== 'orcamentacao' && parseFloat(extrasValores[e.id] || '0') > 0).map((e) => ({
+          id: e.id,
           nome: e.nome,
           valor: parseFloat(extrasValores[e.id] || '0'),
           descricao: EXTRAS_DESCRICOES[e.id] ?? '',
@@ -942,6 +969,22 @@ export default function CalculatorPage() {
       ],
       branding: { appName: APP_NAME, appSlogan: APP_SLOGAN, architectName: ARCHITECT_NAME, architectOasrn: ARCHITECT_OASRN ?? '' },
     };
+    return payload;
+  };
+
+  const previewPayload = useMemo(() => {
+    if (activeCalculator !== 'honorarios') return null;
+    return buildProposalPayload();
+  }, [
+    activeCalculator, lang, referenciaExibida, clienteNome, projetoNome, localProposta, linkGoogleMaps,
+    honorMode, area, valorObra, projectType, complexity, numPisos, fasesIncluidas, honorLocalizacao,
+    despesasReembolsaveis, valorArq, especialidadesValores, valorEsp, extrasValores, valorExtras,
+    totalComIVA, totalSemIVA, valorIVA, exclusoesSelecionadas, areaRef,
+  ]);
+
+  const obterLinkProposta = () => {
+    if (!validarProposta()) return;
+    const payload = buildProposalPayload();
     const encoded = encodeProposalPayload(payload);
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
@@ -973,6 +1016,7 @@ export default function CalculatorPage() {
     setLinkGoogleMaps('');
     setExtrasValores({});
     setLinkPropostaExibido(null);
+    setPropostaFechada(false);
     setDespesasReembolsaveis('');
     setEspecialidadesValores({});
     setExclusoesSelecionadas(new Set());
@@ -989,7 +1033,7 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-h-[50vh]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1286,7 +1330,7 @@ export default function CalculatorPage() {
                 {EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_completo').map((e) => {
                   const hint = e.tipo === 'por_m2' && e.taxaPorM2
                       ? (e.tetoMinimo ? `${e.tetoMinimo}€ + ${e.taxaPorM2}€/m²` : `${e.taxaPorM2}€/m²`)
-                      : e.tipo === 'por_visita' && e.taxaPorVisita ? `${e.taxaPorVisita} €/visita` : e.tipo === 'por_avenca' && e.taxaPorMes ? `${e.taxaPorMes} €/mês` : e.valorSugerido > 0 ? `sug. ${e.valorSugerido}€` : null;
+                      : e.tipo === 'por_visita' && e.taxaPorVisita ? `${e.taxaPorVisita} €/${(e as { unitLabel?: string }).unitLabel || 'visita'}` : e.tipo === 'por_avenca' && e.taxaPorMes ? `${e.taxaPorMes} €/mês` : e.valorSugerido > 0 ? `sug. ${e.valorSugerido}€` : null;
                   return (
                     <label key={e.id} className="flex items-center gap-2">
                       <span className="text-sm flex-1 truncate" title={e.nome}>
@@ -1518,316 +1562,64 @@ export default function CalculatorPage() {
                 <p className="text-sm font-medium">Previsualização da proposta</p>
                 <div
                   ref={pdfRef}
-                  className="bg-white text-black rounded-lg"
-                  style={{
-                    fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
-                    width: '180mm',
-                    minWidth: 180,
-                    padding: 0,
-                    fontSize: 10,
-                    lineHeight: 1.45,
-                    color: '#1a1a1a',
-                  }}
+                  className="bg-white text-black rounded-lg overflow-hidden"
+                  style={{ width: '210mm', minHeight: '297mm' }}
                 >
-                  {/* Cabeçalho */}
-                  <div style={{ background: '#1e3a5f', color: '#fff', padding: '6mm 18mm 5mm', marginBottom: 0 }}>
-                    {(APP_NAME || APP_SLOGAN) && (
-                      <div>
-                        {APP_NAME && <p style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: '0.02em' }}>{APP_NAME}</p>}
-                        {APP_SLOGAN && <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', margin: '1.5mm 0 0 0' }}>{APP_SLOGAN}</p>}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ padding: '0 18mm 18mm' }}>
-                  <div style={{ marginTop: '5mm', marginBottom: '4mm' }}>
-                    <h2 style={{ fontSize: 14, fontWeight: 700, margin: 0, letterSpacing: '-0.01em', color: '#1e3a5f' }}>
-                      {t('proposal.title', lang)}
-                    </h2>
-                    <p style={{ fontSize: 9, color: '#666', margin: '2mm 0 0 0' }}>
-                      {t('proposal.ref', lang)} {referenciaExibida} · {formatDate(new Date(), lang)}
-                    </p>
-                  </div>
-                  {/* Apresentação */}
-                  <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: '#f8fafb', borderRadius: 2, borderLeft: '3px solid #1e3a5f', pageBreakInside: 'avoid' }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 3mm 0', color: '#1e3a5f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.presentation', lang)}</p>
-                    {t('longText.apresentacao', lang).split('\n\n').map((par, i) => (
-                      <p key={i} style={{ fontSize: 9, color: '#495057', margin: '0 0 2.5mm 0', lineHeight: 1.55 }}>{par}</p>
-                    ))}
-                  </div>
-                  {/* Dados do projeto */}
-                  <div style={{ background: '#f8f9fa', borderRadius: 2, padding: '4mm 5mm', marginBottom: '5mm' }}>
-                    {clienteNome && <p style={{ margin: '0 0 1.5mm 0', fontSize: 11 }}><span style={{ color: '#666', fontWeight: 500 }}>{t('proposal.client', lang)}:</span> {clienteNome}</p>}
-                    {projetoNome && <p style={{ margin: '0 0 1.5mm 0', fontSize: 11 }}><span style={{ color: '#666', fontWeight: 500 }}>{t('proposal.project', lang)}:</span> {projetoNome}</p>}
-                    {localProposta && <p style={{ margin: linkGoogleMaps.trim() ? '0 0 1.5mm 0' : 0, fontSize: 11 }}><span style={{ color: '#666', fontWeight: 500 }}>{t('proposal.local', lang)}:</span> {localProposta}</p>}
-                    {linkGoogleMaps.trim() && (
-                      <p style={{ margin: 0, fontSize: 11 }}>
-                        <a href={linkGoogleMaps.trim()} target="_blank" rel="noopener noreferrer" style={{ color: '#1e3a5f', textDecoration: 'underline' }}>
-                          {t('proposal.viewOnGoogleMaps', lang)}
-                        </a>
-                      </p>
-                    )}
-                  </div>
-                  {/* Tabela de valores */}
-                  <div style={{ marginBottom: '5mm' }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
-                    <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, pageBreakInside: 'avoid' }}>
-                      <thead>
-                        <tr style={{ background: '#f1f3f5' }}>
-                          <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: 9, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.concept', lang)}</th>
-                          <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 9, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.value', lang)}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.mode', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{honorMode === 'area' ? `${t('calc.modeByArea', lang)} (${area} m²)` : `${t('calc.modeByPct', lang)} (${valorObra}€)`}</td></tr>
-                        {honorMode === 'area' && (
-                          <>
-                            <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.typology', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{TIPOLOGIAS_HONORARIOS.find((tp) => tp.id === projectType)?.name ?? '-'}</td></tr>
-                            <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.complexity', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{complexity ? t(`complexity.${complexity}`, lang) : '-'}</td></tr>
-                            {TIPOLOGIAS_COM_PISOS.includes(projectType) && numPisos.trim() && (() => {
-                              const n = parseInt(numPisos, 10) || 0;
-                              const suf = n >= 4 ? ' (+10%)' : n === 3 ? ' (+5%)' : '';
-                              return <tr key="pisos" style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.pisos', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{n}{suf}</td></tr>;
-                            })()}
-                          </>
-                        )}
-                        <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.phases', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0)}%</td></tr>
-                        <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.location', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{localProposta.trim() || (LOCALIZACAO_LABELS[honorLocalizacao] ?? honorLocalizacao)}</td></tr>
-                        <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.vat', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>23%</td></tr>
-                        {parseFloat(despesasReembolsaveis) > 0 && (
-                          <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2.5mm 3mm' }}>{t('proposal.reimbursableExpenses', lang)}</td><td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{formatCurrency(parseFloat(despesasReembolsaveis))}</td></tr>
-                        )}
-                        <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6', fontWeight: 600 }}><td style={{ padding: '3mm', color: '#1e3a5f' }}>{t('proposal.archFees', lang)}</td><td style={{ textAlign: 'right', padding: '3mm', fontWeight: 600 }}>{formatCurrency(valorArq)}</td></tr>
-                        {((TIPOLOGIA_ESPECIALIDADES[projectType] ?? []) as string[])
-                          .filter((id) => parseFloat(especialidadesValores[id] || '0') > 0)
-                          .map((id) => (
-                            <tr key={id} style={{ borderBottom: '1px solid #e9ecef' }}>
-                              <td style={{ padding: '2.5mm 3mm' }}>{ESPECIALIDADES.find((e) => e.id === id)?.name ?? id}</td>
-                              <td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{formatCurrency(parseFloat(especialidadesValores[id] || '0'))}</td>
-                            </tr>
-                          ))}
-                        {valorEsp > 0 && (
-                          <tr style={{ background: '#f8f9fa', borderBottom: '1px solid #dee2e6', fontWeight: 600 }}><td style={{ padding: '3mm' }}>{t('proposal.specialtiesSubtotal', lang)}</td><td style={{ textAlign: 'right', padding: '3mm' }}>{formatCurrency(valorEsp)}</td></tr>
-                        )}
-                        <tr style={{ borderBottom: '1px solid #e9ecef', fontWeight: 600 }}><td style={{ padding: '3mm' }}>{t('proposal.totalExclVat', lang)}</td><td style={{ textAlign: 'right', padding: '3mm' }}>{formatCurrency(totalSemIVA)}</td></tr>
-                        <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '3mm' }}>{t('proposal.vat', lang)} (23%)</td><td style={{ textAlign: 'right', padding: '3mm' }}>{formatCurrency(valorIVA)}</td></tr>
-                        <tr style={{ background: '#1e3a5f', color: '#fff', fontWeight: 700, fontSize: 12 }}><td style={{ padding: '4mm 3mm' }}>{t('proposal.totalInclVat', lang)}</td><td style={{ textAlign: 'right', padding: '4mm 3mm' }}>{formatCurrency(totalComIVA)}</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', pageBreakInside: 'avoid' }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section2', lang)}</p>
-                    <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, marginBottom: '2mm', pageBreakInside: 'avoid' }}>
-                      <thead>
-                        <tr style={{ background: '#f1f3f5' }}>
-                          <th style={{ padding: '2mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: 8, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.phase', lang)}</th>
-                          <th style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 8, color: '#495057', borderBottom: '1px solid #dee2e6' }}>%</th>
-                          <th style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 8, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.value', lang)}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Array.from(fasesIncluidas).map((id) => {
-                          const p = ICHPOP_PHASES.find((x) => x.id === id);
-                          if (!p) return null;
-                          const soma = Array.from(fasesIncluidas).reduce((s, i) => s + (ICHPOP_PHASES.find((x) => x.id === i)?.pct ?? 0), 0);
-                          const v = soma > 0 ? (valorArq * p.pct) / soma : 0;
-                          return (
-                            <tr key={id} style={{ borderBottom: '1px solid #e9ecef' }}>
-                              <td style={{ padding: '2mm 3mm' }}>{t(`phases.${id}_name`, lang)}</td>
-                              <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{p.pct}%</td>
-                              <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{formatCurrency(v)}</td>
-                            </tr>
-                          );
-                        })}
-                        {valorEsp > 0 && (
-                          <>
-                            <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2mm 3mm' }}>{t('specialties.deliver1', lang)}</td><td style={{ textAlign: 'right', padding: '2mm 3mm' }}>50%</td><td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{formatCurrency(valorEsp * 0.5)}</td></tr>
-                            <tr style={{ borderBottom: '1px solid #e9ecef' }}><td style={{ padding: '2mm 3mm' }}>{t('specialties.deliver2', lang)}</td><td style={{ textAlign: 'right', padding: '2mm 3mm' }}>50%</td><td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{formatCurrency(valorEsp * 0.5)}</td></tr>
-                          </>
-                        )}
-                      </tbody>
-                    </table>
-                    <p style={{ fontSize: 8, color: '#6c757d', fontStyle: 'italic', margin: 0 }}>{t('proposal.paymentPhasesNote', lang)}</p>
-                  </div>
-                  <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', pageBreakInside: 'avoid' }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section3', lang)}</p>
-                    <div style={{ padding: '3mm 4mm', background: 'rgba(30, 58, 95, 0.04)', borderRadius: 2, marginBottom: '4mm', borderLeft: '3px solid #1e3a5f' }}>
-                      <p style={{ fontSize: 9, fontWeight: 600, margin: 0, color: '#1e3a5f' }}>{t('proposal.bimMethodology', lang)}</p>
-                      <p style={{ fontSize: 8, color: '#495057', margin: '1.5mm 0 0 0', lineHeight: 1.5 }}>{t('longText.notaBim', lang)}</p>
-                    </div>
-                    <div style={{ padding: '4mm 0', borderBottom: '1px solid #e9ecef' }}>
-                      <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 4mm 0', color: '#1e3a5f' }}>{t('proposal.architectureProject', lang)}</p>
-                      {Array.from(fasesIncluidas).map((id) => {
-                        const p = ICHPOP_PHASES.find((x) => x.id === id);
-                        if (!p) return null;
-                        return (
-                          <div key={id} style={{ marginBottom: '5mm' }}>
-                            <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 1.5mm 0', color: '#212529' }}>• {t(`phases.${id}_name`, lang)} ({p.pct}%)</p>
-                            <p style={{ fontSize: 8, color: '#6c757d', margin: 0, lineHeight: 1.5 }}>{t(`phases.${id}_desc`, lang)}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {valorEsp > 0 && (
-                      <div style={{ padding: '5mm 0', borderBottom: '1px solid #e9ecef' }}>
-                        <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 4mm 0', color: '#1e3a5f' }}>Projeto de Especialidades</p>
-                        {((TIPOLOGIA_ESPECIALIDADES[projectType] ?? []) as string[])
-                          .filter((id) => parseFloat(especialidadesValores[id] || '0') > 0)
-                          .map((espId) => {
-                            const esp = ESPECIALIDADES.find((e) => e.id === espId);
-                            const desc = DESCRICOES_ESPECIALIDADES[espId];
-                            if (!esp) return null;
-                            return (
-                              <div key={espId} style={{ marginBottom: '5mm' }}>
-                                <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 1.5mm 0', color: '#212529' }}>• {esp.name}</p>
-                                {desc && <p style={{ fontSize: 8, color: '#6c757d', margin: 0, lineHeight: 1.5 }}>{desc}</p>}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    )}
-                    {(
-                      <div style={{ padding: '5mm 4mm', background: '#f8fafb', marginTop: '2mm', borderRadius: 2 }}>
-                        <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 4mm 0', color: '#1e3a5f' }}>{t('proposal.extrasInfo', lang)}</p>
-                        {(() => {
-                          const execExtra = EXTRAS_PROPOSTA.find((e) => e.id === 'projeto_execucao_completo');
-                          const valorInput = parseFloat(extrasValores['projeto_execucao_completo'] || '0');
-                          const teto = execExtra?.tetoMinimo ?? 2500;
-                          const taxa = execExtra?.taxaPorM2 ?? 15;
-                          const valorCalculado = areaRef > 0 ? Math.round((teto + areaRef * taxa) / 50) * 50 : 0;
-                          const valorExibir = areaRef > 0 ? valorCalculado : valorInput;
-                          const formula = valorExibir > 0 && areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrency(valorCalculado)}` : null;
-                          return (
-                          <div style={{ marginBottom: '5mm', borderLeft: '3px solid #1e3a5f', background: 'rgba(30, 58, 95, 0.06)', padding: '3mm 4mm', borderRadius: '0 2px 2px 0' }}>
-                            <p style={{ fontSize: 9, fontWeight: 700, margin: '0 0 1.5mm 0', color: '#1e3a5f' }}>
-                              • {t('extras.execucaoCompleto', lang)}
-                              {valorExibir > 0 ? ` — ${formatCurrency(valorExibir)}` : valorInput > 0 ? ` — ${formatCurrency(valorInput)}` : ` — ${t('proposal.availableOnRequest', lang)}`}
-                            </p>
-                            {formula && <p style={{ fontSize: 8, color: '#495057', margin: '0 0 1.5mm 0', fontStyle: 'italic' }}>{formula}</p>}
-                            {EXTRAS_DESCRICOES['projeto_execucao_completo'] && <p style={{ fontSize: 8, color: '#495057', margin: 0, lineHeight: 1.5 }}>{EXTRAS_DESCRICOES['projeto_execucao_completo']}</p>}
-                          </div>
-                          );
-                        })()}
-                        {parseFloat(extrasValores['orcamentacao'] || '0') > 0 && (() => {
-                          const orcExtra = EXTRAS_PROPOSTA.find((e) => e.id === 'orcamentacao');
-                          const valorInputOrc = parseFloat(extrasValores['orcamentacao'] || '0') || 0;
-                          const tetoOrc = orcExtra?.tetoMinimo ?? 250;
-                          const taxaOrc = orcExtra?.taxaPorM2 ?? 3.5;
-                          const valorCalcOrc = areaRef > 0 ? Math.round((tetoOrc + areaRef * taxaOrc) / 50) * 50 : 0;
-                          const valorExibirOrc = areaRef > 0 ? valorCalcOrc : valorInputOrc;
-                          const formulaOrc = valorExibirOrc > 0 && areaRef > 0 ? `${tetoOrc}€ + (${areaRef} m² × ${taxaOrc}€/m²) = ${formatCurrency(valorCalcOrc)}` : null;
-                          return (
-                            <div key="orcamentacao" style={{ marginBottom: '5mm', borderLeft: '3px solid #1e3a5f', background: 'rgba(30, 58, 95, 0.06)', padding: '3mm 4mm', borderRadius: '0 2px 2px 0' }}>
-                              <p style={{ fontSize: 9, fontWeight: 700, margin: '0 0 1.5mm 0', color: '#1e3a5f' }}>
-                                • {t('extras.orcamentacaoMedicao', lang)}{valorExibirOrc > 0 ? ` — ${formatCurrency(valorExibirOrc)}` : ` — ${formatCurrency(valorOrc)}`}
-                              </p>
-                              {formulaOrc && <p style={{ fontSize: 8, color: '#495057', margin: '0 0 1.5mm 0', fontStyle: 'italic' }}>{formulaOrc}</p>}
-                              {EXTRAS_DESCRICOES['orcamentacao'] && <p style={{ fontSize: 8, color: '#495057', margin: 0, lineHeight: 1.5 }}>{EXTRAS_DESCRICOES['orcamentacao']}</p>}
-                            </div>
-                          );
-                        })()}
-                        {EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_completo' && e.id !== 'orcamentacao' && parseFloat(extrasValores[e.id] || '0') > 0).map((e) => {
-                          const sobConsulta = e.id === 'alteracao_projeto_obra' && areaRef > 250;
-                          const valorLabel = e.id === 'fotografia_obra' ? '' : sobConsulta ? ` — ${t('proposal.sobConsultaPrevia', lang)}` : ` — ${formatCurrency(parseFloat(extrasValores[e.id] || '0'))}`;
-                          return (
-                            <div key={e.id} style={{ marginBottom: '5mm' }}>
-                              <p style={{ fontSize: 9, fontWeight: 600, margin: '0 0 1.5mm 0', color: '#212529' }}>• {e.nome}{valorLabel}</p>
-                              {EXTRAS_DESCRICOES[e.id] && <p style={{ fontSize: 8, color: '#6c757d', margin: 0, lineHeight: 1.5 }}>{EXTRAS_DESCRICOES[e.id]}</p>}
-                            </div>
-                          );
-                        })}
-                        <p style={{ fontSize: 8, color: '#6c757d', margin: 0, fontStyle: 'italic', lineHeight: 1.45 }}>{t('proposal.extrasNote', lang)}</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', pageBreakInside: 'avoid' }}>
-                    <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section4', lang)}</p>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9 }}>
-                      <thead>
-                        <tr style={{ background: '#f1f3f5' }}>
-                          <th style={{ padding: '2mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: 8, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.phase', lang)}</th>
-                          <th style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 8, color: '#495057', borderBottom: '1px solid #dee2e6' }}>{t('proposal.estimatedDuration', lang)}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {DURACAO_ESTIMADA_FASES.map((d) => {
-                          const duracao = formatarDuracaoSemanasMeses(d, lang);
-                          if (!duracao) return null;
-                          return (
-                            <tr key={d.id} style={{ borderBottom: '1px solid #e9ecef' }}>
-                              <td style={{ padding: '2mm 3mm' }}>{t(`phases.${d.id}_name`, lang)}</td>
-                              <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{duracao}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                    <p style={{ fontSize: 8, color: '#6c757d', margin: '2mm 0 0 0', fontStyle: 'italic' }}>{t('proposal.durationNote', lang)}</p>
-                  </div>
-                  {exclusoesSelecionadas.size > 0 && (
-                    <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', pageBreakInside: 'avoid' }}>
-                      <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section5', lang)}</p>
-                      <ul style={{ margin: 0, paddingLeft: '5mm', fontSize: 9, color: '#495057', lineHeight: 1.6, listStyleType: 'disc' }}>
-                        {Array.from(exclusoesSelecionadas).map((id) => {
-                          const arq = EXCLUSOES_ARQUITETURA.find((e) => e.id === id);
-                          if (arq) return <li key={id} className="pdf-no-break" style={{ pageBreakInside: 'avoid' }}>{arq.label}</li>;
-                          for (const arr of Object.values(EXCLUSOES_ESPECIALIDADES)) {
-                            const found = arr.find((e) => e.id === id);
-                            if (found) return <li key={id} className="pdf-no-break" style={{ pageBreakInside: 'avoid' }}>{found.label}</li>;
-                          }
-                          return null;
-                        })}
-                      </ul>
-                    </div>
-                  )}
-                  <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', fontSize: 9, color: '#495057', pageBreakInside: 'avoid' }}>
-                      <p style={{ fontSize: 9, fontWeight: 600, color: '#495057', margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section6', lang)}</p>
-                    <ul style={{ margin: 0, paddingLeft: '5mm', lineHeight: 1.6, listStyleType: 'disc' }}>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.validity', lang)}</li>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.paymentTranches', lang)}</li>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.changesAfterStudy', lang)}</li>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.vatLegal', lang)}</li>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.noSupervision', lang)}</li>
-                      <li style={{ pageBreakInside: 'avoid' }}>{t('notes.pormenoresNote', lang)}</li>
-                    </ul>
-                  </div>
-                  {(ARCHITECT_NAME || clienteNome) && (
-                    <div className="pdf-no-break" style={{ marginTop: '6mm', paddingTop: '5mm', display: 'flex', justifyContent: 'space-between', gap: '12mm', fontSize: 9, pageBreakInside: 'avoid', borderTop: '1px solid #dee2e6' }}>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: '#1e3a5f', fontSize: 9 }}>{t('proposal.responsible', lang)}</p>
-                        {ARCHITECT_NAME && <p style={{ margin: 0, color: '#495057' }}>{ARCHITECT_NAME}{ARCHITECT_OASRN ? ` — n.º ${ARCHITECT_OASRN} OASRN` : ''}</p>}
-                        <div style={{ marginTop: '5mm', borderBottom: '1.5px solid #1e3a5f', width: '45mm', height: '6mm' }} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: '#1e3a5f', fontSize: 9 }}>{t('proposal.client', lang)}</p>
-                        {clienteNome && <p style={{ margin: 0, color: '#495057' }}>{clienteNome}</p>}
-                        <div style={{ marginTop: '5mm', borderBottom: '1.5px solid #1e3a5f', width: '45mm', height: '6mm' }} />
-                      </div>
-                    </div>
-                  )}
-                  <p style={{ fontSize: 8, color: '#6c757d', margin: '5mm 0 0 0', fontStyle: 'italic' }}>
-                    {t('proposal.disclaimer', lang)}
-                  </p>
-                  </div>
+                  {previewPayload && <ProposalDocument payload={previewPayload} lang={lang} />}
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={exportHonorariosPDF}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      <FileDown className="w-4 h-4" />
-                      Exportar PDF
-                    </button>
-                    <button
-                      type="button"
-                      onClick={obterLinkProposta}
-                      className="flex items-center gap-2 px-4 py-2 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
-                    >
-                      <Link2 className="w-4 h-4" />
-                      Obter link HTML
-                    </button>
-                  </div>
+                  {!propostaFechada ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (validarProposta()) {
+                            setPropostaFechada(true);
+                            toast.success(t('calcProposalClosed', lang));
+                          }
+                        }}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                      >
+                        <Lock className="w-4 h-4" />
+                        {t('calcCloseProposal', lang)}
+                      </button>
+                      <span className="text-xs text-muted-foreground">
+                        {t('calcReadyToSendHint', lang)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-primary">{t('calcReadyToSend', lang)}</p>
+                        <button
+                          type="button"
+                          onClick={() => setPropostaFechada(false)}
+                          className="text-xs text-muted-foreground hover:text-foreground underline"
+                        >
+                          {t('calcReopenProposal', lang)}
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{t('calcReadyToSendHint', lang)}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={exportHonorariosPDF}
+                          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                        >
+                          <FileDown className="w-4 h-4" />
+                          Exportar PDF
+                        </button>
+                        <button
+                          type="button"
+                          onClick={obterLinkProposta}
+                          className="flex items-center gap-2 px-4 py-2 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
+                        >
+                          <Link2 className="w-4 h-4" />
+                          Obter link HTML
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {linkPropostaExibido && (
                     <div className="rounded-lg border border-border bg-muted/30 p-3">
                       <p className="text-xs font-medium text-muted-foreground mb-2">Link da proposta (copiado para a área de transferência):</p>
@@ -1856,40 +1648,7 @@ export default function CalculatorPage() {
           </motion.div>
         )}
 
-        {activeCalculator === 'ichpop' && (
-          <motion.div
-            key="ichpop"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-card border border-border rounded-xl p-6"
-          >
-            <h3 className="text-lg font-semibold mb-2">Percentagens por Fase (Referência ICHPOP)</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Distribuição orientativa do total de honorários. Tabela histórica; desde 2003 não há tabela oficial obrigatória.
-            </p>
-            <div className="space-y-3">
-              {ICHPOP_PHASES.map((phase) => (
-                <div
-                  key={phase.id}
-                  className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border"
-                >
-                  <div>
-                    <p className="font-medium">{phase.name}</p>
-                    <p className="text-xs text-muted-foreground">{phase.desc}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Percent className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xl font-bold text-primary">{phase.pct}%</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              Total: 100%. Ex.: Se honorários totais = 8% da obra, Estudo Prévio ≈ 0.64% da obra (8% × 8%).
-            </p>
-          </motion.div>
-        )}
+        {activeCalculator === 'ichpop' && <IchpopCalculatorCard />}
 
         {activeCalculator === 'areas' && (
           <motion.div

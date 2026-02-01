@@ -26,6 +26,7 @@ import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
 import CalculatorPage from './pages/CalculatorPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -76,7 +77,17 @@ function App() {
                 <Route path="/library" element={<MaterialLibraryPage />} />
                 <Route path="/inbox" element={<StudioInboxPage />} />
                 <Route path="/brand" element={<BrandIdentityPage />} />
-                <Route path="/calculator" element={<CalculatorPage />} />
+                <Route path="/calculator" element={
+                  <ErrorBoundary fallback={
+                    <div className="p-8 rounded-xl border border-destructive/50 bg-destructive/5">
+                      <h2 className="text-lg font-semibold text-destructive mb-2">Erro na Calculadora</h2>
+                      <p className="text-muted-foreground text-sm mb-4">Ocorreu um erro ao carregar. Abre a consola (F12) para detalhes.</p>
+                      <button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90">Recarregar</button>
+                    </div>
+                  }>
+                    <CalculatorPage />
+                  </ErrorBoundary>
+                } />
                 <Route path="/public/proposta" element={<PropostaPublicPage />} />
               </Routes>
             </AppLayout>

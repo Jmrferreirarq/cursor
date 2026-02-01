@@ -147,6 +147,35 @@
   background: hsl(var(--muted-foreground));
 }
 
+/* Impressão: A4 e proposta centrada */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-proposal {
+    background: #fff !important;
+    min-height: auto !important;
+    padding: 0 !important;
+  }
+
+  .print-proposal-center {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .print-proposal-center > * {
+    box-shadow: none !important;
+  }
+}
+
 /* Animation utilities */
 @keyframes fadeIn {
   from {
