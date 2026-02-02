@@ -41,14 +41,14 @@ export function ProposalDocument({ payload: p, lang, className = '', style }: Pr
       }}
     >
       {/* Cabeçalho */}
-      <div style={{ background: C.accent, color: C.onAccent, padding: '8mm 12mm 6mm', boxSizing: 'border-box' }}>
+      <div style={{ background: C.accent, color: C.onAccent, padding: '10mm 15mm 8mm', boxSizing: 'border-box' }}>
         <p style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '0.02em' }}>{branding.appName}</p>
         {branding.appSlogan && (
           <p style={{ fontSize: 10, color: C.onAccentMuted, margin: '1.5mm 0 0 0' }}>{branding.appSlogan}</p>
         )}
       </div>
 
-      <div style={{ padding: '8mm 12mm 18mm', backgroundColor: C.white, boxSizing: 'border-box' }}>
+      <div style={{ padding: '15mm 15mm 15mm', backgroundColor: C.white, boxSizing: 'border-box' }}>
         <div style={{ marginTop: 0, marginBottom: '6mm' }}>
           <h1 style={{ fontSize: 15, fontWeight: 700, margin: 0, letterSpacing: '-0.01em', color: C.accent }}>
             {t('proposal.title', lang)}

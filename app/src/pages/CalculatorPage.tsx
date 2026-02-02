@@ -795,7 +795,7 @@ export default function CalculatorPage() {
     if (!validarProposta()) return;
     const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
     const opt = {
-      margin: [15, 15, 15, 15] as [number, number, number, number],
+      margin: [20, 20, 20, 20] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
       html2canvas: { scale: 1.5, useCORS: true },
@@ -814,7 +814,7 @@ export default function CalculatorPage() {
         pdf.setFontSize(9);
         pdf.setTextColor(89);
         const label = pageOfFormat.replace('{page}', String(i)).replace('{total}', String(total));
-        pdf.text(label, w / 2, h - 8, { align: 'center' });
+        pdf.text(label, w / 2, h - 12, { align: 'center' });
       }
       pdf.save(opt.filename);
       toast.success('PDF guardado');
