@@ -803,7 +803,7 @@ export default function CalculatorPage() {
       margin: [20, 20, 20, 20] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
-      html2canvas: { scale: 1.5, useCORS: true, logging: false },
+      html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794 },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
     };
