@@ -68,7 +68,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 h-16 bg-background/90 backdrop-blur-xl border-b border-border z-50">
+      <nav className="fixed top-0 left-0 right-0 h-16 bg-background z-50" style={{ border: 0, boxShadow: 'none' }}>
         <div className="h-full px-4 lg:px-6 flex items-center justify-between max-w-[2400px] mx-auto">
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2 shrink-0">

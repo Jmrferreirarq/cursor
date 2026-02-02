@@ -133,7 +133,7 @@ export default function CommandBar() {
   return (
     <>
       {/* Command Bar Trigger */}
-      <div className="fixed bottom-0 left-0 right-0 h-14 bg-card/95 backdrop-blur-sm border-t border-border z-40">
+      <div className="fixed bottom-0 left-0 right-0 h-14 bg-card z-40" style={{ border: 'none', boxShadow: 'none' }}>
         <div className="h-full max-w-[2400px] mx-auto px-4 flex items-center justify-center">
           <button
             onClick={() => setIsOpen(true)}

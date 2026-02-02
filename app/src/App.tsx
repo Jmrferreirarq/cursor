@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
 import { DataProvider } from './context/DataContext';
+import { useRemoveOverlays } from './hooks/useRemoveOverlays';
 import Navbar from './components/common/Navbar';
 import CommandBar from './components/common/CommandBar';
 import GlobalUtilities from './components/common/GlobalUtilities';
@@ -32,6 +33,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isPublic = location.pathname.startsWith('/public');
   const isPortal = location.pathname.startsWith('/portal');
+  useRemoveOverlays();
 
   if (isPublic || isPortal) {
     return (
@@ -42,11 +44,11 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300 overflow-x-hidden overflow-y-auto" style={{ isolation: 'isolate' }}>
       <Navbar />
       <CommandBar />
       <GlobalUtilities />
-      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 max-w-[2400px] mx-auto">
+      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
         {children}
       </main>
     </div>

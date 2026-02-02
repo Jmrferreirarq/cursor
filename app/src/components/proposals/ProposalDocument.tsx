@@ -35,18 +35,20 @@ export function ProposalDocument({ payload: p, lang, className = '', style }: Pr
         lineHeight: 1.45,
         backgroundColor: C.white,
         color: C.grafite,
+        boxSizing: 'border-box',
+        overflow: 'hidden',
         ...style,
       }}
     >
       {/* Cabeçalho */}
-      <div style={{ background: C.accent, color: C.onAccent, padding: '6mm 18mm 5mm' }}>
+      <div style={{ background: C.accent, color: C.onAccent, padding: '6mm 12mm 5mm', boxSizing: 'border-box' }}>
         <p style={{ fontSize: 18, fontWeight: 700, margin: 0, letterSpacing: '0.02em' }}>{branding.appName}</p>
         {branding.appSlogan && (
           <p style={{ fontSize: 10, color: C.onAccentMuted, margin: '1.5mm 0 0 0' }}>{branding.appSlogan}</p>
         )}
       </div>
 
-      <div style={{ padding: '0 18mm 18mm', backgroundColor: C.white }}>
+      <div style={{ padding: '0 12mm 18mm', backgroundColor: C.white, boxSizing: 'border-box' }}>
         <div style={{ marginTop: '5mm', marginBottom: '4mm' }}>
           <h1 style={{ fontSize: 15, fontWeight: 700, margin: 0, letterSpacing: '-0.01em', color: C.accent }}>
             {t('proposal.title', lang)}
@@ -81,17 +83,21 @@ export function ProposalDocument({ payload: p, lang, className = '', style }: Pr
         {/* Tabela de valores */}
         <div style={{ marginBottom: '5mm' }}>
           <p style={{ fontSize: 10, fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
-          <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10, pageBreakInside: 'avoid' }}>
+          <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9, pageBreakInside: 'avoid', tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: '55%' }} />
+              <col style={{ width: '45%' }} />
+            </colgroup>
             <thead>
               <tr style={{ background: C.offWhite }}>
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: 10, color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.concept', lang)}</th>
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 10, color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.value', lang)}</th>
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: 9, color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{t('proposal.concept', lang)}</th>
+                <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: 9, color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word' }}>{t('proposal.value', lang)}</th>
               </tr>
             </thead>
             <tbody>
               <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
-                <td style={{ padding: '2.5mm 3mm' }}>{t('proposal.mode', lang)}</td>
-                <td style={{ textAlign: 'right', padding: '2.5mm 3mm' }}>{p.modo}</td>
+                <td style={{ padding: '2.5mm 3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{t('proposal.mode', lang)}</td>
+                <td style={{ textAlign: 'right', padding: '2.5mm 3mm', wordBreak: 'break-word' }}>{p.modo}</td>
               </tr>
               {p.tipologia && (
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>

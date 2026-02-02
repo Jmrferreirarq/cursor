@@ -76,6 +76,40 @@
   * {
     @apply border-border;
   }
+
+  /* Forçar remoção da linha horizontal abaixo da navbar */
+  nav {
+    border: none !important;
+    border-width: 0 !important;
+    border-bottom-width: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+  nav::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: hsl(var(--background));
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Esconder overlays (ex.: Vercel Toolbar em localhost ou produção) */
+  iframe[src*="vercel.live"],
+  iframe[src*="vercel.com"][src*="toolbar"],
+  [id*="vercel-toolbar"],
+  [class*="vercel-toolbar"] {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
   
   html {
     scroll-behavior: smooth;

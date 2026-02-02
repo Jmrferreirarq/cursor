@@ -797,8 +797,8 @@ export default function CalculatorPage() {
     const opt = {
       margin: [0, 0, 0, 0] as [number, number, number, number],
       filename: `${baseName}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      image: { type: 'jpeg' as const, quality: 0.95 },
+      html2canvas: { scale: 1.5, useCORS: true },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
     };
@@ -1563,7 +1563,7 @@ export default function CalculatorPage() {
                 <div
                   ref={pdfRef}
                   className="bg-white text-black rounded-lg overflow-hidden"
-                  style={{ width: '210mm', minHeight: '297mm' }}
+                  style={{ width: '210mm', maxWidth: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
                 >
                   {previewPayload && <ProposalDocument payload={previewPayload} lang={lang} />}
                 </div>

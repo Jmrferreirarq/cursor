@@ -66,7 +66,7 @@ export default function ProductionHours({ team, delay = 0 }: ProductionHoursProp
                   />
                 </div>
 
-                {isBelowTarget && (
+                {isBelowTarget && percentage > 0 && (
                   <p className="text-xs text-warning">
                     Abaixo do alvo — pode haver capacidade livre.
                   </p>
