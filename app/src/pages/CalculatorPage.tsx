@@ -925,9 +925,14 @@ export default function CalculatorPage() {
           const valorInput = parseFloat(extrasValores['projeto_execucao_completo'] || '0') || 0;
           const teto = execExtra?.tetoMinimo ?? 2500;
           const taxa = execExtra?.taxaPorM2 ?? 15;
-          const valorCalculado = areaRef > 0 ? Math.round((teto + areaRef * taxa) / 50) * 50 : 0;
+          const raw = teto + areaRef * taxa;
+          const valorCalculado = areaRef > 0 ? Math.round(raw / 50) * 50 : 0;
           const valor = areaRef > 0 ? valorCalculado : valorInput;
-          const formula = valor > 0 && areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}` : undefined;
+          const formula = valor > 0 && areaRef > 0
+            ? raw === valorCalculado
+              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
+              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${Math.round(raw)}€ → ${formatCurrencyPayload(valorCalculado, lang)}`
+            : undefined;
           return {
             id: 'projeto_execucao_completo',
             nome: t('extras.execucaoCompleto', lang),
@@ -943,10 +948,15 @@ export default function CalculatorPage() {
           const valorInput = parseFloat(extrasValores['orcamentacao'] || '0') || 0;
           const teto = orcExtra?.tetoMinimo ?? 250;
           const taxa = orcExtra?.taxaPorM2 ?? 3.5;
-          const valorCalculado = areaRef > 0 ? Math.round((teto + areaRef * taxa) / 50) * 50 : 0;
+          const raw = teto + areaRef * taxa;
+          const valorCalculado = areaRef > 0 ? Math.round(raw / 50) * 50 : 0;
           const valor = areaRef > 0 ? valorCalculado : valorInput;
           if (valor <= 0) return [];
-          const formula = areaRef > 0 ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}` : undefined;
+          const formula = areaRef > 0
+            ? raw === valorCalculado
+              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
+              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${Math.round(raw)}€ → ${formatCurrencyPayload(valorCalculado, lang)}`
+            : undefined;
           return [{
             id: 'orcamentacao',
             nome: t('extras.orcamentacaoMedicao', lang),
