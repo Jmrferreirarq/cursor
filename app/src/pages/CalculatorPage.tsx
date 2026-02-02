@@ -793,12 +793,17 @@ export default function CalculatorPage() {
   const exportHonorariosPDF = async () => {
     if (!pdfRef.current) return;
     if (!validarProposta()) return;
+    try {
+      await document.fonts.ready;
+    } catch {
+      /* ignore */
+    }
     const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
     const opt = {
       margin: [20, 20, 20, 20] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
-      html2canvas: { scale: 1.5, useCORS: true },
+      html2canvas: { scale: 1.5, useCORS: true, logging: false },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
     };
