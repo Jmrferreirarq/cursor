@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
+import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
 import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
@@ -518,7 +520,9 @@ export default function CalculatorPage() {
   const [exclusoesSelecionadas, setExclusoesSelecionadas] = useState<Set<string>>(new Set());
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
-  const pdfRef = useRef<HTMLDivElement>(null);
+  const captureRef = useRef<HTMLDivElement | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const [capturingPDF, setCapturingPDF] = useState(false);
 
   // Áreas
   const [areaValue, setAreaValue] = useState('');
@@ -790,42 +794,9 @@ export default function CalculatorPage() {
     return true;
   };
 
-  const exportHonorariosPDF = async () => {
-    if (!pdfRef.current) return;
-    if (!validarProposta()) return;
-    try {
-      await document.fonts.ready;
-    } catch {
-      /* ignore */
-    }
-    const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-    const opt = {
-      margin: [20, 20, 20, 20] as [number, number, number, number],
-      filename: `${baseName}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.95 },
-      html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794 },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
-    };
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      const pageOfFormat = t('proposalPageOf', lang);
-      const pdf = await html2pdf().set(opt).from(pdfRef.current).toPdf().get('pdf');
-      const total = pdf.internal.getNumberOfPages();
-      const w = pdf.internal.pageSize.getWidth();
-      const h = pdf.internal.pageSize.getHeight();
-      for (let i = 1; i <= total; i++) {
-        pdf.setPage(i);
-        pdf.setFontSize(9);
-        pdf.setTextColor(89);
-        const label = pageOfFormat.replace('{page}', String(i)).replace('{total}', String(total));
-        pdf.text(label, w / 2, h - 12, { align: 'center' });
-      }
-      pdf.save(opt.filename);
-      toast.success('PDF guardado');
-    } catch (e) {
-      toast.error('Erro ao gerar PDF');
-    }
+  const exportHonorariosPDF = () => {
+    if (!validarProposta() || !previewPayload) return;
+    setCapturingPDF(true);
   };
 
   const LOCALIZACAO_LABELS: Record<string, string> = { lisboa: 'Lisboa (+15%)', litoral: 'Litoral (+5%)', interior: 'Interior (−12%)' };
@@ -997,6 +968,61 @@ export default function CalculatorPage() {
     totalComIVA, totalSemIVA, valorIVA, exclusoesSelecionadas, areaRef,
   ]);
 
+  useEffect(() => {
+    if (!capturingPDF || !previewPayload) return;
+    let cancelled = false;
+    const run = async () => {
+      try {
+        await document.fonts.ready;
+      } catch {
+        /* ignore */
+      }
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      for (let i = 0; i < 30; i++) {
+        if (cancelled) return;
+        await new Promise((r) => setTimeout(r, 100));
+        const el = previewRef.current ?? captureRef.current;
+        if (el && el.offsetHeight > 0) {
+          const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
+          const opt = {
+            margin: [25, 25, 25, 25] as [number, number, number, number],
+            filename: `${baseName}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.95 },
+            html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, windowWidth: 794 },
+            jsPDF: { unit: 'mm' as const, format: 'a4' as const },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
+          };
+          try {
+            const html2pdf = (await import('html2pdf.js')).default;
+            const pageOfFormat = t('proposalPageOf', lang);
+            const pdf = await html2pdf().set(opt).from(el).toPdf().get('pdf');
+            if (cancelled) return;
+            const total = pdf.internal.getNumberOfPages();
+            const w = pdf.internal.pageSize.getWidth();
+            const h = pdf.internal.pageSize.getHeight();
+            for (let j = 1; j <= total; j++) {
+              pdf.setPage(j);
+              pdf.setFontSize(9);
+              pdf.setTextColor(89);
+              const label = pageOfFormat.replace('{page}', String(j)).replace('{total}', String(total));
+              pdf.text(label, w / 2, h - 12, { align: 'center' });
+            }
+            pdf.save(opt.filename);
+            toast.success('PDF guardado');
+          } catch (e) {
+            toast.error('Erro ao gerar PDF');
+          }
+          setCapturingPDF(false);
+          return;
+        }
+      }
+      toast.error('Erro ao preparar exportação');
+      setCapturingPDF(false);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [capturingPDF, previewPayload, referenciaExibida, lang]);
+
   const obterLinkProposta = () => {
     if (!validarProposta()) return;
     const payload = buildProposalPayload();
@@ -1047,8 +1073,38 @@ export default function CalculatorPage() {
     setImovelEstado('bom');
   };
 
+  const pdfCapturePortal = capturingPDF && previewPayload && createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[99999] flex items-center justify-center bg-background/80 text-foreground"
+        aria-hidden
+      >
+        <span className="text-sm font-medium">{t('proposalSaving', lang)}</span>
+      </div>
+      <div
+        ref={(r) => { captureRef.current = r; }}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          width: 794,
+          minWidth: 794,
+          minHeight: 1123,
+          backgroundColor: '#fff',
+          zIndex: 99998,
+          overflow: 'visible',
+        }}
+      >
+        <ProposalDocument payload={previewPayload} lang={lang} />
+      </div>
+    </>,
+    document.body
+  );
+
   return (
-    <div className="space-y-6 min-h-[50vh]">
+    <>
+      {pdfCapturePortal}
+      <div className="space-y-6 min-h-[50vh]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1574,13 +1630,11 @@ export default function CalculatorPage() {
               </p>
 
               <div className="mt-6 space-y-4">
-                <p className="text-sm font-medium">Previsualização da proposta</p>
-                <div
-                  ref={pdfRef}
-                  className="bg-white text-black rounded-lg overflow-hidden"
-                  style={{ width: '210mm', maxWidth: '210mm', minHeight: '297mm', boxSizing: 'border-box' }}
-                >
-                  {previewPayload && <ProposalDocument payload={previewPayload} lang={lang} />}
+                <p className="text-sm font-medium">Previsualização da proposta (folhas A4)</p>
+                <div className="flex justify-center overflow-x-auto overflow-y-auto py-4 max-h-[calc(100vh-16rem)]" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
+                  <div className="relative">
+                    {previewPayload && <ProposalPreviewPaginated ref={previewRef} payload={previewPayload} lang={lang} />}
+                  </div>
                 </div>
                 <div className="flex flex-col gap-3">
                   {!propostaFechada ? (
@@ -1882,5 +1936,6 @@ export default function CalculatorPage() {
         </motion.div>
       )}
     </div>
+    </>
   );
 }

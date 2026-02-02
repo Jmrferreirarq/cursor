@@ -39,7 +39,7 @@ function PropostaPublicPage() {
     }
     const baseName = `orcamento-${(p.ref || 'proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
     const opt = {
-      margin: [20, 20, 20, 20] as [number, number, number, number],
+      margin: [25, 25, 25, 25] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
       html2canvas: { scale: 1.5, useCORS: true, logging: false, width: A4_WIDTH_PX },
@@ -88,7 +88,7 @@ function PropostaPublicPage() {
       ref={(r) => { captureRef.current = r; }}
       style={{
         position: 'fixed',
-        left: -99999,
+        left: 0,
         top: 0,
         width: A4_WIDTH_PX,
         minWidth: A4_WIDTH_PX,
