@@ -56,6 +56,7 @@ export const pt = {
     typologyRequired: 'Seleciona a tipologia do projeto.',
   },
   proposalPrint: 'Imprimir / Guardar PDF',
+  proposalSaving: 'A guardar...',
   proposalPageOf: 'Página {page} de {total}',
   calcCloseProposal: 'Fechar proposta',
   calcProposalClosed: 'Proposta fechada. Pronta para enviar ao cliente.',

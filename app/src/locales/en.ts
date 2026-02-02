@@ -56,6 +56,7 @@ export const en = {
     typologyRequired: 'Select the project typology.',
   },
   proposalPrint: 'Print / Save PDF',
+  proposalSaving: 'Saving...',
   proposalPageOf: 'Page {page} of {total}',
   calcCloseProposal: 'Close proposal',
   calcProposalClosed: 'Proposal closed. Ready to send to client.',

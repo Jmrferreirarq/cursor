@@ -38,6 +38,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   if (isPublic || isPortal) {
     return (
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <GlobalUtilities />
         {children}
       </div>
     );

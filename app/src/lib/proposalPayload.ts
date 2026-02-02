@@ -81,9 +81,65 @@ export const proposalPayloadSchema = z.object({
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
 
-/** Codifica com compressão LZ-String (URL-safe, link mais curto) */
+/** Chaves minificadas para reduzir tamanho do JSON antes da compressão */
+const MINIFY_KEYS: Record<string, string> = {
+  lang: 'l', ref: 'r', data: 'da', cliente: 'c', projeto: 'p', local: 'lo', linkGoogleMaps: 'lm',
+  modo: 'm', area: 'a', valorObra: 'vo', tipologia: 't', complexidade: 'co', pisos: 'pi', fasesPct: 'fp',
+  localizacao: 'loc', iva: 'i', despesasReemb: 'dr', valorArq: 'va', especialidades: 'e', valorEsp: 've',
+  extras: 'ex', valorExtras: 'vex', total: 'to', totalSemIVA: 'ts', valorIVA: 'vi', fasesPagamento: 'fap',
+  descricaoFases: 'df', notaBim: 'nb', notaReunioes: 'nr', apresentacao: 'ap', especialidadesDescricoes: 'ed',
+  exclusoes: 'excl', notas: 'nt', duracaoEstimada: 'de', extrasComDescricao: 'ecd', branding: 'b',
+  appName: 'an', appSlogan: 'as', architectName: 'acn', architectOasrn: 'ao',
+  nome: 'n', valor: 'v', pct: 'pc', descricao: 'd', duracao: 'du', id: 'id', ocultarValor: 'ov',
+  sobConsulta: 'sc', sobConsultaPrevia: 'scp', formula: 'f', isHeader: 'ih',
+};
+
+const EXPAND_KEYS: Record<string, string> = Object.fromEntries(
+  Object.entries(MINIFY_KEYS).map(([k, v]) => [v, k])
+);
+
+function minifyValue(val: unknown, context: 'root' | 'fase' | 'esp' | 'ext' | 'branding'): unknown {
+  if (val === null || val === undefined) return val;
+  if (Array.isArray(val)) return val.map((item) => minifyValue(item, context));
+  if (typeof val !== 'object') return val;
+
+  const obj = val as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    if (v === '' || (Array.isArray(v) && v.length === 0)) continue;
+    const short = MINIFY_KEYS[k] ?? k;
+    const innerCtx = k === 'branding' ? 'branding' : k === 'fasesPagamento' ? 'fase' : k === 'especialidades' || k === 'especialidadesDescricoes' ? 'esp' : k === 'extrasComDescricao' ? 'ext' : 'root';
+    result[short] = typeof v === 'object' && v !== null && !Array.isArray(v) ? minifyValue(v, innerCtx) : v;
+  }
+  return result;
+}
+
+function expandValue(val: unknown): unknown {
+  if (val === null || val === undefined) return val;
+  if (Array.isArray(val)) return val.map(expandValue);
+  if (typeof val !== 'object') return val;
+
+  const obj = val as Record<string, unknown>;
+  const result: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const full = EXPAND_KEYS[k] ?? k;
+    result[full] = typeof v === 'object' && v !== null && !Array.isArray(v) ? expandValue(v) : v;
+  }
+  return result;
+}
+
+/** Omite apresentacao se for o texto default (economiza ~500 caracteres) */
+function minifyPayload(p: ProposalPayload): Record<string, unknown> {
+  const copy = { ...p } as Record<string, unknown>;
+  if (copy.apresentacao === TEXTO_APRESENTACAO_DEFAULT) delete copy.apresentacao;
+  return minifyValue(copy, 'root') as Record<string, unknown>;
+}
+
+/** Codifica com minificação + compressão LZ-String (URL mais curta) */
 export function encodeProposalPayload(p: ProposalPayload): string {
-  const json = JSON.stringify(p);
+  const minified = minifyPayload(p);
+  const json = JSON.stringify(minified);
   return compressToEncodedURIComponent(json);
 }
 
@@ -117,7 +173,8 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
     }
   }
   if (!parsed || typeof parsed !== 'object') return null;
-  const result = proposalPayloadSchema.safeParse(parsed);
+  const expanded = expandValue(parsed);
+  const result = proposalPayloadSchema.safeParse(expanded);
   return result.success ? result.data : null;
 }
 
