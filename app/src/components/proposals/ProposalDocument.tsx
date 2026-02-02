@@ -254,8 +254,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style }: Pr
             </div>
           )}
           {(p.extrasComDescricao ?? []).length > 0 && (
-            <div style={{ padding: '5mm 4mm', background: C.offWhite, borderRadius: 2, marginTop: '2mm' }}>
-              <p style={{ fontSize: 10, fontWeight: 600, margin: '0 0 4mm 0', color: C.accent }}>{t('proposal.extrasInfo', lang)}</p>
+            <div style={{ padding: '4mm 4mm 5mm', background: C.offWhite, borderRadius: 2, marginTop: '6mm' }}>
+              <p style={{ fontSize: 10, fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.extrasInfo', lang)}</p>
               {(p.extrasComDescricao ?? []).map((e) => {
                 const id = (e as { id?: string }).id;
                 const isFormulaExtra = id === 'projeto_execucao_completo' || id === 'orcamentacao';
