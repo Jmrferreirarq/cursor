@@ -795,7 +795,7 @@ export default function CalculatorPage() {
     if (!validarProposta()) return;
     const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
     const opt = {
-      margin: [0, 0, 0, 0] as [number, number, number, number],
+      margin: [15, 15, 15, 15] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
       html2canvas: { scale: 1.5, useCORS: true },
