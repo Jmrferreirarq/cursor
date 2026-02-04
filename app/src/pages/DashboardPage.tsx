@@ -178,10 +178,10 @@ export default function DashboardPage() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
         {[
-          { label: 'Projetos', path: '/projects', icon: FolderKanban },
-          { label: 'Clientes', path: '/clients', icon: () => <span className="text-lg">👥</span> },
-          { label: 'Calendário', path: '/calendar', icon: () => <span className="text-lg">📅</span> },
-          { label: 'Media Hub', path: '/media', icon: () => <span className="text-lg">🖼️</span> },
+          { label: 'Projetos', path: '/projects', Icon: FolderKanban, emoji: null },
+          { label: 'Clientes', path: '/clients', Icon: null, emoji: '👥' },
+          { label: 'Calendário', path: '/calendar', Icon: null, emoji: '📅' },
+          { label: 'Media Hub', path: '/media', Icon: null, emoji: '🖼️' },
         ].map((action, index) => (
           <motion.button
             key={action.path}
@@ -192,10 +192,10 @@ export default function DashboardPage() {
             className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/40 hover:bg-muted/50 transition-all group"
           >
             <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-              {typeof action.icon === 'function' ? (
-                <action.icon />
+              {action.Icon ? (
+                <action.Icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               ) : (
-                <action.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-lg">{action.emoji}</span>
               )}
             </div>
             <span className="font-medium text-sm">{action.label}</span>
