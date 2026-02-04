@@ -1,13 +1,15 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, FileText, Calendar, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
 import { decodeProposalPayload } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
 
-/** 210mm em px @ 96dpi para captura A4 independente do viewport */
+const C = PROPOSAL_PALETTE;
 const A4_WIDTH_PX = 794;
 
 function PropostaPublicPage() {
@@ -20,6 +22,17 @@ function PropostaPublicPage() {
   const captureRef = useRef<HTMLDivElement | null>(null);
   const [exporting, setExporting] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [showDocument, setShowDocument] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Scroll detection
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const exportPDF = async () => {
     if (!p) return;
@@ -61,7 +74,7 @@ function PropostaPublicPage() {
         pdf.text(label, w / 2, h - 12, { align: 'center' });
       }
       pdf.save(opt.filename);
-      toast.success('PDF guardado');
+      toast.success('PDF guardado com sucesso');
     } catch (e) {
       toast.error('Erro ao gerar PDF');
     } finally {
@@ -70,15 +83,23 @@ function PropostaPublicPage() {
     }
   };
 
+  // Error state
   if (!p) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: PROPOSAL_PALETTE.offWhite }}>
-        <div className="max-w-md text-center">
-          <h1 className="text-xl font-semibold text-gray-800 mb-2">{t('proposalError.notFound', lang)}</h1>
-          <p className="text-gray-600 text-sm">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: C.offWhite }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md text-center"
+        >
+          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl flex items-center justify-center" style={{ backgroundColor: C.accent }}>
+            <FileText className="w-8 h-8" style={{ color: C.onAccent }} />
+          </div>
+          <h1 className="text-2xl font-bold mb-3" style={{ color: C.grafite }}>{t('proposalError.notFound', lang)}</h1>
+          <p className="text-base" style={{ color: C.cinzaMarca }}>
             {t('proposalError.linkExpired', lang)}
           </p>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -102,27 +123,320 @@ function PropostaPublicPage() {
     document.body
   );
 
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat(lang === 'en' ? 'en-GB' : 'pt-PT', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(value);
+  };
+
   return (
-    <div className="print-proposal relative min-h-screen" style={{ backgroundColor: PROPOSAL_PALETTE.offWhite }}>
+    <div className="min-h-screen" style={{ backgroundColor: C.offWhite }}>
       {captureEl}
-      <button
-        type="button"
-        onClick={exportPDF}
-        disabled={exporting}
-        className="no-print fixed top-4 right-4 z-50 px-4 py-2 text-white text-sm font-medium rounded-lg shadow-md hover:opacity-90 transition-opacity disabled:opacity-70"
-        style={{ backgroundColor: PROPOSAL_PALETTE.accent }}
+
+      {/* Floating Header */}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled ? 'backdrop-blur-xl' : ''
+        }`}
+        style={{ 
+          backgroundColor: isScrolled ? 'rgba(246, 245, 242, 0.9)' : 'transparent',
+          borderBottom: isScrolled ? `1px solid ${C.cinzaLinha}` : 'none'
+        }}
       >
-        {exporting ? t('proposalSaving', lang) : t('proposalPrint', lang)}
-      </button>
-      <div className="print-proposal-center flex justify-center px-4" style={{ paddingTop: 24, paddingBottom: 24 }}>
-        <div
-          ref={pdfRef}
-          className="bg-white text-black rounded-lg overflow-hidden"
-          style={{ width: '210mm', maxWidth: '210mm', minWidth: '210mm', minHeight: '297mm', boxSizing: 'border-box', flexShrink: 0 }}
-        >
-          <ProposalDocument payload={p} lang={lang} />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div 
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: C.accent }}
+            >
+              <span className="text-sm font-bold" style={{ color: C.onAccent }}>
+                {p.branding.appName.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <div className="hidden sm:block">
+              <p className="text-sm font-semibold" style={{ color: C.grafite }}>{p.branding.appName}</p>
+              {p.branding.appSlogan && (
+                <p className="text-xs" style={{ color: C.cinzaMarca }}>{p.branding.appSlogan}</p>
+              )}
+            </div>
+          </div>
+          
+          <button
+            onClick={exportPDF}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: C.accent, color: C.onAccent }}
+          >
+            <Download className="w-4 h-4" />
+            <span>{exporting ? 'A guardar...' : 'Guardar PDF'}</span>
+          </button>
         </div>
-      </div>
+      </motion.header>
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-16 px-4 sm:px-6 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-3xl"
+            style={{ backgroundColor: C.accent }}
+          />
+        </div>
+
+        <div className="max-w-5xl mx-auto relative">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            {/* Badge */}
+            <div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
+              style={{ backgroundColor: `${C.accent}10`, color: C.accent }}
+            >
+              <FileText className="w-4 h-4" />
+              <span>{t('proposal.title', lang)}</span>
+            </div>
+
+            {/* Title */}
+            <h1 
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 tracking-tight"
+              style={{ color: C.grafite }}
+            >
+              {p.projeto || t('proposal.title', lang)}
+            </h1>
+
+            {/* Client name */}
+            {p.cliente && (
+              <p className="text-xl sm:text-2xl mb-2" style={{ color: C.cinzaMarca }}>
+                {lang === 'pt' ? 'para' : 'for'} <span className="font-semibold" style={{ color: C.accent }}>{p.cliente}</span>
+              </p>
+            )}
+
+            {/* Ref & Date */}
+            <p className="text-sm mb-8" style={{ color: C.cinzaMarca }}>
+              {t('proposal.ref', lang)} {p.ref} · {p.data}
+            </p>
+
+            {/* Key Info Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto mb-12">
+              {/* Total Value */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="p-5 rounded-2xl text-center"
+                style={{ backgroundColor: C.white, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
+              >
+                <Euro className="w-5 h-5 mx-auto mb-2" style={{ color: C.accent }} />
+                <p className="text-2xl font-bold" style={{ color: C.grafite }}>{formatCurrency(p.total)}</p>
+                <p className="text-xs" style={{ color: C.cinzaMarca }}>{t('proposal.totalInclVat', lang)}</p>
+              </motion.div>
+
+              {/* Location */}
+              {p.local && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="p-5 rounded-2xl text-center"
+                  style={{ backgroundColor: C.white, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
+                >
+                  <MapPin className="w-5 h-5 mx-auto mb-2" style={{ color: C.accent }} />
+                  <p className="text-lg font-semibold" style={{ color: C.grafite }}>{p.localizacao}</p>
+                  <p className="text-xs truncate" style={{ color: C.cinzaMarca }}>{p.local}</p>
+                </motion.div>
+              )}
+
+              {/* Project Type */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="p-5 rounded-2xl text-center"
+                style={{ backgroundColor: C.white, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
+              >
+                <Building2 className="w-5 h-5 mx-auto mb-2" style={{ color: C.accent }} />
+                <p className="text-lg font-semibold" style={{ color: C.grafite }}>{p.modo}</p>
+                <p className="text-xs" style={{ color: C.cinzaMarca }}>{p.tipologia || t('proposal.typology', lang)}</p>
+              </motion.div>
+            </div>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <button
+                onClick={() => setShowDocument(!showDocument)}
+                className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-xl transition-all"
+                style={{ backgroundColor: C.accent, color: C.onAccent }}
+              >
+                <FileText className="w-5 h-5" />
+                <span>{showDocument ? 'Ocultar Proposta' : 'Ver Proposta Completa'}</span>
+              </button>
+
+              {p.linkGoogleMaps && (
+                <a
+                  href={p.linkGoogleMaps}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-xl transition-all border"
+                  style={{ borderColor: C.cinzaLinha, color: C.grafite }}
+                >
+                  <MapPin className="w-5 h-5" />
+                  <span>{t('proposal.viewOnGoogleMaps', lang)}</span>
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+            </motion.div>
+
+            {/* Scroll indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="mt-12"
+            >
+              <ChevronDown 
+                className="w-6 h-6 mx-auto animate-bounce" 
+                style={{ color: C.cinzaMarca }}
+              />
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Quick Summary Section */}
+      <section className="py-16 px-4 sm:px-6" style={{ backgroundColor: C.white }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-12"
+          >
+            {/* Phases Summary */}
+            <div>
+              <h2 
+                className="text-sm font-semibold uppercase tracking-wider mb-6"
+                style={{ color: C.accent }}
+              >
+                {t('proposal.section2', lang)}
+              </h2>
+              <div className="space-y-3">
+                {p.fasesPagamento.filter(f => !(f as { isHeader?: boolean }).isHeader).slice(0, 6).map((fase, idx) => (
+                  <div 
+                    key={idx}
+                    className="flex items-center justify-between p-4 rounded-xl"
+                    style={{ backgroundColor: C.offWhite }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold"
+                        style={{ backgroundColor: `${C.accent}15`, color: C.accent }}
+                      >
+                        {fase.pct}%
+                      </div>
+                      <span className="font-medium" style={{ color: C.grafite }}>{fase.nome}</span>
+                    </div>
+                    {fase.valor && (
+                      <span className="font-semibold" style={{ color: C.grafite }}>
+                        {formatCurrency(fase.valor)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* What's Included */}
+            <div>
+              <h2 
+                className="text-sm font-semibold uppercase tracking-wider mb-6"
+                style={{ color: C.accent }}
+              >
+                {lang === 'pt' ? 'O que está incluído' : 'What\'s included'}
+              </h2>
+              <div className="space-y-3">
+                {p.descricaoFases.slice(0, 6).map((fase, idx) => (
+                  <div 
+                    key={idx}
+                    className="flex items-start gap-3 p-4 rounded-xl"
+                    style={{ backgroundColor: C.offWhite }}
+                  >
+                    <div 
+                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ backgroundColor: C.accent }}
+                    >
+                      <Check className="w-3.5 h-3.5" style={{ color: C.onAccent }} />
+                    </div>
+                    <div>
+                      <p className="font-medium" style={{ color: C.grafite }}>{fase.nome}</p>
+                      {fase.descricao && (
+                        <p className="text-sm mt-1 line-clamp-2" style={{ color: C.cinzaMarca }}>{fase.descricao}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Full Document Section */}
+      <AnimatePresence>
+        {showDocument && (
+          <motion.section
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="py-12 px-4 sm:px-6"
+            style={{ backgroundColor: C.offWhite }}
+          >
+            <div className="max-w-5xl mx-auto">
+              <div className="flex justify-center">
+                <div
+                  ref={pdfRef}
+                  className="bg-white text-black rounded-xl overflow-hidden shadow-2xl"
+                  style={{ 
+                    width: '210mm', 
+                    maxWidth: '100%', 
+                    minHeight: '297mm', 
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <ProposalDocument payload={p} lang={lang} />
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
+      {/* Footer */}
+      <footer className="py-12 px-4 sm:px-6 text-center" style={{ backgroundColor: C.white }}>
+        <div className="max-w-5xl mx-auto">
+          <p className="text-sm" style={{ color: C.cinzaMarca }}>
+            {t('proposal.disclaimer', lang)}
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-2">
+            <span className="text-sm" style={{ color: C.cinzaMarca }}>
+              {lang === 'pt' ? 'Proposta gerada por' : 'Proposal generated by'}
+            </span>
+            <span className="font-semibold" style={{ color: C.accent }}>
+              {p.branding.appName}
+            </span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

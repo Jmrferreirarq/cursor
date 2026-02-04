@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye, ArrowRight } from 'lucide-react';
+import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye, ArrowRight, Sparkles, Users, Calendar, Euro } from 'lucide-react';
 import { toast } from 'sonner';
 import PDFPreview from '@/components/proposals/PDFPreview';
 import { useData } from '@/context/DataContext';
 import type { Proposal, ProposalPhase } from '@/types';
 
 const projectTypes = [
-  { id: 'obra-nova', label: 'Obra Nova', icon: Building2 },
-  { id: 'remodelacao', label: 'Remodelação', icon: Home },
-  { id: 'ampliacao', label: 'Ampliação', icon: Hammer },
-  { id: 'interior', label: 'Design Interior', icon: PenTool },
-  { id: 'consultoria', label: 'Consultoria', icon: Wrench },
+  { id: 'obra-nova', label: 'Obra Nova', icon: Building2, description: 'Construção de raiz' },
+  { id: 'remodelacao', label: 'Remodelação', icon: Home, description: 'Reabilitação de espaços' },
+  { id: 'ampliacao', label: 'Ampliação', icon: Hammer, description: 'Extensão de edificado' },
+  { id: 'interior', label: 'Design Interior', icon: PenTool, description: 'Projeto de interiores' },
+  { id: 'consultoria', label: 'Consultoria', icon: Wrench, description: 'Serviços técnicos' },
 ];
 
 const defaultPhases: ProposalPhase[] = [
-  { id: 'ep', name: 'Estudo Prévio', description: 'Análise preliminar e esquemas', value: 2500, selected: false },
+  { id: 'ep', name: 'Estudo Prévio', description: 'Análise preliminar e esquemas conceptuais', value: 2500, selected: false },
   { id: 'ap', name: 'Anteprojeto', description: 'Desenvolvimento de plantas e modelação 3D', value: 3500, selected: false },
   { id: 'lic', name: 'Licenciamento', description: 'Processo de aprovação municipal', value: 2000, selected: false },
   { id: 'pe', name: 'Projeto Execução', description: 'Detalhamento construtivo completo', value: 5000, selected: false },
@@ -185,73 +185,83 @@ export default function ProposalsManagementPage() {
     resetForm();
   };
 
+  const steps = [
+    { number: 1, title: 'Cliente', icon: Users },
+    { number: 2, title: 'Projeto', icon: Building2 },
+    { number: 3, title: 'Resumo', icon: FileText },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"
       >
         <div>
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <FileText className="w-4 h-4" />
-            <span className="text-sm">Gestão de Propostas</span>
+            <span className="text-sm font-medium tracking-wide uppercase">Comercial</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Gerador de Propostas</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Gerador de Propostas</h1>
+          <p className="text-muted-foreground mt-2">
+            Crie propostas profissionais em minutos
+          </p>
         </div>
         <button
           onClick={resetForm}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-fit"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
           <span>Nova Proposta</span>
         </button>
       </motion.div>
 
-      {/* Proposals List */}
+      {/* Saved Proposals */}
       {proposals.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card border border-border rounded-xl p-4 shadow-card"
+          transition={{ delay: 0.1 }}
+          className="bg-card border border-border rounded-xl overflow-hidden"
         >
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-            Propostas guardadas ({proposals.length})
-          </h3>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
+          <div className="px-5 py-4 border-b border-border bg-muted/30">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Propostas Recentes
+              <span className="ml-2 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">{proposals.length}</span>
+            </h3>
+          </div>
+          <div className="divide-y divide-border max-h-48 overflow-y-auto">
             {proposals.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted/80 transition-colors group"
+                className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group"
               >
-                <div>
-                  <p className="font-medium">{p.clientName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {projectTypes.find((t) => t.id === p.projectType)?.label} •{' '}
-                    {new Intl.NumberFormat('pt-PT', {
-                      style: 'currency',
-                      currency: 'EUR',
-                    }).format(p.totalWithVat)}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span className="text-sm font-semibold text-primary">{p.clientName.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">{p.clientName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {projectTypes.find((t) => t.id === p.projectType)?.label} • {formatCurrency(p.totalWithVat)}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      p.status === 'draft'
-                        ? 'bg-muted-foreground/20 text-muted-foreground'
-                        : 'bg-success/20 text-success'
-                    }`}
-                  >
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs px-2.5 py-1 rounded-full ${
+                    p.status === 'draft' ? 'bg-muted text-muted-foreground' : 'bg-emerald-500/20 text-emerald-400'
+                  }`}>
                     {p.status === 'draft' ? 'Rascunho' : p.status}
                   </span>
                   <button
                     onClick={() => createProjectFromProposal(p)}
-                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-primary hover:bg-primary/10 transition-all"
-                    title="Criar projeto a partir desta proposta"
+                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                   >
                     <ArrowRight className="w-3 h-3" />
-                    Projeto
+                    Criar Projeto
                   </button>
                 </div>
               </div>
@@ -261,20 +271,36 @@ export default function ProposalsManagementPage() {
       )}
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-2">
-        {[1, 2, 3].map((s) => (
-          <React.Fragment key={s}>
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                step >= s ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {step > s ? <Check className="w-4 h-4" /> : s}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="flex items-center justify-center gap-4"
+      >
+        {steps.map((s, index) => (
+          <React.Fragment key={s.number}>
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                  step >= s.number 
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {step > s.number ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+              </div>
+              <div className="hidden sm:block">
+                <p className={`text-sm font-medium ${step >= s.number ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {s.title}
+                </p>
+              </div>
             </div>
-            {s < 3 && <div className={`w-8 h-0.5 ${step > s ? 'bg-primary' : 'bg-muted'}`} />}
+            {index < steps.length - 1 && (
+              <div className={`w-12 h-0.5 rounded ${step > s.number ? 'bg-primary' : 'bg-border'}`} />
+            )}
           </React.Fragment>
         ))}
-      </div>
+      </motion.div>
 
       {/* Form Content */}
       <motion.div
@@ -283,250 +309,252 @@ export default function ProposalsManagementPage() {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
         transition={{ duration: 0.3 }}
-        className="bg-card border border-border rounded-xl p-6"
+        className="bg-card border border-border rounded-2xl overflow-hidden"
       >
-        {step === 1 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Dados do Cliente</h2>
+        {/* Step Header */}
+        <div className="px-6 py-4 border-b border-border bg-muted/30">
+          <h2 className="text-lg font-semibold">
+            {step === 1 && 'Dados do Cliente'}
+            {step === 2 && 'Tipo de Projeto e Fases'}
+            {step === 3 && 'Resumo da Proposta'}
+          </h2>
+        </div>
 
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={() => {
-                  setUseExistingClient(true);
-                  setClientData({ name: '', email: '', phone: '', address: '', municipality: '' });
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  useExistingClient
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-              >
-                Cliente existente
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setUseExistingClient(false);
-                  setSelectedClientId('');
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  !useExistingClient
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
-                }`}
-              >
-                Novo cliente
-              </button>
-            </div>
-
-            {useExistingClient ? (
-              <div>
-                <label className="block text-sm font-medium mb-2">Seleciona o cliente *</label>
-                <select
-                  value={selectedClientId}
-                  onChange={(e) => setSelectedClientId(e.target.value)}
-                  className="w-full h-10 px-4 py-2 rounded-lg border border-border bg-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        <div className="p-6">
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseExistingClient(true);
+                    setClientData({ name: '', email: '', phone: '', address: '', municipality: '' });
+                  }}
+                  className={`flex-1 p-4 rounded-xl border text-left transition-all ${
+                    useExistingClient
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-muted/30 hover:border-primary/40'
+                  }`}
                 >
-                  <option value="">— Escolhe um cliente —</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} — {c.email}
-                    </option>
-                  ))}
-                </select>
+                  <Users className={`w-5 h-5 mb-2 ${useExistingClient ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <p className="font-medium">Cliente existente</p>
+                  <p className="text-xs text-muted-foreground mt-1">Selecionar da base de dados</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseExistingClient(false);
+                    setSelectedClientId('');
+                  }}
+                  className={`flex-1 p-4 rounded-xl border text-left transition-all ${
+                    !useExistingClient
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-muted/30 hover:border-primary/40'
+                  }`}
+                >
+                  <Plus className={`w-5 h-5 mb-2 ${!useExistingClient ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <p className="font-medium">Novo cliente</p>
+                  <p className="text-xs text-muted-foreground mt-1">Adicionar manualmente</p>
+                </button>
               </div>
-            ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Nome *</label>
-                <input
-                  type="text"
-                  value={clientData.name}
-                  onChange={(e) => setClientData({ ...clientData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  placeholder="Nome completo"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={clientData.email}
-                  onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  placeholder="email@exemplo.pt"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Telefone *</label>
-                <input
-                  type="tel"
-                  value={clientData.phone}
-                  onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  placeholder="+351 000 000 000"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Morada</label>
-                <input
-                  type="text"
-                  value={clientData.address}
-                  onChange={(e) => setClientData({ ...clientData, address: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  placeholder="Rua, número, código postal"
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">Município</label>
-                <input
-                  type="text"
-                  value={clientData.municipality}
-                  onChange={(e) => setClientData({ ...clientData, municipality: e.target.value })}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
-                  placeholder="Ex: Lisboa, Porto, Braga..."
-                />
-              </div>
-            </div>
-            )}
-          </div>
-        )}
 
-        {step === 2 && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Tipo de Projeto e Fases</h2>
-            
-            <div>
-              <label className="block text-sm font-medium mb-3">Tipo de Projeto *</label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                {projectTypes.map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setProjectType(type.id)}
-                    className={`p-4 rounded-xl border transition-all ${
-                      projectType === type.id
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border bg-muted hover:border-muted-foreground/30'
-                    }`}
+              {useExistingClient ? (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Seleciona o cliente *</label>
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="w-full h-12 px-4 rounded-xl border border-border bg-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   >
-                    <type.icon className={`w-6 h-6 mx-auto mb-2 ${projectType === type.id ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <p className={`text-sm font-medium ${projectType === type.id ? 'text-primary' : ''}`}>{type.label}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-3">Fases a Incluir *</label>
-              <div className="space-y-2">
-                {phases.map((phase) => (
-                  <div
-                    key={phase.id}
-                    onClick={() => togglePhase(phase.id)}
-                    className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-all ${
-                      phase.selected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border bg-muted hover:border-muted-foreground/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-                          phase.selected ? 'bg-primary border-primary' : 'border-muted-foreground'
-                        }`}
-                      >
-                        {phase.selected && <Check className="w-3 h-3 text-primary-foreground" />}
-                      </div>
-                      <div>
-                        <p className="font-medium">{phase.name}</p>
-                        <p className="text-sm text-muted-foreground">{phase.description}</p>
-                      </div>
-                    </div>
-                    <p className="font-semibold">{formatCurrency(phase.value)}</p>
+                    <option value="">— Escolhe um cliente —</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} — {c.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nome *</label>
+                    <input
+                      type="text"
+                      value={clientData.name}
+                      onChange={(e) => setClientData({ ...clientData, name: e.target.value })}
+                      className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Nome completo"
+                    />
                   </div>
-                ))}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email *</label>
+                    <input
+                      type="email"
+                      value={clientData.email}
+                      onChange={(e) => setClientData({ ...clientData, email: e.target.value })}
+                      className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="email@exemplo.pt"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Telefone *</label>
+                    <input
+                      type="tel"
+                      value={clientData.phone}
+                      onChange={(e) => setClientData({ ...clientData, phone: e.target.value })}
+                      className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="+351 000 000 000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Município</label>
+                    <input
+                      type="text"
+                      value={clientData.municipality}
+                      onChange={(e) => setClientData({ ...clientData, municipality: e.target.value })}
+                      className="w-full px-4 py-3 bg-muted/50 border border-border rounded-xl focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                      placeholder="Ex: Lisboa, Porto..."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-8">
+              <div>
+                <label className="block text-sm font-medium mb-4">Tipo de Projeto *</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {projectTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      onClick={() => setProjectType(type.id)}
+                      className={`p-4 rounded-xl border text-left transition-all ${
+                        projectType === type.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border bg-muted/30 hover:border-primary/40'
+                      }`}
+                    >
+                      <type.icon className={`w-6 h-6 mb-2 ${projectType === type.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <p className={`font-medium text-sm ${projectType === type.id ? 'text-primary' : ''}`}>{type.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">{type.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-4">Fases a Incluir *</label>
+                <div className="space-y-2">
+                  {phases.map((phase) => (
+                    <div
+                      key={phase.id}
+                      onClick={() => togglePhase(phase.id)}
+                      className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${
+                        phase.selected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-muted/30 hover:border-primary/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                            phase.selected ? 'bg-primary border-primary' : 'border-muted-foreground/40'
+                          }`}
+                        >
+                          {phase.selected && <Check className="w-4 h-4 text-primary-foreground" />}
+                        </div>
+                        <div>
+                          <p className="font-medium">{phase.name}</p>
+                          <p className="text-sm text-muted-foreground">{phase.description}</p>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-lg">{formatCurrency(phase.value)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 3 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Resumo da Proposta</h2>
-              <div className="flex gap-2">
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={handlePreviewPDF}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/30 rounded-lg hover:bg-primary/20 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 text-primary border border-primary/30 rounded-xl hover:bg-primary/20 transition-colors"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>Pré-visualizar PDF</span>
+                  <span>Pré-visualizar</span>
                 </button>
                 <button
                   onClick={handleExportPDF}
-                  className="flex items-center gap-2 px-4 py-2 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-xl hover:bg-muted/80 transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   <span>Exportar PDF</span>
                 </button>
               </div>
-            </div>
 
-            <div className="bg-muted/50 rounded-xl p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
+              <div className="bg-muted/30 rounded-xl p-6 space-y-6">
+                {/* Client & Project Info */}
+                <div className="grid grid-cols-2 gap-6 pb-6 border-b border-border">
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Cliente</p>
+                    <p className="font-semibold text-lg">
+                      {useExistingClient && selectedClientId
+                        ? clients.find((c) => c.id === selectedClientId)?.name || ''
+                        : clientData.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Tipo de Projeto</p>
+                    <p className="font-semibold text-lg">
+                      {projectTypes.find((t) => t.id === projectType)?.label}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Selected Phases */}
                 <div>
-                  <p className="text-sm text-muted-foreground">Cliente</p>
-                  <p className="font-medium">
-                    {useExistingClient && selectedClientId
-                      ? clients.find((c) => c.id === selectedClientId)?.name || ''
-                      : clientData.name}
-                  </p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">Fases Selecionadas</p>
+                  <div className="space-y-2">
+                    {selectedPhases.map((phase) => (
+                      <div key={phase.id} className="flex justify-between py-2 border-b border-border/50 last:border-0">
+                        <span className="text-muted-foreground">{phase.name}</span>
+                        <span className="font-medium">{formatCurrency(phase.value)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Tipo de Projeto</p>
-                  <p className="font-medium">
-                    {projectTypes.find((t) => t.id === projectType)?.label}
-                  </p>
-                </div>
-              </div>
 
-              <div>
-                <p className="text-sm font-medium mb-3">Fases Selecionadas</p>
-                <div className="space-y-2">
-                  {selectedPhases.map((phase) => (
-                    <div key={phase.id} className="flex justify-between py-2">
-                      <span>{phase.name}</span>
-                      <span className="font-medium">{formatCurrency(phase.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">IVA ({vatRate}%)</span>
-                  <span>{formatCurrency(vatAmount)}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold pt-2 border-t border-border">
-                  <span>Total</span>
-                  <span className="text-primary">{formatCurrency(total)}</span>
+                {/* Totals */}
+                <div className="pt-4 border-t border-border space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="font-medium">{formatCurrency(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">IVA ({vatRate}%)</span>
+                    <span className="font-medium">{formatCurrency(vatAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold pt-3 border-t border-border">
+                    <span>Total</span>
+                    <span className="text-primary">{formatCurrency(total)}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8 pt-6 border-t border-border">
+        <div className="flex justify-between px-6 py-4 border-t border-border bg-muted/20">
           <button
             onClick={() => setStep((s) => Math.max(1, s - 1))}
             disabled={step === 1}
-            className="px-6 py-2.5 border border-border rounded-lg font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 border border-border rounded-xl font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Anterior
           </button>
@@ -534,7 +562,7 @@ export default function ProposalsManagementPage() {
             <button
               onClick={handleFinalize}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Check className="w-4 h-4" />
               <span>Guardar Proposta</span>
@@ -543,7 +571,7 @@ export default function ProposalsManagementPage() {
             <button
               onClick={() => setStep((s) => Math.min(3, s + 1))}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>Próximo</span>
               <ChevronRight className="w-4 h-4" />

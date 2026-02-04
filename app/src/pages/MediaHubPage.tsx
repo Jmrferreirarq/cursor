@@ -1,171 +1,361 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Image, Video, Upload, Folder, Grid, List, Search, Filter } from 'lucide-react';
+import { Image, Upload, Search, LayoutGrid, Rows3 } from 'lucide-react';
+import { MediaCard, MediaCardFeatured, MediaTags, MediaLightbox, type MediaItem } from '@/components/media';
 
-const mockMedia = [
-  { id: '1', name: 'Casa Douro - Exterior.jpg', type: 'image', size: '2.4 MB', date: '2024-01-15', folder: 'Projetos/Casa Douro' },
-  { id: '2', name: 'Casa Douro - Interior.jpg', type: 'image', size: '1.8 MB', date: '2024-01-15', folder: 'Projetos/Casa Douro' },
-  { id: '3', name: 'Apresentação Cliente.mp4', type: 'video', size: '45.2 MB', date: '2024-01-12', folder: 'Projetos/Escritório' },
-  { id: '4', name: 'Logo FA-360.svg', type: 'image', size: '12 KB', date: '2024-01-10', folder: 'Branding' },
-  { id: '5', name: 'Site Banner.jpg', type: 'image', size: '856 KB', date: '2024-01-08', folder: 'Marketing' },
+// Mock data com tags e estrutura melhorada
+const mockMedia: MediaItem[] = [
+  { 
+    id: '1', 
+    name: 'Casa Douro - Exterior Principal.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Exterior', 'Fotografia'],
+    project: 'Casa Douro',
+    date: '2024-01-15',
+    size: '2.4 MB'
+  },
+  { 
+    id: '2', 
+    name: 'Casa Douro - Sala de Estar.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Interior', 'Fotografia'],
+    project: 'Casa Douro',
+    date: '2024-01-15',
+    size: '1.8 MB'
+  },
+  { 
+    id: '3', 
+    name: 'Escritório Tech - Open Space.jpg', 
+    type: 'image', 
+    tags: ['Comercial', 'Interior', 'Render'],
+    project: 'Escritório Tech',
+    date: '2024-01-12',
+    size: '3.2 MB'
+  },
+  { 
+    id: '4', 
+    name: 'Apresentação Cliente.mp4', 
+    type: 'video', 
+    tags: ['Comercial', 'Vídeo'],
+    project: 'Escritório Tech',
+    date: '2024-01-12',
+    size: '45.2 MB'
+  },
+  { 
+    id: '5', 
+    name: 'Moradia Cascais - Fachada.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Exterior', 'Render'],
+    project: 'Moradia Cascais',
+    date: '2024-01-10',
+    size: '4.1 MB'
+  },
+  { 
+    id: '6', 
+    name: 'Moradia Cascais - Piscina.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Exterior', 'Render'],
+    project: 'Moradia Cascais',
+    date: '2024-01-10',
+    size: '3.8 MB'
+  },
+  { 
+    id: '7', 
+    name: 'Restaurante Mar - Interior.jpg', 
+    type: 'image', 
+    tags: ['Comercial', 'Interior', 'Fotografia'],
+    project: 'Restaurante Mar',
+    date: '2024-01-08',
+    size: '2.9 MB'
+  },
+  { 
+    id: '8', 
+    name: 'Loft Lisboa - Quarto.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Interior', 'Fotografia'],
+    project: 'Loft Lisboa',
+    date: '2024-01-05',
+    size: '2.1 MB'
+  },
+  { 
+    id: '9', 
+    name: 'Hotel Algarve - Lobby.jpg', 
+    type: 'image', 
+    tags: ['Hotelaria', 'Interior', 'Render'],
+    project: 'Hotel Algarve',
+    date: '2024-01-03',
+    size: '5.2 MB'
+  },
+  { 
+    id: '10', 
+    name: 'Clínica Saúde - Receção.jpg', 
+    type: 'image', 
+    tags: ['Comercial', 'Interior', 'Render'],
+    project: 'Clínica Saúde',
+    date: '2024-01-02',
+    size: '2.7 MB'
+  },
+  { 
+    id: '11', 
+    name: 'Apartamento Porto - Vista Rio.jpg', 
+    type: 'image', 
+    tags: ['Residencial', 'Interior', 'Fotografia'],
+    project: 'Apartamento Porto',
+    date: '2024-01-01',
+    size: '3.3 MB'
+  },
+  { 
+    id: '12', 
+    name: 'Showroom Móveis - Geral.jpg', 
+    type: 'image', 
+    tags: ['Comercial', 'Interior', 'Fotografia'],
+    project: 'Showroom Móveis',
+    date: '2023-12-28',
+    size: '2.5 MB'
+  },
 ];
 
-const folders = [
-  { id: '1', name: 'Projetos', count: 24 },
-  { id: '2', name: 'Branding', count: 8 },
-  { id: '3', name: 'Marketing', count: 15 },
-  { id: '4', name: 'Documentos', count: 32 },
-];
+// Extrair todas as tags únicas
+const allTags = Array.from(new Set(mockMedia.flatMap((item) => item.tags))).sort();
 
 export default function MediaHubPage() {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'editorial' | 'grid'>('editorial');
+  const [lightboxItem, setLightboxItem] = useState<MediaItem | null>(null);
 
-  const filteredMedia = mockMedia.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.folder.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrar media
+  const filteredMedia = useMemo(() => {
+    return mockMedia.filter((item) => {
+      const matchesSearch = 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.project?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesTag = !activeTag || item.tags.includes(activeTag);
+      
+      return matchesSearch && matchesTag;
+    });
+  }, [searchQuery, activeTag]);
+
+  // Contar items por tag
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    allTags.forEach((tag) => {
+      counts[tag] = mockMedia.filter((item) => item.tags.includes(tag)).length;
+    });
+    return counts;
+  }, []);
+
+  // Separar featured (primeiro item) dos restantes no modo editorial
+  const featuredItem = viewMode === 'editorial' ? filteredMedia[0] : null;
+  const gridItems = viewMode === 'editorial' ? filteredMedia.slice(1) : filteredMedia;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6"
       >
         <div>
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Image className="w-4 h-4" />
-            <span className="text-sm">Gestão de Media</span>
+            <span className="text-sm font-medium tracking-wide uppercase">Portfolio</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Media Hub</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Media Hub</h1>
+          <p className="text-muted-foreground mt-2 max-w-xl">
+            Galeria de projetos, renders e fotografias do atelier.
+          </p>
         </div>
-        <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-fit">
+        
+        <button className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit">
           <Upload className="w-4 h-4" />
           <span>Upload</span>
         </button>
       </motion.div>
 
-      {/* Folders */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {folders.map((folder, index) => (
-          <motion.div
-            key={folder.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="bg-card border border-border rounded-xl p-4 hover:border-muted-foreground/30 transition-colors cursor-pointer"
-          >
-            <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center mb-3">
-              <Folder className="w-5 h-5 text-primary" />
-            </div>
-            <h3 className="font-medium">{folder.name}</h3>
-            <p className="text-sm text-muted-foreground">{folder.count} ficheiros</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Search + View Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-col sm:flex-row gap-4"
+      >
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar ficheiros..."
-            className="w-full pl-10 pr-4 py-2.5 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none transition-colors"
+            placeholder="Pesquisar por nome, projeto ou tag..."
+            className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm"
           />
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors">
-            <Filter className="w-4 h-4" />
-            <span>Filtrar</span>
+
+        {/* View mode toggle */}
+        <div className="flex bg-muted/50 border border-border rounded-xl overflow-hidden">
+          <button
+            onClick={() => setViewMode('editorial')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+              viewMode === 'editorial' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            <span className="hidden sm:inline">Editorial</span>
           </button>
-          <div className="flex bg-muted border border-border rounded-lg overflow-hidden">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2.5 transition-colors ${viewMode === 'grid' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/80'}`}
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2.5 transition-colors ${viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted/80'}`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
+              viewMode === 'grid' 
+                ? 'bg-primary text-primary-foreground' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Rows3 className="w-4 h-4" />
+            <span className="hidden sm:inline">Grelha</span>
+          </button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Media Grid/List */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {filteredMedia.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-card border border-border rounded-xl overflow-hidden hover:border-muted-foreground/30 transition-colors cursor-pointer group"
-            >
-              <div className="aspect-square bg-muted flex items-center justify-center">
-                {item.type === 'image' ? (
-                  <Image className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors" />
-                ) : (
-                  <Video className="w-12 h-12 text-muted-foreground group-hover:text-primary transition-colors" />
-                )}
+      {/* Tags Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <MediaTags
+          tags={allTags}
+          activeTag={activeTag}
+          onTagClick={setActiveTag}
+          counts={tagCounts}
+        />
+      </motion.div>
+
+      {/* Results count */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="flex items-center justify-between"
+      >
+        <p className="text-sm text-muted-foreground">
+          {filteredMedia.length} {filteredMedia.length === 1 ? 'resultado' : 'resultados'}
+          {activeTag && <span className="ml-1">em <strong>{activeTag}</strong></span>}
+        </p>
+      </motion.div>
+
+      {/* Media Grid - Editorial Layout */}
+      {viewMode === 'editorial' && filteredMedia.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="space-y-6"
+        >
+          {/* Featured item */}
+          {featuredItem && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <MediaCardFeatured
+                item={featuredItem}
+                index={0}
+                onTagClick={setActiveTag}
+                onOpenLightbox={setLightboxItem}
+              />
+              
+              {/* Two smaller items beside featured */}
+              <div className="grid grid-cols-2 gap-4">
+                {gridItems.slice(0, 4).map((item, index) => (
+                  <MediaCard
+                    key={item.id}
+                    item={item}
+                    index={index + 1}
+                    variant="compact"
+                    onTagClick={setActiveTag}
+                    onOpenLightbox={setLightboxItem}
+                  />
+                ))}
               </div>
-              <div className="p-3">
-                <p className="text-sm font-medium truncate">{item.name}</p>
-                <p className="text-xs text-muted-foreground">{item.size}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted/50 border-b border-border">
-                <th className="text-left px-6 py-3 text-sm font-semibold text-muted-foreground">Nome</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-muted-foreground">Pasta</th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-muted-foreground">Data</th>
-                <th className="text-right px-6 py-3 text-sm font-semibold text-muted-foreground">Tamanho</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredMedia.map((item) => (
-                <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors cursor-pointer">
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-3">
-                      {item.type === 'image' ? (
-                        <Image className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <Video className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <span className="text-sm">{item.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">{item.folder}</td>
-                  <td className="px-6 py-3 text-sm">{new Date(item.date).toLocaleDateString('pt-PT')}</td>
-                  <td className="px-6 py-3 text-right text-sm text-muted-foreground">{item.size}</td>
-                </tr>
+            </div>
+          )}
+
+          {/* Rest of items */}
+          {gridItems.length > 4 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {gridItems.slice(4).map((item, index) => (
+                <MediaCard
+                  key={item.id}
+                  item={item}
+                  index={index + 5}
+                  onTagClick={setActiveTag}
+                  onOpenLightbox={setLightboxItem}
+                />
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          )}
+        </motion.div>
       )}
 
-      {filteredMedia.length === 0 && (
-        <div className="text-center py-12">
-          <Image className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhum ficheiro encontrado</p>
-        </div>
+      {/* Media Grid - Standard Layout */}
+      {viewMode === 'grid' && filteredMedia.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+        >
+          {filteredMedia.map((item, index) => (
+            <MediaCard
+              key={item.id}
+              item={item}
+              index={index}
+              onTagClick={setActiveTag}
+              onOpenLightbox={setLightboxItem}
+            />
+          ))}
+        </motion.div>
       )}
+
+      {/* Empty state */}
+      {filteredMedia.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center py-20 px-6 rounded-xl border border-dashed border-border bg-muted/10"
+        >
+          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+            <Image className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <p className="text-muted-foreground font-medium text-center">
+            Nenhum ficheiro encontrado
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-1 text-center">
+            Tenta ajustar a pesquisa ou os filtros
+          </p>
+          {(searchQuery || activeTag) && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setActiveTag(null);
+              }}
+              className="mt-4 px-4 py-2 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              Limpar filtros
+            </button>
+          )}
+        </motion.div>
+      )}
+
+      {/* Lightbox */}
+      <MediaLightbox
+        item={lightboxItem}
+        items={filteredMedia}
+        onClose={() => setLightboxItem(null)}
+        onNavigate={setLightboxItem}
+      />
     </div>
   );
 }

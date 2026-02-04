@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, FolderKanban, Calendar, Users, Euro, MapPin, Clock } from 'lucide-react';
+import { ArrowLeft, FolderKanban, Calendar, Users, Euro, MapPin, Clock, GitBranch, FileText, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import ProjectTimeline from '@/components/projects/ProjectTimeline';
+
+type TabId = 'overview' | 'timeline' | 'documents' | 'notes';
 
 export default function ProjectDetailsPage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+
+  const tabs: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: 'overview', label: 'Visão Geral', icon: FolderKanban },
+    { id: 'timeline', label: 'Timeline', icon: GitBranch },
+    { id: 'documents', label: 'Documentos', icon: FileText },
+    { id: 'notes', label: 'Notas', icon: MessageSquare },
+  ];
 
   return (
     <div className="space-y-6">
@@ -74,54 +85,120 @@ export default function ProjectDetailsPage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Tabs */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="flex gap-2 overflow-x-auto pb-2"
+      >
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                isActive 
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25' 
+                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </motion.div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card border border-border rounded-xl p-6 shadow-card"
+          >
+            <h3 className="text-lg font-semibold mb-4">Equipa</h3>
+            <div className="space-y-3">
+              {['CEO', 'JÉSSICA'].map((member) => (
+                <div key={member} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-sm font-medium text-primary">{member.charAt(0)}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">{member}</p>
+                    <p className="text-sm text-muted-foreground">Arquiteto</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-card border border-border rounded-xl p-6 shadow-card"
+          >
+            <h3 className="text-lg font-semibold mb-4">Progresso</h3>
+            <div className="space-y-4">
+              {['Estudo Prévio', 'Anteprojeto', 'Licenciamento', 'Projeto Execução'].map((phase, index) => (
+                <div key={phase}>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm">{phase}</span>
+                    <span className="text-sm text-muted-foreground">{index < 2 ? '100%' : '0%'}</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${index < 2 ? 'bg-success' : 'bg-muted-foreground/30'}`}
+                      style={{ width: index < 2 ? '100%' : '0%' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {activeTab === 'timeline' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-card border border-border rounded-xl p-6 shadow-card"
         >
-          <h3 className="text-lg font-semibold mb-4">Equipa</h3>
-          <div className="space-y-3">
-            {['CEO', 'JÉSSICA'].map((member) => (
-              <div key={member} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary">{member.charAt(0)}</span>
-                </div>
-                <div>
-                  <p className="font-medium">{member}</p>
-                  <p className="text-sm text-muted-foreground">Arquiteto</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProjectTimeline />
         </motion.div>
+      )}
 
+      {activeTab === 'documents' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-card border border-border rounded-xl p-6 shadow-card"
+          transition={{ delay: 0.2 }}
+          className="bg-card border border-border rounded-xl p-8 text-center"
         >
-          <h3 className="text-lg font-semibold mb-4">Progresso</h3>
-          <div className="space-y-4">
-            {['Estudo Prévio', 'Anteprojeto', 'Licenciamento', 'Projeto Execução'].map((phase, index) => (
-              <div key={phase}>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm">{phase}</span>
-                  <span className="text-sm text-muted-foreground">{index < 2 ? '100%' : '0%'}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${index < 2 ? 'bg-success' : 'bg-muted-foreground/30'}`}
-                    style={{ width: index < 2 ? '100%' : '0%' }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+          <FileText className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Documentos do Projeto</h3>
+          <p className="text-muted-foreground text-sm">Os documentos do projeto aparecerão aqui.</p>
         </motion.div>
-      </div>
+      )}
+
+      {activeTab === 'notes' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-card border border-border rounded-xl p-8 text-center"
+        >
+          <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Notas & Comentários</h3>
+          <p className="text-muted-foreground text-sm">Adicione notas e comentários ao projeto.</p>
+        </motion.div>
+      )}
     </div>
   );
 }

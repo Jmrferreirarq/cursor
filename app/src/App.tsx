@@ -4,10 +4,14 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
 import { DataProvider } from './context/DataContext';
+import { PresentationProvider } from './context/PresentationContext';
 import { useRemoveOverlays } from './hooks/useRemoveOverlays';
 import Navbar from './components/common/Navbar';
 import CommandBar from './components/common/CommandBar';
 import GlobalUtilities from './components/common/GlobalUtilities';
+import { PresentationOverlay, PresentationButton } from './components/common/PresentationOverlay';
+import MobileNavigation from './components/common/MobileNavigation';
+import { PWAInstallBanner, OfflineIndicator, UpdateAvailableBanner } from './components/common/PWAInstallBanner';
 
 // Pages
 import DashboardPage from './pages/DashboardPage';
@@ -27,11 +31,12 @@ import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
 import CalculatorPage from './pages/CalculatorPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
+import PortfolioPublicPage from './pages/PortfolioPublicPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/public');
+  const isPublic = location.pathname.startsWith('/public') || location.pathname.startsWith('/portfolio');
   const isPortal = location.pathname.startsWith('/portal');
   useRemoveOverlays();
 
@@ -39,6 +44,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <GlobalUtilities />
+        <OfflineIndicator />
+        <UpdateAvailableBanner />
         {children}
       </div>
     );
@@ -49,7 +56,13 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <Navbar />
       <CommandBar />
       <GlobalUtilities />
-      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
+      <PresentationOverlay />
+      <PresentationButton />
+      <MobileNavigation />
+      <PWAInstallBanner />
+      <OfflineIndicator />
+      <UpdateAvailableBanner />
+      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 lg:pb-8 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
         {children}
       </main>
     </div>
@@ -63,6 +76,7 @@ function App() {
         <LanguageProvider>
           <TimeProvider>
           <Router>
+            <PresentationProvider>
             <AppLayout>
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
@@ -92,8 +106,10 @@ function App() {
                   </ErrorBoundary>
                 } />
                 <Route path="/public/proposta" element={<PropostaPublicPage />} />
+                <Route path="/portfolio" element={<PortfolioPublicPage />} />
               </Routes>
             </AppLayout>
+            </PresentationProvider>
           </Router>
           </TimeProvider>
         </LanguageProvider>
