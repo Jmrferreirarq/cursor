@@ -44,7 +44,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         backgroundColor: C.white,
         color: C.grafite,
         boxSizing: 'border-box',
-        overflow: 'hidden',
+        overflow: 'visible',
         ...style,
       }}
     >

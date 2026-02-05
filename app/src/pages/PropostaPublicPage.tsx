@@ -55,7 +55,7 @@ function PropostaPublicPage() {
       margin: [15, 20, 20, 20] as [number, number, number, number],
       filename: `${baseName}.pdf`,
       image: { type: 'jpeg' as const, quality: 0.95 },
-      html2canvas: { scale: 1.5, useCORS: true, logging: false, width: A4_WIDTH_PX },
+      html2canvas: { scale: 2, useCORS: true, logging: false, width: A4_WIDTH_PX, windowWidth: A4_WIDTH_PX, scrollY: 0, scrollX: 0 },
       jsPDF: { unit: 'mm' as const, format: 'a4' as const },
       pagebreak: { mode: ['css'], avoid: ['.pdf-no-break'] },
     };
