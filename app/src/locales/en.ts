@@ -144,7 +144,7 @@ export const en = {
   },
   longText: {
     apresentacao: 'Founded in 2017 by architect José Ferreira, Ferreirarquitetos is a reference in the architecture sector in Portugal, particularly in the Aveiro region. Combining precision with Portuguese creativity, our team is dedicated to turning visions into reality, delivering projects that are both innovative and functional.\n\nFrom residential to commercial and industrial projects, our meticulous and detailed approach has been recognised with several awards, including the Silver Medal at the Lusophone Architecture and Interior Design Awards in 2021. Notable projects include JL_Consultório in Aveiro and Izakaya Matsuri in Alboi.\n\nAt Ferreirarquitetos, we believe each project is an opportunity to open doors to new possibilities, always committed to excellence and client satisfaction. With a dedicated and highly qualified team, we are ready to take on challenges and create spaces that inspire.',
-    notaBim: 'The entire process is developed using BIM methodology (Building Information Modeling), with integrated digital 3D models containing geometric and alphanumeric information on the building. The development includes non-photorealistic interior images and exterior images of all project phases.',
+    notaBim: 'The entire process is developed using BIM methodology (Building Information Modeling), with integrated digital 3D models containing geometric and alphanumeric information on the building. Decision support images (not for marketing): 8 exterior views + 6 interiors in Preliminary Study; 4 updated exterior views in Draft Project. Additional images: €45/unit.',
     reunioesAte150: 'The scope of the fees contemplates approximately 6 to 8 meetings until licence approval (presentations, validations and responses to authorities). The number varies according to project complexity and area.',
     reunioes150a300: 'The scope of the fees contemplates approximately 8 to 12 meetings until licence approval (presentations, validations and responses to authorities). The number varies according to project complexity and area.',
     reunioesAcima300: 'The scope of the fees contemplates approximately 12 to 15 meetings until licence approval (presentations, validations and responses to authorities). Larger projects may require adjustment upon consultation.',
@@ -152,13 +152,14 @@ export const en = {
   },
   notes: {
     validity: 'Proposal validity: 30 days.',
-    paymentTranches: 'All payment instalments must be made within 2 to 3 working days of completion of the respective deliverable.',
+    paymentTranches: 'Payments by bank transfer, within 3 working days of invoice issue. Advances issued with receipt-invoice.',
     changesAfterStudy: 'After the preliminary study phase is completed, any changes to the initial project will be quoted accordingly.',
     vatLegal: 'Values shown are subject to VAT at the legal rate in force.',
     noSupervision: 'We do not provide site supervision or inspection services for our own projects. If required, these will be provided by an external entity, to be defined in a separate contract.',
+    siteVisits: 'Site Assistance: 8 visits included in the architecture fee. Standard visit: travel + site presence up to 2h + summary minutes by email. Does not include: meetings with contractor outside the visit, formal work validation (requires supervision), or presence at municipal inspections. Additional visits: €80/visit (Aveiro municipality) or €80/visit + €0.40/km (outside municipality).',
     pormenoresNote: 'Generic construction details (3 to 6) are included in the scope of the licensing project. The full Execution Project is an extra service, quoted separately.',
     // Margin protection notes (CERTO)
-    revisionLimit: 'Contractual limit: 2 revision cycles per phase. Additional cycles = briefing change/rescheduling, quoted at €150/cycle or €45/hour.',
+    revisionLimit: 'Contractual limit: 2 revision cycles per phase. Additional cycles occur when there is a material change to the programme/briefing or revision of previously validated decisions. Quote: €150/cycle or €45/hour.',
     notificationCycles: 'Contractual limit: 1 response cycle to municipal notifications. Additional cycles = new work cycle, quoted at €150/cycle or as per complexity.',
     licensingNotExecution: 'Project until municipal decision: Scope includes all phases until licensing approval (2 cycles/phase + 1 notification cycle). Execution Project (construction detail) is an extra service.',
     scopeChange: 'Changes to the programme or area after the Schematic Design phase starts constitute extra work and will be quoted separately.',

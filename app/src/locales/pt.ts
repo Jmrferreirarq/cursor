@@ -144,7 +144,7 @@ export const pt = {
   },
   longText: {
     apresentacao: 'Fundada em 2017 pelo arquiteto José Ferreira, a Ferreirarquitetos é uma referência no setor de arquitetura em Portugal, em especial na região de Aveiro. Com uma combinação de precisão e criatividade portuguesa, a nossa equipa dedica-se a transformar visões em realidade, garantindo projetos simultaneamente inovadores e funcionais.\n\nDesde projetos residenciais a comerciais e industriais, a nossa abordagem meticulosa e detalhada tem sido reconhecida por diversos prémios, nomeadamente a Medalha de Prata nos Prémios Lusófonos de Arquitetura e Design de Interiores em 2021. Alguns dos nossos projetos mais notáveis incluem o JL_Consultório em Aveiro e o Izakaya Matsuri no Alboi.\n\nNa Ferreirarquitetos, acreditamos que cada projeto é uma oportunidade para abrir portas a novas possibilidades, mantendo o compromisso com a excelência e a satisfação do cliente. Com uma equipa dedicada e qualificada, estamos preparados para enfrentar novos desafios e criar espaços que inspiram.',
-    notaBim: 'Todo o processo é desenvolvido em metodologia BIM (Building Information Modeling / Modelação da Informação da Construção), utilizando modelos digitais 3D que integram informação geométrica e alfanumérica do edificado. O desenvolvimento contempla imagens interiores não fotorealistas e imagens exteriores de todas as fases do projeto.',
+    notaBim: 'Todo o processo é desenvolvido em metodologia BIM (Building Information Modeling / Modelação da Informação da Construção), utilizando modelos digitais 3D que integram informação geométrica e alfanumérica do edificado. Imagens de apoio à decisão (não destinadas a marketing): 8 vistas exteriores + 6 interiores no Estudo Prévio; 4 vistas exteriores atualizadas no Anteprojeto. Imagens adicionais: 45€/unidade.',
     reunioesAte150: 'O âmbito dos honorários contempla aproximadamente 6 a 8 reuniões até à aprovação do licenciamento (apresentações, validações e diligências). O número varia consoante a complexidade e área do projeto.',
     reunioes150a300: 'O âmbito dos honorários contempla aproximadamente 8 a 12 reuniões até à aprovação do licenciamento (apresentações, validações e diligências). O número varia consoante a complexidade e área do projeto.',
     reunioesAcima300: 'O âmbito dos honorários contempla aproximadamente 12 a 15 reuniões até à aprovação do licenciamento (apresentações, validações e diligências). Projetos de maior dimensão podem requerer ajuste sob consulta.',
@@ -152,13 +152,14 @@ export const pt = {
   },
   notes: {
     validity: 'Validade da proposta: 30 dias.',
-    paymentTranches: 'Todas as tranches de pagamento devem ser efetuadas dentro de 2 a 3 dias úteis após a conclusão da respetiva entrega.',
+    paymentTranches: 'Pagamentos por transferência bancária, dentro de 3 dias úteis após emissão de fatura. Adiantamentos emitidos com fatura-recibo.',
     changesAfterStudy: 'Após fase de estudo prévio concluída, qualquer alteração ao projeto inicial será devidamente cotada.',
     vatLegal: 'Os valores apresentados acrescem IVA à taxa legal em vigor.',
     noSupervision: 'Não prestamos serviços de direção de obra nem de fiscalização das nossas próprias obras. Caso seja necessário, serão prestados por entidade externa, a definir em contrato em separado.',
+    siteVisits: 'Assistência à Obra: 8 visitas incluídas no valor de arquitetura. Visita padrão: deslocação + presença em obra até 2h + ata sumária por email. Não inclui: reuniões com empreiteiro fora da visita, validação formal de trabalhos (requer fiscalização), ou presença em vistorias camarárias. Visitas adicionais: 80€/visita (concelho de Aveiro) ou 80€/visita + 0,40€/km (fora do concelho).',
     pormenoresNote: 'Os pormenores construtivos genéricos (3 a 6) estão incluídos no âmbito do projeto de licenciamento. O Projeto de Execução completo constitui serviço extra, cotado em separado.',
     // Notas de proteção de margem (CERTO)
-    revisionLimit: 'Limite contratual: 2 ciclos de revisão por fase. Ciclos adicionais = alteração de briefing/reprogramação, cotados a 150€/ciclo ou 45€/hora.',
+    revisionLimit: 'Limite contratual: 2 ciclos de revisão por fase. Ciclos adicionais ocorrem quando há alteração material do programa/briefing ou revisão de decisões já validadas. Cotação: 150€/ciclo ou 45€/hora.',
     notificationCycles: 'Limite contratual: 1 ciclo de resposta a notificações municipais. Ciclos adicionais = novo ciclo de trabalho, cotados a 150€/ciclo ou conforme complexidade.',
     licensingNotExecution: 'Projeto até decisão municipal: O âmbito inclui todas as fases até à aprovação do licenciamento pela Câmara (2 ciclos/fase + 1 ciclo notificações). O Projeto de Execução (detalhe para obra) é serviço extra.',
     scopeChange: 'Alterações de programa ou área após início do Ante-Projeto constituem trabalho extra e serão cotadas separadamente.',

@@ -430,7 +430,7 @@ const ESCALOES_DECRESCIMENTO: [number, number][] = [
 
 // Descrições das especialidades (para a proposta)
 const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
-  estruturas: 'Projeto de estruturas e fundações, análise e dimensionamento para garantir segurança e durabilidade, em conformidade com as normas em vigor (s/ estudo sísmico).',
+  estruturas: 'Projeto de estruturas e fundações — dimensionamento conforme regulamentação aplicável (incluindo ação sísmica EC8). Não inclui campanhas geotécnicas, ensaios ou estudos específicos extraordinários.',
   aguas_esgotos: 'Projeto de águas prediais, residuais e pluviais, assegurando a gestão eficiente de águas no edifício e o cumprimento ambiental.',
   gas: 'Projeto de redes de gás, dimensionamento e traçado das instalações em conformidade com a regulamentação de segurança.',
   eletrico: 'Projeto de instalações elétricas, distribuição de energia, proteções e circuitos, de acordo com as normas técnicas.',
@@ -922,6 +922,7 @@ export default function CalculatorPage() {
         t('notes.paymentTranches', lang),
         t('notes.changesAfterStudy', lang),
         t('notes.vatLegal', lang),
+        t('notes.siteVisits', lang),
         t('notes.noSupervision', lang),
         t('notes.pormenoresNote', lang),
         // Notas de proteção de margem (CERTO)
@@ -1036,16 +1037,17 @@ export default function CalculatorPage() {
         resumoExecutivo: {
           incluido: [
             'Projeto de Arquitetura até decisão municipal',
+            'Assistência à Obra (8 visitas incluídas)',
             ...(espComValor.length > 0 ? ['Projetos de Especialidades'] : []),
             `${Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases ICHPOP`,
             `${honorMode === 'pct' ? '8-12' : areaRef <= 150 ? '6-8' : areaRef <= 300 ? '8-12' : '12-15'} reuniões até aprovação`,
             '2 ciclos revisão/fase + 1 ciclo notificações (limite contratual)',
           ],
           naoIncluido: [
-            'Projeto de Execução (extra)',
-            'Fiscalização de obra',
+            'Projeto de Execução (detalhe construtivo para obra)',
+            'Direção/Fiscalização de obra',
             'Taxas e emolumentos camarários',
-            'Ciclos adicionais = alteração de briefing (150€/ciclo)',
+            'Ciclos adicionais por alteração de briefing',
           ],
           prazoEstimado: '10-14 meses (típico)',
           proximoPasso: 'Adjudicação + reunião de arranque',
@@ -1129,58 +1131,139 @@ export default function CalculatorPage() {
         /* ignore */
       }
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      
+      // Aguardar que o elemento esteja pronto
       for (let i = 0; i < 30; i++) {
         if (cancelled) return;
         await new Promise((r) => setTimeout(r, 100));
         const el = previewRef.current ?? captureRef.current;
         if (el && el.offsetHeight > 0) {
-          const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-          const opt = {
-            margin: [15, 20, 20, 20] as [number, number, number, number],
-            filename: `${baseName}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.95 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, width: 794, windowWidth: 794, scrollY: 0, scrollX: 0 },
-            jsPDF: { unit: 'mm' as const, format: 'a4' as const },
-            pagebreak: { mode: ['css'], avoid: ['.pdf-no-break'] },
-          };
           try {
-            const html2pdf = (await import('html2pdf.js')).default;
-            const pageOfFormat = t('proposalPageOf', lang);
-            const pdf = await html2pdf().set(opt).from(el).toPdf().get('pdf');
-            if (cancelled) return;
-            const total = pdf.internal.getNumberOfPages();
-            const w = pdf.internal.pageSize.getWidth();
-            const h = pdf.internal.pageSize.getHeight();
-            
-            // Rodapé com contactos em todas as páginas
-            const footerLeft = APP_NAME;
-            const footerRight = [CONTACT_EMAIL, CONTACT_PHONE, CONTACT_WEBSITE].filter(Boolean).join(' • ');
-            
-            for (let j = 1; j <= total; j++) {
-              pdf.setPage(j);
-              
-              // Linha separadora do rodapé
-              pdf.setDrawColor(200);
-              pdf.setLineWidth(0.3);
-              pdf.line(25, h - 20, w - 25, h - 20);
-              
-              // Rodapé esquerdo (nome da empresa)
-              pdf.setFontSize(7);
-              pdf.setTextColor(100, 100, 100);
-              pdf.text(footerLeft, 25, h - 16, { align: 'left' });
-              
-              // Rodapé direito (contactos)
-              pdf.text(footerRight, w - 25, h - 16, { align: 'right' });
-              
-              // Número da página (centrado)
-              pdf.setFontSize(8);
-              pdf.setTextColor(89);
-              const label = pageOfFormat.replace('{page}', String(j)).replace('{total}', String(total));
-              pdf.text(label, w / 2, h - 10, { align: 'center' });
+            // Criar iframe oculto para impressão (evita "about:blank" no PDF)
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = 'none';
+            iframe.style.visibility = 'hidden';
+            document.body.appendChild(iframe);
+
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (!iframeDoc || !iframe.contentWindow) {
+              toast.error('Erro ao preparar impressão');
+              document.body.removeChild(iframe);
+              setCapturingPDF(false);
+              return;
             }
-            pdf.save(opt.filename);
-            toast.success('PDF guardado');
+
+            // Estilos específicos para impressão
+            const printStyles = `
+              @page {
+                size: A4;
+                margin: 10mm 12mm 15mm 12mm;
+              }
+              
+              * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+              }
+              
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: white !important;
+                font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+              }
+              
+              .print-container {
+                width: 210mm;
+                margin: 0 auto;
+                background: white;
+              }
+              
+              /* Evitar cortes de conteúdo */
+              .pdf-no-break,
+              .page-break-before,
+              table, tr, li {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+              
+              .page-break-before {
+                break-before: page !important;
+                page-break-before: always !important;
+              }
+              
+              /* Títulos nunca ficam sozinhos - movem com conteúdo */
+              h1, h2, h3, h4, 
+              .section-title {
+                break-after: avoid !important;
+                page-break-after: avoid !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+              
+              p {
+                orphans: 3;
+                widows: 3;
+              }
+              
+              /* Títulos de secção precisam de espaço mínimo após eles */
+              .section-title + * {
+                break-before: avoid !important;
+                page-break-before: avoid !important;
+              }
+              
+              /* Containers de secção - manter título com início do conteúdo */
+              .pdf-no-break {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
+            `;
+
+            // Construir documento HTML para impressão
+            iframeDoc.open();
+            // Nome do ficheiro = referência do cliente
+            const pdfFileName = referenciaExibida || 'Proposta';
+            
+            iframeDoc.write(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="UTF-8">
+                <title>${pdfFileName}</title>
+                <link rel="preconnect" href="https://fonts.googleapis.com">
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+                <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+                <style>${printStyles}</style>
+              </head>
+              <body>
+                <div class="print-container">
+                  ${el.outerHTML}
+                </div>
+              </body>
+              </html>
+            `);
+            iframeDoc.close();
+
+            // Aguardar carregamento de fontes
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Imprimir via iframe
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+
+            // Remover iframe após impressão
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 2000);
+
+            toast.success('Desative "Cabeçalhos e rodapés" nas opções de impressão');
           } catch (e) {
+            console.error('Erro ao gerar PDF:', e);
             toast.error('Erro ao gerar PDF');
           }
           setCapturingPDF(false);

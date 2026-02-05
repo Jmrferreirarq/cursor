@@ -198,32 +198,124 @@
   background: hsl(var(--muted-foreground));
 }
 
-/* Impressão: A4 e proposta centrada */
+/* ═══════════════════════════════════════════════════════════════════
+   IMPRESSÃO: Estilos para PDF via impressão nativa do browser
+   ═══════════════════════════════════════════════════════════════════ */
+
 @page {
   size: A4;
-  margin: 0;
+  margin: 12mm 15mm 18mm 15mm; /* topo, direita, baixo, esquerda */
 }
 
 @media print {
-  .no-print {
+  /* Garantir cores corretas na impressão */
+  html, body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Esconder elementos que não devem aparecer no PDF */
+  .no-print,
+  nav,
+  header,
+  footer:not(.print-footer),
+  .sidebar,
+  button,
+  .btn,
+  [role="navigation"] {
     display: none !important;
   }
 
+  /* Reset básico para impressão */
+  body {
+    background: white !important;
+    color: #1a1a1a !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Container da proposta */
   .print-proposal {
     background: #fff !important;
     min-height: auto !important;
     padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
   }
 
   .print-proposal-center {
-    display: flex !important;
-    justify-content: center !important;
+    display: block !important;
     width: 100% !important;
     padding: 0 !important;
   }
 
   .print-proposal-center > * {
     box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* ═══ CONTROLO DE QUEBRAS DE PÁGINA ═══ */
+  
+  /* Evitar cortar blocos de conteúdo */
+  .pdf-no-break,
+  .avoid-break,
+  table,
+  tr,
+  figure,
+  blockquote,
+  pre,
+  ul, ol {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Cada item de lista também protegido */
+  li {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Títulos nunca ficam sozinhos no fim da página */
+  h1, h2, h3, h4, h5, h6,
+  .section-title {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Parágrafos - evitar órfãos e viúvas */
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Forçar quebra de página antes de secções específicas */
+  .page-break-before {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* Forçar quebra de página depois de secções específicas */
+  .page-break-after {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  /* Imagens - nunca cortar */
+  img {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    max-width: 100% !important;
+  }
+
+  /* Links - mostrar URL em impressão (opcional) */
+  a[href^="http"]:after {
+    content: none; /* Desativado por defeito */
+  }
+
+  /* Remover backgrounds desnecessários exceto os explícitos */
+  * {
+    background-attachment: local !important;
   }
 }
 

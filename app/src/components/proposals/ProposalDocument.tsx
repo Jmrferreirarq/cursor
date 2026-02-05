@@ -80,13 +80,18 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Dados do projeto */}
-        <div className="pdf-no-break" style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', pageBreakInside: 'avoid' }}>
+        <div style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm' }}>
           {p.cliente && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.client', lang)}:</span> {p.cliente}</p>}
           {p.projeto && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.project', lang)}:</span> {p.projeto}</p>}
           {p.local && <p style={{ margin: p.linkGoogleMaps ? '0 0 1mm 0' : 0, fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.local', lang)}:</span> {p.local}</p>}
           {p.linkGoogleMaps && (
             <p style={{ margin: 0, fontSize: fs(9) }}>
-              <a href={p.linkGoogleMaps} target="_blank" rel="noopener noreferrer" style={{ color: C.accent, textDecoration: 'underline' }}>
+              <a 
+                href={p.linkGoogleMaps.startsWith('http') ? p.linkGoogleMaps : `https://${p.linkGoogleMaps}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{ color: C.accent, textDecoration: 'underline' }}
+              >
                 {t('proposal.viewOnGoogleMaps', lang)}
               </a>
             </p>
@@ -95,10 +100,25 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* RESUMO EXECUTIVO — Decisão em 60 segundos */}
         {p.mostrarResumo && p.resumoExecutivo && (
-          <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
-            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 3mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}` }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('proposal.executiveSummary', lang)}
             </p>
+            
+            {/* Bloco CEO-ready - visão rápida */}
+            <div style={{ marginBottom: '3mm', padding: '2.5mm 3mm', background: C.accent, borderRadius: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4mm', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: fs(11), fontWeight: 700, color: C.onAccent }}>
+                {formatCurrency(p.totalSemIVA ?? p.total, lang)} {p.totalSemIVA ? '+IVA' : ''}
+              </span>
+              <span style={{ color: C.onAccentMuted }}>|</span>
+              <span style={{ fontSize: fs(9), color: C.onAccent }}>
+                Prazo típico: <strong>{p.resumoExecutivo.prazoEstimado ?? '10-14 meses'}</strong>
+              </span>
+              <span style={{ color: C.onAccentMuted }}>|</span>
+              <span style={{ fontSize: fs(9), color: C.onAccent }}>
+                Arquitetura {p.especialidades && p.especialidades.length > 0 ? '+ Especialidades ' : ''}+ 8 visitas
+              </span>
+            </div>
             
             {/* Grid de 2 colunas para incluído/não incluído */}
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm' }}>
@@ -162,8 +182,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           </div>
         )}
 
-        {/* Tabela de valores */}
-        <div style={{ marginBottom: '5mm' }}>
+        {/* Tabela de valores - começa em página nova */}
+        <div className="page-break-before" style={{ marginBottom: '5mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), tableLayout: 'fixed' }}>
             <colgroup>
@@ -263,8 +283,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                   <tr>
                     <td colSpan={2} style={{ padding: '2mm 3mm', fontSize: fs(8), fontStyle: 'italic', color: C.cinzaMarca }}>
                       {lang === 'en' 
-                        ? '* Specialty values are estimates subject to adjustment after detailed survey by the respective designers.'
-                        : '* Os valores das especialidades são estimativas sujeitas a retificação após levantamento detalhado pelos respetivos projetistas.'}
+                        ? '* Specialty values are estimates subject to adjustment after topographic survey, geotechnical report, definition of retaining structures, programme changes, or specific requirements from authorities (CM, ANEPC, SMAS).'
+                        : '* Os valores das especialidades são estimativas sujeitas a retificação após levantamento topográfico, relatório geotécnico, definição de contenções, alterações de programa, ou exigências específicas de entidades (CM, ANEPC, SMAS).'}
                     </td>
                   </tr>
                 </>
@@ -302,8 +322,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Fases de pagamento */}
-        <div style={{ marginTop: '4mm', paddingTop: '3mm' }}>
-          <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section2', lang)}</p>
+        <div className="pdf-no-break" style={{ marginTop: '4mm', paddingTop: '3mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+          <p className="section-title" style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section2', lang)}</p>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '2mm' }}>
             <thead>
               <tr style={{ background: C.offWhite }}>
@@ -344,16 +364,16 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Descrição das fases */}
-        <div style={{ marginTop: '5mm', paddingTop: '3mm' }}>
-          <p style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section3', lang)}</p>
+        <div style={{ marginTop: '6mm' }}>
+          <p className="section-title" style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section3', lang)}</p>
           {p.notaBim && (
-            <div style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}` }}>
+            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
               <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.accent }}>{t('proposal.bimMethodology', lang)}</p>
               <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaBim}</p>
             </div>
           )}
           {p.notaReunioes && (
-            <div style={{ padding: '2.5mm 3mm', background: C.offWhite, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.cinzaLinha}` }}>
+            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.offWhite, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
               <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.cinzaMarca }}>{t('proposal.reunioesContexto', lang)}</p>
               <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaReunioes}</p>
             </div>
@@ -361,9 +381,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
             <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.architectureProject', lang)}</p>
             {p.descricaoFases.map((f) => (
-              <div key={f.nome} style={{ marginBottom: '3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite }}>• {f.nome} ({f.pct}%)</p>
-                {f.descricao && <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4 }}>{f.descricao}</p>}
+              <div key={f.nome} className="pdf-no-break" style={{ marginBottom: '4mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <p className="pdf-no-break" style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite, pageBreakInside: 'avoid' }}>• {f.nome} ({f.pct}%)</p>
+                {f.descricao && <p className="pdf-no-break" style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4, pageBreakInside: 'avoid' }}>{f.descricao}</p>}
               </div>
             ))}
           </div>
@@ -371,9 +391,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
               <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.specialtiesProject', lang)}</p>
               {p.especialidadesDescricoes.map((e) => (
-                <div key={e.nome} style={{ marginBottom: '3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                  <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite }}>• {e.nome}</p>
-                  {e.descricao && <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4 }}>{e.descricao}</p>}
+                <div key={e.nome} className="pdf-no-break" style={{ marginBottom: '4mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <p className="pdf-no-break" style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite, pageBreakInside: 'avoid' }}>• {e.nome}</p>
+                  {e.descricao && <p className="pdf-no-break" style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4, pageBreakInside: 'avoid' }}>{e.descricao}</p>}
                 </div>
               ))}
             </div>
@@ -497,31 +517,47 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* Estimativa de execução */}
         {(p.duracaoEstimada ?? []).length > 0 && (
-          <div style={{ marginTop: '4mm', paddingTop: '3mm' }}>
-            <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section4', lang)}</p>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(10), marginBottom: '2mm' }}>
-              <thead>
-                <tr style={{ background: C.offWhite }}>
-                  <th style={{ padding: '2mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.phase', lang)}</th>
-                  <th style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.estimatedDuration', lang)}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(p.duracaoEstimada ?? []).map((d) => (
-                  <tr key={d.nome} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
-                    <td style={{ padding: '2mm 3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{d.nome}</td>
-                    <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{d.duracao}</td>
+          <div style={{ marginTop: '6mm' }}>
+            {/* Título + cabeçalho da tabela ficam sempre juntos */}
+            <div className="pdf-no-break" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              <p className="section-title" style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section4', lang)}</p>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(10), marginBottom: '2mm' }}>
+                <thead>
+                  <tr style={{ background: C.offWhite }}>
+                    <th style={{ padding: '2mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.phase', lang)}</th>
+                    <th style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.estimatedDuration', lang)}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(p.duracaoEstimada ?? []).slice(0, 2).map((d) => (
+                    <tr key={d.nome} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
+                      <td style={{ padding: '2mm 3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{d.nome}</td>
+                      <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{d.duracao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Restantes linhas podem quebrar */}
+            {(p.duracaoEstimada ?? []).length > 2 && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(10), marginBottom: '2mm' }}>
+                <tbody>
+                  {(p.duracaoEstimada ?? []).slice(2).map((d) => (
+                    <tr key={d.nome} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
+                      <td style={{ padding: '2mm 3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{d.nome}</td>
+                      <td style={{ textAlign: 'right', padding: '2mm 3mm' }}>{d.duracao}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.durationNote', lang)}</p>
           </div>
         )}
 
-        {/* CENÁRIOS DE PRAZO — Expectativa realista */}
+        {/* CENÁRIOS DE PRAZO — começa em página nova */}
         {p.mostrarCenarios && p.cenariosPrazo && (
-          <div className="pdf-no-break" style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
+          <div className="page-break-before" style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, breakBefore: 'page', pageBreakBefore: 'always' }}>
             <p style={{ fontSize: fs(10), fontWeight: 600, color: C.accent, margin: '0 0 3mm 0' }}>{t('proposal.timelineScenarios', lang)}</p>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
               <tbody>
@@ -562,8 +598,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const espExclusoes = p.exclusoes.filter(e => isEspExclusao(e));
           
           return (
-            <div style={{ marginTop: '4mm', paddingTop: '3mm' }}>
-              <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section5', lang)}</p>
+            <div className="pdf-no-break" style={{ marginTop: '6mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              <p className="section-title" style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section5', lang)}</p>
               
               <div style={{ display: 'flex', gap: '3mm' }}>
                 {/* Coluna Arquitetura */}
@@ -596,8 +632,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           );
         })()}
 
-        {/* Notas */}
-        <div style={{ marginTop: '4mm', paddingTop: '3mm', fontSize: fs(8), color: C.cinzaMarca }}>
+        {/* Notas - segue após exclusões */}
+        <div style={{ marginTop: '6mm', paddingTop: '3mm', fontSize: fs(8), color: C.cinzaMarca }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section6', lang)}</p>
           
           {/* Notas gerais (primeiras 6) */}
@@ -622,9 +658,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
-        {/* Assinaturas */}
+        {/* Assinaturas - sempre na última página */}
         {(branding.architectName || p.cliente) && (
-          <div className="pdf-no-break" style={{ marginTop: '5mm', paddingTop: '4mm', borderTop: `1px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
+          <div className="page-break-before pdf-no-break" style={{ paddingTop: '4mm', borderTop: `1px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid', breakBefore: 'page', pageBreakBefore: 'always' }}>
             {/* Mini-resumo de confirmação */}
             <div style={{ marginBottom: '4mm', padding: '2mm 3mm', background: C.offWhite, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: fs(8) }}>
               <span style={{ color: C.cinzaMarca }}>
