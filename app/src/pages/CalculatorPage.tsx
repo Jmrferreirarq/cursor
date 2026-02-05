@@ -28,9 +28,10 @@ const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
 const APP_SLOGAN = import.meta.env.VITE_APP_SLOGAN ?? '';
 const ARCHITECT_NAME = import.meta.env.VITE_ARCHITECT_NAME ?? '';
 const ARCHITECT_OASRN = import.meta.env.VITE_ARCHITECT_OASRN ?? '';
-const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? 'geral@ferreirarquitetos.com';
-const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE ?? '+351 234 123 456';
-const CONTACT_WEBSITE = import.meta.env.VITE_CONTACT_WEBSITE ?? 'ferreirarquitetos.com';
+const CONTACT_MORADA = import.meta.env.VITE_CONTACT_MORADA ?? 'Avenida Europa, 914 · 3810-138 Aveiro';
+const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? 'jmrferreirarq@gmail.com';
+const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE ?? '+351 910 662 814';
+const CONTACT_WEBSITE = import.meta.env.VITE_CONTACT_WEBSITE ?? 'www.ferreira-arquitetos.pt';
 
 const calculators = [
   {
@@ -66,23 +67,24 @@ const calculators = [
 ];
 
 // Especialidades: minValor + taxa €/m² (valor = max(minValor, área × rate))
+// Valores reduzidos ~15-20% para maior competitividade (2024-02)
 const ESPECIALIDADES_SUGESTAO: Record<string, { minValor: number; rate: number }> = {
-  estruturas: { minValor: 800, rate: 6 },
-  aguas_esgotos: { minValor: 500, rate: 3 },
-  gas: { minValor: 400, rate: 2 },
-  eletrico: { minValor: 600, rate: 4 },
-  ited: { minValor: 350, rate: 1.5 },
-  avac: { minValor: 700, rate: 5 },
-  termico: { minValor: 500, rate: 3.5 },
-  scie: { minValor: 500, rate: 3 },
-  domotica: { minValor: 400, rate: 2 },
-  paisagismo: { minValor: 800, rate: 5 },
-  interiores: { minValor: 1000, rate: 8 },
-  geotecnia: { minValor: 1500, rate: 0 }, // valor fixo mínimo
-  coord_especialidades: { minValor: 500, rate: 2.5 },
-  conservacao: { minValor: 1200, rate: 8 },
-  acustica: { minValor: 500, rate: 3 },
-  iluminacao: { minValor: 400, rate: 2 },
+  estruturas: { minValor: 700, rate: 5 },
+  aguas_esgotos: { minValor: 400, rate: 2.5 },
+  gas: { minValor: 350, rate: 1.5 },
+  eletrico: { minValor: 500, rate: 3.5 },
+  ited: { minValor: 300, rate: 1.2 },
+  avac: { minValor: 600, rate: 4 },
+  termico: { minValor: 400, rate: 3 },
+  scie: { minValor: 400, rate: 2.5 },
+  domotica: { minValor: 350, rate: 1.5 },
+  paisagismo: { minValor: 650, rate: 4 },
+  interiores: { minValor: 800, rate: 6.5 },
+  geotecnia: { minValor: 1200, rate: 0 }, // valor fixo mínimo
+  coord_especialidades: { minValor: 400, rate: 2 },
+  conservacao: { minValor: 1000, rate: 6.5 },
+  acustica: { minValor: 400, rate: 2.5 },
+  iluminacao: { minValor: 350, rate: 1.5 },
 };
 
 // Especialidades de projeto (subconsultores/parceiros)
@@ -1001,7 +1003,7 @@ export default function CalculatorPage() {
           sobConsultaPrevia: e.id === 'alteracao_projeto_obra' && areaRef > 250,
         })),
       ],
-      branding: { appName: APP_NAME, appSlogan: APP_SLOGAN, architectName: ARCHITECT_NAME, architectOasrn: ARCHITECT_OASRN ?? '', email: CONTACT_EMAIL, telefone: CONTACT_PHONE, website: CONTACT_WEBSITE },
+      branding: { appName: APP_NAME, appSlogan: APP_SLOGAN, architectName: ARCHITECT_NAME, architectOasrn: ARCHITECT_OASRN ?? '', morada: CONTACT_MORADA, email: CONTACT_EMAIL, telefone: CONTACT_PHONE, website: CONTACT_WEBSITE },
       // CERTO: Novos campos para melhorar propostas
       mostrarResumo,
       mostrarPacotes,
@@ -1886,8 +1888,8 @@ export default function CalculatorPage() {
                       </span>
                     </div>
                   ) : (
-                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                      <div className="flex items-center justify-between gap-2 mb-3">
                         <p className="text-sm font-medium text-primary">{t('calcReadyToSend', lang)}</p>
                         <button
                           type="button"
@@ -1897,12 +1899,11 @@ export default function CalculatorPage() {
                           {t('calcReopenProposal', lang)}
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground">{t('calcReadyToSendHint', lang)}</p>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 mb-2">
                         <button
                           type="button"
                           onClick={exportHonorariosPDF}
-                          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
                         >
                           <FileDown className="w-4 h-4" />
                           Exportar PDF
@@ -1910,12 +1911,13 @@ export default function CalculatorPage() {
                         <button
                           type="button"
                           onClick={obterLinkProposta}
-                          className="flex items-center gap-2 px-4 py-2 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
                         >
                           <Link2 className="w-4 h-4" />
                           Obter link HTML
                         </button>
                       </div>
+                      <p className="text-xs text-muted-foreground">{t('calcReadyToSendHint', lang)}</p>
                     </div>
                   )}
                   {linkPropostaExibido && (

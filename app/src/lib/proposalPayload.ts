@@ -20,7 +20,8 @@ const brandingSchema = z.object({
   appSlogan: z.string().optional().default(''),
   architectName: z.string().optional().default(''),
   architectOasrn: z.string().optional().default(''),
-  // Contactos para rodapé
+  // Contactos para rodapé e capa
+  morada: z.string().optional().default(''),
   email: z.string().optional().default(''),
   telefone: z.string().optional().default(''),
   website: z.string().optional().default(''),
@@ -125,7 +126,7 @@ const MINIFY_KEYS: Record<string, string> = {
   extras: 'ex', valorExtras: 'vex', total: 'to', totalSemIVA: 'ts', valorIVA: 'vi', fasesPagamento: 'fap',
   descricaoFases: 'df', notaBim: 'nb', notaReunioes: 'nr', apresentacao: 'ap', especialidadesDescricoes: 'ed',
   exclusoes: 'excl', notas: 'nt', duracaoEstimada: 'de', extrasComDescricao: 'ecd', branding: 'b',
-  appName: 'an', appSlogan: 'as', architectName: 'acn', architectOasrn: 'ao', email: 'em', telefone: 'tel', website: 'ws',
+  appName: 'an', appSlogan: 'as', architectName: 'acn', architectOasrn: 'ao', morada: 'mor', email: 'em', telefone: 'tel', website: 'ws',
   nome: 'n', valor: 'v', pct: 'pc', descricao: 'd', duracao: 'du', id: 'id', ocultarValor: 'ov',
   sobConsulta: 'sc', sobConsultaPrevia: 'scp', formula: 'f', isHeader: 'ih',
   // Novos campos CERTO
