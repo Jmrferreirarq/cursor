@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, FileText, Calendar, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
+import { FileText, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
 import { decodeProposalPayload } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
@@ -187,24 +187,20 @@ function PropostaPublicPage() {
             </div>
           </div>
           
-          <button
-            onClick={exportPDF}
-            disabled={exporting}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ backgroundColor: C.accent, color: C.onAccent }}
-          >
-            <Download className="w-4 h-4" />
-            <span>{exporting ? 'A guardar...' : 'Guardar PDF'}</span>
-          </button>
+{/* Botão PDF removido - utilizador pode usar Ctrl+P ou botão na proposta completa */}
         </div>
       </motion.header>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 px-4 sm:px-6 overflow-hidden">
+      <section className="relative pt-28 pb-12 px-4 sm:px-6 overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden">
           <div 
-            className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-3xl"
+            className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full opacity-[0.06] blur-3xl"
+            style={{ backgroundColor: C.accent }}
+          />
+          <div 
+            className="absolute -bottom-20 -left-20 w-[300px] h-[300px] rounded-full opacity-[0.04] blur-2xl"
             style={{ backgroundColor: C.accent }}
           />
         </div>
@@ -256,8 +252,18 @@ function PropostaPublicPage() {
                 style={{ backgroundColor: C.white, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}
               >
                 <Euro className="w-5 h-5 mx-auto mb-2" style={{ color: C.accent }} />
-                <p className="text-2xl font-bold" style={{ color: C.grafite }}>{formatCurrency(p.total)}</p>
-                <p className="text-xs" style={{ color: C.cinzaMarca }}>{t('proposal.totalInclVat', lang)}</p>
+                {p.totalSemIVA ? (
+                  <>
+                    <p className="text-sm" style={{ color: C.cinzaMarca }}>{formatCurrency(p.totalSemIVA)} <span className="text-xs">(s/IVA)</span></p>
+                    <p className="text-2xl font-bold" style={{ color: C.grafite }}>{formatCurrency(p.total)}</p>
+                    <p className="text-xs font-medium" style={{ color: C.accent }}>{t('proposal.totalInclVat', lang)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold" style={{ color: C.grafite }}>{formatCurrency(p.total)}</p>
+                    <p className="text-xs" style={{ color: C.cinzaMarca }}>{t('proposal.totalInclVat', lang)}</p>
+                  </>
+                )}
               </motion.div>
 
               {/* Location */}
@@ -337,13 +343,13 @@ function PropostaPublicPage() {
       </section>
 
       {/* Quick Summary Section */}
-      <section className="py-16 px-4 sm:px-6" style={{ backgroundColor: C.white }}>
+      <section className="py-12 px-4 sm:px-6" style={{ backgroundColor: C.white }}>
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-12"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
           >
             {/* Phases Summary */}
             <div>
@@ -353,29 +359,44 @@ function PropostaPublicPage() {
               >
                 {t('proposal.section2', lang)}
               </h2>
-              <div className="space-y-3">
-                {p.fasesPagamento.filter(f => !(f as { isHeader?: boolean }).isHeader).slice(0, 6).map((fase, idx) => (
-                  <div 
-                    key={idx}
-                    className="flex items-center justify-between p-4 rounded-xl"
-                    style={{ backgroundColor: C.offWhite }}
-                  >
-                    <div className="flex items-center gap-3">
+              <div className="space-y-2">
+                {p.fasesPagamento.map((fase, idx) => {
+                  const isHeader = (fase as { isHeader?: boolean }).isHeader;
+                  if (isHeader) {
+                    return (
                       <div 
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold"
-                        style={{ backgroundColor: `${C.accent}15`, color: C.accent }}
+                        key={idx}
+                        className="pt-3 pb-1 first:pt-0"
                       >
-                        {fase.pct}%
+                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: C.accent }}>
+                          {fase.nome}
+                        </p>
                       </div>
-                      <span className="font-medium" style={{ color: C.grafite }}>{fase.nome}</span>
+                    );
+                  }
+                  return (
+                    <div 
+                      key={idx}
+                      className="flex items-center justify-between p-3 rounded-xl"
+                      style={{ backgroundColor: C.offWhite }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-10 h-7 rounded-md flex items-center justify-center text-xs font-semibold"
+                          style={{ backgroundColor: `${C.accent}15`, color: C.accent }}
+                        >
+                          {fase.pct}%
+                        </div>
+                        <span className="text-sm font-medium" style={{ color: C.grafite }}>{fase.nome}</span>
+                      </div>
+                      {fase.valor != null && (
+                        <span className="text-sm font-semibold" style={{ color: C.grafite }}>
+                          {formatCurrency(fase.valor)}
+                        </span>
+                      )}
                     </div>
-                    {fase.valor && (
-                      <span className="font-semibold" style={{ color: C.grafite }}>
-                        {formatCurrency(fase.valor)}
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -445,19 +466,46 @@ function PropostaPublicPage() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 text-center" style={{ backgroundColor: C.white }}>
-        <div className="max-w-5xl mx-auto">
-          <p className="text-sm" style={{ color: C.cinzaMarca }}>
+      <footer className="py-16 px-4 sm:px-6" style={{ backgroundColor: C.accent }}>
+        <div className="max-w-5xl mx-auto text-center">
+          {/* Logo/Name */}
+          <div className="mb-6">
+            <p className="text-2xl font-bold" style={{ color: C.onAccent }}>{p.branding.appName}</p>
+            {p.branding.appSlogan && (
+              <p className="text-sm mt-1" style={{ color: C.onAccentMuted }}>{p.branding.appSlogan}</p>
+            )}
+          </div>
+          
+          {/* Contact Info */}
+          {(p.branding.email || p.branding.telefone || p.branding.website) && (
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mb-8">
+              {p.branding.email && (
+                <a href={`mailto:${p.branding.email}`} className="text-sm hover:underline" style={{ color: C.onAccent }}>
+                  {p.branding.email}
+                </a>
+              )}
+              {p.branding.telefone && (
+                <a href={`tel:${p.branding.telefone.replace(/\s/g, '')}`} className="text-sm hover:underline" style={{ color: C.onAccent }}>
+                  {p.branding.telefone}
+                </a>
+              )}
+              {p.branding.website && (
+                <a href={p.branding.website.startsWith('http') ? p.branding.website : `https://${p.branding.website}`} target="_blank" rel="noopener noreferrer" className="text-sm hover:underline" style={{ color: C.onAccent }}>
+                  {p.branding.website}
+                </a>
+              )}
+            </div>
+          )}
+          
+          {/* Address */}
+          {p.branding.morada && (
+            <p className="text-xs mb-6" style={{ color: C.onAccentMuted }}>{p.branding.morada}</p>
+          )}
+          
+          {/* Disclaimer */}
+          <p className="text-xs max-w-2xl mx-auto" style={{ color: C.onAccentMuted }}>
             {t('proposal.disclaimer', lang)}
           </p>
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <span className="text-sm" style={{ color: C.cinzaMarca }}>
-              {lang === 'pt' ? 'Proposta gerada por' : 'Proposal generated by'}
-            </span>
-            <span className="font-semibold" style={{ color: C.accent }}>
-              {p.branding.appName}
-            </span>
-          </div>
         </div>
       </footer>
     </div>

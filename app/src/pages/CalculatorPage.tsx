@@ -526,6 +526,7 @@ export default function CalculatorPage() {
   const [especialidadesValores, setEspecialidadesValores] = useState<Record<string, string>>({});
   const [exclusoesSelecionadas, setExclusoesSelecionadas] = useState<Set<string>>(new Set());
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
+  const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -554,6 +555,28 @@ export default function CalculatorPage() {
 
   const formatCurrency = (value: number, l?: 'pt' | 'en') =>
     formatCurrencyLocale(value, l ?? lang);
+
+  // Hash para detetar alterações na proposta após gerar link
+  const computeProposalHash = useMemo(() => {
+    const data = {
+      honorMode, area, projectType, complexity, valorObra, pctHonor,
+      curvaDecrescimento, fasesIncluidas: Array.from(fasesIncluidas).sort().join(','),
+      honorLocalizacao, numPisos, clienteNome, projetoNome, referenciaProposta,
+      localProposta, linkGoogleMaps, extrasValores, despesasReembolsaveis,
+      especialidadesValores, exclusoesSelecionadas: Array.from(exclusoesSelecionadas).sort().join(','),
+      mostrarResumo, mostrarPacotes, mostrarCenarios,
+    };
+    return JSON.stringify(data);
+  }, [
+    honorMode, area, projectType, complexity, valorObra, pctHonor,
+    curvaDecrescimento, fasesIncluidas, honorLocalizacao, numPisos,
+    clienteNome, projetoNome, referenciaProposta, localProposta, linkGoogleMaps,
+    extrasValores, despesasReembolsaveis, especialidadesValores, exclusoesSelecionadas,
+    mostrarResumo, mostrarPacotes, mostrarCenarios,
+  ]);
+
+  // Verificar se o link está desatualizado
+  const linkDesatualizado = linkPropostaExibido && linkPropostaHash && computeProposalHash !== linkPropostaHash;
 
   const calculateHonorariosArquiteturaBase = (): number => {
     if (honorMode === 'area') {
@@ -1178,6 +1201,7 @@ export default function CalculatorPage() {
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
     setLinkPropostaExibido(url);
+    setLinkPropostaHash(computeProposalHash); // Guardar hash para detetar alterações
     navigator.clipboard.writeText(url).then(() => toast.success('Link copiado para a área de transferência')).catch(() => {});
   };
 
@@ -1205,6 +1229,7 @@ export default function CalculatorPage() {
     setLinkGoogleMaps('');
     setExtrasValores({});
     setLinkPropostaExibido(null);
+    setLinkPropostaHash(null);
     setPropostaFechada(false);
     setDespesasReembolsaveis('');
     setEspecialidadesValores({});
@@ -1921,24 +1946,44 @@ export default function CalculatorPage() {
                     </div>
                   )}
                   {linkPropostaExibido && (
-                    <div className="rounded-lg border border-border bg-muted/30 p-3">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Link da proposta (copiado para a área de transferência):</p>
+                    <div className={`rounded-lg border p-3 ${linkDesatualizado ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30' : 'border-green-400 bg-green-50 dark:bg-green-950/30'}`}>
+                      {linkDesatualizado ? (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-amber-600 dark:text-amber-400">⚠️</span>
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Link desatualizado — os valores foram alterados</p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-green-600 dark:text-green-400">✓</span>
+                          <p className="text-xs font-semibold text-green-700 dark:text-green-400">Link atualizado e copiado</p>
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <input
                           type="text"
                           readOnly
                           value={linkPropostaExibido}
-                          className="flex-1 min-w-0 px-3 py-2 text-sm bg-background border border-border rounded font-mono"
+                          className={`flex-1 min-w-0 px-3 py-2 text-sm bg-background border rounded font-mono ${linkDesatualizado ? 'border-amber-300 opacity-60' : 'border-green-300'}`}
                           onClick={(e) => (e.target as HTMLInputElement).select()}
                         />
-                        <a
-                          href={linkPropostaExibido}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                        >
-                          Abrir
-                        </a>
+                        {linkDesatualizado ? (
+                          <button
+                            type="button"
+                            onClick={obterLinkProposta}
+                            className="shrink-0 px-3 py-2 text-sm font-medium bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
+                          >
+                            Regenerar
+                          </button>
+                        ) : (
+                          <a
+                            href={linkPropostaExibido}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                          >
+                            Abrir
+                          </a>
+                        )}
                       </div>
                     </div>
                   )}
