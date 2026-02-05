@@ -1141,7 +1141,7 @@ export default function CalculatorPage() {
             image: { type: 'jpeg' as const, quality: 0.95 },
             html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, windowWidth: 794 },
             jsPDF: { unit: 'mm' as const, format: 'a4' as const },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['li', 'tr', '.pdf-no-break'] },
+            pagebreak: { mode: ['css'], avoid: ['.pdf-no-break'] },
           };
           try {
             const html2pdf = (await import('html2pdf.js')).default;
