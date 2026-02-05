@@ -21,8 +21,11 @@ import { ProposalPreviewPaginated } from '../components/proposals/ProposalPrevie
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
 import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
+import { useData } from '../context/DataContext';
+import { ClientAutocomplete } from '../components/clients/ClientAutocomplete';
 import { t, formatDate, formatCurrency as formatCurrencyLocale } from '../locales';
 import { toast } from 'sonner';
+import type { Client } from '../types';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
 const APP_SLOGAN = import.meta.env.VITE_APP_SLOGAN ?? '';
@@ -501,6 +504,7 @@ const AREA_TO_M2: Record<string, number> = {
 export default function CalculatorPage() {
   const { language } = useLanguage();
   const lang = language;
+  const { saveCalculatorProposal } = useData();
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
 
   // Honorários
@@ -517,6 +521,7 @@ export default function CalculatorPage() {
   const [honorLocalizacao, setHonorLocalizacao] = useState<string>('litoral');
   const [numPisos, setNumPisos] = useState('');
   const [clienteNome, setClienteNome] = useState('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [projetoNome, setProjetoNome] = useState('');
   const [referenciaProposta, setReferenciaProposta] = useState('');
   const [localProposta, setLocalProposta] = useState('');
@@ -804,6 +809,17 @@ export default function CalculatorPage() {
 
   const referenciaExibida = referenciaProposta.trim() || gerarReferenciaAuto();
 
+  // Handler para quando um cliente existente é selecionado
+  const handleClientSelect = (client: Client | null) => {
+    setSelectedClient(client);
+    if (client) {
+      // Auto-preencher local se disponível e campo estiver vazio
+      if (client.municipality && !localProposta.trim()) {
+        setLocalProposta(client.municipality);
+      }
+    }
+  };
+
   const validarProposta = (): boolean => {
     if (!clienteNome.trim()) {
       toast.error(t('proposalValidation.clientRequired', lang));
@@ -831,6 +847,23 @@ export default function CalculatorPage() {
 
   const exportHonorariosPDF = () => {
     if (!validarProposta() || !previewPayload) return;
+    
+    // Guardar proposta e cliente automaticamente
+    saveCalculatorProposal({
+      clientName: clienteNome.trim(),
+      reference: referenciaExibida,
+      projectName: projetoNome.trim(),
+      projectType: projectType,
+      location: localProposta.trim() || undefined,
+      area: parseFloat(area) || undefined,
+      architectureValue: valorArq,
+      specialtiesValue: valorEsp,
+      extrasValue: valorExtras,
+      totalValue: totalSemIVA,
+      totalWithVat: totalComIVA,
+      vatRate: 23,
+    });
+    
     setCapturingPDF(true);
   };
 
@@ -1279,10 +1312,29 @@ export default function CalculatorPage() {
 
   const obterLinkProposta = () => {
     if (!validarProposta()) return;
+    
     const payload = buildProposalPayload();
     const encoded = encodeProposalPayload(payload);
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+    
+    // Guardar proposta e cliente automaticamente (com URL)
+    saveCalculatorProposal({
+      clientName: clienteNome.trim(),
+      reference: referenciaExibida,
+      projectName: projetoNome.trim(),
+      projectType: projectType,
+      location: localProposta.trim() || undefined,
+      area: parseFloat(area) || undefined,
+      architectureValue: valorArq,
+      specialtiesValue: valorEsp,
+      extrasValue: valorExtras,
+      totalValue: totalSemIVA,
+      totalWithVat: totalComIVA,
+      vatRate: 23,
+      proposalUrl: url,
+    });
+    
     setLinkPropostaExibido(url);
     setLinkPropostaHash(computeProposalHash); // Guardar hash para detetar alterações
     navigator.clipboard.writeText(url).then(() => toast.success('Link copiado para a área de transferência')).catch(() => {});
@@ -1425,11 +1477,10 @@ export default function CalculatorPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div>
                 <label className="block text-sm font-medium mb-2">Cliente</label>
-                <input
-                  type="text"
+                <ClientAutocomplete
                   value={clienteNome}
-                  onChange={(e) => setClienteNome(e.target.value)}
-                  className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                  onChange={setClienteNome}
+                  onClientSelect={handleClientSelect}
                   placeholder="Nome do cliente"
                 />
               </div>

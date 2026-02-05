@@ -55,6 +55,15 @@ export interface Proposal {
   createdAt: string;
   sentAt?: string;
   validUntil?: string;
+  // Campos adicionais para propostas da calculadora
+  reference?: string;           // FA-XXX
+  projectName?: string;         // Nome do projeto
+  location?: string;            // Local/Município
+  architectureValue?: number;   // Valor arquitetura (s/IVA)
+  specialtiesValue?: number;    // Valor especialidades (s/IVA)
+  extrasValue?: number;         // Valor extras (s/IVA)
+  area?: number;                // Área (m²)
+  proposalUrl?: string;         // Link da proposta
 }
 
 export interface ProposalPhase {
