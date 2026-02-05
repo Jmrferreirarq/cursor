@@ -531,6 +531,8 @@ export default function CalculatorPage() {
   const [especialidadesValores, setEspecialidadesValores] = useState<Record<string, string>>({});
   const [exclusoesSelecionadas, setExclusoesSelecionadas] = useState<Set<string>>(new Set());
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
+  const [linkPropostaCurto, setLinkPropostaCurto] = useState<string | null>(null);
+  const [encurtandoLink, setEncurtandoLink] = useState(false);
   const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
@@ -1310,7 +1312,21 @@ export default function CalculatorPage() {
     return () => { cancelled = true; };
   }, [capturingPDF, previewPayload, referenciaExibida, lang]);
 
-  const obterLinkProposta = () => {
+  // Função para encurtar URL usando TinyURL
+  const encurtarUrl = async (longUrl: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+      if (response.ok) {
+        const shortUrl = await response.text();
+        return shortUrl.trim();
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  const obterLinkProposta = async () => {
     if (!validarProposta()) return;
     
     const payload = buildProposalPayload();
@@ -1336,8 +1352,21 @@ export default function CalculatorPage() {
     });
     
     setLinkPropostaExibido(url);
-    setLinkPropostaHash(computeProposalHash); // Guardar hash para detetar alterações
-    navigator.clipboard.writeText(url).then(() => toast.success('Link copiado para a área de transferência')).catch(() => {});
+    setLinkPropostaHash(computeProposalHash);
+    setLinkPropostaCurto(null);
+    
+    // Encurtar URL em background
+    setEncurtandoLink(true);
+    const shortUrl = await encurtarUrl(url);
+    setEncurtandoLink(false);
+    
+    if (shortUrl) {
+      setLinkPropostaCurto(shortUrl);
+      navigator.clipboard.writeText(shortUrl).then(() => toast.success('Link curto copiado!')).catch(() => {});
+    } else {
+      // Fallback: copiar link completo
+      navigator.clipboard.writeText(url).then(() => toast.success('Link copiado (encurtador indisponível)')).catch(() => {});
+    }
   };
 
   const unitLabel: Record<string, string> = {
@@ -1364,6 +1393,7 @@ export default function CalculatorPage() {
     setLinkGoogleMaps('');
     setExtrasValores({});
     setLinkPropostaExibido(null);
+    setLinkPropostaCurto(null);
     setLinkPropostaHash(null);
     setPropostaFechada(false);
     setDespesasReembolsaveis('');
@@ -2089,16 +2119,59 @@ export default function CalculatorPage() {
                       ) : (
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-green-600 dark:text-green-400">✓</span>
-                          <p className="text-xs font-semibold text-green-700 dark:text-green-400">Link atualizado e copiado</p>
+                          <p className="text-xs font-semibold text-green-700 dark:text-green-400">
+                            {encurtandoLink ? 'A encurtar link...' : linkPropostaCurto ? 'Link curto pronto!' : 'Link atualizado e copiado'}
+                          </p>
                         </div>
                       )}
+                      
+                      {/* Link curto (principal) */}
+                      {linkPropostaCurto && !linkDesatualizado && (
+                        <div className="flex gap-2 mb-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={linkPropostaCurto}
+                            className="flex-1 min-w-0 px-3 py-2 text-sm bg-green-100 dark:bg-green-900/30 border border-green-400 rounded font-mono font-semibold"
+                            onClick={(e) => {
+                              (e.target as HTMLInputElement).select();
+                              navigator.clipboard.writeText(linkPropostaCurto);
+                              toast.success('Link curto copiado!');
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(linkPropostaCurto);
+                              toast.success('Link curto copiado!');
+                            }}
+                            className="shrink-0 px-3 py-2 text-sm font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                          >
+                            Copiar
+                          </button>
+                          <a
+                            href={linkPropostaCurto}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                          >
+                            Abrir
+                          </a>
+                        </div>
+                      )}
+                      
+                      {/* Link completo (secundário ou fallback) */}
                       <div className="flex gap-2">
                         <input
                           type="text"
                           readOnly
                           value={linkPropostaExibido}
-                          className={`flex-1 min-w-0 px-3 py-2 text-sm bg-background border rounded font-mono ${linkDesatualizado ? 'border-amber-300 opacity-60' : 'border-green-300'}`}
-                          onClick={(e) => (e.target as HTMLInputElement).select()}
+                          className={`flex-1 min-w-0 px-3 py-2 text-xs bg-background border rounded font-mono ${linkDesatualizado ? 'border-amber-300 opacity-60' : linkPropostaCurto ? 'border-border opacity-50' : 'border-green-300'}`}
+                          onClick={(e) => {
+                            (e.target as HTMLInputElement).select();
+                            navigator.clipboard.writeText(linkPropostaExibido);
+                            toast.success('Link completo copiado!');
+                          }}
                         />
                         {linkDesatualizado ? (
                           <button
@@ -2108,7 +2181,7 @@ export default function CalculatorPage() {
                           >
                             Regenerar
                           </button>
-                        ) : (
+                        ) : !linkPropostaCurto && (
                           <a
                             href={linkPropostaExibido}
                             target="_blank"
@@ -2119,6 +2192,7 @@ export default function CalculatorPage() {
                           </a>
                         )}
                       </div>
+                      {linkPropostaCurto && <p className="text-xs text-muted-foreground mt-1">↑ Link curto (ideal para WhatsApp) · ↓ Link completo</p>}
                     </div>
                   )}
                 </div>
