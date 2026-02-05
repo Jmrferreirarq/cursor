@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wrench, BookOpen, FileText, Calculator, Ruler, Building2, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Wrench, BookOpen, FileText, Calculator, Ruler, Building2, ExternalLink, Layers, ArrowRight } from 'lucide-react';
 
 const tools = [
   {
@@ -56,6 +57,33 @@ export default function TechnicalHubPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">Hub Técnico</h1>
         </div>
+      </motion.div>
+
+      {/* Featured: Construction Details */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <Link
+          to="/technical/details"
+          className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl hover:border-primary/40 hover:shadow-lg transition-all"
+        >
+          <div className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <Layers className="w-7 h-7 text-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-lg font-semibold">Pormenores Construtivos</h3>
+              <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs rounded-full">Novo</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Biblioteca técnica com 20 detalhes de construção em 10 tipologias. 
+              Paredes, tetos, pavimentos, isolamento, carpintarias e mais.
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+        </Link>
       </motion.div>
 
       {/* Tools Grid */}

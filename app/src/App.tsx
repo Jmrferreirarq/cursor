@@ -24,6 +24,7 @@ import FinancialPage from './pages/FinancialPage';
 import CalendarPage from './pages/CalendarPage';
 import MarketingPage from './pages/MarketingPage';
 import TechnicalHubPage from './pages/TechnicalHubPage';
+import ConstructionDetailsPage from './pages/ConstructionDetailsPage';
 import ProposalsManagementPage from './pages/ProposalsManagementPage';
 import MediaHubPage from './pages/MediaHubPage';
 import MaterialLibraryPage from './pages/MaterialLibraryPage';
@@ -89,6 +90,7 @@ function App() {
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/marketing" element={<MarketingPage />} />
                 <Route path="/technical" element={<TechnicalHubPage />} />
+                <Route path="/technical/details" element={<ConstructionDetailsPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
                 <Route path="/media" element={<MediaHubPage />} />
                 <Route path="/library" element={<MaterialLibraryPage />} />

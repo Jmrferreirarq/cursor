@@ -20,6 +20,10 @@ const brandingSchema = z.object({
   appSlogan: z.string().optional().default(''),
   architectName: z.string().optional().default(''),
   architectOasrn: z.string().optional().default(''),
+  // Contactos para rodapé
+  email: z.string().optional().default(''),
+  telefone: z.string().optional().default(''),
+  website: z.string().optional().default(''),
 });
 
 const fasesPagamentoSchema = z.array(z.object({
@@ -39,6 +43,31 @@ const extrasComDescricaoSchema = z.array(z.object({
   sobConsultaPrevia: z.boolean().optional(),
   formula: z.string().optional(),
 })).optional().default([]);
+
+/** Schema para pacotes de serviço */
+const pacoteSchema = z.object({
+  id: z.enum(['essencial', 'obra_tranquila', 'experiencia']),
+  nome: z.string(),
+  descricao: z.string(),
+  valor: z.number(),
+  recomendado: z.boolean().optional(),
+  itens: z.array(z.string()).default([]),
+});
+
+/** Schema para cenários de prazo */
+const cenarioPrazoSchema = z.object({
+  melhorCaso: z.string(),
+  casoTipico: z.string(),
+  piorCaso: z.string(),
+});
+
+/** Schema para resumo executivo */
+const resumoExecutivoSchema = z.object({
+  incluido: z.array(z.string()).default([]),
+  naoIncluido: z.array(z.string()).default([]),
+  prazoEstimado: z.string().optional(),
+  proximoPasso: z.string().optional(),
+});
 
 export const proposalPayloadSchema = z.object({
   lang: langSchema,
@@ -77,6 +106,13 @@ export const proposalPayloadSchema = z.object({
   duracaoEstimada: z.array(z.object({ nome: z.string(), duracao: z.string() })).optional().default([]),
   extrasComDescricao: extrasComDescricaoSchema,
   branding: brandingSchema,
+  // Novos campos para melhorias CERTO
+  resumoExecutivo: resumoExecutivoSchema.optional(),
+  pacotes: z.array(pacoteSchema).optional(),
+  cenariosPrazo: cenarioPrazoSchema.optional(),
+  mostrarPacotes: z.boolean().optional().default(false),
+  mostrarResumo: z.boolean().optional().default(false),
+  mostrarCenarios: z.boolean().optional().default(false),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -89,9 +125,13 @@ const MINIFY_KEYS: Record<string, string> = {
   extras: 'ex', valorExtras: 'vex', total: 'to', totalSemIVA: 'ts', valorIVA: 'vi', fasesPagamento: 'fap',
   descricaoFases: 'df', notaBim: 'nb', notaReunioes: 'nr', apresentacao: 'ap', especialidadesDescricoes: 'ed',
   exclusoes: 'excl', notas: 'nt', duracaoEstimada: 'de', extrasComDescricao: 'ecd', branding: 'b',
-  appName: 'an', appSlogan: 'as', architectName: 'acn', architectOasrn: 'ao',
+  appName: 'an', appSlogan: 'as', architectName: 'acn', architectOasrn: 'ao', email: 'em', telefone: 'tel', website: 'ws',
   nome: 'n', valor: 'v', pct: 'pc', descricao: 'd', duracao: 'du', id: 'id', ocultarValor: 'ov',
   sobConsulta: 'sc', sobConsultaPrevia: 'scp', formula: 'f', isHeader: 'ih',
+  // Novos campos CERTO
+  resumoExecutivo: 're', pacotes: 'pak', cenariosPrazo: 'cp', mostrarPacotes: 'mp', mostrarResumo: 'mr',
+  mostrarCenarios: 'mc', incluido: 'inc', naoIncluido: 'ninc', prazoEstimado: 'pe', proximoPasso: 'pp',
+  melhorCaso: 'mec', casoTipico: 'ct', piorCaso: 'pic', recomendado: 'rec', itens: 'it',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

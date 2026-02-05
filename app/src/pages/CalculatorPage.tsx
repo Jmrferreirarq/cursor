@@ -28,6 +28,9 @@ const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
 const APP_SLOGAN = import.meta.env.VITE_APP_SLOGAN ?? '';
 const ARCHITECT_NAME = import.meta.env.VITE_ARCHITECT_NAME ?? '';
 const ARCHITECT_OASRN = import.meta.env.VITE_ARCHITECT_OASRN ?? '';
+const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL ?? 'geral@ferreirarquitetos.com';
+const CONTACT_PHONE = import.meta.env.VITE_CONTACT_PHONE ?? '+351 234 123 456';
+const CONTACT_WEBSITE = import.meta.env.VITE_CONTACT_WEBSITE ?? 'ferreirarquitetos.com';
 
 const calculators = [
   {
@@ -103,8 +106,9 @@ const ESPECIALIDADES: { id: string; name: string }[] = [
 ];
 
 // Extras opcionais (serviços adicionais que o cliente pode optar por incluir)
-const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'por_visita' | 'por_avenca'; valorSugerido: number; taxaPorM2?: number; taxaPorVisita?: number; taxaPorMes?: number; tetoMinimo?: number; unitLabel?: string; categoria: 'arq' | 'esp' }[] = [
-  { id: 'projeto_execucao_completo', nome: 'Projeto de Execução (completo)', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 2500, taxaPorM2: 15, categoria: 'arq' },
+const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'por_visita' | 'por_avenca'; valorSugerido: number; taxaPorM2?: number; taxaPorVisita?: number; taxaPorMes?: number; tetoMinimo?: number; unitLabel?: string; categoria: 'arq' | 'esp'; tier?: 'base' | 'completa' }[] = [
+  { id: 'projeto_execucao_base', nome: 'Projeto de Execução (base)', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 2500, taxaPorM2: 15, categoria: 'arq', tier: 'base' },
+  { id: 'projeto_execucao_completa', nome: 'Projeto de Execução (completa)', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 4000, taxaPorM2: 22, categoria: 'arq', tier: 'completa' },
   { id: 'orcamentacao', nome: 'Orçamentação e medição', tipo: 'por_m2', valorSugerido: 0, tetoMinimo: 250, taxaPorM2: 3.5, categoria: 'arq' },
   { id: 'maquete', nome: 'Maquete física ou virtual', tipo: 'fixo', valorSugerido: 1500, categoria: 'arq' },
   { id: 'renderizacoes', nome: 'Renderizações / imagens 3D', tipo: 'fixo', valorSugerido: 400, categoria: 'arq' },
@@ -126,7 +130,8 @@ const EXTRAS_PROPOSTA: { id: string; nome: string; tipo: 'fixo' | 'por_m2' | 'po
 
 // Descrições breves dos extras (para a proposta)
 const EXTRAS_DESCRICOES: Record<string, string> = {
-  projeto_execucao_completo: 'Projeto de execução completo: pormenorização integral de elementos construtivos, especificação de materiais, compatibilização com especialidades e informação necessária à empreitada. Valor indicativo: teto mínimo + €/m² conforme área. Âmbito e tempo de execução comparável ou superior ao licenciamento.',
+  projeto_execucao_base: 'Projeto de execução base: 3-6 pormenores construtivos tipo, especificações de materiais genéricas e compatibilização básica com especialidades. Adequado para obras com empreiteiro experiente. Valor: teto mínimo + €/m² conforme área.',
+  projeto_execucao_completa: 'Projeto de execução completa: 10-15 pormenores construtivos detalhados, mapas de vãos completos, detalhes de remates e encontros, especificações de materiais específicas e compatibilização BIM total. Recomendado para garantir qualidade e reduzir imprevistos em obra. Valor: teto mínimo + €/m² conforme área.',
   orcamentacao: 'Mapas de quantidades, medições e orçamentação para apoio à adjudicação da obra.',
   maquete: 'Maquete física ou modelo 3D para estudo ou apresentação.',
   renderizacoes: 'Imagens fotorrealistas e vistas 3D para divulgação ou aprovação.',
@@ -178,7 +183,7 @@ const DURACAO_ESTIMADA_FASES: { id: string; min: number; max: number; labelKey?:
 // Exclusões genéricas de arquitetura (aplicadas por defeito; exceções por tipologia/categoria abaixo)
 const EXCLUSOES_GENERICAS_ARQ = [
   'arq_fiscalizacao', 'arq_coord_seguranca', 'arq_licenciamentos', 'arq_geotecnia', 'arq_maquetes',
-  'arq_fotogrametria', 'arq_especialidades', 'arq_projeto_execucao_completo', 'arq_alteracoes_briefing', 'arq_deslocacoes', 'arq_tramites',
+  'arq_fotogrametria', 'arq_especialidades', 'arq_projeto_execucao', 'arq_alteracoes_briefing', 'arq_deslocacoes', 'arq_tramites',
   'arq_obra_clandestina', 'arq_alteracoes_posteriores', 'arq_certificacao', 'arq_acompanhamento',
   'arq_impressao', 'arq_taxas_entidades', 'arq_mapa_quantidades',
 ];
@@ -212,7 +217,7 @@ const EXCLUSOES_ARQUITETURA: { id: string; label: string }[] = [
   { id: 'arq_maquetes', label: 'Maquetes físicas ou virtuais' },
   { id: 'arq_fotogrametria', label: 'Fotografias aéreas / fotogrametria' },
   { id: 'arq_especialidades', label: 'Projetos de especialidades (quando não incluídos)' },
-  { id: 'arq_projeto_execucao_completo', label: 'Projeto de Execução completo (quando não incluído; pormenores genéricos estão incluídos no licenciamento)' },
+  { id: 'arq_projeto_execucao', label: 'Projeto de Execução (quando não incluído; pormenores genéricos estão incluídos no licenciamento)' },
   { id: 'arq_alteracoes_briefing', label: 'Alterações de briefing ou programa após aprovação' },
   { id: 'arq_deslocacoes', label: 'Deslocações fora da área acordada' },
   { id: 'arq_tramites', label: 'Trâmites com entidades terceiras (sem previsão contratual)' },
@@ -523,6 +528,11 @@ export default function CalculatorPage() {
   const captureRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [capturingPDF, setCapturingPDF] = useState(false);
+
+  // CERTO: Novas opções para melhorar propostas
+  const [mostrarResumo, setMostrarResumo] = useState(true);
+  const [mostrarPacotes, setMostrarPacotes] = useState(false);
+  const [mostrarCenarios, setMostrarCenarios] = useState(true);
 
   // Áreas
   const [areaValue, setAreaValue] = useState('');
@@ -889,6 +899,11 @@ export default function CalculatorPage() {
         t('notes.vatLegal', lang),
         t('notes.noSupervision', lang),
         t('notes.pormenoresNote', lang),
+        // Notas de proteção de margem (CERTO)
+        t('notes.revisionLimit', lang),
+        t('notes.notificationCycles', lang),
+        t('notes.licensingNotExecution', lang),
+        t('notes.clientResponseTime', lang),
       ],
       duracaoEstimada: DURACAO_ESTIMADA_FASES.map((d) => {
         const duracao = formatarDuracaoSemanasMeses(d, lang, t);
@@ -896,28 +911,58 @@ export default function CalculatorPage() {
         return { nome, duracao };
       }).filter((x) => x.duracao),
       extrasComDescricao: [
-        (() => {
-          const execExtra = EXTRAS_PROPOSTA.find((e) => e.id === 'projeto_execucao_completo');
-          const valorInput = parseFloat(extrasValores['projeto_execucao_completo'] || '0') || 0;
-          const teto = execExtra?.tetoMinimo ?? 2500;
-          const taxa = execExtra?.taxaPorM2 ?? 15;
+        // Projeto de Execução Base
+        ...(() => {
+          const execBase = EXTRAS_PROPOSTA.find((e) => e.id === 'projeto_execucao_base');
+          const valorInput = parseFloat(extrasValores['projeto_execucao_base'] || '0') || 0;
+          const teto = execBase?.tetoMinimo ?? 2500;
+          const taxa = execBase?.taxaPorM2 ?? 15;
           const raw = teto + areaRef * taxa;
           const valorCalculado = areaRef > 0 ? Math.round(raw / 50) * 50 : 0;
-          const valor = areaRef > 0 ? valorCalculado : valorInput;
-          const formula = valor > 0 && areaRef > 0
-            ? raw === valorCalculado
-              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
-              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${Math.round(raw)}€ → ${formatCurrencyPayload(valorCalculado, lang)}`
+          const valor = valorInput > 0 ? valorInput : (areaRef > 0 ? valorCalculado : 0);
+          const rawRounded = Math.round(raw);
+          const foiArredondado = valorCalculado !== rawRounded;
+          const formula = areaRef > 0
+            ? foiArredondado
+              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${rawRounded}€ (arred. ${formatCurrencyPayload(valorCalculado, lang)})`
+              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
             : undefined;
-          return {
-            id: 'projeto_execucao_completo',
-            nome: t('extras.execucaoCompleto', lang),
+          return [{
+            id: 'projeto_execucao_base',
+            nome: lang === 'en' ? 'Execution Project (base)' : 'Projeto de Execução (base)',
             valor,
-            descricao: EXTRAS_DESCRICOES['projeto_execucao_completo'] ?? '',
+            descricao: EXTRAS_DESCRICOES['projeto_execucao_base'] ?? '',
             ocultarValor: false,
             sobConsulta: valor <= 0,
             formula,
-          };
+          }];
+        })(),
+        // Projeto de Execução Completa
+        ...(() => {
+          const execCompleta = EXTRAS_PROPOSTA.find((e) => e.id === 'projeto_execucao_completa');
+          const valorInput = parseFloat(extrasValores['projeto_execucao_completa'] || '0') || 0;
+          const teto = execCompleta?.tetoMinimo ?? 4000;
+          const taxa = execCompleta?.taxaPorM2 ?? 22;
+          const raw = teto + areaRef * taxa;
+          const valorCalculado = areaRef > 0 ? Math.round(raw / 50) * 50 : 0;
+          const valor = valorInput > 0 ? valorInput : (areaRef > 0 ? valorCalculado : 0);
+          const rawRounded = Math.round(raw);
+          const foiArredondado = valorCalculado !== rawRounded;
+          const formula = areaRef > 0
+            ? foiArredondado
+              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${rawRounded}€ (arred. ${formatCurrencyPayload(valorCalculado, lang)})`
+              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
+            : undefined;
+          return [{
+            id: 'projeto_execucao_completa',
+            nome: lang === 'en' ? 'Execution Project (complete)' : 'Projeto de Execução (completa)',
+            valor,
+            descricao: EXTRAS_DESCRICOES['projeto_execucao_completa'] ?? '',
+            ocultarValor: false,
+            sobConsulta: valor <= 0,
+            formula,
+            // Marcar como recomendado para destaque visual
+          }];
         })(),
         ...((): { id: string; nome: string; valor: number; descricao: string; ocultarValor: boolean; sobConsulta: boolean; formula?: string }[] => {
           const orcExtra = EXTRAS_PROPOSTA.find((e) => e.id === 'orcamentacao');
@@ -928,10 +973,13 @@ export default function CalculatorPage() {
           const valorCalculado = areaRef > 0 ? Math.round(raw / 50) * 50 : 0;
           const valor = areaRef > 0 ? valorCalculado : valorInput;
           if (valor <= 0) return [];
+          // Fórmula clara: mostra cálculo exato e, se arredondado, explica
+          const rawRounded = Math.round(raw);
+          const foiArredondado = valorCalculado !== rawRounded;
           const formula = areaRef > 0
-            ? raw === valorCalculado
-              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
-              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${Math.round(raw)}€ → ${formatCurrencyPayload(valorCalculado, lang)}`
+            ? foiArredondado
+              ? `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${rawRounded}€ (arred. ${formatCurrencyPayload(valorCalculado, lang)})`
+              : `${teto}€ + (${areaRef} m² × ${taxa}€/m²) = ${formatCurrencyPayload(valorCalculado, lang)}`
             : undefined;
           return [{
             id: 'orcamentacao',
@@ -943,7 +991,7 @@ export default function CalculatorPage() {
             formula,
           }];
         })(),
-        ...EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_completo' && e.id !== 'orcamentacao' && parseFloat(extrasValores[e.id] || '0') > 0).map((e) => ({
+        ...EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_base' && e.id !== 'projeto_execucao_completa' && e.id !== 'orcamentacao' && parseFloat(extrasValores[e.id] || '0') > 0).map((e) => ({
           id: e.id,
           nome: e.nome,
           valor: parseFloat(extrasValores[e.id] || '0'),
@@ -953,7 +1001,84 @@ export default function CalculatorPage() {
           sobConsultaPrevia: e.id === 'alteracao_projeto_obra' && areaRef > 250,
         })),
       ],
-      branding: { appName: APP_NAME, appSlogan: APP_SLOGAN, architectName: ARCHITECT_NAME, architectOasrn: ARCHITECT_OASRN ?? '' },
+      branding: { appName: APP_NAME, appSlogan: APP_SLOGAN, architectName: ARCHITECT_NAME, architectOasrn: ARCHITECT_OASRN ?? '', email: CONTACT_EMAIL, telefone: CONTACT_PHONE, website: CONTACT_WEBSITE },
+      // CERTO: Novos campos para melhorar propostas
+      mostrarResumo,
+      mostrarPacotes,
+      mostrarCenarios,
+      // Resumo executivo automático
+      ...(mostrarResumo ? {
+        resumoExecutivo: {
+          incluido: [
+            'Projeto de Arquitetura até decisão municipal',
+            ...(espComValor.length > 0 ? ['Projetos de Especialidades'] : []),
+            `${Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases ICHPOP`,
+            `${honorMode === 'pct' ? '8-12' : areaRef <= 150 ? '6-8' : areaRef <= 300 ? '8-12' : '12-15'} reuniões até aprovação`,
+            '2 ciclos revisão/fase + 1 ciclo notificações (limite contratual)',
+          ],
+          naoIncluido: [
+            'Projeto de Execução (extra)',
+            'Fiscalização de obra',
+            'Taxas e emolumentos camarários',
+            'Ciclos adicionais = alteração de briefing (150€/ciclo)',
+          ],
+          prazoEstimado: '10-14 meses (típico)',
+          proximoPasso: 'Adjudicação + reunião de arranque',
+        },
+      } : {}),
+      // Cenários de prazo automáticos
+      ...(mostrarCenarios ? {
+        cenariosPrazo: {
+          melhorCaso: '6-8 meses',
+          casoTipico: '10-14 meses',
+          piorCaso: '18+ meses',
+        },
+      } : {}),
+      // Pacotes de serviço (se ativado)
+      ...(mostrarPacotes ? {
+        pacotes: [
+          {
+            id: 'essencial' as const,
+            nome: t('proposal.packageEssential', lang),
+            descricao: t('proposal.packageEssentialDesc', lang),
+            valor: totalComIVA,
+            recomendado: false,
+            itens: [
+              'Projeto de Arquitetura',
+              ...(espComValor.length > 0 ? ['Projetos de Especialidades'] : []),
+              'Acompanhamento até licenciamento',
+            ],
+          },
+          {
+            id: 'obra_tranquila' as const,
+            nome: t('proposal.packageComfort', lang),
+            descricao: t('proposal.packageComfortDesc', lang),
+            // Usa Execução Completa (4000 + 22€/m²) no pacote Obra Tranquila
+            valor: Math.round((totalComIVA + (4000 + areaRef * 22) * 1.23 + (250 + areaRef * 3.5) * 1.23) / 100) * 100,
+            recomendado: true,
+            itens: [
+              'Tudo do Essencial',
+              'Projeto de Execução (completa)',
+              'Orçamentação e medições',
+              'Reduz derrapagens em obra',
+            ],
+          },
+          {
+            id: 'experiencia' as const,
+            nome: t('proposal.packageExperience', lang),
+            descricao: t('proposal.packageExperienceDesc', lang),
+            // Usa Execução Completa (4000 + 22€/m²) no pacote Experiência
+            valor: Math.round((totalComIVA + (4000 + areaRef * 22) * 1.23 + (250 + areaRef * 3.5) * 1.23 + 1500 * 1.23 + 400 * 1.23) / 100) * 100,
+            recomendado: false,
+            itens: [
+              'Tudo do Obra Tranquila',
+              'Renderizações 3D',
+              'Maquete virtual',
+              'Ajuda na decisão, reduz revisões',
+            ],
+          },
+        ],
+      } : {}),
     };
     return payload;
   };
@@ -966,6 +1091,7 @@ export default function CalculatorPage() {
     honorMode, area, valorObra, projectType, complexity, numPisos, fasesIncluidas, honorLocalizacao,
     despesasReembolsaveis, valorArq, especialidadesValores, valorEsp, extrasValores, valorExtras,
     totalComIVA, totalSemIVA, valorIVA, exclusoesSelecionadas, areaRef,
+    mostrarResumo, mostrarPacotes, mostrarCenarios,
   ]);
 
   useEffect(() => {
@@ -1000,12 +1126,32 @@ export default function CalculatorPage() {
             const total = pdf.internal.getNumberOfPages();
             const w = pdf.internal.pageSize.getWidth();
             const h = pdf.internal.pageSize.getHeight();
+            
+            // Rodapé com contactos em todas as páginas
+            const footerLeft = APP_NAME;
+            const footerRight = [CONTACT_EMAIL, CONTACT_PHONE, CONTACT_WEBSITE].filter(Boolean).join(' • ');
+            
             for (let j = 1; j <= total; j++) {
               pdf.setPage(j);
-              pdf.setFontSize(9);
+              
+              // Linha separadora do rodapé
+              pdf.setDrawColor(200);
+              pdf.setLineWidth(0.3);
+              pdf.line(25, h - 20, w - 25, h - 20);
+              
+              // Rodapé esquerdo (nome da empresa)
+              pdf.setFontSize(7);
+              pdf.setTextColor(100, 100, 100);
+              pdf.text(footerLeft, 25, h - 16, { align: 'left' });
+              
+              // Rodapé direito (contactos)
+              pdf.text(footerRight, w - 25, h - 16, { align: 'right' });
+              
+              // Número da página (centrado)
+              pdf.setFontSize(8);
               pdf.setTextColor(89);
               const label = pageOfFormat.replace('{page}', String(j)).replace('{total}', String(total));
-              pdf.text(label, w / 2, h - 12, { align: 'center' });
+              pdf.text(label, w / 2, h - 10, { align: 'center' });
             }
             pdf.save(opt.filename);
             toast.success('PDF guardado');
@@ -1247,7 +1393,7 @@ export default function CalculatorPage() {
 
             <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
               <p className="text-sm font-medium mb-3">Fases incluídas no serviço</p>
-              <p className="text-xs text-muted-foreground mb-3">Base (até licenciamento aprovado). Pormenores genéricos incluídos no licenciamento. Fiscalização e Projeto de Execução completo são extras.</p>
+              <p className="text-xs text-muted-foreground mb-3">Base (até licenciamento aprovado). Pormenores genéricos incluídos no licenciamento. Fiscalização e Projeto de Execução são extras.</p>
               <div className="flex flex-wrap gap-4">
                 {ICHPOP_PHASES.map((phase) => (
                   <label key={phase.id} className="flex items-center gap-2 cursor-pointer">
@@ -1357,6 +1503,54 @@ export default function CalculatorPage() {
               </div>
             </div>
 
+            {/* CERTO: Opções de apresentação da proposta */}
+            <div className="mb-6 p-4 bg-primary/5 rounded-lg border border-primary/30 scroll-mt-4">
+              <div className="mb-3">
+                <p className="text-sm font-medium text-primary">Opções de apresentação (CERTO)</p>
+                <p className="text-xs text-muted-foreground">
+                  Melhora a clareza e taxa de fecho da proposta.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={mostrarResumo}
+                    onChange={(e) => setMostrarResumo(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Resumo Executivo</span>
+                    <p className="text-xs text-muted-foreground">Decisão em 60 segundos</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={mostrarCenarios}
+                    onChange={(e) => setMostrarCenarios(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Cenários de Prazo</span>
+                    <p className="text-xs text-muted-foreground">Melhor/típico/pior caso</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={mostrarPacotes}
+                    onChange={(e) => setMostrarPacotes(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Pacotes de Serviço</span>
+                    <p className="text-xs text-muted-foreground">Essencial/Obra Tranquila/Experiência</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             <div id="extras-proposta" className="mb-6 p-4 bg-muted/30 rounded-lg border border-border scroll-mt-4">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <div>
@@ -1373,32 +1567,67 @@ export default function CalculatorPage() {
                   Preencher sugestões
                 </button>
               </div>
-              {(() => {
-                const execExtra = EXTRAS_PROPOSTA.find((x) => x.id === 'projeto_execucao_completo');
-                const teto = execExtra?.tetoMinimo ?? 0;
-                const taxa = execExtra?.taxaPorM2 ?? 0;
-                const hint = teto > 0 && taxa > 0 ? `${teto}€ + ${taxa}€/m²` : taxa > 0 ? `${taxa}€/m²` : null;
-                return (
-                <div className="mb-4 p-3 rounded-lg border border-primary/30 bg-primary/5">
-                  <p className="text-xs font-medium text-primary mb-2">Projeto de Execução completo (pormenores genéricos incluídos no licenciamento):</p>
-                  <label className="flex items-center gap-3">
-                    <span className="text-sm font-medium">Projeto de Execução (completo)</span>
-                    {hint && <span className="text-xs text-muted-foreground">({hint})</span>}
-                    <input
-                      type="number"
-                      min="0"
-                      step="50"
-                      value={extrasValores['projeto_execucao_completo'] ?? ''}
-                      onChange={(ev) => setExtrasValores((prev) => ({ ...prev, projeto_execucao_completo: ev.target.value }))}
-                      className="w-24 px-2 py-1.5 text-sm bg-background border border-border rounded"
-                      placeholder="€"
-                    />
-                  </label>
+              {/* Projeto de Execução - duas opções lado a lado */}
+              <div className="mb-4 p-3 rounded-lg border border-primary/30 bg-primary/5">
+                <p className="text-xs font-medium text-primary mb-3">Projeto de Execução (pormenores genéricos incluídos no licenciamento):</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Execução Base */}
+                  {(() => {
+                    const execBase = EXTRAS_PROPOSTA.find((x) => x.id === 'projeto_execucao_base');
+                    const tetoBase = execBase?.tetoMinimo ?? 2500;
+                    const taxaBase = execBase?.taxaPorM2 ?? 15;
+                    const hintBase = `${tetoBase}€ + ${taxaBase}€/m²`;
+                    return (
+                      <div className={`p-3 rounded-lg border ${extrasValores['projeto_execucao_base'] ? 'border-primary bg-primary/10' : 'border-border bg-muted/30'}`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold">Base</span>
+                          <span className="text-xs text-muted-foreground">({hintBase})</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">3-6 pormenores tipo, especificações genéricas</p>
+                        <input
+                          type="number"
+                          min="0"
+                          step="50"
+                          value={extrasValores['projeto_execucao_base'] ?? ''}
+                          onChange={(ev) => setExtrasValores((prev) => ({ ...prev, projeto_execucao_base: ev.target.value, projeto_execucao_completa: '' }))}
+                          className="w-full px-2 py-1.5 text-sm bg-background border border-border rounded"
+                          placeholder="€"
+                        />
+                      </div>
+                    );
+                  })()}
+                  {/* Execução Completa */}
+                  {(() => {
+                    const execCompleta = EXTRAS_PROPOSTA.find((x) => x.id === 'projeto_execucao_completa');
+                    const tetoCompleta = execCompleta?.tetoMinimo ?? 4000;
+                    const taxaCompleta = execCompleta?.taxaPorM2 ?? 22;
+                    const hintCompleta = `${tetoCompleta}€ + ${taxaCompleta}€/m²`;
+                    return (
+                      <div className={`p-3 rounded-lg border-2 ${extrasValores['projeto_execucao_completa'] ? 'border-primary bg-primary/10' : 'border-primary/50 bg-primary/5'} relative`}>
+                        <div className="absolute -top-2 right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-medium">
+                          Recomendado
+                        </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-primary">Completa</span>
+                          <span className="text-xs text-muted-foreground">({hintCompleta})</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">10-15 pormenores, mapas de vãos, compatibilização BIM</p>
+                        <input
+                          type="number"
+                          min="0"
+                          step="50"
+                          value={extrasValores['projeto_execucao_completa'] ?? ''}
+                          onChange={(ev) => setExtrasValores((prev) => ({ ...prev, projeto_execucao_completa: ev.target.value, projeto_execucao_base: '' }))}
+                          className="w-full px-2 py-1.5 text-sm bg-background border border-border rounded"
+                          placeholder="€"
+                        />
+                      </div>
+                    );
+                  })()}
                 </div>
-                );
-              })()}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_completo').map((e) => {
+                {EXTRAS_PROPOSTA.filter((e) => e.id !== 'projeto_execucao_base' && e.id !== 'projeto_execucao_completa').map((e) => {
                   const hint = e.tipo === 'por_m2' && e.taxaPorM2
                       ? (e.tetoMinimo ? `${e.tetoMinimo}€ + ${e.taxaPorM2}€/m²` : `${e.taxaPorM2}€/m²`)
                       : e.tipo === 'por_visita' && e.taxaPorVisita ? `${e.taxaPorVisita} €/${(e as { unitLabel?: string }).unitLabel || 'visita'}` : e.tipo === 'por_avenca' && e.taxaPorMes ? `${e.taxaPorMes} €/mês` : e.valorSugerido > 0 ? `sug. ${e.valorSugerido}€` : null;

@@ -66,12 +66,35 @@ function PropostaPublicPage() {
       const total = pdf.internal.getNumberOfPages();
       const w = pdf.internal.pageSize.getWidth();
       const h = pdf.internal.pageSize.getHeight();
+      
+      // Rodapé com contactos em todas as páginas
+      const footerLeft = p.branding?.appName || 'FA-360';
+      const contactParts = [p.branding?.email, p.branding?.telefone, p.branding?.website].filter(Boolean);
+      const footerRight = contactParts.join(' • ');
+      
       for (let i = 1; i <= total; i++) {
         pdf.setPage(i);
-        pdf.setFontSize(9);
+        
+        // Linha separadora do rodapé
+        pdf.setDrawColor(200);
+        pdf.setLineWidth(0.3);
+        pdf.line(25, h - 20, w - 25, h - 20);
+        
+        // Rodapé esquerdo (nome da empresa)
+        pdf.setFontSize(7);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(footerLeft, 25, h - 16, { align: 'left' });
+        
+        // Rodapé direito (contactos)
+        if (footerRight) {
+          pdf.text(footerRight, w - 25, h - 16, { align: 'right' });
+        }
+        
+        // Número da página (centrado)
+        pdf.setFontSize(8);
         pdf.setTextColor(89);
         const label = pageOfFormat.replace('{page}', String(i)).replace('{total}', String(total));
-        pdf.text(label, w / 2, h - 12, { align: 'center' });
+        pdf.text(label, w / 2, h - 10, { align: 'center' });
       }
       pdf.save(opt.filename);
       toast.success('PDF guardado com sucesso');
