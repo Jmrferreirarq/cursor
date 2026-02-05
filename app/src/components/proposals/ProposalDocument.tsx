@@ -138,7 +138,18 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: fs(8), color: C.cinzaMarca, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('proposal.totalInvestment', lang)}</span>
-                <p style={{ fontSize: fs(14), fontWeight: 700, color: C.accent, margin: '1mm 0 0 0' }}>{formatCurrency(p.total, lang)}</p>
+                {p.totalSemIVA != null ? (
+                  <>
+                    <p style={{ fontSize: fs(10), color: C.grafite, margin: '1mm 0 0 0' }}>
+                      {formatCurrency(p.totalSemIVA, lang)} <span style={{ fontSize: fs(8), color: C.cinzaMarca }}>(s/IVA)</span>
+                    </p>
+                    <p style={{ fontSize: fs(14), fontWeight: 700, color: C.accent, margin: '0.5mm 0 0 0' }}>
+                      {formatCurrency(p.total, lang)} <span style={{ fontSize: fs(9), fontWeight: 600 }}>(c/IVA)</span>
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ fontSize: fs(14), fontWeight: 700, color: C.accent, margin: '1mm 0 0 0' }}>{formatCurrency(p.total, lang)}</p>
+                )}
               </div>
             </div>
             
@@ -215,7 +226,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </tr>
               <tr style={{ background: C.offWhite, borderBottom: `1px solid ${C.cinzaLinha}`, fontWeight: 600 }}>
                 <td style={{ padding: '3mm', color: C.grafite }}>{t('proposal.archFees', lang)}</td>
-                <td style={{ textAlign: 'right', padding: '3mm', fontWeight: 600 }}>{formatCurrency(p.valorArq, lang)}</td>
+                <td style={{ textAlign: 'right', padding: '3mm' }}>
+                  <span style={{ fontWeight: 600 }}>{formatCurrency(p.valorArq, lang)}</span>
+                  <span style={{ fontSize: fs(8), color: C.cinzaMarca, fontWeight: 400, marginLeft: '2mm' }}>
+                    ({formatCurrency(p.valorArq * 1.23, lang)} c/IVA)
+                  </span>
+                </td>
               </tr>
               
               {/* ═══ SECÇÃO: ESPECIALIDADES (só se existirem) ═══ */}
@@ -235,7 +251,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                   {p.valorEsp > 0 && (
                     <tr style={{ background: C.offWhite, borderBottom: `1px solid ${C.cinzaLinha}`, fontWeight: 600, color: C.grafite }}>
                       <td style={{ padding: '3mm' }}>{t('proposal.specialtiesSubtotal', lang)}</td>
-                      <td style={{ textAlign: 'right', padding: '3mm' }}>{formatCurrency(p.valorEsp, lang)}</td>
+                      <td style={{ textAlign: 'right', padding: '3mm' }}>
+                        <span style={{ fontWeight: 600 }}>{formatCurrency(p.valorEsp, lang)}</span>
+                        <span style={{ fontSize: fs(8), color: C.cinzaMarca, fontWeight: 400, marginLeft: '2mm' }}>
+                          ({formatCurrency(p.valorEsp * 1.23, lang)} c/IVA)
+                        </span>
+                      </td>
                     </tr>
                   )}
                   {/* Nota: valores estimativos */}
@@ -257,23 +278,23 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </tr>
               {p.totalSemIVA != null && p.valorIVA != null ? (
                 <>
-                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
-                    <td style={{ padding: '3mm' }}>{t('proposal.totalExclVat', lang)}</td>
-                    <td style={{ textAlign: 'right', padding: '3mm', fontWeight: 600 }}>{formatCurrency(p.totalSemIVA, lang)}</td>
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite, background: C.offWhite }}>
+                    <td style={{ padding: '3mm', fontWeight: 600 }}>{t('proposal.totalExclVat', lang)}</td>
+                    <td style={{ textAlign: 'right', padding: '3mm', fontWeight: 700, fontSize: fs(11) }}>{formatCurrency(p.totalSemIVA, lang)}</td>
                   </tr>
-                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite }}>
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.cinzaMarca }}>
                     <td style={{ padding: '3mm' }}>{t('proposal.vat', lang)} (23%)</td>
-                    <td style={{ textAlign: 'right', padding: '3mm' }}>{formatCurrency(p.valorIVA, lang)}</td>
+                    <td style={{ textAlign: 'right', padding: '3mm', fontStyle: 'italic' }}>+ {formatCurrency(p.valorIVA, lang)}</td>
                   </tr>
-                  <tr style={{ background: C.offWhite, fontWeight: 700, fontSize: fs(12) }}>
-                    <td style={{ padding: '4mm 3mm', color: C.accent }}>{t('proposal.totalInclVat', lang)}</td>
-                    <td style={{ textAlign: 'right', padding: '4mm 3mm', color: C.accent }}>{formatCurrency(p.total, lang)}</td>
+                  <tr style={{ background: C.accent, fontWeight: 700, fontSize: fs(13) }}>
+                    <td style={{ padding: '4mm 3mm', color: C.onAccent }}>{t('proposal.totalInclVat', lang)}</td>
+                    <td style={{ textAlign: 'right', padding: '4mm 3mm', color: C.onAccent }}>{formatCurrency(p.total, lang)}</td>
                   </tr>
                 </>
               ) : (
-                <tr style={{ background: C.offWhite, fontWeight: 700, fontSize: fs(12) }}>
-                  <td style={{ padding: '4mm 3mm', color: C.accent }}>{t('proposal.total', lang)}</td>
-                  <td style={{ textAlign: 'right', padding: '4mm 3mm', color: C.accent }}>{formatCurrency(p.total, lang)}</td>
+                <tr style={{ background: C.accent, fontWeight: 700, fontSize: fs(13) }}>
+                  <td style={{ padding: '4mm 3mm', color: C.onAccent }}>{t('proposal.total', lang)}</td>
+                  <td style={{ textAlign: 'right', padding: '4mm 3mm', color: C.onAccent }}>{formatCurrency(p.total, lang)}</td>
                 </tr>
               )}
             </tbody>
@@ -609,7 +630,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               <span style={{ color: C.cinzaMarca }}>
                 {lang === 'en' ? 'Acceptance of this proposal implies agreement with all terms and conditions described above.' : 'A aceitação desta proposta implica concordância com todas as condições descritas.'}
               </span>
-              <span style={{ fontWeight: 600, color: C.accent }}>{formatCurrency(p.total, lang)}</span>
+              <span style={{ textAlign: 'right' }}>
+                {p.totalSemIVA != null && (
+                  <span style={{ color: C.cinzaMarca, marginRight: '3mm' }}>{formatCurrency(p.totalSemIVA, lang)} s/IVA</span>
+                )}
+                <span style={{ fontWeight: 600, color: C.accent }}>{formatCurrency(p.total, lang)} c/IVA</span>
+              </span>
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12mm', fontSize: fs(10) }}>
