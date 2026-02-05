@@ -80,7 +80,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Dados do projeto */}
-        <div style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm' }}>
+        <div className="pdf-no-break" style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', pageBreakInside: 'avoid' }}>
           {p.cliente && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.client', lang)}:</span> {p.cliente}</p>}
           {p.projeto && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.project', lang)}:</span> {p.projeto}</p>}
           {p.local && <p style={{ margin: p.linkGoogleMaps ? '0 0 1mm 0' : 0, fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.local', lang)}:</span> {p.local}</p>}
@@ -95,7 +95,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* RESUMO EXECUTIVO — Decisão em 60 segundos */}
         {p.mostrarResumo && p.resumoExecutivo && (
-          <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}` }}>
+          <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 3mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('proposal.executiveSummary', lang)}
             </p>
@@ -521,7 +521,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* CENÁRIOS DE PRAZO — Expectativa realista */}
         {p.mostrarCenarios && p.cenariosPrazo && (
-          <div style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}` }}>
+          <div className="pdf-no-break" style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(10), fontWeight: 600, color: C.accent, margin: '0 0 3mm 0' }}>{t('proposal.timelineScenarios', lang)}</p>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
               <tbody>
