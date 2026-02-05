@@ -53,15 +53,15 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           CONTEÚDO — Páginas seguintes
           ═══════════════════════════════════════════════════════════════════ */}
       
-      {/* Cabeçalho — margens A4 25mm (ISO) */}
-      <div style={{ background: C.accent, color: C.onAccent, padding: '10mm 25mm 8mm', boxSizing: 'border-box' }}>
+      {/* Cabeçalho — margens compactas para melhor uso do espaço */}
+      <div style={{ background: C.accent, color: C.onAccent, padding: '8mm 18mm 6mm', boxSizing: 'border-box' }}>
         <p style={{ fontSize: fs(18), fontWeight: 700, margin: 0, letterSpacing: '0.02em' }}>{branding.appName}</p>
         {branding.appSlogan && (
-          <p style={{ fontSize: fs(10), color: C.onAccentMuted, margin: '1.5mm 0 0 0' }}>{branding.appSlogan}</p>
+          <p style={{ fontSize: fs(10), color: C.onAccentMuted, margin: '1mm 0 0 0' }}>{branding.appSlogan}</p>
         )}
       </div>
 
-      <div style={{ padding: '25mm 25mm 25mm', backgroundColor: C.white, boxSizing: 'border-box', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>
+      <div style={{ padding: '12mm 18mm 18mm', backgroundColor: C.white, boxSizing: 'border-box', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>
         <div style={{ marginTop: 0, marginBottom: '6mm' }}>
           <h1 style={{ fontSize: fs(15), fontWeight: 700, margin: 0, letterSpacing: '-0.01em', color: C.accent }}>
             {t('proposal.title', lang)}
@@ -95,34 +95,34 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* RESUMO EXECUTIVO — Decisão em 60 segundos */}
         {p.mostrarResumo && p.resumoExecutivo && (
-          <div className="pdf-no-break" style={{ marginBottom: '6mm', padding: '5mm 6mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
-            <p style={{ fontSize: fs(11), fontWeight: 700, margin: '0 0 4mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}` }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 3mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('proposal.executiveSummary', lang)}
             </p>
             
             {/* Grid de 2 colunas para incluído/não incluído */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '4mm' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm' }}>
               <tbody>
                 <tr>
-                  <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '4mm' }}>
-                    <p style={{ fontSize: fs(9), fontWeight: 700, color: '#16a34a', margin: '0 0 2mm 0', display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
-                      <span style={{ width: '2mm', height: '2mm', background: '#16a34a', borderRadius: '50%', display: 'inline-block' }} />
+                  <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '3mm' }}>
+                    <p style={{ fontSize: fs(8), fontWeight: 700, color: '#16a34a', margin: '0 0 1.5mm 0', display: 'flex', alignItems: 'center', gap: '1mm' }}>
+                      <span style={{ width: '1.5mm', height: '1.5mm', background: '#16a34a', borderRadius: '50%', display: 'inline-block' }} />
                       {t('proposal.included', lang)}
                     </p>
-                    <ul style={{ margin: 0, paddingLeft: '4mm', fontSize: fs(9), color: C.grafite, lineHeight: 1.6, listStyleType: 'none' }}>
+                    <ul style={{ margin: 0, paddingLeft: '3mm', fontSize: fs(8), color: C.grafite, lineHeight: 1.5, listStyleType: 'none' }}>
                       {(p.resumoExecutivo.incluido ?? []).map((item, i) => (
-                        <li key={i} style={{ marginBottom: '1mm', paddingLeft: '2mm', borderLeft: `1.5px solid #16a34a` }}>{item}</li>
+                        <li key={i} style={{ marginBottom: '0.5mm', paddingLeft: '1.5mm', borderLeft: `1px solid #16a34a` }}>{item}</li>
                       ))}
                     </ul>
                   </td>
-                  <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '4mm', borderLeft: `1px solid ${C.accent}` }}>
-                    <p style={{ fontSize: fs(9), fontWeight: 700, color: C.cinzaMarca, margin: '0 0 2mm 0', display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
-                      <span style={{ width: '2mm', height: '2mm', background: C.cinzaMarca, borderRadius: '50%', display: 'inline-block' }} />
+                  <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '3mm', borderLeft: `1px solid ${C.accent}` }}>
+                    <p style={{ fontSize: fs(8), fontWeight: 700, color: C.cinzaMarca, margin: '0 0 1.5mm 0', display: 'flex', alignItems: 'center', gap: '1mm' }}>
+                      <span style={{ width: '1.5mm', height: '1.5mm', background: C.cinzaMarca, borderRadius: '50%', display: 'inline-block' }} />
                       {t('proposal.notIncluded', lang)}
                     </p>
-                    <ul style={{ margin: 0, paddingLeft: '4mm', fontSize: fs(9), color: C.cinzaMarca, lineHeight: 1.6, listStyleType: 'none' }}>
+                    <ul style={{ margin: 0, paddingLeft: '3mm', fontSize: fs(8), color: C.cinzaMarca, lineHeight: 1.5, listStyleType: 'none' }}>
                       {(p.resumoExecutivo.naoIncluido ?? []).map((item, i) => (
-                        <li key={i} style={{ marginBottom: '1mm', paddingLeft: '2mm', borderLeft: `1.5px solid ${C.cinzaLinha}` }}>{item}</li>
+                        <li key={i} style={{ marginBottom: '0.5mm', paddingLeft: '1.5mm', borderLeft: `1px solid ${C.cinzaLinha}` }}>{item}</li>
                       ))}
                     </ul>
                   </td>
@@ -131,31 +131,31 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             </table>
             
             {/* Linha de totais com destaque */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.white, borderRadius: 2, padding: '3mm 4mm', border: `1px solid ${C.accent}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.white, borderRadius: 2, padding: '2.5mm 3mm', border: `1px solid ${C.accent}` }}>
               <div>
-                <span style={{ fontSize: fs(8), color: C.cinzaMarca, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('proposal.estimatedTimeline', lang)}</span>
-                <p style={{ fontSize: fs(11), fontWeight: 700, color: C.grafite, margin: '1mm 0 0 0' }}>{p.resumoExecutivo.prazoEstimado ?? '10-14 meses'}</p>
+                <span style={{ fontSize: fs(7), color: C.cinzaMarca, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('proposal.estimatedTimeline', lang)}</span>
+                <p style={{ fontSize: fs(10), fontWeight: 700, color: C.grafite, margin: '0.5mm 0 0 0' }}>{p.resumoExecutivo.prazoEstimado ?? '10-14 meses'}</p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: fs(8), color: C.cinzaMarca, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('proposal.totalInvestment', lang)}</span>
+                <span style={{ fontSize: fs(7), color: C.cinzaMarca, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{t('proposal.totalInvestment', lang)}</span>
                 {p.totalSemIVA != null ? (
                   <>
-                    <p style={{ fontSize: fs(10), color: C.grafite, margin: '1mm 0 0 0' }}>
-                      {formatCurrency(p.totalSemIVA, lang)} <span style={{ fontSize: fs(8), color: C.cinzaMarca }}>(s/IVA)</span>
+                    <p style={{ fontSize: fs(9), color: C.grafite, margin: '0.5mm 0 0 0' }}>
+                      {formatCurrency(p.totalSemIVA, lang)} <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>(s/IVA)</span>
                     </p>
-                    <p style={{ fontSize: fs(14), fontWeight: 700, color: C.accent, margin: '0.5mm 0 0 0' }}>
-                      {formatCurrency(p.total, lang)} <span style={{ fontSize: fs(9), fontWeight: 600 }}>(c/IVA)</span>
+                    <p style={{ fontSize: fs(12), fontWeight: 700, color: C.accent, margin: '0' }}>
+                      {formatCurrency(p.total, lang)} <span style={{ fontSize: fs(8), fontWeight: 600 }}>(c/IVA)</span>
                     </p>
                   </>
                 ) : (
-                  <p style={{ fontSize: fs(14), fontWeight: 700, color: C.accent, margin: '1mm 0 0 0' }}>{formatCurrency(p.total, lang)}</p>
+                  <p style={{ fontSize: fs(12), fontWeight: 700, color: C.accent, margin: '0.5mm 0 0 0' }}>{formatCurrency(p.total, lang)}</p>
                 )}
               </div>
             </div>
             
             {/* Próximo passo */}
-            <div style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.accent, borderRadius: 2 }}>
-              <span style={{ fontSize: fs(9), color: C.onAccent, fontWeight: 600 }}>
+            <div style={{ marginTop: '2.5mm', padding: '2mm 3mm', background: C.accent, borderRadius: 2 }}>
+              <span style={{ fontSize: fs(8), color: C.onAccent, fontWeight: 600 }}>
                 → {t('proposal.nextStep', lang)}: {p.resumoExecutivo.proximoPasso ?? t('proposal.nextStepText', lang)}
               </span>
             </div>
@@ -163,17 +163,17 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         )}
 
         {/* Tabela de valores */}
-        <div style={{ marginBottom: '6mm' }}>
-          <p style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
-          <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9), pageBreakInside: 'avoid', tableLayout: 'fixed' }}>
+        <div style={{ marginBottom: '5mm' }}>
+          <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), tableLayout: 'fixed' }}>
             <colgroup>
               <col style={{ width: '55%' }} />
               <col style={{ width: '45%' }} />
             </colgroup>
             <thead>
               <tr style={{ background: C.offWhite }}>
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{t('proposal.concept', lang)}</th>
-                <th style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word' }}>{t('proposal.value', lang)}</th>
+                <th style={{ padding: '2mm', textAlign: 'left', fontWeight: 600, fontSize: fs(8), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{t('proposal.concept', lang)}</th>
+                <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 600, fontSize: fs(8), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}`, wordBreak: 'break-word' }}>{t('proposal.value', lang)}</th>
               </tr>
             </thead>
             <tbody>
@@ -304,7 +304,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         {/* Fases de pagamento */}
         <div style={{ marginTop: '6mm', paddingTop: '6mm' }}>
           <p style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section2', lang)}</p>
-          <table className="pdf-no-break" style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(10), marginBottom: '2mm', pageBreakInside: 'avoid' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9), marginBottom: '2mm' }}>
             <thead>
               <tr style={{ background: C.offWhite }}>
                 <th style={{ padding: '2mm 3mm', textAlign: 'left', fontWeight: 600, fontSize: fs(9), color: C.cinzaMarca, borderBottom: `1px solid ${C.cinzaLinha}` }}>{t('proposal.phase', lang)}</th>
@@ -343,37 +343,37 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.paymentPhasesNote', lang)}</p>
         </div>
 
-        {/* Descrição das fases — inicia em nova página; margem superior A4 via html2pdf */}
-        <div style={{ marginTop: 0, paddingTop: '3mm', pageBreakBefore: 'always' }}>
+        {/* Descrição das fases */}
+        <div style={{ marginTop: '5mm', paddingTop: '3mm' }}>
           <p style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section3', lang)}</p>
           {p.notaBim && (
-            <div className="pdf-no-break" style={{ padding: '3mm 4mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '4mm', borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
-              <p style={{ fontSize: fs(10), fontWeight: 600, margin: 0, color: C.accent }}>{t('proposal.bimMethodology', lang)}</p>
-              <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: '1.5mm 0 0 0', lineHeight: 1.5 }}>{p.notaBim}</p>
+            <div style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}` }}>
+              <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.accent }}>{t('proposal.bimMethodology', lang)}</p>
+              <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaBim}</p>
             </div>
           )}
           {p.notaReunioes && (
-            <div className="pdf-no-break" style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, marginBottom: '4mm', borderLeft: `3px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
-              <p style={{ fontSize: fs(10), fontWeight: 600, margin: 0, color: C.cinzaMarca }}>{t('proposal.reunioesContexto', lang)}</p>
-              <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: '1.5mm 0 0 0', lineHeight: 1.5 }}>{p.notaReunioes}</p>
+            <div style={{ padding: '2.5mm 3mm', background: C.offWhite, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.cinzaLinha}` }}>
+              <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.cinzaMarca }}>{t('proposal.reunioesContexto', lang)}</p>
+              <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaReunioes}</p>
             </div>
           )}
-          <div style={{ padding: '4mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
-            <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 4mm 0', color: C.accent }}>{t('proposal.architectureProject', lang)}</p>
+          <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
+            <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.architectureProject', lang)}</p>
             {p.descricaoFases.map((f) => (
-              <div key={f.nome} className="pdf-no-break" style={{ marginBottom: '5mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid' }}>
-                <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 1.5mm 0', color: C.grafite }}>• {f.nome} ({f.pct}%)</p>
-                {f.descricao && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>{f.descricao}</p>}
+              <div key={f.nome} style={{ marginBottom: '3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite }}>• {f.nome} ({f.pct}%)</p>
+                {f.descricao && <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4 }}>{f.descricao}</p>}
               </div>
             ))}
           </div>
           {p.especialidadesDescricoes.length > 0 && (
-            <div style={{ padding: '5mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
-              <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 4mm 0', color: C.accent }}>{t('proposal.specialtiesProject', lang)}</p>
+            <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
+              <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.specialtiesProject', lang)}</p>
               {p.especialidadesDescricoes.map((e) => (
-                <div key={e.nome} className="pdf-no-break" style={{ marginBottom: '5mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid' }}>
-                  <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 1.5mm 0', color: C.grafite }}>• {e.nome}</p>
-                  {e.descricao && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>{e.descricao}</p>}
+                <div key={e.nome} style={{ marginBottom: '3mm', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                  <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite }}>• {e.nome}</p>
+                  {e.descricao && <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4 }}>{e.descricao}</p>}
                 </div>
               ))}
             </div>

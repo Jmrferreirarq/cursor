@@ -1136,7 +1136,7 @@ export default function CalculatorPage() {
         if (el && el.offsetHeight > 0) {
           const baseName = `orcamento-${referenciaExibida.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
           const opt = {
-            margin: [25, 25, 25, 25] as [number, number, number, number],
+            margin: [15, 20, 20, 20] as [number, number, number, number],
             filename: `${baseName}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.95 },
             html2canvas: { scale: 1.5, useCORS: true, logging: false, width: 794, windowWidth: 794 },
