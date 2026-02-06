@@ -1442,9 +1442,44 @@ export default function CalculatorPage() {
       const payload = buildProposalPayload();
       const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
       
-      // Gerar URL longa diretamente (mais fiável)
-      const encoded = encodeProposalPayload(payload);
-      const finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+      let finalUrl: string;
+      let isShortLink = false;
+      
+      // Tentar gerar link curto via API (só em produção)
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      
+      if (!isLocalhost) {
+        try {
+          const response = await fetch('/api/proposals/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              payload,
+              reference: referenciaExibida,
+              clientName: clienteNome.trim(),
+              projectName: projetoNome.trim(),
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.shortId) {
+              finalUrl = `${window.location.origin}${base}/p/${data.shortId}`;
+              isShortLink = true;
+              console.log('[Link] Link curto criado:', finalUrl);
+            }
+          }
+        } catch (e) {
+          console.warn('[Link] API falhou, usando link longo:', e);
+        }
+      }
+      
+      // Fallback: URL longa
+      if (!isShortLink) {
+        const encoded = encodeProposalPayload(payload);
+        finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+        console.log('[Link] Link longo gerado');
+      }
       
       // Guardar proposta localmente
       saveCalculatorProposal({
@@ -1499,10 +1534,10 @@ export default function CalculatorPage() {
       // Copiar link (pode falhar em alguns contextos)
       try {
         await navigator.clipboard.writeText(finalUrl);
-        toast.success('Link da proposta copiado!');
+        toast.success(isShortLink ? 'Link curto copiado!' : 'Link da proposta copiado!');
       } catch {
         // Clipboard bloqueado - mostrar link para copiar manualmente
-        toast.success('Link gerado! Clica para copiar.');
+        toast.success(isShortLink ? 'Link curto gerado!' : 'Link gerado! Clica para copiar.');
       }
       
     } catch (err) {
