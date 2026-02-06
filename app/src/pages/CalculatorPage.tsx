@@ -1108,6 +1108,7 @@ export default function CalculatorPage() {
       mostrarResumo,
       mostrarPacotes,
       mostrarCenarios,
+      mostrarGuiaObra,
       // Resumo executivo automático
       ...(mostrarResumo ? {
         resumoExecutivo: {
