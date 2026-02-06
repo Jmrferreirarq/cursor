@@ -16,6 +16,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { saveProposal } from '../lib/supabase';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
@@ -1422,9 +1423,28 @@ export default function CalculatorPage() {
     const payload = buildProposalPayload();
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     
-    // Gerar URL direta da proposta
-    const encoded = encodeProposalPayload(payload);
-    const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+    // Tentar guardar na base de dados para link curto
+    console.log('[Link] A guardar proposta na base de dados...');
+    const { shortId, error } = await saveProposal(
+      payload as Record<string, unknown>,
+      referenciaExibida,
+      clienteNome.trim(),
+      projetoNome.trim()
+    );
+    
+    let finalUrl: string;
+    
+    if (!error && shortId) {
+      // Link curto funcionou
+      finalUrl = `${window.location.origin}${base}/p/${shortId}`;
+      console.log('[Link] Link curto criado:', finalUrl);
+      setLinkPropostaCurto(finalUrl);
+    } else {
+      // Fallback para URL longa
+      console.warn('[Link] Falha ao criar link curto, usando URL longa:', error);
+      const encoded = encodeProposalPayload(payload);
+      finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+    }
     
     // Guardar proposta e cliente automaticamente
     saveCalculatorProposal({
@@ -1440,14 +1460,16 @@ export default function CalculatorPage() {
       totalValue: totalSemIVA,
       totalWithVat: totalComIVA,
       vatRate: 23,
-      proposalUrl: url,
+      proposalUrl: finalUrl,
     });
     
-    setLinkPropostaExibido(url);
+    setLinkPropostaExibido(finalUrl);
     setLinkPropostaHash(computeProposalHash);
     
-    // Copiar link da proposta
-    navigator.clipboard.writeText(url).then(() => toast.success('Link da proposta copiado!')).catch(() => {});
+    // Copiar link
+    navigator.clipboard.writeText(finalUrl).then(() => {
+      toast.success(shortId ? 'Link curto copiado!' : 'Link da proposta copiado!');
+    }).catch(() => {});
   };
 
   const unitLabel: Record<string, string> = {

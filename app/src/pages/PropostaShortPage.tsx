@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { FileText, Loader2, AlertCircle } from 'lucide-react';
-import { getProposalByShortId, isSupabaseConfigured } from '../lib/supabase';
+import { getProposalByShortId } from '../lib/supabase';
 import { proposalPayloadSchema, type ProposalPayload } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
@@ -29,12 +29,6 @@ function PropostaShortPage() {
     async function loadProposal() {
       if (!shortId) {
         setError('ID não fornecido');
-        setLoading(false);
-        return;
-      }
-
-      if (!isSupabaseConfigured()) {
-        setError('Sistema não configurado');
         setLoading(false);
         return;
       }
