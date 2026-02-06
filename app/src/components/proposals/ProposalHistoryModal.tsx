@@ -186,7 +186,7 @@ export function ProposalHistoryModal({ isOpen, onClose }: ProposalHistoryModalPr
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleCopyLink(item)}
-                            disabled={expired && !item.longLink}
+                            disabled={!!(expired && !item.longLink)}
                             className="p-2 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Copiar link"
                           >
@@ -199,7 +199,7 @@ export function ProposalHistoryModal({ isOpen, onClose }: ProposalHistoryModalPr
                           
                           <button
                             onClick={() => handleOpenLink(item)}
-                            disabled={expired && !item.longLink}
+                            disabled={!!(expired && !item.longLink)}
                             className="p-2 hover:bg-zinc-700 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Abrir proposta"
                           >
