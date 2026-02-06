@@ -286,10 +286,11 @@ export default function ProposalsManagementPage() {
           </div>
           <div className="divide-y divide-border max-h-48 overflow-y-auto">
             {proposals.map((p) => (
-              <div
+              <button
                 key={p.id}
+                type="button"
                 onClick={() => loadProposal(p)}
-                className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group cursor-pointer"
+                className="w-full flex items-center justify-between px-5 py-3 hover:bg-primary/10 transition-colors group cursor-pointer text-left"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -308,15 +309,11 @@ export default function ProposalsManagementPage() {
                   }`}>
                     {p.status === 'draft' ? 'Rascunho' : p.status}
                   </span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); createProjectFromProposal(p); }}
-                    className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
-                  >
-                    <ArrowRight className="w-3 h-3" />
-                    Criar Projeto
-                  </button>
+                  <span className="text-xs text-primary group-hover:underline">
+                    Editar →
+                  </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </motion.div>

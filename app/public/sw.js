@@ -1,5 +1,5 @@
 // FA360 Service Worker
-const CACHE_NAME = 'fa360-v4';
+const CACHE_NAME = 'fa360-v5';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately
