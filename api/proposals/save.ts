@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Usar Upstash Redis via variáveis de ambiente do Vercel
-const UPSTASH_URL = process.env.KV_REST_API_URL;
-const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN;
+// O Upstash pode usar diferentes nomes de variáveis
+const UPSTASH_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env.KV_URL;
+const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_READ_ONLY_TOKEN;
 
 function generateShortId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -78,8 +79,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Verificar se Redis está configurado
   if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-    console.error('Upstash Redis not configured');
-    return res.status(500).json({ error: 'Database not configured' });
+    console.error('Upstash Redis not configured. URL:', !!UPSTASH_URL, 'TOKEN:', !!UPSTASH_TOKEN);
+    console.error('Available env vars with KV/UPSTASH:', Object.keys(process.env).filter(k => k.includes('KV') || k.includes('UPSTASH')));
+    return res.status(500).json({ error: 'Database not configured', debug: { hasUrl: !!UPSTASH_URL, hasToken: !!UPSTASH_TOKEN } });
   }
 
   try {
