@@ -217,8 +217,10 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
   let parsed: unknown = null;
   try {
     const decompressed = decompressFromEncodedURIComponent(raw);
+    console.log('[Decode] LZ decompressed:', decompressed ? 'success' : 'null');
     if (decompressed) parsed = tryParseJson(decompressed);
-  } catch {
+  } catch (e) {
+    console.log('[Decode] LZ error:', e);
     /* não é LZ; tentar base64 */
   }
   if (!parsed) {
@@ -228,13 +230,19 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
       if (pad) b64 += '='.repeat(4 - pad);
       const json = decodeURIComponent(escape(atob(b64)));
       parsed = tryParseJson(json);
-    } catch {
+      console.log('[Decode] Base64 parsed:', parsed ? 'success' : 'null');
+    } catch (e) {
+      console.log('[Decode] Base64 error:', e);
       return null;
     }
   }
-  if (!parsed || typeof parsed !== 'object') return null;
+  if (!parsed || typeof parsed !== 'object') {
+    console.log('[Decode] Parsed is null or not object');
+    return null;
+  }
   const expanded = expandValue(parsed);
   const result = proposalPayloadSchema.safeParse(expanded);
+  console.log('[Decode] Schema validation:', result.success ? 'success' : result.error?.errors);
   return result.success ? result.data : null;
 }
 
