@@ -19,8 +19,10 @@ import {
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { saveProposal } from '../lib/supabase';
+import { addToProposalHistory } from '../lib/proposalHistory';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
+import { ProposalHistoryModal } from '../components/proposals/ProposalHistoryModal';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
 import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
@@ -580,6 +582,7 @@ export default function CalculatorPage() {
   const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
   const [gerandoLink, setGerandoLink] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [capturingPDF, setCapturingPDF] = useState(false);
@@ -1530,6 +1533,19 @@ export default function CalculatorPage() {
         },
       });
       
+      // Guardar no histórico de propostas
+      addToProposalHistory({
+        reference: referenciaExibida,
+        clientName: clienteNome.trim(),
+        projectName: projetoNome.trim(),
+        projectType: projectType,
+        location: localProposta.trim() || undefined,
+        totalValue: totalSemIVA,
+        totalWithVat: totalComIVA,
+        shortLink: isShortLink ? finalUrl : undefined,
+        longLink: longUrl,
+      });
+      
       setLinkPropostaExibido(finalUrl);
       setLinkPropostaHash(computeProposalHash);
       
@@ -2381,6 +2397,15 @@ export default function CalculatorPage() {
                             </>
                           )}
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowHistoryModal(true)}
+                          className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
+                          title="Ver histórico de propostas"
+                        >
+                          <History className="w-4 h-4" />
+                          Histórico
+                        </button>
                       </div>
                       <p className="text-xs text-muted-foreground">{t('calcReadyToSendHint', lang)}</p>
                     </div>
@@ -2757,6 +2782,12 @@ export default function CalculatorPage() {
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* Modal de histórico de propostas */}
+    <ProposalHistoryModal 
+      isOpen={showHistoryModal} 
+      onClose={() => setShowHistoryModal(false)} 
+    />
     </>
   );
 }
