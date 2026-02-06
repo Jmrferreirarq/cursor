@@ -83,7 +83,7 @@ export default function ProposalsManagementPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/calculadora')}
+          onClick={() => navigate('/calculator')}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
@@ -219,7 +219,7 @@ export default function ProposalsManagementPage() {
             As propostas criadas na Calculadora aparecem aqui automaticamente quando geras um link.
           </p>
           <button
-            onClick={() => navigate('/calculadora')}
+            onClick={() => navigate('/calculator')}
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
           >
             <Calculator className="w-5 h-5" />
@@ -242,7 +242,7 @@ export default function ProposalsManagementPage() {
           <div>
             <h4 className="font-medium mb-1">Como criar propostas?</h4>
             <p className="text-sm text-muted-foreground">
-              Usa a <button onClick={() => navigate('/calculadora')} className="text-primary hover:underline font-medium">Calculadora de Honorários</button> para 
+              Usa a <button onClick={() => navigate('/calculator')} className="text-primary hover:underline font-medium">Calculadora de Honorários</button> para 
               criar propostas detalhadas com cálculo automático de honorários ICHPOP, especialidades, extras e mais. 
               Quando gerares o link da proposta, ela aparece automaticamente nesta lista.
             </p>
