@@ -6,6 +6,8 @@ import { formatCurrency } from '../../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../../lib/proposalPalette';
 import { t, type Lang } from '../../locales';
 import type { ProposalPayload } from '../../lib/proposalPayload';
+import { getPhasesByCategory, getCostsByTypology, calculateConstructionEstimate } from '../../data/constructionGuide';
+import { CompanySnapshot } from '../branding/CompanySnapshot';
 
 const C = PROPOSAL_PALETTE;
 
@@ -125,24 +127,52 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               <tbody>
                 <tr>
                   <td style={{ width: '50%', verticalAlign: 'top', paddingRight: '3mm' }}>
-                    <p style={{ fontSize: fs(8), fontWeight: 700, color: '#16a34a', margin: '0 0 1.5mm 0', display: 'flex', alignItems: 'center', gap: '1mm' }}>
-                      <span style={{ width: '1.5mm', height: '1.5mm', background: '#16a34a', borderRadius: '50%', display: 'inline-block' }} />
+                    <p style={{ fontSize: fs(8), fontWeight: 700, color: '#16a34a', margin: '0 0 2mm 0', display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                      <span style={{ 
+                        width: '4mm', 
+                        height: '4mm', 
+                        background: '#dcfce7', 
+                        borderRadius: '50%', 
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: fs(7),
+                        fontWeight: 700,
+                        color: '#16a34a',
+                      }}>✓</span>
                       {t('proposal.included', lang)}
                     </p>
-                    <ul style={{ margin: 0, paddingLeft: '3mm', fontSize: fs(8), color: C.grafite, lineHeight: 1.5, listStyleType: 'none' }}>
+                    <ul style={{ margin: 0, padding: 0, fontSize: fs(8), color: C.grafite, lineHeight: 1.6, listStyleType: 'none' }}>
                       {(p.resumoExecutivo.incluido ?? []).map((item, i) => (
-                        <li key={i} style={{ marginBottom: '0.5mm', paddingLeft: '1.5mm', borderLeft: `1px solid #16a34a` }}>{item}</li>
+                        <li key={i} style={{ marginBottom: '1mm', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                          <span style={{ color: '#16a34a', fontWeight: 700, fontSize: fs(9), lineHeight: 1.4 }}>✓</span>
+                          <span>{item}</span>
+                        </li>
                       ))}
                     </ul>
                   </td>
-                  <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '3mm', borderLeft: `1px solid ${C.accent}` }}>
-                    <p style={{ fontSize: fs(8), fontWeight: 700, color: C.cinzaMarca, margin: '0 0 1.5mm 0', display: 'flex', alignItems: 'center', gap: '1mm' }}>
-                      <span style={{ width: '1.5mm', height: '1.5mm', background: C.cinzaMarca, borderRadius: '50%', display: 'inline-block' }} />
+                  <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: '3mm', borderLeft: `1px solid ${C.cinzaLinha}` }}>
+                    <p style={{ fontSize: fs(8), fontWeight: 700, color: '#dc2626', margin: '0 0 2mm 0', display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                      <span style={{ 
+                        width: '4mm', 
+                        height: '4mm', 
+                        background: '#fef2f2', 
+                        borderRadius: '50%', 
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: fs(7),
+                        fontWeight: 700,
+                        color: '#dc2626',
+                      }}>✗</span>
                       {t('proposal.notIncluded', lang)}
                     </p>
-                    <ul style={{ margin: 0, paddingLeft: '3mm', fontSize: fs(8), color: C.cinzaMarca, lineHeight: 1.5, listStyleType: 'none' }}>
+                    <ul style={{ margin: 0, padding: 0, fontSize: fs(8), color: C.cinzaMarca, lineHeight: 1.6, listStyleType: 'none' }}>
                       {(p.resumoExecutivo.naoIncluido ?? []).map((item, i) => (
-                        <li key={i} style={{ marginBottom: '0.5mm', paddingLeft: '1.5mm', borderLeft: `1px solid ${C.cinzaLinha}` }}>{item}</li>
+                        <li key={i} style={{ marginBottom: '1mm', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                          <span style={{ color: '#dc2626', fontWeight: 700, fontSize: fs(9), lineHeight: 1.4 }}>✗</span>
+                          <span>{item}</span>
+                        </li>
                       ))}
                     </ul>
                   </td>
@@ -183,7 +213,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         )}
 
         {/* Tabela de valores - começa em página nova */}
-        <div className="page-break-before" style={{ marginBottom: '5mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
+        <div className="page-break-before" style={{ marginBottom: '5mm', paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), tableLayout: 'fixed' }}>
             <colgroup>
@@ -363,8 +393,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.paymentPhasesNote', lang)}</p>
         </div>
 
-        {/* Descrição das fases */}
-        <div style={{ marginTop: '6mm' }}>
+        {/* Descrição das fases - começa em página nova (página 4) */}
+        <div className="page-break-before" style={{ paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
           <p className="section-title" style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section3', lang)}</p>
           {p.notaBim && (
             <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
@@ -398,37 +428,111 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               ))}
             </div>
           )}
-          {(p.extrasComDescricao ?? []).length > 0 && !p.mostrarPacotes && (
-            <div style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, marginTop: '4mm' }}>
-              <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.extrasInfo', lang)}</p>
-              {(p.extrasComDescricao ?? []).map((e) => {
-                const id = (e as { id?: string }).id;
-                const isFormulaExtra = id === 'projeto_execucao_base' || id === 'projeto_execucao_completa' || id === 'orcamentacao';
-                return (
-                  <div
-                    key={e.nome}
-                    className="pdf-no-break"
-                    style={{
-                      marginBottom: '5mm',
-                      wordBreak: 'break-word',
-                      overflowWrap: 'break-word',
-                      pageBreakInside: 'avoid',
-                      ...(isFormulaExtra
-                        ? { borderLeft: `3px solid ${C.accent}`, background: C.accentSoft, padding: '3mm 4mm', borderRadius: '0 2px 2px 0' }
-                        : {}),
-                    }}
-                  >
-                    <p style={{ fontSize: fs(10), fontWeight: isFormulaExtra ? 700 : 600, margin: '0 0 1.5mm 0', color: isFormulaExtra ? C.accent : C.grafite }}>
-                      • {e.nome}{e.ocultarValor ? '' : (e as { sobConsultaPrevia?: boolean }).sobConsultaPrevia ? ` — ${t('proposal.sobConsultaPrevia', lang)}` : e.sobConsulta ? ` — ${t('proposal.availableOnRequest', lang)}` : ` — ${formatCurrency(e.valor, lang)}`}
-                    </p>
-                    {e.formula && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: '0 0 1.5mm 0', fontStyle: 'italic' }}>{e.formula}</p>}
-                    {e.descricao && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>{e.descricao}</p>}
+          {/* Extras - começa em página nova (página 5) */}
+          {(p.extrasComDescricao ?? []).length > 0 && !p.mostrarPacotes && (() => {
+            // Categorias de extras
+            const CATEGORIAS_EXTRAS: { id: string; icon: string; nome: { pt: string; en: string }; ids: string[] }[] = [
+              { id: 'projeto', icon: '📐', nome: { pt: 'Projeto & Execução', en: 'Project & Execution' }, ids: ['projeto_execucao_base', 'projeto_execucao_completa', 'orcamentacao'] },
+              { id: 'visualizacao', icon: '🎨', nome: { pt: 'Visualização', en: 'Visualization' }, ids: ['renderizacoes', 'fotografia_obra', 'maquete'] },
+              { id: 'estudos', icon: '📋', nome: { pt: 'Estudos & Certificações', en: 'Studies & Certifications' }, ids: ['estudo_viabilidade', 'relatorio_tecnico', 'certificacao_energetica', 'plantas_asbuilt', 'fotogrametria', 'ensaios_in_situ', 'simulacao_energetica'] },
+              { id: 'obra', icon: '🔧', nome: { pt: 'Apoio à Obra', en: 'Construction Support' }, ids: ['fiscalizacao_visita', 'fiscalizacao_avenca', 'alteracao_projeto_obra', 'consulta_processo_camarario', 'reunioes_adicionais', 'deslocacoes'] },
+            ];
+            
+            // Agrupar extras por categoria
+            const extras = p.extrasComDescricao ?? [];
+            const categoriasComExtras = CATEGORIAS_EXTRAS.map((cat) => ({
+              ...cat,
+              extras: extras.filter((e) => cat.ids.includes((e as { id?: string }).id ?? '')),
+            })).filter((cat) => cat.extras.length > 0);
+            
+            // Extras não categorizados (fallback)
+            const idsCategorizados = CATEGORIAS_EXTRAS.flatMap((c) => c.ids);
+            const extrasOutros = extras.filter((e) => !idsCategorizados.includes((e as { id?: string }).id ?? ''));
+            
+            return (
+            <div className="page-break-before" style={{ padding: '3mm 4mm', paddingTop: '3mm', background: C.offWhite, borderRadius: 2, breakBefore: 'page', pageBreakBefore: 'always' }}>
+              <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 4mm 0', color: C.accent }}>{t('proposal.extrasInfo', lang)}</p>
+              
+              {categoriasComExtras.map((cat, catIndex) => (
+                <div key={cat.id} style={{ marginBottom: catIndex < categoriasComExtras.length - 1 ? '5mm' : '3mm' }}>
+                  {/* Header da categoria */}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '2mm', 
+                    marginBottom: '3mm',
+                    paddingBottom: '1.5mm',
+                    borderBottom: `1px solid ${C.cinzaLinha}`,
+                  }}>
+                    <span style={{ fontSize: fs(10) }}>{cat.icon}</span>
+                    <span style={{ 
+                      fontSize: fs(8), 
+                      fontWeight: 700, 
+                      color: C.grafite, 
+                      textTransform: 'uppercase', 
+                      letterSpacing: '0.04em' 
+                    }}>
+                      {cat.nome[lang]}
+                    </span>
                   </div>
-                );
-              })}
+                  
+                  {/* Extras da categoria */}
+                  {cat.extras.map((e) => {
+                    const id = (e as { id?: string }).id;
+                    const isFormulaExtra = id === 'projeto_execucao_base' || id === 'projeto_execucao_completa' || id === 'orcamentacao';
+                    return (
+                      <div
+                        key={e.nome}
+                        className="pdf-no-break"
+                        style={{
+                          marginBottom: '4mm',
+                          marginLeft: '3mm',
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
+                          pageBreakInside: 'avoid',
+                          ...(isFormulaExtra
+                            ? { borderLeft: `3px solid ${C.accent}`, background: C.accentSoft, padding: '3mm 4mm', borderRadius: '0 2px 2px 0', marginLeft: 0 }
+                            : {}),
+                        }}
+                      >
+                        <p style={{ fontSize: fs(10), fontWeight: isFormulaExtra ? 700 : 600, margin: '0 0 1.5mm 0', color: isFormulaExtra ? C.accent : C.grafite }}>
+                          • {e.nome}{e.ocultarValor ? '' : (e as { sobConsultaPrevia?: boolean }).sobConsultaPrevia ? ` — ${t('proposal.sobConsultaPrevia', lang)}` : e.sobConsulta ? ` — ${t('proposal.availableOnRequest', lang)}` : ` — ${formatCurrency(e.valor, lang)}`}
+                        </p>
+                        {e.formula && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: '0 0 1.5mm 0', fontStyle: 'italic' }}>{e.formula}</p>}
+                        {e.descricao && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>{e.descricao}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+              
+              {/* Extras não categorizados */}
+              {extrasOutros.length > 0 && (
+                <div style={{ marginBottom: '3mm' }}>
+                  {extrasOutros.map((e) => (
+                    <div
+                      key={e.nome}
+                      className="pdf-no-break"
+                      style={{
+                        marginBottom: '4mm',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        pageBreakInside: 'avoid',
+                      }}
+                    >
+                      <p style={{ fontSize: fs(10), fontWeight: 600, margin: '0 0 1.5mm 0', color: C.grafite }}>
+                        • {e.nome}{e.ocultarValor ? '' : (e as { sobConsultaPrevia?: boolean }).sobConsultaPrevia ? ` — ${t('proposal.sobConsultaPrevia', lang)}` : e.sobConsulta ? ` — ${t('proposal.availableOnRequest', lang)}` : ` — ${formatCurrency(e.valor, lang)}`}
+                      </p>
+                      {e.descricao && <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>{e.descricao}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0, fontStyle: 'italic', lineHeight: 1.45 }}>{t('proposal.extrasNote', lang)}</p>
             </div>
-          )}
+            );
+          })()}
 
           {/* PACOTES DE SERVIÇO — Escolha por nível de segurança */}
           {p.mostrarPacotes && (p.pacotes ?? []).length > 0 && (
@@ -515,9 +619,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
-        {/* Estimativa de execução */}
+        {/* Estimativa de execução - começa em página nova */}
         {(p.duracaoEstimada ?? []).length > 0 && (
-          <div style={{ marginTop: '6mm' }}>
+          <div className="page-break-before" style={{ paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
             {/* Título + cabeçalho da tabela ficam sempre juntos */}
             <div className="pdf-no-break" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               <p className="section-title" style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section4', lang)}</p>
@@ -552,39 +656,39 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </table>
             )}
             <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.durationNote', lang)}</p>
-          </div>
-        )}
-
-        {/* CENÁRIOS DE PRAZO — começa em página nova */}
-        {p.mostrarCenarios && p.cenariosPrazo && (
-          <div className="page-break-before" style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, breakBefore: 'page', pageBreakBefore: 'always' }}>
-            <p style={{ fontSize: fs(10), fontWeight: 600, color: C.accent, margin: '0 0 3mm 0' }}>{t('proposal.timelineScenarios', lang)}</p>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
-              <tbody>
-                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                  <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
-                    <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
-                    <span style={{ color: '#16a34a' }}>{t('proposal.bestCase', lang)}</span>
-                  </td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite }}>{p.cenariosPrazo.melhorCaso}</td>
-                </tr>
-                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: C.accentSoft2 }}>
-                  <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
-                    <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: C.accent, display: 'inline-block' }} />
-                    <span style={{ color: C.accent }}>{t('proposal.typicalCase', lang)}</span>
-                  </td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite, fontWeight: 600 }}>{p.cenariosPrazo.casoTipico}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
-                    <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
-                    <span style={{ color: '#dc2626' }}>{t('proposal.worstCase', lang)}</span>
-                  </td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite }}>{p.cenariosPrazo.piorCaso}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p style={{ fontSize: fs(8), color: C.cinzaMarca, fontStyle: 'italic', margin: '2mm 0 0 0' }}>{t('proposal.timelineNote', lang)}</p>
+            
+            {/* Cenários de Prazo - logo após a tabela de duração */}
+            {p.mostrarCenarios && p.cenariosPrazo && (
+              <div style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}` }}>
+                <p style={{ fontSize: fs(10), fontWeight: 600, color: C.accent, margin: '0 0 3mm 0' }}>{t('proposal.timelineScenarios', lang)}</p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
+                  <tbody>
+                    <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                      <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
+                        <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                        <span style={{ color: '#16a34a' }}>{t('proposal.bestCase', lang)}</span>
+                      </td>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite }}>{p.cenariosPrazo.melhorCaso}</td>
+                    </tr>
+                    <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: C.accentSoft2 }}>
+                      <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
+                        <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: C.accent, display: 'inline-block' }} />
+                        <span style={{ color: C.accent }}>{t('proposal.typicalCase', lang)}</span>
+                      </td>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite, fontWeight: 600 }}>{p.cenariosPrazo.casoTipico}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '2.5mm 3mm', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2mm' }}>
+                        <span style={{ width: '2.5mm', height: '2.5mm', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} />
+                        <span style={{ color: '#dc2626' }}>{t('proposal.worstCase', lang)}</span>
+                      </td>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', color: C.grafite }}>{p.cenariosPrazo.piorCaso}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ fontSize: fs(8), color: C.cinzaMarca, fontStyle: 'italic', margin: '2mm 0 0 0' }}>{t('proposal.timelineNote', lang)}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -632,8 +736,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           );
         })()}
 
-        {/* Notas - segue após exclusões */}
-        <div style={{ marginTop: '6mm', paddingTop: '3mm', fontSize: fs(8), color: C.cinzaMarca }}>
+        {/* Notas - começa em página nova */}
+        <div className="page-break-before" style={{ paddingTop: '3mm', fontSize: fs(8), color: C.cinzaMarca, breakBefore: 'page', pageBreakBefore: 'always' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section6', lang)}</p>
           
           {/* Notas gerais (primeiras 6) */}
@@ -658,49 +762,382 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
-        {/* Assinaturas - sempre na última página */}
-        {(branding.architectName || p.cliente) && (
-          <div className="page-break-before pdf-no-break" style={{ paddingTop: '4mm', borderTop: `1px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid', breakBefore: 'page', pageBreakBefore: 'always' }}>
-            {/* Mini-resumo de confirmação */}
-            <div style={{ marginBottom: '4mm', padding: '2mm 3mm', background: C.offWhite, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: fs(8) }}>
-              <span style={{ color: C.cinzaMarca }}>
-                {lang === 'en' ? 'Acceptance implies agreement with all terms described.' : 'A aceitação implica concordância com todas as condições.'}
-              </span>
-              <span style={{ textAlign: 'right' }}>
-                {p.totalSemIVA != null && (
-                  <span style={{ color: C.cinzaMarca, marginRight: '2mm' }}>{formatCurrency(p.totalSemIVA, lang)} s/IVA</span>
-                )}
-                <span style={{ fontWeight: 600, color: C.accent }}>{formatCurrency(p.total, lang)} c/IVA</span>
-              </span>
+        {/* ESTIMATIVA DE INVESTIMENTO EM OBRA - segue após notas */}
+        {p.custosConstrucao && p.areaNum && p.areaNum > 0 && (() => {
+          // Valores fixos por m² (chave na mão)
+          const custoMin = 1200;
+          const custoMed = 1500;
+          const custoMax = 2000;
+          const area = p.areaNum;
+          
+          // Totais sem IVA
+          const totalMinSemIVA = area * custoMin;
+          const totalMedSemIVA = area * custoMed;
+          const totalMaxSemIVA = area * custoMax;
+          
+          // Totais com IVA (6% para construção nova habitação)
+          const ivaRate = 0.06;
+          const totalMinComIVA = Math.round(totalMinSemIVA * (1 + ivaRate));
+          const totalMedComIVA = Math.round(totalMedSemIVA * (1 + ivaRate));
+          const totalMaxComIVA = Math.round(totalMaxSemIVA * (1 + ivaRate));
+          
+          return (
+          <div style={{ marginTop: '6mm', marginBottom: '6mm', padding: '4mm 5mm', background: C.offWhite, borderRadius: 3, border: `1px solid ${C.cinzaLinha}` }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              {lang === 'en' ? 'Construction Investment Estimate' : 'Estimativa de Investimento em Obra'}
+            </p>
+            
+            <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 3mm 0' }}>
+              {lang === 'en' 
+                ? `Area: ${area} m² · Typology: ${p.tipologia} · Turnkey values (estimated)`
+                : `Área: ${area} m² · Tipologia: ${p.tipologia} · Valores chave na mão (estimados)`}
+            </p>
+            
+            {/* Grid de 3 cenários */}
+            <div style={{ display: 'flex', gap: '3mm', marginBottom: '3mm' }}>
+              {/* Económico */}
+              <div style={{ flex: 1, padding: '3mm', background: C.white, borderRadius: 2, border: `1px solid ${C.cinzaLinha}`, textAlign: 'center', position: 'relative' }}>
+                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '0 0 1.5mm 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  {lang === 'en' ? 'Economic' : 'Económico'}
+                </p>
+                <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: '0 0 0.5mm 0' }}>
+                  s/ IVA: <strong style={{ color: C.grafite }}>{formatCurrency(totalMinSemIVA, lang)}</strong>
+                </p>
+                <p style={{ fontSize: fs(10), fontWeight: 700, color: C.grafite, margin: '0 0 1.5mm 0' }}>
+                  c/ IVA: {formatCurrency(totalMinComIVA, lang)}
+                </p>
+                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: 0, fontWeight: 500 }}>
+                  {custoMin}€/m²
+                </p>
+              </div>
+              
+              {/* Médio - com badge "Mais comum" */}
+              <div style={{ flex: 1, padding: '3mm', background: C.accentSoft, borderRadius: 2, border: `2px solid ${C.accent}`, textAlign: 'center', position: 'relative' }}>
+                {/* Badge */}
+                <span style={{ 
+                  position: 'absolute', 
+                  top: '-2.5mm', 
+                  left: '50%', 
+                  transform: 'translateX(-50%)',
+                  background: C.accent, 
+                  color: C.onAccent, 
+                  fontSize: fs(6), 
+                  fontWeight: 700, 
+                  padding: '0.8mm 2.5mm', 
+                  borderRadius: 2,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.03em',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {lang === 'en' ? '★ Most common' : '★ Mais comum'}
+                </span>
+                <p style={{ fontSize: fs(7), color: C.accent, margin: '1mm 0 1.5mm 0', textTransform: 'uppercase', letterSpacing: '0.03em', fontWeight: 600 }}>
+                  {lang === 'en' ? 'Medium' : 'Médio'}
+                </p>
+                <p style={{ fontSize: fs(6.5), color: C.accent, margin: '0 0 0.5mm 0', opacity: 0.85 }}>
+                  s/ IVA: <strong>{formatCurrency(totalMedSemIVA, lang)}</strong>
+                </p>
+                <p style={{ fontSize: fs(12), fontWeight: 700, color: C.accent, margin: '0 0 1.5mm 0' }}>
+                  c/ IVA: {formatCurrency(totalMedComIVA, lang)}
+                </p>
+                <p style={{ fontSize: fs(7), color: C.accent, margin: 0, fontWeight: 600 }}>
+                  {custoMed}€/m²
+                </p>
+              </div>
+              
+              {/* Premium */}
+              <div style={{ flex: 1, padding: '3mm', background: C.white, borderRadius: 2, border: `1px solid ${C.cinzaLinha}`, textAlign: 'center', position: 'relative' }}>
+                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '0 0 1.5mm 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  Premium
+                </p>
+                <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: '0 0 0.5mm 0' }}>
+                  s/ IVA: <strong style={{ color: C.grafite }}>{formatCurrency(totalMaxSemIVA, lang)}</strong>
+                </p>
+                <p style={{ fontSize: fs(10), fontWeight: 700, color: C.grafite, margin: '0 0 1.5mm 0' }}>
+                  c/ IVA: {formatCurrency(totalMaxComIVA, lang)}
+                </p>
+                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: 0, fontWeight: 500 }}>
+                  {custoMax}€/m²
+                </p>
+              </div>
             </div>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10mm', fontSize: fs(9) }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: C.accent, fontSize: fs(9) }}>{t('proposal.responsible', lang)}</p>
-                {branding.architectName && (
-                  <p style={{ margin: 0, color: C.cinzaMarca, fontSize: fs(8) }}>
-                    {branding.architectName}{branding.architectOasrn ? ` — n.º ${branding.architectOasrn} OASRN` : ''}
-                  </p>
-                )}
-                <div style={{ marginTop: '4mm', borderBottom: `1px solid ${C.accent}`, width: '45mm', height: '6mm' }} />
-                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '1mm 0 0 0' }}>{lang === 'en' ? 'Date' : 'Data'}: ___/___/______</p>
+            {/* Barra visual comparativa */}
+            <div style={{ marginBottom: '3mm' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2mm', fontSize: fs(6.5), color: C.cinzaMarca }}>
+                <span>{custoMin}€</span>
+                <div style={{ flex: 1, height: '4mm', background: `linear-gradient(to right, #e8f5e9 0%, ${C.accentSoft} 37.5%, #fff3e0 100%)`, borderRadius: 2, position: 'relative' }}>
+                  {/* Marcador do valor médio */}
+                  <div style={{ 
+                    position: 'absolute', 
+                    left: '37.5%', 
+                    top: '-1mm', 
+                    bottom: '-1mm',
+                    width: '2px',
+                    background: C.accent,
+                  }} />
+                </div>
+                <span>{custoMax}€</span>
               </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: C.accent, fontSize: fs(9) }}>{t('proposal.client', lang)}</p>
-                {p.cliente && <p style={{ margin: 0, color: C.cinzaMarca, fontSize: fs(8) }}>{p.cliente}</p>}
-                <div style={{ marginTop: '4mm', borderBottom: `1px solid ${C.accent}`, width: '45mm', height: '6mm' }} />
-                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '1mm 0 0 0' }}>{lang === 'en' ? 'Date' : 'Data'}: ___/___/______</p>
+              <p style={{ fontSize: fs(6), color: C.cinzaMarca, margin: '1mm 0 0 0', textAlign: 'center' }}>
+                {lang === 'en' ? 'Cost scale per m² (turnkey)' : 'Escala de custo por m² (chave na mão)'}
+              </p>
+            </div>
+            
+            {/* Disclaimer */}
+            <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: 0, fontStyle: 'italic', lineHeight: 1.4 }}>
+              {lang === 'en' 
+                ? '* Estimated turnkey values (construction + finishes). VAT at 6% (new construction). Does not include land, fees, licences, or architecture projects. Subject to detailed specification.'
+                : '* Valores estimados chave na mão (construção + acabamentos). IVA a 6% (construção nova). Não inclui terreno, taxas, licenças ou projetos de arquitetura. Sujeito a especificação detalhada.'}
+            </p>
+            
+            {/* Custos Adicionais a Considerar */}
+            <div style={{ marginTop: '5mm', padding: '3mm 4mm', background: C.white, borderRadius: 2, border: `1px dashed ${C.cinzaLinha}` }}>
+              <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: C.grafite }}>
+                {lang === 'en' ? '💡 Additional Costs to Consider' : '💡 Custos Adicionais a Considerar'}
+              </p>
+              <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '0 0 2mm 0', lineHeight: 1.4 }}>
+                {lang === 'en' 
+                  ? 'For complete budget planning, remember to include:'
+                  : 'Para um planeamento completo do orçamento, não esquecer de incluir:'}
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2mm' }}>
+                {[
+                  { icon: '🏛️', pt: 'Taxas e licenças camarárias', en: 'Municipal fees and licences' },
+                  { icon: '🔌', pt: 'Ligações (água, luz, gás, esgotos)', en: 'Utility connections (water, electricity, gas, sewage)' },
+                  { icon: '🌳', pt: 'Arranjos exteriores / paisagismo', en: 'Landscaping / exterior works' },
+                  { icon: '🍳', pt: 'Cozinha e eletrodomésticos', en: 'Kitchen and appliances' },
+                  { icon: '📦', pt: 'Mobiliário e decoração', en: 'Furniture and decoration' },
+                  { icon: '⚠️', pt: 'Margem para imprevistos (10-15%)', en: 'Contingency margin (10-15%)' },
+                ].map((item, i) => (
+                  <span key={i} style={{ 
+                    fontSize: fs(7), 
+                    color: C.cinzaMarca, 
+                    background: C.offWhite, 
+                    padding: '1mm 2mm', 
+                    borderRadius: 2,
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {item.icon} {lang === 'en' ? item.en : item.pt}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
 
-        <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '3mm 0 0 0', fontStyle: 'italic' }}>
-          {t('proposal.disclaimer', lang)}
-        </p>
-        
-        {/* Espaço para rodapé do PDF */}
-        <div style={{ height: '8mm' }} />
+        {/* GUIA DE OBRA — Faseamento e Custos de Construção */}
+        {p.mostrarGuiaObra && p.tipologiaCategoria && (() => {
+          const phases = getPhasesByCategory(p.tipologiaCategoria);
+          const costs = p.tipologiaId ? getCostsByTypology(p.tipologiaId) : undefined;
+          const estimates = p.tipologiaId && p.areaNum ? calculateConstructionEstimate(p.tipologiaId, p.areaNum) : null;
+          
+          if (!phases && !costs) return null;
+          
+          return (
+            <div className="page-break-before" style={{ breakBefore: 'page', pageBreakBefore: 'always' }}>
+              {/* Cabeçalho do Guia */}
+              <div style={{ marginBottom: '5mm', padding: '3mm 4mm', background: C.accent, borderRadius: 3 }}>
+                <p style={{ fontSize: fs(12), fontWeight: 700, color: C.onAccent, margin: 0, letterSpacing: '0.02em' }}>
+                  {lang === 'en' ? 'CONSTRUCTION GUIDE' : 'GUIA DE CONSTRUÇÃO'}
+                </p>
+                <p style={{ fontSize: fs(9), color: C.onAccentMuted, margin: '1mm 0 0 0' }}>
+                  {lang === 'en' ? 'Typical phases and estimated costs for' : 'Faseamento típico e custos estimados para'} {p.tipologia}
+                </p>
+              </div>
+
+              {/* Estimativa de Custos de Construção */}
+              {costs && (
+                <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
+                  <p style={{ fontSize: fs(10), fontWeight: 700, color: C.accent, margin: '0 0 3mm 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {lang === 'en' ? 'Estimated Construction Cost' : 'Estimativa de Custo de Construção'}
+                  </p>
+                  
+                  {/* Tabela de custos por m² */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3mm' }}>
+                    <thead>
+                      <tr style={{ background: C.offWhite }}>
+                        <th style={{ padding: '2mm 3mm', textAlign: 'left', fontSize: fs(8), color: C.cinzaMarca, fontWeight: 600, borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                          {lang === 'en' ? 'Finish Level' : 'Nível de Acabamento'}
+                        </th>
+                        <th style={{ padding: '2mm 3mm', textAlign: 'center', fontSize: fs(8), color: C.cinzaMarca, fontWeight: 600, borderBottom: `1px solid ${C.cinzaLinha}` }}>€/m²</th>
+                        {estimates && (
+                          <th style={{ padding: '2mm 3mm', textAlign: 'right', fontSize: fs(8), color: C.cinzaMarca, fontWeight: 600, borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                            {lang === 'en' ? `Total (${p.areaNum} m²)` : `Total (${p.areaNum} m²)`}
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                        <td style={{ padding: '2mm 3mm', fontSize: fs(9), color: C.grafite }}>
+                          {lang === 'en' ? 'Basic (standard finishes)' : 'Básico (acabamentos standard)'}
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'center', fontSize: fs(9), color: C.grafite }}>{costs.minCost.toLocaleString('pt-PT')} €</td>
+                        {estimates && (
+                          <td style={{ padding: '2mm 3mm', textAlign: 'right', fontSize: fs(9), color: C.grafite }}>{estimates.min.toLocaleString('pt-PT')} €</td>
+                        )}
+                      </tr>
+                      <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: C.accentSoft }}>
+                        <td style={{ padding: '2mm 3mm', fontSize: fs(9), fontWeight: 600, color: C.accent }}>
+                          {lang === 'en' ? 'Medium (quality finishes)' : 'Médio (acabamentos de qualidade)'}
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'center', fontSize: fs(10), fontWeight: 700, color: C.accent }}>{costs.medCost.toLocaleString('pt-PT')} €</td>
+                        {estimates && (
+                          <td style={{ padding: '2mm 3mm', textAlign: 'right', fontSize: fs(10), fontWeight: 700, color: C.accent }}>{estimates.med.toLocaleString('pt-PT')} €</td>
+                        )}
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '2mm 3mm', fontSize: fs(9), color: C.grafite }}>
+                          {lang === 'en' ? 'Premium (high-end finishes)' : 'Premium (acabamentos de luxo)'}
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'center', fontSize: fs(9), color: C.grafite }}>{costs.maxCost.toLocaleString('pt-PT')} €</td>
+                        {estimates && (
+                          <td style={{ padding: '2mm 3mm', textAlign: 'right', fontSize: fs(9), color: C.grafite }}>{estimates.max.toLocaleString('pt-PT')} €</td>
+                        )}
+                      </tr>
+                    </tbody>
+                  </table>
+                  
+                  {costs.notes && (
+                    <p style={{ fontSize: fs(8), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>* {costs.notes}</p>
+                  )}
+                  <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '2mm 0 0 0' }}>
+                    {lang === 'en' 
+                      ? '* Values are indicative estimates (2024) and may vary according to market conditions, location and specific requirements.'
+                      : '* Valores são estimativas indicativas (2024) e podem variar conforme condições de mercado, localização e requisitos específicos.'}
+                  </p>
+                </div>
+              )}
+
+              {/* Faseamento de Obra */}
+              {phases && (
+                <div style={{ marginBottom: '5mm' }}>
+                  <div className="pdf-no-break" style={{ marginBottom: '3mm', pageBreakInside: 'avoid' }}>
+                    <p style={{ fontSize: fs(10), fontWeight: 700, color: C.accent, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      {lang === 'en' ? 'Construction Phases' : 'Faseamento de Obra'} — {phases.category}
+                    </p>
+                    <p style={{ fontSize: fs(9), color: C.cinzaMarca, margin: 0 }}>
+                      {lang === 'en' ? 'Typical total duration:' : 'Duração total típica:'} <strong>{phases.totalDuration}</strong>
+                    </p>
+                  </div>
+                  
+                  {phases.phases.map((phase, index) => (
+                    <div 
+                      key={phase.id} 
+                      className="pdf-no-break"
+                      style={{ 
+                        marginBottom: '3mm', 
+                        padding: '3mm', 
+                        background: index % 2 === 0 ? C.offWhite : C.white, 
+                        borderRadius: 2,
+                        borderLeft: `3px solid ${C.accent}`,
+                        pageBreakInside: 'avoid',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1mm' }}>
+                        <p style={{ fontSize: fs(9), fontWeight: 600, color: C.grafite, margin: 0 }}>{phase.name}</p>
+                        <span style={{ fontSize: fs(8), color: C.accent, fontWeight: 600, whiteSpace: 'nowrap', marginLeft: '3mm' }}>{phase.duration}</span>
+                      </div>
+                      <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.4 }}>{phase.description}</p>
+                      {phase.tips && (
+                        <p style={{ fontSize: fs(7), color: C.accent, margin: '1mm 0 0 0', fontStyle: 'italic' }}>💡 {phase.tips}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Nota final */}
+              <div style={{ padding: '3mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.cinzaMarca}` }}>
+                <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: 0, lineHeight: 1.5 }}>
+                  {lang === 'en'
+                    ? 'This guide is for planning purposes only. Actual timelines and costs depend on project complexity, contractor availability, and market conditions. We recommend obtaining detailed quotes from qualified contractors.'
+                    : 'Este guia é apenas para fins de planeamento. Prazos e custos reais dependem da complexidade do projeto, disponibilidade de empreiteiros e condições de mercado. Recomendamos a obtenção de orçamentos detalhados junto de empreiteiros qualificados.'}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Última página: Company Snapshot + Assinaturas no fundo */}
+        <div className="page-break-before last-page-container" style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          minHeight: '230mm',
+          paddingTop: '3mm',
+          breakBefore: 'page', 
+          pageBreakBefore: 'always' 
+        }}>
+          {/* Company Snapshot - Sobre a empresa */}
+          <div style={{ marginBottom: '6mm' }}>
+            <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 3mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {lang === 'en' ? 'About Us' : 'Sobre Nós'}
+            </p>
+            <CompanySnapshot variant="full" lang={lang} forPrint={true} />
+          </div>
+
+          {/* Espaçador flexível para empurrar assinaturas para baixo */}
+          <div style={{ flex: 1 }} />
+
+          {/* Assinaturas - sempre no fundo da página */}
+          {(branding.architectName || p.cliente) && (
+            <div className="pdf-no-break" style={{ paddingTop: '4mm', borderTop: `1px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
+              {/* Mini-resumo de confirmação */}
+              <div style={{ marginBottom: '4mm', padding: '2mm 3mm', background: C.offWhite, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: fs(8) }}>
+                <span style={{ color: C.cinzaMarca }}>
+                  {lang === 'en' ? 'Acceptance implies agreement with all terms described.' : 'A aceitação implica concordância com todas as condições.'}
+                </span>
+                <span style={{ textAlign: 'right' }}>
+                  {p.totalSemIVA != null && (
+                    <span style={{ color: C.cinzaMarca, marginRight: '2mm' }}>{formatCurrency(p.totalSemIVA, lang)} s/IVA</span>
+                  )}
+                  <span style={{ fontWeight: 600, color: C.accent }}>{formatCurrency(p.total, lang)} c/IVA</span>
+                </span>
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10mm', fontSize: fs(9) }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: C.accent, fontSize: fs(9) }}>{t('proposal.responsible', lang)}</p>
+                  {branding.architectName && (
+                    <p style={{ margin: 0, color: C.cinzaMarca, fontSize: fs(8) }}>
+                      {branding.architectName}{branding.architectOasrn ? ` — n.º ${branding.architectOasrn} OASRN` : ''}
+                    </p>
+                  )}
+                  <div style={{ marginTop: '4mm', borderBottom: `1px solid ${C.accent}`, width: '45mm', height: '6mm' }} />
+                  <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '1mm 0 0 0' }}>{lang === 'en' ? 'Date' : 'Data'}: ___/___/______</p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, margin: '0 0 1mm 0', color: C.accent, fontSize: fs(9) }}>{t('proposal.client', lang)}</p>
+                  {p.cliente && <p style={{ margin: 0, color: C.cinzaMarca, fontSize: fs(8) }}>{p.cliente}</p>}
+                  <div style={{ marginTop: '4mm', borderBottom: `1px solid ${C.accent}`, width: '45mm', height: '6mm' }} />
+                  <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '1mm 0 0 0' }}>{lang === 'en' ? 'Date' : 'Data'}: ___/___/______</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '3mm 0 0 0', fontStyle: 'italic' }}>
+            {t('proposal.disclaimer', lang)}
+          </p>
+        </div>
+      </div>
+
+      {/* Rodapé fixo para impressão - aparece em todas as páginas */}
+      <div className="print-footer">
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr>
+              <td style={{ textAlign: 'left', padding: 0, color: '#9ca3af' }}>{p.ref} <span style={{ color: '#d1d5db' }}>•</span> {p.cliente}</td>
+              <td style={{ textAlign: 'right', padding: 0 }}>
+                <span style={{ fontWeight: 600, color: C.accent }}>{branding.appName.toUpperCase()}</span>
+                <span style={{ color: '#d1d5db' }}> • </span>
+                <span style={{ color: '#9ca3af' }}>{branding.website || 'ferreirarquitetos.pt'}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>

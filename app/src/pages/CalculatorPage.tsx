@@ -16,6 +16,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { isSupabaseConfigured, saveProposal } from '../lib/supabase';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
@@ -414,6 +415,47 @@ const TIPOLOGIAS_COM_PISOS: string[] = [
   'equip_religioso', 'equip_funerario', 'equip_social',
   'anexo',
 ];
+
+// Custos de construção por m² (valores indicativos, mercado português 2024-2025)
+// min = económico, med = médio, max = premium
+const CUSTOS_CONSTRUCAO_M2: Record<string, { min: number; med: number; max: number; duracao: string }> = {
+  // Habitação
+  habitacao_unifamiliar: { min: 1000, med: 1400, max: 2000, duracao: '12-18 meses' },
+  habitacao_coletiva: { min: 900, med: 1200, max: 1600, duracao: '18-30 meses' },
+  habitacao_apartamento: { min: 500, med: 800, max: 1200, duracao: '3-6 meses' },
+  habitacao_moradia: { min: 1000, med: 1400, max: 2000, duracao: '12-18 meses' },
+  // Reabilitação
+  reabilitacao: { min: 600, med: 900, max: 1300, duracao: '6-12 meses' },
+  reabilitacao_integral: { min: 800, med: 1100, max: 1500, duracao: '10-16 meses' },
+  restauro: { min: 1000, med: 1400, max: 2200, duracao: '12-24 meses' },
+  // Comércio e Serviços
+  comercio: { min: 500, med: 800, max: 1200, duracao: '2-4 meses' },
+  escritorio: { min: 450, med: 700, max: 1000, duracao: '2-4 meses' },
+  restaurante: { min: 700, med: 1000, max: 1500, duracao: '3-5 meses' },
+  hotel: { min: 1200, med: 1600, max: 2200, duracao: '18-30 meses' },
+  clinica: { min: 800, med: 1100, max: 1600, duracao: '4-8 meses' },
+  armazem_comercial: { min: 350, med: 500, max: 700, duracao: '4-8 meses' },
+  // Indústria
+  industria: { min: 400, med: 600, max: 900, duracao: '6-12 meses' },
+  logistica: { min: 300, med: 450, max: 650, duracao: '4-8 meses' },
+  laboratorio: { min: 900, med: 1300, max: 1800, duracao: '6-12 meses' },
+  // Equipamentos
+  equip_educacao: { min: 900, med: 1200, max: 1600, duracao: '12-24 meses' },
+  equip_saude: { min: 1400, med: 1800, max: 2500, duracao: '18-36 meses' },
+  equip_cultura: { min: 1200, med: 1600, max: 2200, duracao: '18-30 meses' },
+  equip_desporto: { min: 700, med: 1000, max: 1400, duracao: '8-16 meses' },
+  equip_administrativo: { min: 900, med: 1200, max: 1600, duracao: '12-24 meses' },
+  equip_religioso: { min: 800, med: 1100, max: 1500, duracao: '10-18 meses' },
+  equip_funerario: { min: 600, med: 900, max: 1200, duracao: '6-12 meses' },
+  equip_social: { min: 900, med: 1200, max: 1600, duracao: '12-20 meses' },
+  // Especiais
+  urbanismo: { min: 0, med: 0, max: 0, duracao: 'N/A' },
+  interiores: { min: 400, med: 700, max: 1200, duracao: '2-4 meses' },
+  paisagismo: { min: 80, med: 150, max: 300, duracao: '1-3 meses' },
+  anexo: { min: 800, med: 1100, max: 1500, duracao: '3-6 meses' },
+  agricola: { min: 300, med: 500, max: 800, duracao: '4-8 meses' },
+};
+
 // Multiplicador por pisos: 1–2 → 1.0, 3 → 1.05, 4+ → 1.10
 function multPisos(numPisos: number): number {
   if (numPisos <= 0 || numPisos <= 2) return 1;
@@ -543,6 +585,7 @@ export default function CalculatorPage() {
   const [mostrarResumo, setMostrarResumo] = useState(true);
   const [mostrarPacotes, setMostrarPacotes] = useState(false);
   const [mostrarCenarios, setMostrarCenarios] = useState(true);
+  const [mostrarGuiaObra, setMostrarGuiaObra] = useState(true);
 
   // Áreas
   const [areaValue, setAreaValue] = useState('');
@@ -571,7 +614,7 @@ export default function CalculatorPage() {
       honorLocalizacao, numPisos, clienteNome, projetoNome, referenciaProposta,
       localProposta, linkGoogleMaps, extrasValores, despesasReembolsaveis,
       especialidadesValores, exclusoesSelecionadas: Array.from(exclusoesSelecionadas).sort().join(','),
-      mostrarResumo, mostrarPacotes, mostrarCenarios,
+      mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
     };
     return JSON.stringify(data);
   }, [
@@ -579,7 +622,7 @@ export default function CalculatorPage() {
     curvaDecrescimento, fasesIncluidas, honorLocalizacao, numPisos,
     clienteNome, projetoNome, referenciaProposta, localProposta, linkGoogleMaps,
     extrasValores, despesasReembolsaveis, especialidadesValores, exclusoesSelecionadas,
-    mostrarResumo, mostrarPacotes, mostrarCenarios,
+    mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
   ]);
 
   // Verificar se o link está desatualizado
@@ -1141,6 +1184,27 @@ export default function CalculatorPage() {
           },
         ],
       } : {}),
+      // Guia de Obra - custos de construção estimados
+      ...(mostrarGuiaObra && projectType ? (() => {
+        const custos = CUSTOS_CONSTRUCAO_M2[projectType];
+        if (!custos || custos.min === 0) return {};
+        const areaCalc = honorMode === 'area' ? parseFloat(area) || 0 : Math.round((parseFloat(valorObra) || 0) / 1000);
+        if (areaCalc <= 0) return {};
+        return {
+          tipologiaId: projectType,
+          tipologiaCategoria: TIPOLOGIAS_HONORARIOS.find((t) => t.id === projectType)?.categoria ?? '',
+          areaNum: areaCalc,
+          custosConstrucao: {
+            min: custos.min,
+            med: custos.med,
+            max: custos.max,
+            minTotal: Math.round(areaCalc * custos.min),
+            medTotal: Math.round(areaCalc * custos.med),
+            maxTotal: Math.round(areaCalc * custos.max),
+            duracao: custos.duracao,
+          },
+        };
+      })() : {}),
     };
     return payload;
   };
@@ -1153,7 +1217,7 @@ export default function CalculatorPage() {
     honorMode, area, valorObra, projectType, complexity, numPisos, fasesIncluidas, honorLocalizacao,
     despesasReembolsaveis, valorArq, especialidadesValores, valorEsp, extrasValores, valorExtras,
     totalComIVA, totalSemIVA, valorIVA, exclusoesSelecionadas, areaRef,
-    mostrarResumo, mostrarPacotes, mostrarCenarios,
+    mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
   ]);
 
   useEffect(() => {
@@ -1197,7 +1261,21 @@ export default function CalculatorPage() {
             const printStyles = `
               @page {
                 size: A4;
-                margin: 10mm 12mm 15mm 12mm;
+                margin: 18mm 12mm 18mm 12mm;
+                
+                /* Remover cabeçalhos/rodapés automáticos do browser */
+                @top-left { content: none !important; }
+                @top-center { content: none !important; }
+                @top-right { content: none !important; }
+                @bottom-left { content: none !important; }
+                @bottom-center { content: none !important; }
+                
+                @bottom-right {
+                  content: "Pág. " counter(page);
+                  font-family: 'DM Sans', sans-serif;
+                  font-size: 8pt;
+                  color: #6b7280;
+                }
               }
               
               * {
@@ -1257,6 +1335,29 @@ export default function CalculatorPage() {
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
               }
+              
+              /* Rodapé fixo em todas as páginas */
+              .print-footer {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: auto;
+                padding: 3mm 8mm 5mm 8mm;
+                font-size: 7.5pt;
+                font-family: 'DM Sans', sans-serif;
+                letter-spacing: 0.01em;
+                border-top: 0.5px solid #e5e7eb;
+                background: white;
+                box-sizing: border-box;
+              }
+              .print-footer table {
+                width: 100%;
+              }
+              .print-footer td {
+                white-space: nowrap;
+                vertical-align: middle;
+              }
             `;
 
             // Construir documento HTML para impressão
@@ -1312,26 +1413,64 @@ export default function CalculatorPage() {
     return () => { cancelled = true; };
   }, [capturingPDF, previewPayload, referenciaExibida, lang]);
 
-  // Função para encurtar URL usando TinyURL
-  const encurtarUrl = async (longUrl: string): Promise<string | null> => {
-    try {
-      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
-      if (response.ok) {
-        const shortUrl = await response.text();
-        return shortUrl.trim();
-      }
-      return null;
-    } catch {
-      return null;
-    }
+  // Função para encurtar URL (desativada temporariamente - serviços externos não funcionam bem com localhost)
+  // Para produção, considerar usar um serviço próprio ou Vercel Edge Functions
+  const encurtarUrl = async (_longUrl: string): Promise<string | null> => {
+    // Desativado: serviços como TinyURL e is.gd têm problemas com URLs longas/localhost
+    // Retorna null para usar sempre o link completo
+    return null;
   };
 
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
     
     const payload = buildProposalPayload();
-    const encoded = encodeProposalPayload(payload);
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
+    
+    // Tentar usar Supabase para link curto
+    if (isSupabaseConfigured()) {
+      setEncurtandoLink(true);
+      const { shortId, error } = await saveProposal(
+        payload as Record<string, unknown>,
+        referenciaExibida,
+        clienteNome.trim(),
+        projetoNome.trim()
+      );
+      setEncurtandoLink(false);
+      
+      if (!error && shortId) {
+        const shortUrl = `${window.location.origin}${base}/p/${shortId}`;
+        
+        // Guardar proposta localmente também
+        saveCalculatorProposal({
+          clientName: clienteNome.trim(),
+          reference: referenciaExibida,
+          projectName: projetoNome.trim(),
+          projectType: projectType,
+          location: localProposta.trim() || undefined,
+          area: parseFloat(area) || undefined,
+          architectureValue: valorArq,
+          specialtiesValue: valorEsp,
+          extrasValue: valorExtras,
+          totalValue: totalSemIVA,
+          totalWithVat: totalComIVA,
+          vatRate: 23,
+          proposalUrl: shortUrl,
+        });
+        
+        setLinkPropostaExibido(shortUrl);
+        setLinkPropostaHash(computeProposalHash);
+        setLinkPropostaCurto(shortUrl);
+        
+        navigator.clipboard.writeText(shortUrl).then(() => toast.success('Link curto copiado!')).catch(() => {});
+        return;
+      }
+      // Se falhou, continuar com URL longa
+      console.warn('Falha ao guardar proposta na base de dados:', error);
+    }
+    
+    // Fallback: URL com payload codificado
+    const encoded = encodeProposalPayload(payload);
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
     
     // Guardar proposta e cliente automaticamente (com URL)
@@ -1355,18 +1494,8 @@ export default function CalculatorPage() {
     setLinkPropostaHash(computeProposalHash);
     setLinkPropostaCurto(null);
     
-    // Encurtar URL em background
-    setEncurtandoLink(true);
-    const shortUrl = await encurtarUrl(url);
-    setEncurtandoLink(false);
-    
-    if (shortUrl) {
-      setLinkPropostaCurto(shortUrl);
-      navigator.clipboard.writeText(shortUrl).then(() => toast.success('Link curto copiado!')).catch(() => {});
-    } else {
-      // Fallback: copiar link completo
-      navigator.clipboard.writeText(url).then(() => toast.success('Link copiado (encurtador indisponível)')).catch(() => {});
-    }
+    // Copiar link completo
+    navigator.clipboard.writeText(url).then(() => toast.success('Link da proposta copiado!')).catch(() => {});
   };
 
   const unitLabel: Record<string, string> = {
@@ -1737,6 +1866,18 @@ export default function CalculatorPage() {
                   <div>
                     <span className="text-sm font-medium">Pacotes de Serviço</span>
                     <p className="text-xs text-muted-foreground">Essencial/Obra Tranquila/Experiência</p>
+                  </div>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={mostrarGuiaObra}
+                    onChange={(e) => setMostrarGuiaObra(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  <div>
+                    <span className="text-sm font-medium">Estimativa de Obra</span>
+                    <p className="text-xs text-muted-foreground">Custos €/m² (mín/méd/máx) + prazo</p>
                   </div>
                 </label>
               </div>

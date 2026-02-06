@@ -12,6 +12,20 @@ import { ProposalDocument } from '../components/proposals/ProposalDocument';
 const C = PROPOSAL_PALETTE;
 const A4_WIDTH_PX = 794;
 
+/** Extrai iniciais do nome da empresa (ex: "Ferreirarquitetos" → "FA", "Ferreira Arquitetos" → "FA") */
+function getInitials(name: string): string {
+  // Caso especial: Ferreirarquitetos → FA
+  if (name.toLowerCase().includes('ferreirarquitetos') || name.toLowerCase().includes('ferreira')) {
+    return 'FA';
+  }
+  // Se tem espaços, usar primeira letra de cada palavra
+  if (name.includes(' ')) {
+    return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  }
+  // Fallback: primeiras 2 letras
+  return name.substring(0, 2).toUpperCase();
+}
+
 function PropostaPublicPage() {
   const [searchParams] = useSearchParams();
   const encoded = searchParams.get('d');
@@ -176,7 +190,7 @@ function PropostaPublicPage() {
               style={{ backgroundColor: C.accent }}
             >
               <span className="text-sm font-bold" style={{ color: C.onAccent }}>
-                {p.branding.appName.substring(0, 2).toUpperCase()}
+                {getInitials(p.branding.appName)}
               </span>
             </div>
             <div className="hidden sm:block">

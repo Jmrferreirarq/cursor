@@ -114,6 +114,21 @@ export const proposalPayloadSchema = z.object({
   mostrarPacotes: z.boolean().optional().default(false),
   mostrarResumo: z.boolean().optional().default(false),
   mostrarCenarios: z.boolean().optional().default(false),
+  // Guia de Obra - faseamento e custos de construção
+  mostrarGuiaObra: z.boolean().optional().default(false),
+  tipologiaId: z.string().optional(),
+  tipologiaCategoria: z.string().optional(),
+  areaNum: z.number().optional(),
+  // Estimativa de custos de construção
+  custosConstrucao: z.object({
+    min: z.number(),
+    med: z.number(),
+    max: z.number(),
+    minTotal: z.number(),
+    medTotal: z.number(),
+    maxTotal: z.number(),
+    duracao: z.string(),
+  }).optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -133,6 +148,10 @@ const MINIFY_KEYS: Record<string, string> = {
   resumoExecutivo: 're', pacotes: 'pak', cenariosPrazo: 'cp', mostrarPacotes: 'mp', mostrarResumo: 'mr',
   mostrarCenarios: 'mc', incluido: 'inc', naoIncluido: 'ninc', prazoEstimado: 'pe', proximoPasso: 'pp',
   melhorCaso: 'mec', casoTipico: 'ct', piorCaso: 'pic', recomendado: 'rec', itens: 'it',
+  // Guia de Obra
+  mostrarGuiaObra: 'mgo', tipologiaId: 'tid', tipologiaCategoria: 'tca', areaNum: 'arn',
+  // Custos de construção
+  custosConstrucao: 'cc', min: 'mi', med: 'me', max: 'ma', minTotal: 'mit', medTotal: 'met', maxTotal: 'mat',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

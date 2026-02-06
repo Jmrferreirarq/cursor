@@ -32,12 +32,13 @@ import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
 import CalculatorPage from './pages/CalculatorPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
+import PropostaShortPage from './pages/PropostaShortPage';
 import PortfolioPublicPage from './pages/PortfolioPublicPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/public') || location.pathname.startsWith('/portfolio');
+  const isPublic = location.pathname.startsWith('/public') || location.pathname.startsWith('/portfolio') || location.pathname.startsWith('/p/');
   const isPortal = location.pathname.startsWith('/portal');
   useRemoveOverlays();
 
@@ -108,6 +109,7 @@ function App() {
                   </ErrorBoundary>
                 } />
                 <Route path="/public/proposta" element={<PropostaPublicPage />} />
+                <Route path="/p/:shortId" element={<PropostaShortPage />} />
                 <Route path="/portfolio" element={<PortfolioPublicPage />} />
               </Routes>
             </AppLayout>
