@@ -11,6 +11,7 @@ import { ProposalDocument } from '../components/proposals/ProposalDocument';
 
 const C = PROPOSAL_PALETTE;
 const A4_WIDTH_PX = 794;
+const A4_WIDTH_MM = 210;
 
 /** Extrai iniciais do nome da empresa (ex: "Ferreirarquitetos" → "FA", "Ferreira Arquitetos" → "FA") */
 function getInitials(name: string): string {
@@ -38,6 +39,27 @@ function PropostaPublicPage() {
   const [capturing, setCapturing] = useState(false);
   const [showDocument, setShowDocument] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [documentScale, setDocumentScale] = useState(1);
+  const documentContainerRef = useRef<HTMLDivElement>(null);
+
+  // Calculate document scale for mobile responsiveness
+  useEffect(() => {
+    const calculateScale = () => {
+      const screenWidth = window.innerWidth;
+      const padding = 32; // 16px each side
+      const availableWidth = screenWidth - padding;
+      // A4 width is approximately 794px at 96dpi
+      if (availableWidth < A4_WIDTH_PX) {
+        setDocumentScale(availableWidth / A4_WIDTH_PX);
+      } else {
+        setDocumentScale(1);
+      }
+    };
+    
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
 
   // Scroll detection
   useEffect(() => {
@@ -456,22 +478,33 @@ function PropostaPublicPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="py-12 px-4 sm:px-6"
+            className="py-12 px-2 sm:px-6"
             style={{ backgroundColor: C.offWhite }}
           >
-            <div className="max-w-5xl mx-auto">
-              <div className="flex justify-center">
+            <div className="mx-auto" style={{ maxWidth: documentScale < 1 ? '100%' : '80rem' }}>
+              <div 
+                ref={documentContainerRef}
+                className="flex justify-center"
+              >
                 <div
-                  ref={pdfRef}
-                  className="bg-white text-black rounded-xl overflow-hidden shadow-2xl"
-                  style={{ 
-                    width: '210mm', 
-                    maxWidth: '100%', 
-                    minHeight: '297mm', 
-                    boxSizing: 'border-box'
+                  style={{
+                    // Wrapper to handle scaled content height
+                    width: documentScale < 1 ? `${A4_WIDTH_PX * documentScale}px` : 'auto',
                   }}
                 >
-                  <ProposalDocument payload={p} lang={lang} />
+                  <div
+                    ref={pdfRef}
+                    className="bg-white text-black rounded-xl overflow-hidden shadow-2xl"
+                    style={{ 
+                      width: `${A4_WIDTH_PX}px`,
+                      boxSizing: 'border-box',
+                      // Scale transform for mobile
+                      transform: documentScale < 1 ? `scale(${documentScale})` : 'none',
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <ProposalDocument payload={p} lang={lang} />
+                  </div>
                 </div>
               </div>
             </div>
