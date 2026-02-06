@@ -17,13 +17,14 @@ function generateShortId(): string {
 async function redisSet(key: string, value: string, exSeconds: number): Promise<boolean> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
   try {
+    // Upstash REST API espera o valor diretamente (não double-stringified)
     const response = await fetch(`${UPSTASH_URL}/set/${key}?EX=${exSeconds}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${UPSTASH_TOKEN}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
-      body: JSON.stringify(value),
+      body: value,
     });
     return response.ok;
   } catch {
