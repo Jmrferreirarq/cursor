@@ -16,7 +16,6 @@ import {
   Lock,
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
-import { isSupabaseConfigured, saveProposal } from '../lib/supabase';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
@@ -574,7 +573,6 @@ export default function CalculatorPage() {
   const [exclusoesSelecionadas, setExclusoesSelecionadas] = useState<Set<string>>(new Set());
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
   const [linkPropostaCurto, setLinkPropostaCurto] = useState<string | null>(null);
-  const [encurtandoLink, setEncurtandoLink] = useState(false);
   const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
@@ -1416,68 +1414,18 @@ export default function CalculatorPage() {
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
     
-    // Limpar links antigos imediatamente
+    // Limpar estado
     setLinkPropostaCurto(null);
     setLinkPropostaExibido(null);
-    setEncurtandoLink(true);
     
     const payload = buildProposalPayload();
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     
-    // Tentar usar API para link curto
-    try {
-      console.log('[Link] A chamar API para guardar proposta...');
-      const { shortId, error } = await saveProposal(
-        payload as Record<string, unknown>,
-        referenciaExibida,
-        clienteNome.trim(),
-        projetoNome.trim()
-      );
-      
-      console.log('[Link] Resposta da API:', { shortId, error });
-      
-      if (!error && shortId) {
-        const shortUrl = `${window.location.origin}${base}/p/${shortId}`;
-        console.log('[Link] Link curto gerado:', shortUrl);
-        
-        // Guardar proposta localmente também
-        saveCalculatorProposal({
-          clientName: clienteNome.trim(),
-          reference: referenciaExibida,
-          projectName: projetoNome.trim(),
-          projectType: projectType,
-          location: localProposta.trim() || undefined,
-          area: parseFloat(area) || undefined,
-          architectureValue: valorArq,
-          specialtiesValue: valorEsp,
-          extrasValue: valorExtras,
-          totalValue: totalSemIVA,
-          totalWithVat: totalComIVA,
-          vatRate: 23,
-          proposalUrl: shortUrl,
-        });
-        
-        setLinkPropostaExibido(shortUrl);
-        setLinkPropostaHash(computeProposalHash);
-        setLinkPropostaCurto(shortUrl);
-        setEncurtandoLink(false);
-        
-        navigator.clipboard.writeText(shortUrl).then(() => toast.success('Link curto copiado!')).catch(() => {});
-        return;
-      }
-      
-      // Se falhou, usar URL longa
-      console.warn('[Link] Falha na API, a usar URL longa:', error);
-    } catch (e) {
-      console.error('[Link] Erro ao chamar API:', e);
-    }
-    
-    // Fallback: URL com payload codificado
+    // Gerar URL direta da proposta
     const encoded = encodeProposalPayload(payload);
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
-    console.log('[Link] A usar URL longa (fallback)');
     
-    // Guardar proposta e cliente automaticamente (com URL)
+    // Guardar proposta e cliente automaticamente
     saveCalculatorProposal({
       clientName: clienteNome.trim(),
       reference: referenciaExibida,
@@ -1496,10 +1444,8 @@ export default function CalculatorPage() {
     
     setLinkPropostaExibido(url);
     setLinkPropostaHash(computeProposalHash);
-    setLinkPropostaCurto(null);
-    setEncurtandoLink(false);
     
-    // Copiar link completo
+    // Copiar link da proposta
     navigator.clipboard.writeText(url).then(() => toast.success('Link da proposta copiado!')).catch(() => {});
   };
 
@@ -2266,59 +2212,34 @@ export default function CalculatorPage() {
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-green-600 dark:text-green-400">✓</span>
                           <p className="text-xs font-semibold text-green-700 dark:text-green-400">
-                            {encurtandoLink ? 'A encurtar link...' : linkPropostaCurto ? 'Link curto pronto!' : 'Link atualizado e copiado'}
+                            Link da proposta copiado!
                           </p>
                         </div>
                       )}
                       
-                      {/* Link curto (principal) */}
-                      {linkPropostaCurto && !linkDesatualizado && (
-                        <div className="flex gap-2 mb-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={linkPropostaCurto}
-                            className="flex-1 min-w-0 px-3 py-2 text-sm bg-green-100 dark:bg-green-900/30 border border-green-400 rounded font-mono font-semibold"
-                            onClick={(e) => {
-                              (e.target as HTMLInputElement).select();
-                              navigator.clipboard.writeText(linkPropostaCurto);
-                              toast.success('Link curto copiado!');
-                            }}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(linkPropostaCurto);
-                              toast.success('Link curto copiado!');
-                            }}
-                            className="shrink-0 px-3 py-2 text-sm font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                          >
-                            Copiar
-                          </button>
-                          <a
-                            href={linkPropostaCurto}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
-                          >
-                            Abrir
-                          </a>
-                        </div>
-                      )}
-                      
-                      {/* Link completo (secundário ou fallback) */}
+                      {/* Link da proposta */}
                       <div className="flex gap-2">
                         <input
                           type="text"
                           readOnly
                           value={linkPropostaExibido}
-                          className={`flex-1 min-w-0 px-3 py-2 text-xs bg-background border rounded font-mono ${linkDesatualizado ? 'border-amber-300 opacity-60' : linkPropostaCurto ? 'border-border opacity-50' : 'border-green-300'}`}
+                          className={`flex-1 min-w-0 px-3 py-2 text-xs bg-background border rounded font-mono ${linkDesatualizado ? 'border-amber-300 opacity-60' : 'border-green-300'}`}
                           onClick={(e) => {
                             (e.target as HTMLInputElement).select();
                             navigator.clipboard.writeText(linkPropostaExibido);
-                            toast.success('Link completo copiado!');
+                            toast.success('Link copiado!');
                           }}
                         />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(linkPropostaExibido);
+                            toast.success('Link copiado!');
+                          }}
+                          className="shrink-0 px-3 py-2 text-sm font-medium bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                        >
+                          Copiar
+                        </button>
                         {linkDesatualizado ? (
                           <button
                             type="button"
@@ -2327,7 +2248,7 @@ export default function CalculatorPage() {
                           >
                             Regenerar
                           </button>
-                        ) : !linkPropostaCurto && (
+                        ) : (
                           <a
                             href={linkPropostaExibido}
                             target="_blank"
@@ -2338,7 +2259,6 @@ export default function CalculatorPage() {
                           </a>
                         )}
                       </div>
-                      {linkPropostaCurto && <p className="text-xs text-muted-foreground mt-1">↑ Link curto (ideal para WhatsApp) · ↓ Link completo</p>}
                     </div>
                   )}
                 </div>
