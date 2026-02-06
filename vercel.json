@@ -1,14 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install --prefix app",
+  "installCommand": "npm install && npm install --prefix app",
   "buildCommand": "npm run build --prefix app",
   "outputDirectory": "app/dist",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node@3"
-    }
-  },
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }

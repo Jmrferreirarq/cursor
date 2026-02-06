@@ -1,0 +1,7 @@
+{
+  "name": "fa360-api",
+  "private": true,
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
