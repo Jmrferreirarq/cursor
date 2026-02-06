@@ -1413,33 +1413,32 @@ export default function CalculatorPage() {
     return () => { cancelled = true; };
   }, [capturingPDF, previewPayload, referenciaExibida, lang]);
 
-  // Função para encurtar URL (desativada temporariamente - serviços externos não funcionam bem com localhost)
-  // Para produção, considerar usar um serviço próprio ou Vercel Edge Functions
-  const encurtarUrl = async (_longUrl: string): Promise<string | null> => {
-    // Desativado: serviços como TinyURL e is.gd têm problemas com URLs longas/localhost
-    // Retorna null para usar sempre o link completo
-    return null;
-  };
-
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
+    
+    // Limpar links antigos imediatamente
+    setLinkPropostaCurto(null);
+    setLinkPropostaExibido(null);
+    setEncurtandoLink(true);
     
     const payload = buildProposalPayload();
     const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
     
-    // Tentar usar Supabase para link curto
-    if (isSupabaseConfigured()) {
-      setEncurtandoLink(true);
+    // Tentar usar API para link curto
+    try {
+      console.log('[Link] A chamar API para guardar proposta...');
       const { shortId, error } = await saveProposal(
         payload as Record<string, unknown>,
         referenciaExibida,
         clienteNome.trim(),
         projetoNome.trim()
       );
-      setEncurtandoLink(false);
+      
+      console.log('[Link] Resposta da API:', { shortId, error });
       
       if (!error && shortId) {
         const shortUrl = `${window.location.origin}${base}/p/${shortId}`;
+        console.log('[Link] Link curto gerado:', shortUrl);
         
         // Guardar proposta localmente também
         saveCalculatorProposal({
@@ -1461,17 +1460,22 @@ export default function CalculatorPage() {
         setLinkPropostaExibido(shortUrl);
         setLinkPropostaHash(computeProposalHash);
         setLinkPropostaCurto(shortUrl);
+        setEncurtandoLink(false);
         
         navigator.clipboard.writeText(shortUrl).then(() => toast.success('Link curto copiado!')).catch(() => {});
         return;
       }
-      // Se falhou, continuar com URL longa
-      console.warn('Falha ao guardar proposta na base de dados:', error);
+      
+      // Se falhou, usar URL longa
+      console.warn('[Link] Falha na API, a usar URL longa:', error);
+    } catch (e) {
+      console.error('[Link] Erro ao chamar API:', e);
     }
     
     // Fallback: URL com payload codificado
     const encoded = encodeProposalPayload(payload);
     const url = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+    console.log('[Link] A usar URL longa (fallback)');
     
     // Guardar proposta e cliente automaticamente (com URL)
     saveCalculatorProposal({
@@ -1493,6 +1497,7 @@ export default function CalculatorPage() {
     setLinkPropostaExibido(url);
     setLinkPropostaHash(computeProposalHash);
     setLinkPropostaCurto(null);
+    setEncurtandoLink(false);
     
     // Copiar link completo
     navigator.clipboard.writeText(url).then(() => toast.success('Link da proposta copiado!')).catch(() => {});
