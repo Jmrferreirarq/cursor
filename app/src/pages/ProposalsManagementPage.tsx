@@ -113,6 +113,57 @@ export default function ProposalsManagementPage() {
     setShowPDFPreview(false);
   };
 
+  // Carregar proposta existente no formulário
+  const loadProposal = (p: Proposal) => {
+    // Carregar dados do cliente
+    const client = clients.find((c) => c.id === p.clientId);
+    if (client) {
+      setUseExistingClient(true);
+      setSelectedClientId(client.id);
+      setClientData({
+        name: client.name,
+        email: client.email || '',
+        phone: client.phone || '',
+        address: client.address || '',
+        municipality: client.municipality || '',
+      });
+    } else {
+      setUseExistingClient(false);
+      setClientData({
+        name: p.clientName,
+        email: '',
+        phone: '',
+        address: '',
+        municipality: '',
+      });
+    }
+    
+    // Carregar tipo de projeto
+    setProjectType(p.projectType);
+    
+    // Carregar fases (se existirem)
+    if (p.phases && p.phases.length > 0) {
+      setPhases(defaultPhases.map((defaultPhase) => {
+        const existingPhase = p.phases.find((ph) => ph.id === defaultPhase.id);
+        if (existingPhase) {
+          return { ...defaultPhase, value: existingPhase.value, selected: existingPhase.selected };
+        }
+        return { ...defaultPhase, selected: false };
+      }));
+    }
+    
+    // Ir para o resumo se a proposta já tem dados completos
+    if (p.projectType && p.phases.length > 0) {
+      setStep(3);
+    } else if (p.projectType) {
+      setStep(2);
+    } else {
+      setStep(1);
+    }
+    
+    toast.success(`Proposta de ${p.clientName} carregada!`);
+  };
+
   const createProjectFromProposal = (p: Proposal) => {
     const client = clients.find((c) => c.id === p.clientId);
     if (!client) {
@@ -237,7 +288,8 @@ export default function ProposalsManagementPage() {
             {proposals.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group"
+                onClick={() => loadProposal(p)}
+                className="flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-colors group cursor-pointer"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -246,7 +298,7 @@ export default function ProposalsManagementPage() {
                   <div>
                     <p className="font-medium">{p.clientName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {projectTypes.find((t) => t.id === p.projectType)?.label} • {formatCurrency(p.totalWithVat)}
+                      {projectTypes.find((t) => t.id === p.projectType)?.label || p.projectType} • {formatCurrency(p.totalWithVat)}
                     </p>
                   </div>
                 </div>
@@ -257,7 +309,7 @@ export default function ProposalsManagementPage() {
                     {p.status === 'draft' ? 'Rascunho' : p.status}
                   </span>
                   <button
-                    onClick={() => createProjectFromProposal(p)}
+                    onClick={(e) => { e.stopPropagation(); createProjectFromProposal(p); }}
                     className="opacity-0 group-hover:opacity-100 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-all"
                   >
                     <ArrowRight className="w-3 h-3" />
