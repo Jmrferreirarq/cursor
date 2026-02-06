@@ -82,7 +82,7 @@ export const proposalPayloadSchema = z.object({
   area: z.string().optional(),
   valorObra: z.string().optional(),
   tipologia: z.string(),
-  complexidade: z.string(),
+  complexidade: z.string().optional().default(''),
   pisos: z.number().optional(),
   fasesPct: z.number(),
   localizacao: z.string(),
@@ -241,8 +241,13 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
     return null;
   }
   const expanded = expandValue(parsed);
+  console.log('[Decode] Expanded object keys:', Object.keys(expanded as object));
   const result = proposalPayloadSchema.safeParse(expanded);
-  console.log('[Decode] Schema validation:', result.success ? 'success' : result.error?.errors);
+  if (!result.success) {
+    console.error('[Decode] Schema validation FAILED:', JSON.stringify(result.error, null, 2));
+  } else {
+    console.log('[Decode] Schema validation: success');
+  }
   return result.success ? result.data : null;
 }
 

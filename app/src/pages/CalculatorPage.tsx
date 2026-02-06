@@ -160,7 +160,7 @@ const EXTRAS_DESCRICOES: Record<string, string> = {
 };
 
 // Nota metodologia BIM (proposta)
-const NOTA_BIM = 'Todo o processo é desenvolvido em metodologia BIM (Building Information Modeling / Modelação da Informação da Construção), utilizando modelos digitais 3D que integram informação geométrica e alfanumérica do edificado. O desenvolvimento contempla imagens interiores não fotorealistas e imagens exteriores de todas as fases do projeto.';
+const NOTA_BIM = 'Todo o processo é desenvolvido em metodologia BIM (Building Information Modeling / Modelação da Informação da Construção), utilizando modelos digitais 3D que integram informação geométrica e alfanumérica do edificado. O desenvolvimento contempla imagens interiores e exteriores não fotorealistas de apoio à decisão, bem como pormenorização genérica de pontos-chave da construção.';
 
 
 // Formatar duração em semanas e meses (4 semanas ≈ 1 mês)
@@ -579,6 +579,7 @@ export default function CalculatorPage() {
   const [linkPropostaCurto, setLinkPropostaCurto] = useState<string | null>(null);
   const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
   const [propostaFechada, setPropostaFechada] = useState(false);
+  const [gerandoLink, setGerandoLink] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const [capturingPDF, setCapturingPDF] = useState(false);
@@ -588,6 +589,16 @@ export default function CalculatorPage() {
   const [mostrarPacotes, setMostrarPacotes] = useState(false);
   const [mostrarCenarios, setMostrarCenarios] = useState(true);
   const [mostrarGuiaObra, setMostrarGuiaObra] = useState(true);
+  const [mostrarFases, setMostrarFases] = useState(true);
+  const [mostrarEspecialidades, setMostrarEspecialidades] = useState(true);
+  const [mostrarExtras, setMostrarExtras] = useState(true);
+  const [mostrarExclusoes, setMostrarExclusoes] = useState(true);
+  const [mostrarCondicoes, setMostrarCondicoes] = useState(true);
+  const [mostrarMapa, setMostrarMapa] = useState(true);
+  const [mostrarEquipa, setMostrarEquipa] = useState(true);
+  const [notasAdicionais, setNotasAdicionais] = useState('');
+  const [notasExtras, setNotasExtras] = useState('');
+  const [areaUnit, setAreaUnit] = useState('m2');
 
   // Áreas
   const [areaValue, setAreaValue] = useState('');
@@ -1119,6 +1130,8 @@ export default function CalculatorPage() {
           incluido: [
             'Projeto de Arquitetura até decisão municipal',
             'Assistência à Obra (8 visitas incluídas)',
+            'Imagens 3D não fotorealistas (apoio à decisão)',
+            'Pormenorização genérica de pontos-chave',
             ...(espComValor.length > 0 ? ['Projetos de Especialidades'] : []),
             `${Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases ICHPOP`,
             `${honorMode === 'pct' ? '8-12' : areaRef <= 150 ? '6-8' : areaRef <= 300 ? '8-12' : '12-15'} reuniões até aprovação`,
@@ -1419,90 +1432,89 @@ export default function CalculatorPage() {
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
     
-    // Limpar estado
-    setLinkPropostaCurto(null);
-    setLinkPropostaExibido(null);
+    setGerandoLink(true);
     
-    const payload = buildProposalPayload();
-    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
-    
-    // Tentar guardar na base de dados para link curto
-    console.log('[Link] A guardar proposta na base de dados...');
-    const { shortId, error } = await saveProposal(
-      payload as Record<string, unknown>,
-      referenciaExibida,
-      clienteNome.trim(),
-      projetoNome.trim()
-    );
-    
-    let finalUrl: string;
-    
-    if (!error && shortId) {
-      // Link curto funcionou
-      finalUrl = `${window.location.origin}${base}/p/${shortId}`;
-      console.log('[Link] Link curto criado:', finalUrl);
-      setLinkPropostaCurto(finalUrl);
-    } else {
-      // Fallback para URL longa
-      console.warn('[Link] Falha ao criar link curto, usando URL longa:', error);
+    try {
+      // Limpar estado
+      setLinkPropostaCurto(null);
+      setLinkPropostaExibido(null);
+      
+      const payload = buildProposalPayload();
+      const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
+      
+      // Gerar URL longa diretamente (mais fiável)
       const encoded = encodeProposalPayload(payload);
-      finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+      const finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+      
+      // Guardar proposta localmente
+      saveCalculatorProposal({
+        clientName: clienteNome.trim(),
+        reference: referenciaExibida,
+        projectName: projetoNome.trim(),
+        projectType: projectType,
+        location: localProposta.trim() || undefined,
+        area: parseFloat(area) || undefined,
+        architectureValue: valorArq,
+        specialtiesValue: valorEsp,
+        extrasValue: valorExtras,
+        totalValue: totalSemIVA,
+        totalWithVat: totalComIVA,
+        vatRate: 23,
+        proposalUrl: finalUrl,
+        calculatorState: {
+          honorMode,
+          area,
+          projectType,
+          complexity,
+          valorObra,
+          pctHonor,
+          curvaDecrescimento,
+          fasesIncluidas: Array.from(fasesIncluidas),
+          honorLocalizacao,
+          numPisos,
+          extrasValores,
+          despesasReembolsaveis,
+          especialidadesValores,
+          exclusoesSelecionadas: Array.from(exclusoesSelecionadas),
+          notasAdicionais,
+          notasExtras,
+          mostrarResumo,
+          mostrarFases,
+          mostrarEspecialidades,
+          mostrarExtras,
+          mostrarExclusoes,
+          mostrarCondicoes,
+          mostrarMapa,
+          mostrarEquipa,
+          mostrarCenarios,
+          mostrarGuiaObra,
+          linkGoogleMaps,
+          areaUnit,
+        },
+      });
+      
+      setLinkPropostaExibido(finalUrl);
+      setLinkPropostaHash(computeProposalHash);
+      
+      // Copiar link (pode falhar em alguns contextos)
+      try {
+        await navigator.clipboard.writeText(finalUrl);
+        toast.success('Link da proposta copiado!');
+      } catch {
+        // Clipboard bloqueado - mostrar link para copiar manualmente
+        toast.success('Link gerado! Clica para copiar.');
+      }
+      
+    } catch (err) {
+      console.error('[Link] Erro ao gerar link:', err);
+      // Mostrar erro detalhado na consola
+      if (err instanceof Error) {
+        console.error('[Link] Detalhes:', err.message, err.stack);
+      }
+      toast.error('Erro ao gerar link - ver consola (F12)');
+    } finally {
+      setGerandoLink(false);
     }
-    
-    // Guardar proposta e cliente automaticamente (com estado da calculadora)
-    saveCalculatorProposal({
-      clientName: clienteNome.trim(),
-      reference: referenciaExibida,
-      projectName: projetoNome.trim(),
-      projectType: projectType,
-      location: localProposta.trim() || undefined,
-      area: parseFloat(area) || undefined,
-      architectureValue: valorArq,
-      specialtiesValue: valorEsp,
-      extrasValue: valorExtras,
-      totalValue: totalSemIVA,
-      totalWithVat: totalComIVA,
-      vatRate: 23,
-      proposalUrl: finalUrl,
-      calculatorState: {
-        honorMode,
-        area,
-        projectType,
-        complexity,
-        valorObra,
-        pctHonor,
-        curvaDecrescimento,
-        fasesIncluidas: Array.from(fasesIncluidas),
-        honorLocalizacao,
-        numPisos,
-        extrasValores,
-        despesasReembolsaveis,
-        especialidadesValores,
-        exclusoesSelecionadas: Array.from(exclusoesSelecionadas),
-        notasAdicionais,
-        notasExtras,
-        mostrarResumo,
-        mostrarFases,
-        mostrarEspecialidades,
-        mostrarExtras,
-        mostrarExclusoes,
-        mostrarCondicoes,
-        mostrarMapa,
-        mostrarEquipa,
-        mostrarCenarios,
-        mostrarGuiaObra,
-        linkGoogleMaps,
-        areaUnit,
-      },
-    });
-    
-    setLinkPropostaExibido(finalUrl);
-    setLinkPropostaHash(computeProposalHash);
-    
-    // Copiar link
-    navigator.clipboard.writeText(finalUrl).then(() => {
-      toast.success(shortId ? 'Link curto copiado!' : 'Link da proposta copiado!');
-    }).catch(() => {});
   };
 
   const unitLabel: Record<string, string> = {
@@ -2317,10 +2329,20 @@ export default function CalculatorPage() {
                         <button
                           type="button"
                           onClick={obterLinkProposta}
-                          className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors"
+                          disabled={gerandoLink}
+                          className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg text-sm font-medium hover:bg-muted/80 transition-colors disabled:opacity-50"
                         >
-                          <Link2 className="w-4 h-4" />
-                          Obter link HTML
+                          {gerandoLink ? (
+                            <>
+                              <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              A gerar...
+                            </>
+                          ) : (
+                            <>
+                              <Link2 className="w-4 h-4" />
+                              Obter link HTML
+                            </>
+                          )}
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">{t('calcReadyToSendHint', lang)}</p>
