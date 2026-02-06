@@ -1,92 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Client, Project, Proposal, CalculatorState } from '@/types';
 
-const initialClients: Client[] = [
-  {
-    id: 'cli-ex-1',
-    name: 'Maria Silva',
-    email: 'maria.silva@email.pt',
-    phone: '+351 912 345 678',
-    address: 'Rua das Flores, 42',
-    municipality: 'Lisboa',
-    nif: '123456789',
-    projects: ['proj-ex-1'],
-    createdAt: new Date().toISOString().slice(0, 10),
-    notes: 'Cliente exemplo – reabilitação',
-  },
-  {
-    id: 'cli-ex-2',
-    name: 'João Santos',
-    email: 'joao.santos@email.pt',
-    phone: '+351 923 456 789',
-    address: 'Estrada da Praia, 15',
-    municipality: 'Loulé',
-    nif: '987654321',
-    projects: ['proj-ex-2'],
-    createdAt: new Date().toISOString().slice(0, 10),
-    notes: 'Cliente exemplo – moradia',
-  },
-  {
-    id: 'cli-ex-3',
-    name: 'Ana Costa',
-    email: 'ana.costa@email.pt',
-    phone: '+351 934 567 890',
-    address: 'Avenida da Boavista, 200',
-    municipality: 'Porto',
-    nif: '456789123',
-    projects: ['proj-ex-3'],
-    createdAt: new Date().toISOString().slice(0, 10),
-    notes: 'Cliente exemplo – comércio',
-  },
-];
-
-const initialProjects: Project[] = [
-  {
-    id: 'proj-ex-1',
-    name: 'Reabilitação Apartamento Lisboa',
-    client: 'Maria Silva',
-    status: 'active',
-    phase: 'Projeto de Execução',
-    startDate: '2024-01-15',
-    deadline: '2024-09-30',
-    budget: 45000,
-    hoursLogged: 120,
-    team: ['JÉSSICA', 'SOFIA'],
-    description: 'Reabilitação integral de apartamento T3 no centro de Lisboa.',
-    address: 'Rua das Flores, 42',
-    municipality: 'Lisboa',
-  },
-  {
-    id: 'proj-ex-2',
-    name: 'Moradia Unifamiliar Algarve',
-    client: 'João Santos',
-    status: 'negotiation',
-    phase: 'Ante-Projeto',
-    startDate: '2024-03-01',
-    deadline: '2025-06-30',
-    budget: 185000,
-    hoursLogged: 0,
-    team: ['SOFIA'],
-    description: 'Moradia unifamiliar em Loulé com piscina e jardim.',
-    address: 'Estrada da Praia, 15',
-    municipality: 'Loulé',
-  },
-  {
-    id: 'proj-ex-3',
-    name: 'Loja Comercial Porto',
-    client: 'Ana Costa',
-    status: 'lead',
-    phase: 'Estudo Prévio',
-    startDate: '',
-    deadline: '',
-    budget: 32000,
-    hoursLogged: 0,
-    team: [],
-    description: 'Projeto de arquitetura para loja de vestuário na Boavista.',
-    address: 'Avenida da Boavista, 200',
-    municipality: 'Porto',
-  },
-];
+// Iniciar com arrays vazios - sem dados de exemplo
+const initialClients: Client[] = [];
+const initialProjects: Project[] = [];
 
 const FA360_STORAGE_KEY = 'fa360_data';
 
@@ -378,8 +295,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const proposalsIn = Array.isArray(data.proposals)
         ? data.proposals.map((r) => parseProposal(r as Record<string, unknown>))
         : [];
-      setClients(clientsIn.length ? clientsIn : initialClients);
-      setProjects(projectsIn.length ? projectsIn : initialProjects);
+      setClients(clientsIn);
+      setProjects(projectsIn);
       setProposals(proposalsIn);
       return { ok: true };
     } catch (err) {
