@@ -14,6 +14,8 @@ import {
   FileDown,
   Link2,
   Lock,
+  History,
+  X,
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { saveProposal } from '../lib/supabase';
@@ -546,8 +548,9 @@ const AREA_TO_M2: Record<string, number> = {
 export default function CalculatorPage() {
   const { language } = useLanguage();
   const lang = language;
-  const { saveCalculatorProposal } = useData();
+  const { saveCalculatorProposal, proposals } = useData();
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
+  const [showProposalsList, setShowProposalsList] = useState(false);
 
   // Honorários
   const [honorMode, setHonorMode] = useState<'area' | 'pct'>('area');
@@ -1446,7 +1449,7 @@ export default function CalculatorPage() {
       finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
     }
     
-    // Guardar proposta e cliente automaticamente
+    // Guardar proposta e cliente automaticamente (com estado da calculadora)
     saveCalculatorProposal({
       clientName: clienteNome.trim(),
       reference: referenciaExibida,
@@ -1461,6 +1464,36 @@ export default function CalculatorPage() {
       totalWithVat: totalComIVA,
       vatRate: 23,
       proposalUrl: finalUrl,
+      calculatorState: {
+        honorMode,
+        area,
+        projectType,
+        complexity,
+        valorObra,
+        pctHonor,
+        curvaDecrescimento,
+        fasesIncluidas: Array.from(fasesIncluidas),
+        honorLocalizacao,
+        numPisos,
+        extrasValores,
+        despesasReembolsaveis,
+        especialidadesValores,
+        exclusoesSelecionadas: Array.from(exclusoesSelecionadas),
+        notasAdicionais,
+        notasExtras,
+        mostrarResumo,
+        mostrarFases,
+        mostrarEspecialidades,
+        mostrarExtras,
+        mostrarExclusoes,
+        mostrarCondicoes,
+        mostrarMapa,
+        mostrarEquipa,
+        mostrarCenarios,
+        mostrarGuiaObra,
+        linkGoogleMaps,
+        areaUnit,
+      },
     });
     
     setLinkPropostaExibido(finalUrl);
@@ -1514,6 +1547,64 @@ export default function CalculatorPage() {
     setImovelEstado('bom');
   };
 
+  // Carregar proposta guardada na calculadora
+  const loadProposal = (proposal: typeof proposals[0]) => {
+    if (!proposal.calculatorState) {
+      toast.error('Esta proposta não tem dados da calculadora guardados.');
+      return;
+    }
+    
+    const state = proposal.calculatorState;
+    
+    // Restaurar estado da calculadora
+    setActiveCalculator('honorarios');
+    setHonorMode(state.honorMode);
+    setArea(state.area);
+    setProjectType(state.projectType);
+    setComplexity(state.complexity);
+    setValorObra(state.valorObra);
+    setPctHonor(state.pctHonor);
+    setCurvaDecrescimento(state.curvaDecrescimento);
+    setFasesIncluidas(new Set(state.fasesIncluidas));
+    setHonorLocalizacao(state.honorLocalizacao);
+    setNumPisos(state.numPisos);
+    setExtrasValores(state.extrasValores);
+    setDespesasReembolsaveis(state.despesasReembolsaveis);
+    setEspecialidadesValores(state.especialidadesValores);
+    setExclusoesSelecionadas(new Set(state.exclusoesSelecionadas));
+    setLinkGoogleMaps(state.linkGoogleMaps);
+    setAreaUnit(state.areaUnit || 'm2');
+    
+    // Restaurar opções de visualização
+    setMostrarResumo(state.mostrarResumo);
+    setMostrarFases(state.mostrarFases);
+    setMostrarEspecialidades(state.mostrarEspecialidades);
+    setMostrarExtras(state.mostrarExtras);
+    setMostrarExclusoes(state.mostrarExclusoes);
+    setMostrarCondicoes(state.mostrarCondicoes);
+    setMostrarMapa(state.mostrarMapa);
+    setMostrarEquipa(state.mostrarEquipa);
+    setMostrarCenarios(state.mostrarCenarios);
+    setMostrarGuiaObra(state.mostrarGuiaObra);
+    setNotasAdicionais(state.notasAdicionais);
+    setNotasExtras(state.notasExtras);
+    
+    // Restaurar dados do cliente/projeto
+    setClienteNome(proposal.clientName);
+    setProjetoNome(proposal.projectName || '');
+    setReferenciaProposta(proposal.reference || '');
+    setLocalProposta(proposal.location || '');
+    
+    // Limpar estados de link
+    setLinkPropostaExibido(null);
+    setLinkPropostaCurto(null);
+    setLinkPropostaHash(null);
+    setPropostaFechada(false);
+    
+    setShowProposalsList(false);
+    toast.success(`Proposta ${proposal.reference} carregada!`);
+  };
+
   const pdfCapturePortal = capturingPDF && previewPayload && createPortal(
     <>
       <div
@@ -1558,15 +1649,26 @@ export default function CalculatorPage() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">Calculadoras</h1>
         </div>
-        {activeCalculator && (
-          <button
-            onClick={resetCalculator}
-            className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors w-fit"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Limpar</span>
-          </button>
-        )}
+        <div className="flex gap-2">
+          {proposals.length > 0 && (
+            <button
+              onClick={() => setShowProposalsList(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors w-fit"
+            >
+              <History className="w-4 h-4" />
+              <span>Propostas ({proposals.length})</span>
+            </button>
+          )}
+          {activeCalculator && (
+            <button
+              onClick={resetCalculator}
+              className="flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-lg hover:bg-muted/80 transition-colors w-fit"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Limpar</span>
+            </button>
+          )}
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -2509,6 +2611,93 @@ export default function CalculatorPage() {
         </motion.div>
       )}
     </div>
+
+    {/* Modal de Propostas Guardadas */}
+    <AnimatePresence>
+      {showProposalsList && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowProposalsList(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <History className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">Propostas Guardadas</h2>
+                  <p className="text-sm text-muted-foreground">{proposals.length} proposta{proposals.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowProposalsList(false)}
+                className="p-2 hover:bg-muted rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {proposals.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Nenhuma proposta guardada</p>
+                </div>
+              ) : (
+                proposals.map((proposal) => (
+                  <button
+                    key={proposal.id}
+                    onClick={() => loadProposal(proposal)}
+                    className="w-full p-4 bg-muted/50 hover:bg-muted border border-border rounded-xl text-left transition-all group"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-primary">{proposal.reference || 'Sem referência'}</span>
+                          {proposal.calculatorState ? (
+                            <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-500 rounded-full">Editável</span>
+                          ) : (
+                            <span className="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-500 rounded-full">Só visualização</span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium truncate">{proposal.clientName}</p>
+                        {proposal.projectName && (
+                          <p className="text-sm text-muted-foreground truncate">{proposal.projectName}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          <span>{proposal.createdAt}</span>
+                          {proposal.location && <span>• {proposal.location}</span>}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-primary">{formatCurrency(proposal.totalWithVat)}</p>
+                        <p className="text-xs text-muted-foreground">c/ IVA</p>
+                      </div>
+                    </div>
+                    {proposal.proposalUrl && (
+                      <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground truncate max-w-[200px]">{proposal.proposalUrl}</span>
+                        <span className="text-xs text-primary group-hover:underline">Abrir na calculadora →</span>
+                      </div>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 }

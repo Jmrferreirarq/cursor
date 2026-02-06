@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import type { Client, Project, Proposal } from '@/types';
+import type { Client, Project, Proposal, CalculatorState } from '@/types';
 
 const initialClients: Client[] = [
   {
@@ -116,6 +116,7 @@ export interface CalculatorProposalInput {
   totalWithVat: number;
   vatRate: number;
   proposalUrl?: string;
+  calculatorState?: CalculatorState;
 }
 
 interface DataContextType {
@@ -295,6 +296,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
               totalWithVat: input.totalWithVat,
               vatRate: input.vatRate,
               proposalUrl: input.proposalUrl,
+              calculatorState: input.calculatorState,
             }
           : p
       ));
@@ -322,6 +324,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       specialtiesValue: input.specialtiesValue,
       extrasValue: input.extrasValue,
       proposalUrl: input.proposalUrl,
+      calculatorState: input.calculatorState,
     };
     
     setProposals((prev) => [newProposal, ...prev]);

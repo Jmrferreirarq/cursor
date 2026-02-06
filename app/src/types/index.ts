@@ -42,6 +42,38 @@ export interface Task {
   completedAt?: string;
 }
 
+/** Estado da calculadora para restaurar proposta */
+export interface CalculatorState {
+  honorMode: 'area' | 'pct';
+  area: string;
+  projectType: string;
+  complexity: string;
+  valorObra: string;
+  pctHonor: string;
+  curvaDecrescimento: boolean;
+  fasesIncluidas: string[];
+  honorLocalizacao: string;
+  numPisos: string;
+  extrasValores: Record<string, string>;
+  despesasReembolsaveis: string;
+  especialidadesValores: Record<string, string>;
+  exclusoesSelecionadas: string[];
+  notasAdicionais: string;
+  notasExtras: string;
+  mostrarResumo: boolean;
+  mostrarFases: boolean;
+  mostrarEspecialidades: boolean;
+  mostrarExtras: boolean;
+  mostrarExclusoes: boolean;
+  mostrarCondicoes: boolean;
+  mostrarMapa: boolean;
+  mostrarEquipa: boolean;
+  mostrarCenarios: boolean;
+  mostrarGuiaObra: boolean;
+  linkGoogleMaps: string;
+  areaUnit: string;
+}
+
 export interface Proposal {
   id: string;
   clientId: string;
@@ -64,6 +96,7 @@ export interface Proposal {
   extrasValue?: number;         // Valor extras (s/IVA)
   area?: number;                // Área (m²)
   proposalUrl?: string;         // Link da proposta
+  calculatorState?: CalculatorState; // Estado completo da calculadora
 }
 
 export interface ProposalPhase {
