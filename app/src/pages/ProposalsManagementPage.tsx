@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye, ArrowRight, Sparkles, Users, Calendar, Euro } from 'lucide-react';
+import { FileText, Plus, Download, ChevronRight, Check, Building2, Home, Hammer, Wrench, PenTool, Eye, ArrowRight, Sparkles, Users, Calendar, Euro, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import PDFPreview from '@/components/proposals/PDFPreview';
 import { useData } from '@/context/DataContext';
@@ -26,7 +26,7 @@ const defaultPhases: ProposalPhase[] = [
 
 export default function ProposalsManagementPage() {
   const navigate = useNavigate();
-  const { clients, addClient, addProposal, addProject, proposals } = useData();
+  const { clients, addClient, addProposal, addProject, proposals, deleteProposal } = useData();
   const [step, setStep] = useState(1);
   const [useExistingClient, setUseExistingClient] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -303,7 +303,7 @@ export default function ProposalsManagementPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <span className={`text-xs px-2.5 py-1 rounded-full ${
                     p.status === 'draft' ? 'bg-muted text-muted-foreground' : 'bg-emerald-500/20 text-emerald-400'
                   }`}>
@@ -312,6 +312,20 @@ export default function ProposalsManagementPage() {
                   <span className="text-xs text-primary group-hover:underline">
                     Editar →
                   </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Tens a certeza que queres eliminar esta proposta?')) {
+                        deleteProposal(p.id);
+                        toast.success('Proposta eliminada');
+                      }
+                    }}
+                    className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors ml-1"
+                    title="Eliminar proposta"
+                  >
+                    <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-400" />
+                  </button>
                 </div>
               </button>
             ))}

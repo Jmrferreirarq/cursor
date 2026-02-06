@@ -43,6 +43,8 @@ interface DataContextType {
   addClient: (client: Client) => void;
   addProject: (project: Project) => void;
   addProposal: (proposal: Proposal) => void;
+  /** Elimina uma proposta pelo ID */
+  deleteProposal: (id: string) => void;
   /** Encontra cliente existente (por nome ou NIF) ou cria novo. Retorna o ID do cliente. */
   findOrCreateClient: (input: ClientInput) => string;
   /** Guarda proposta da calculadora e liga ao cliente. Retorna o ID da proposta. */
@@ -148,6 +150,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const addProposal = useCallback((proposal: Proposal) => {
     setProposals((prev) => [proposal, ...prev]);
+  }, []);
+
+  const deleteProposal = useCallback((id: string) => {
+    setProposals((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
   /** Encontra cliente existente (por nome ou NIF) ou cria novo */
@@ -314,6 +320,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addClient,
         addProject,
         addProposal,
+        deleteProposal,
         findOrCreateClient,
         saveCalculatorProposal,
         resetAllData,
