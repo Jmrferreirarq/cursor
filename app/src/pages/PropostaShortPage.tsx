@@ -43,10 +43,12 @@ function PropostaShortPage() {
 
       try {
         // O payload já vem parseado da API
+        console.log('[PropostaShort] Payload recebido:', JSON.stringify(proposal.payload, null, 2).substring(0, 500));
         const validated = proposalPayloadSchema.safeParse(proposal.payload);
         
         if (!validated.success) {
-          console.error('Payload inválido:', validated.error);
+          console.error('Payload inválido:', JSON.stringify(validated.error, null, 2));
+          console.error('Campos em falta ou inválidos:', validated.error.issues.map(i => `${i.path.join('.')}: ${i.message}`));
           setError('Dados da proposta inválidos');
           setLoading(false);
           return;
