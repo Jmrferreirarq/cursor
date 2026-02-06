@@ -43,7 +43,16 @@ function PropostaShortPage() {
 
       try {
         // O payload já vem parseado da API
-        console.log('[PropostaShort] Payload recebido:', JSON.stringify(proposal.payload, null, 2).substring(0, 500));
+        console.log('[PropostaShort] Proposal object:', proposal);
+        console.log('[PropostaShort] Payload type:', typeof proposal.payload);
+        
+        if (!proposal.payload) {
+          console.error('Payload está vazio ou undefined');
+          setError('Dados da proposta em falta');
+          setLoading(false);
+          return;
+        }
+        
         const validated = proposalPayloadSchema.safeParse(proposal.payload);
         
         if (!validated.success) {
