@@ -22,9 +22,11 @@ import {
   Moon,
   Globe,
   ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
+import { useData } from '@/context/DataContext';
 
 const navItems = [
   { path: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, exact: true },
@@ -46,9 +48,19 @@ const navItems = [
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
+  const { resetAllData } = useData();
+
+  const handleResetData = async () => {
+    await resetAllData();
+    localStorage.removeItem('fa360_data');
+    setShowResetConfirm(false);
+    setUserMenuOpen(false);
+    window.location.reload();
+  };
   const getLabel = (key: string) => {
     const result = t(key);
     return typeof result === 'string' ? result : key;
@@ -159,6 +171,14 @@ export default function Navbar() {
                     <button className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors">
                       Configurações
                     </button>
+                    <div className="border-t border-border my-1" />
+                    <button 
+                      onClick={() => setShowResetConfirm(true)}
+                      className="w-full px-4 py-2 text-left text-sm text-amber-600 hover:bg-amber-500/10 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Limpar Dados
+                    </button>
                     <button className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 transition-colors">
                       Sair
                     </button>
@@ -219,6 +239,52 @@ export default function Navbar() {
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reset Confirmation Dialog */}
+      <AnimatePresence>
+        {showResetConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4"
+            onClick={() => setShowResetConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-popover border border-border rounded-xl shadow-xl p-6 max-w-md w-full"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-amber-500" />
+                </div>
+                <h3 className="text-lg font-semibold">Limpar Todos os Dados</h3>
+              </div>
+              <p className="text-muted-foreground mb-6">
+                Esta ação irá apagar permanentemente todos os clientes, projetos e propostas guardados. 
+                Esta ação não pode ser revertida.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleResetData}
+                  className="px-4 py-2 text-sm font-medium bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Confirmar Reset
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
