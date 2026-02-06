@@ -1442,8 +1442,13 @@ export default function CalculatorPage() {
       const payload = buildProposalPayload();
       const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
       
-      let finalUrl: string;
       let isShortLink = false;
+      let finalUrl: string;
+      
+      // Gerar URL longa como base
+      const encoded = encodeProposalPayload(payload);
+      const longUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+      finalUrl = longUrl;
       
       // Tentar gerar link curto via API (só em produção)
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -1474,11 +1479,8 @@ export default function CalculatorPage() {
         }
       }
       
-      // Fallback: URL longa
       if (!isShortLink) {
-        const encoded = encodeProposalPayload(payload);
-        finalUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
-        console.log('[Link] Link longo gerado');
+        console.log('[Link] Link longo usado');
       }
       
       // Guardar proposta localmente
