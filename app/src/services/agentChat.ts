@@ -10,12 +10,22 @@ import { runPlatformDiagnostic } from './platformAgent';
 
 // ── Types ──
 
+export interface ChatAttachment {
+  type: 'pdf' | 'image';
+  fileName: string;
+  sizeKB: number;
+  pages?: number;         // PDF only
+  extractedText?: string; // PDF only
+  dataUrl?: string;       // Image only
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'agent';
   content: string;
   timestamp: string;
   actions?: ChatAction[];
+  attachment?: ChatAttachment;
   data?: Record<string, unknown>;
 }
 
@@ -338,7 +348,7 @@ function generateLocalResponse(intent: string, appData: AppData): { content: str
 
 // ── AI Response (with OpenAI) ──
 
-async function generateAIResponse(userMessage: string, appData: AppData, history: ChatMessage[]): Promise<{ content: string; actions?: ChatAction[] }> {
+async function generateAIResponse(userMessage: string, appData: AppData, history: ChatMessage[], attachment?: ChatAttachment): Promise<{ content: string; actions?: ChatAction[] }> {
   const apiKey = getApiKey();
   if (!apiKey) return generateLocalResponse('unknown', appData);
 
@@ -372,16 +382,41 @@ REGRAS:
 - Podes usar emojis moderadamente
 - Se te pedirem para fazer algo na plataforma, explica os passos
 - Se detectares problemas, alerta proactivamente
-- Formatação: usa markdown para negrito, listas, etc.`;
+- Formatação: usa markdown para negrito, listas, etc.
+- Se o utilizador enviar um ficheiro (PDF ou imagem), analisa o conteúdo e responde com base nele
+- Para PDFs, o texto extraído vem incluído na mensagem
+- Para imagens, descreve o que vês e sugere usos na plataforma`;
 
-  const messages = [
-    { role: 'system' as const, content: systemPrompt },
+  // Build user message with attachment context
+  let fullUserMessage = userMessage;
+  if (attachment) {
+    if (attachment.type === 'pdf' && attachment.extractedText) {
+      fullUserMessage = `[O utilizador enviou o ficheiro PDF "${attachment.fileName}" (${attachment.pages} páginas, ${attachment.sizeKB}KB)]\n\nCONTEÚDO DO PDF:\n${attachment.extractedText.slice(0, 12000)}\n\n${attachment.extractedText.length > 12000 ? '(Texto truncado — demasiado longo)\n\n' : ''}PERGUNTA/PEDIDO DO UTILIZADOR: ${userMessage || 'Analisa este documento.'}`;
+    } else if (attachment.type === 'image') {
+      fullUserMessage = `[O utilizador enviou uma imagem "${attachment.fileName}" (${attachment.sizeKB}KB)]\n\n${userMessage || 'Analisa esta imagem.'}`;
+    }
+  }
+
+  const messages: { role: 'system' | 'user' | 'assistant'; content: string | Array<{ type: string; text?: string; image_url?: { url: string; detail: string } }> }[] = [
+    { role: 'system', content: systemPrompt },
     ...history.slice(-10).map((m) => ({
-      role: m.role === 'user' ? 'user' as const : 'assistant' as const,
+      role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
       content: m.content,
     })),
-    { role: 'user' as const, content: userMessage },
   ];
+
+  // For images with AI, send as vision message
+  if (attachment?.type === 'image' && attachment.dataUrl) {
+    messages.push({
+      role: 'user',
+      content: [
+        { type: 'text', text: fullUserMessage },
+        { type: 'image_url', image_url: { url: attachment.dataUrl, detail: 'high' } },
+      ],
+    });
+  } else {
+    messages.push({ role: 'user', content: fullUserMessage });
+  }
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -414,7 +449,29 @@ export async function processMessage(
   appData: AppData,
   history: ChatMessage[],
   useAI: boolean = true,
+  attachment?: ChatAttachment,
 ): Promise<{ content: string; actions?: ChatAction[] }> {
+  // If there's an attachment, always use AI (if available) for best results
+  if (attachment) {
+    if (hasApiKey()) {
+      return generateAIResponse(userMessage, appData, history, attachment);
+    }
+
+    // Local fallback for files
+    if (attachment.type === 'pdf') {
+      const preview = attachment.extractedText?.slice(0, 500) || '';
+      return {
+        content: `**Ficheiro recebido:** ${attachment.fileName} (${attachment.pages} páginas, ${attachment.sizeKB}KB)\n\n**Pré-visualização do texto:**\n${preview}${(attachment.extractedText?.length || 0) > 500 ? '...' : ''}\n\n_Para uma análise completa do PDF, ativa o AI Copilot (API key da OpenAI)._`,
+      };
+    }
+    if (attachment.type === 'image') {
+      return {
+        content: `**Imagem recebida:** ${attachment.fileName} (${attachment.sizeKB}KB)\n\n_Para análise de imagens, ativa o AI Copilot. Ou vai à Media Inbox para fazer upload e análise automática._`,
+        actions: [{ id: 'nav-media', label: 'Ir para Media Inbox', type: 'navigate', payload: '/media' }],
+      };
+    }
+  }
+
   const match = matchIntent(userMessage);
 
   // If we have a confident local match, use it (faster + free)
@@ -431,12 +488,13 @@ export async function processMessage(
   return generateLocalResponse(match.intent, appData);
 }
 
-export function createMessage(role: 'user' | 'agent', content: string, actions?: ChatAction[]): ChatMessage {
+export function createMessage(role: 'user' | 'agent', content: string, actions?: ChatAction[], attachment?: ChatAttachment): ChatMessage {
   return {
     id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     role,
     content,
     timestamp: new Date().toISOString(),
     actions,
+    attachment,
   };
 }

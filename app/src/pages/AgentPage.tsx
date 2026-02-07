@@ -5,7 +5,7 @@ import {
   Bot, Shield, Database, BarChart3, Zap, AlertTriangle, CheckCircle2,
   Info, XCircle, Check, Sparkles, Loader2,
   Heart, FileText, ClipboardCopy, ChevronDown, ChevronUp,
-  Send, MessageSquare, ArrowRight, ExternalLink, Copy,
+  Send, MessageSquare, ArrowRight, Copy, Paperclip, X, Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
@@ -14,8 +14,9 @@ import { localStorageService } from '@/services/localStorage';
 import { runPlatformDiagnostic } from '@/services/platformAgent';
 import { hasApiKey } from '@/services/ai';
 import { processMessage, createMessage, QUICK_SUGGESTIONS } from '@/services/agentChat';
+import { extractTextFromPDF, readFileAsDataURL, getFileType } from '@/services/pdfExtractor';
 import type { PlatformReport, Severity } from '@/services/platformAgent';
-import type { ChatMessage, ChatAction } from '@/services/agentChat';
+import type { ChatMessage, ChatAction, ChatAttachment } from '@/services/agentChat';
 
 const SEVERITY_CONFIG: Record<Severity, { icon: typeof CheckCircle2; color: string; bg: string }> = {
   critical: { icon: XCircle, color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
@@ -49,8 +50,12 @@ export default function AgentPage() {
   ]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null);
+  const [fileProcessing, setFileProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -71,19 +76,78 @@ export default function AgentPage() {
     return data;
   }, [clients, projects, proposals, assets, posts, contentPacks, editorialDNA, slots, performanceEntries]);
 
+  // ── File handling ──
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ''; // Reset input
+
+    const fileType = getFileType(file);
+    if (fileType === 'unsupported') {
+      toast.error('Tipo de ficheiro não suportado. Envia PDFs ou imagens.');
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Ficheiro demasiado grande (máx. 20MB).');
+      return;
+    }
+
+    setFileProcessing(true);
+    setPendingFile(file);
+
+    try {
+      if (fileType === 'pdf') {
+        const result = await extractTextFromPDF(file);
+        setPendingAttachment({
+          type: 'pdf',
+          fileName: file.name,
+          sizeKB: result.sizeKB,
+          pages: result.pages,
+          extractedText: result.text,
+        });
+        toast.success(`PDF carregado: ${result.pages} páginas extraídas`);
+      } else if (fileType === 'image') {
+        const dataUrl = await readFileAsDataURL(file);
+        setPendingAttachment({
+          type: 'image',
+          fileName: file.name,
+          sizeKB: Math.round(file.size / 1024),
+          dataUrl,
+        });
+        toast.success('Imagem carregada');
+      }
+    } catch (err) {
+      toast.error('Erro ao processar ficheiro');
+      setPendingFile(null);
+      setPendingAttachment(null);
+    }
+    setFileProcessing(false);
+  };
+
+  const clearFile = () => {
+    setPendingFile(null);
+    setPendingAttachment(null);
+  };
+
   // ── Chat ──
 
   const sendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() && !pendingAttachment) return;
 
-    const userMsg = createMessage('user', text.trim());
+    const attachment = pendingAttachment || undefined;
+    const messageText = text.trim() || (attachment ? `Analisa este ficheiro: ${attachment.fileName}` : '');
+    const userMsg = createMessage('user', messageText, undefined, attachment);
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
+    setPendingFile(null);
+    setPendingAttachment(null);
     setThinking(true);
 
     try {
       const appData = getAppData();
-      const response = await processMessage(text.trim(), appData, messages);
+      const response = await processMessage(messageText, appData, messages, true, attachment);
       const agentMsg = createMessage('agent', response.content, response.actions);
       setMessages((prev) => [...prev, agentMsg]);
     } catch {
@@ -186,6 +250,20 @@ export default function AgentPage() {
                         {msg.role === 'agent' ? 'Agente' : 'Tu'} · {new Date(msg.timestamp).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
+                    {/* Attachment badge */}
+                    {msg.attachment && (
+                      <div className={`flex items-center gap-2 mb-1.5 px-3 py-1.5 rounded-lg border text-xs ${
+                        msg.role === 'user'
+                          ? 'bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground'
+                          : 'bg-muted border-border text-muted-foreground'
+                      }`}>
+                        {msg.attachment.type === 'pdf' ? <FileText className="w-3.5 h-3.5 shrink-0" /> : <ImageIcon className="w-3.5 h-3.5 shrink-0" />}
+                        <span className="truncate font-medium">{msg.attachment.fileName}</span>
+                        <span className="shrink-0 opacity-70">
+                          {msg.attachment.type === 'pdf' ? `${msg.attachment.pages}p · ` : ''}{msg.attachment.sizeKB}KB
+                        </span>
+                      </div>
+                    )}
                     {/* Bubble */}
                     <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       msg.role === 'user'
@@ -260,27 +338,50 @@ export default function AgentPage() {
 
             {/* Input */}
             <div className="border-t border-border px-4 sm:px-6 py-3">
-              <div className="flex items-center gap-3">
+              {/* Pending file preview */}
+              {pendingAttachment && (
+                <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
+                  {pendingAttachment.type === 'pdf' ? <FileText className="w-4 h-4 text-primary shrink-0" /> : <ImageIcon className="w-4 h-4 text-primary shrink-0" />}
+                  <span className="text-xs font-medium text-foreground truncate">{pendingAttachment.fileName}</span>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {pendingAttachment.type === 'pdf' ? `${pendingAttachment.pages} páginas · ` : ''}{pendingAttachment.sizeKB}KB
+                  </span>
+                  <button onClick={clearFile} className="ml-auto p-1 hover:bg-muted rounded-lg transition-colors shrink-0">
+                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                {/* File upload button */}
+                <input ref={fileInputRef} type="file" accept=".pdf,image/*" onChange={handleFileSelect} className="hidden" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={thinking || fileProcessing}
+                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 shrink-0"
+                  title="Enviar ficheiro (PDF ou imagem)"
+                >
+                  {fileProcessing ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <Paperclip className="w-4 h-4 text-muted-foreground" />}
+                </button>
                 <input
                   ref={inputRef}
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Escreve uma mensagem ao Agente..."
+                  placeholder={pendingAttachment ? 'Mensagem sobre o ficheiro (opcional)...' : 'Escreve uma mensagem ao Agente...'}
                   className="flex-1 bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
                   disabled={thinking}
                 />
                 <button
                   onClick={() => sendMessage(input)}
-                  disabled={!input.trim() || thinking}
+                  disabled={(!input.trim() && !pendingAttachment) || thinking}
                   className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
                 >
                   {thinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                {hasApiKey() ? 'AI ativo — respostas inteligentes habilitadas' : 'Respostas locais — ativa o AI Copilot para respostas mais ricas'}
+                {hasApiKey() ? 'AI ativo — aceita PDFs, imagens e texto livre' : 'Respostas locais — ativa o AI Copilot para análise de ficheiros'}
               </p>
             </div>
           </motion.div>
