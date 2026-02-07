@@ -23,6 +23,7 @@ import {
   Globe,
   ChevronDown,
   Trash2,
+  Bot,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -44,6 +45,7 @@ const navItems = [
   { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
   { path: '/brand', labelKey: 'nav.brand', icon: Palette },
   { path: '/calculator', labelKey: 'nav.calculator', icon: Calculator },
+  { path: '/agent', labelKey: 'nav.agent', icon: Bot },
 ];
 
 export default function Navbar() {

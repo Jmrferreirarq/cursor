@@ -26,6 +26,7 @@ const ptTranslations: Translations = {
     inbox: 'Inbox',
     brand: 'Marca',
     calculator: 'Calculadora',
+    agent: 'Agente',
   },
   dashboard: {
     title: 'Comando Operacional',
@@ -103,6 +104,7 @@ const enTranslations: Translations = {
     inbox: 'Inbox',
     brand: 'Brand',
     calculator: 'Calculator',
+    agent: 'Agent',
   },
   dashboard: {
     title: 'Operational Command',

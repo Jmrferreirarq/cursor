@@ -32,6 +32,7 @@ import AssetDetailPage from './pages/AssetDetailPage';
 import PlannerPage from './pages/PlannerPage';
 import PerformancePage from './pages/PerformancePage';
 import EditorialDNAPage from './pages/EditorialDNAPage';
+import AgentPage from './pages/AgentPage';
 import MaterialLibraryPage from './pages/MaterialLibraryPage';
 import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
@@ -100,6 +101,7 @@ function App() {
                 <Route path="/planner" element={<PlannerPage />} />
                 <Route path="/performance" element={<PerformancePage />} />
                 <Route path="/editorial-dna" element={<EditorialDNAPage />} />
+                <Route path="/agent" element={<AgentPage />} />
                 <Route path="/technical" element={<TechnicalHubPage />} />
                 <Route path="/technical/details" element={<ConstructionDetailsPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
