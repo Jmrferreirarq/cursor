@@ -39,6 +39,7 @@ const navItems = [
   { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
   { path: '/technical', labelKey: 'nav.technical', icon: Wrench },
   { path: '/media', labelKey: 'nav.media', icon: Image },
+  { path: '/planner', labelKey: 'nav.planner', icon: Calendar },
   { path: '/library', labelKey: 'nav.library', icon: Library },
   { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
   { path: '/brand', labelKey: 'nav.brand', icon: Palette },

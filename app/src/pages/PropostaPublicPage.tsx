@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
@@ -29,7 +29,8 @@ function getInitials(name: string): string {
 
 function PropostaPublicPage() {
   const [searchParams] = useSearchParams();
-  const encoded = searchParams.get('d');
+  const { data: pathData } = useParams<{ data: string }>();
+  const encoded = searchParams.get('d') || pathData || null;
   const urlLang = searchParams.get('lang') as Lang | null;
   const p = encoded ? decodeProposalPayload(encoded) : null;
   const lang: Lang = urlLang === 'en' ? 'en' : (p?.lang ?? 'pt');

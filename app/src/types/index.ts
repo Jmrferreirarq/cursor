@@ -162,3 +162,135 @@ export interface PipelineData {
   closed: number;
   potentialValue: number;
 }
+
+// ─── Content Factory Types ──────────────────────────────────────────
+
+export type MediaType = 'obra' | 'render' | 'detalhe' | 'equipa' | 'before-after';
+export type MediaObjective = 'atrair-clientes' | 'portfolio' | 'recrutamento' | 'autoridade-tecnica';
+export type MediaStatus = 'rascunho' | 'por-classificar' | 'analisado' | 'pronto' | 'publicado';
+export type MediaRestriction = 'sem-rostos' | 'sem-moradas' | 'sem-marcas' | 'sem-matriculas';
+export type ContentChannel = 'ig-feed' | 'ig-reels' | 'ig-stories' | 'ig-carrossel' | 'linkedin' | 'tiktok' | 'pinterest' | 'youtube' | 'threads';
+export type PostStatus = 'idea' | 'generated' | 'review' | 'approved' | 'scheduled' | 'published';
+export type GeneratorType = 'manual' | 'auto-copy' | 'auto-narrative' | 'auto-recycle';
+
+export interface MediaAsset {
+  id: string;
+  name: string;
+  type: 'image' | 'video';
+  src?: string;
+  thumbnail?: string;
+
+  // Layer A — Ingestion (mandatory on upload)
+  projectId?: string;
+  mediaType: MediaType;
+  objective: MediaObjective;
+  status: MediaStatus;
+  restrictions: MediaRestriction[];
+
+  // Layer B — Analysis (auto-generated)
+  tags: string[];
+  qualityScore?: number; // 0–100
+  risks: string[];
+  keyMoments?: { time: number; description: string }[];
+  story?: string; // 1-sentence summary
+
+  // Metadata
+  uploadedAt: string;
+  fileSize?: string;
+  dimensions?: { width: number; height: number };
+}
+
+export interface ContentCopy {
+  lang: 'pt' | 'en';
+  channel: ContentChannel;
+  text: string;
+}
+
+export interface ContentFormat {
+  ratio: string; // '9:16', '1:1', '4:5', '16:9'
+  label: string;
+  description?: string;
+}
+
+export interface ContentPack {
+  id: string;
+  assetId: string;
+  copies: ContentCopy[];
+  hashtags: string[];
+  cta: string;
+  formats: ContentFormat[];
+  generatorUsed: GeneratorType;
+  createdAt: string;
+}
+
+export interface PostMetrics {
+  views?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  saves?: number;
+  clicks?: number;
+  reach?: number;
+}
+
+export interface ContentPost {
+  id: string;
+  assetId?: string;
+  contentPackId?: string;
+  slotId?: string;
+  channel: ContentChannel;
+  format: string;
+  copyPt: string;
+  copyEn: string;
+  hashtags: string[];
+  cta: string;
+  status: PostStatus;
+  scheduledDate?: string;
+  publishedDate?: string;
+  metrics?: PostMetrics;
+  createdAt: string;
+}
+
+export interface EditorialPillar {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface EditorialVoice {
+  id: string;
+  name: string;
+  tone: string;
+  example: string;
+}
+
+export interface EditorialFormat {
+  id: string;
+  name: string;
+  structure: string;
+  examplePt: string;
+  exampleEn: string;
+}
+
+export interface EditorialDNA {
+  pillars: EditorialPillar[];
+  voices: EditorialVoice[];
+  formats: EditorialFormat[];
+}
+
+export interface PublicationSlot {
+  id: string;
+  dayOfWeek: number; // 0=Sunday … 6=Saturday
+  label: string;
+  channels: ContentChannel[];
+  pillar?: string;
+  voice?: string;
+}
+
+export interface PerformanceEntry {
+  id: string;
+  postId: string;
+  recordedAt: string;
+  metrics: PostMetrics;
+  notes?: string;
+}

@@ -32,7 +32,8 @@ const mainNavItems: NavItem[] = [
 ];
 
 const moreNavItems: NavItem[] = [
-  { path: '/media', label: 'Media Hub', icon: Image },
+  { path: '/media', label: 'Media', icon: Image },
+  { path: '/planner', label: 'Planner', icon: Calendar },
   { path: '/proposals', label: 'Propostas', icon: FileText },
   { path: '/calculator', label: 'Calculadora', icon: Calculator },
   { path: '/brand', label: 'Marca', icon: Palette },

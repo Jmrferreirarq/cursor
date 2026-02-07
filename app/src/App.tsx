@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
 import { DataProvider } from './context/DataContext';
+import { MediaProvider } from './context/MediaContext';
 import { PresentationProvider } from './context/PresentationContext';
 import { useRemoveOverlays } from './hooks/useRemoveOverlays';
 import Navbar from './components/common/Navbar';
@@ -27,6 +28,10 @@ import TechnicalHubPage from './pages/TechnicalHubPage';
 import ConstructionDetailsPage from './pages/ConstructionDetailsPage';
 import ProposalsManagementPage from './pages/ProposalsManagementPage';
 import MediaHubPage from './pages/MediaHubPage';
+import AssetDetailPage from './pages/AssetDetailPage';
+import PlannerPage from './pages/PlannerPage';
+import PerformancePage from './pages/PerformancePage';
+import EditorialDNAPage from './pages/EditorialDNAPage';
 import MaterialLibraryPage from './pages/MaterialLibraryPage';
 import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
@@ -74,6 +79,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <DataProvider>
+      <MediaProvider>
       <ThemeProvider>
         <LanguageProvider>
           <TimeProvider>
@@ -90,6 +96,10 @@ function App() {
                 <Route path="/financial" element={<FinancialPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/marketing" element={<MarketingPage />} />
+                <Route path="/media/:id" element={<AssetDetailPage />} />
+                <Route path="/planner" element={<PlannerPage />} />
+                <Route path="/performance" element={<PerformancePage />} />
+                <Route path="/editorial-dna" element={<EditorialDNAPage />} />
                 <Route path="/technical" element={<TechnicalHubPage />} />
                 <Route path="/technical/details" element={<ConstructionDetailsPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
@@ -118,6 +128,7 @@ function App() {
           </TimeProvider>
         </LanguageProvider>
       </ThemeProvider>
+      </MediaProvider>
     </DataProvider>
   );
 }

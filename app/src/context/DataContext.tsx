@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { Client, Project, Proposal, CalculatorState } from '@/types';
+import { localStorageService } from '@/services/localStorage';
 
 // Iniciar com arrays vazios - sem dados de exemplo
 const initialClients: Client[] = [];
 const initialProjects: Project[] = [];
-
-const FA360_STORAGE_KEY = 'fa360_data';
 
 /** Dados mínimos para criar/encontrar cliente */
 export interface ClientInput {
@@ -56,85 +55,30 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-function parseClient(r: Record<string, unknown>): Client {
-  return {
-    id: String(r.id || ''),
-    name: String(r.name || ''),
-    email: String(r.email || ''),
-    phone: String(r.phone || ''),
-    address: (r.address as string) || undefined,
-    municipality: (r.municipality as string) || undefined,
-    nif: (r.nif as string) || undefined,
-    projects: Array.isArray(r.projects) ? r.projects.map(String) : String(r.projects || '').split(',').filter(Boolean),
-    createdAt: String(r.createdAt || ''),
-    notes: (r.notes as string) || undefined,
-  };
-}
-
-function parseProject(r: Record<string, unknown>): Project {
-  return {
-    id: String(r.id || ''),
-    name: String(r.name || ''),
-    client: String(r.client || ''),
-    status: (r.status as Project['status']) || 'lead',
-    phase: String(r.phase || ''),
-    startDate: String(r.startDate || ''),
-    deadline: String(r.deadline || ''),
-    budget: Number(r.budget) || 0,
-    hoursLogged: Number(r.hoursLogged) || 0,
-    team: Array.isArray(r.team) ? r.team.map(String) : String(r.team || '').split(',').filter(Boolean),
-    description: (r.description as string) || undefined,
-    address: (r.address as string) || undefined,
-    municipality: (r.municipality as string) || undefined,
-  };
-}
-
-function parseProposal(r: Record<string, unknown>): Proposal {
-  return {
-    id: String(r.id || ''),
-    clientId: String(r.clientId || ''),
-    clientName: String(r.clientName || ''),
-    projectType: String(r.projectType || ''),
-    phases: Array.isArray(r.phases) ? (r.phases as Proposal['phases']) : [],
-    totalValue: Number(r.totalValue) || 0,
-    vatRate: Number(r.vatRate) || 23,
-    totalWithVat: Number(r.totalWithVat) || 0,
-    status: (r.status as Proposal['status']) || 'draft',
-    createdAt: String(r.createdAt || ''),
-    validUntil: (r.validUntil as string) || undefined,
-  };
-}
+const svc = localStorageService;
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [proposals, setProposals] = useState<Proposal[]>([]);
 
+  // Load from storage on mount
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(FA360_STORAGE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw) as { clients?: unknown[]; projects?: unknown[]; proposals?: unknown[] };
-      if (Array.isArray(data.clients) && data.clients.length) {
-        setClients(data.clients.map((r) => parseClient(r as Record<string, unknown>)));
-      }
-      if (Array.isArray(data.projects) && data.projects.length) {
-        setProjects(data.projects.map((r) => parseProject(r as Record<string, unknown>)));
-      }
-      if (Array.isArray(data.proposals) && data.proposals.length) {
-        setProposals(data.proposals.map((r) => parseProposal(r as Record<string, unknown>)));
-      }
+      const data = svc.load();
+      if (data.clients.length) setClients(data.clients);
+      if (data.projects.length) setProjects(data.projects);
+      if (data.proposals.length) setProposals(data.proposals);
     } catch {
       /* ignore */
     }
   }, []);
 
+  // Persist on change — merges with existing storage to preserve media/planner data
   useEffect(() => {
     try {
-      localStorage.setItem(
-        FA360_STORAGE_KEY,
-        JSON.stringify({ clients, projects, proposals, exportedAt: new Date().toISOString() })
-      );
+      const existing = svc.load();
+      svc.save({ ...existing, clients, projects, proposals });
     } catch {
       /* quota exceeded */
     }
@@ -270,45 +214,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const exportToFile = useCallback(() => {
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          { clients, projects, proposals, exportedAt: new Date().toISOString(), app: 'FA360' },
-          null,
-          2
-        ),
-      ],
-      { type: 'application/json' }
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `fa360-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const existing = svc.load();
+    svc.exportToFile({ ...existing, clients, projects, proposals });
   }, [clients, projects, proposals]);
 
   const importFromFile = useCallback(async (file: File): Promise<{ ok: boolean; error?: string }> => {
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text) as { clients?: unknown[]; projects?: unknown[]; proposals?: unknown[] };
-      const clientsIn = Array.isArray(data.clients)
-        ? data.clients.map((r) => parseClient(r as Record<string, unknown>))
-        : [];
-      const projectsIn = Array.isArray(data.projects)
-        ? data.projects.map((r) => parseProject(r as Record<string, unknown>))
-        : [];
-      const proposalsIn = Array.isArray(data.proposals)
-        ? data.proposals.map((r) => parseProposal(r as Record<string, unknown>))
-        : [];
-      setClients(clientsIn);
-      setProjects(projectsIn);
-      setProposals(proposalsIn);
-      return { ok: true };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { ok: false, error: msg };
-    }
+    const result = await svc.importFromFile(file);
+    if (!result.ok || !result.data) return { ok: false, error: result.error };
+    const d = result.data;
+    setClients(d.clients.length ? d.clients : initialClients);
+    setProjects(d.projects.length ? d.projects : initialProjects);
+    setProposals(d.proposals);
+    return { ok: true };
   }, []);
 
   return (
