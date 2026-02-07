@@ -4,10 +4,6 @@
  * and generates reports for Cursor communication.
  */
 
-import type {
-  Client, Project, Proposal, MediaAsset, ContentPost,
-  ContentPack, PublicationSlot, EditorialDNA, PerformanceEntry,
-} from '@/types';
 import type { AppData } from './storage';
 import { hasApiKey, getApiKey } from './ai';
 
@@ -210,8 +206,8 @@ function runDiagnostics(data: AppData): DiagnosticItem[] {
 
   let storageUsed = 0;
   try {
-    const data = localStorage.getItem('fa360_data');
-    storageUsed = data ? new Blob([data]).size : 0;
+    const rawStorage = localStorage.getItem('fa360_data');
+    storageUsed = rawStorage ? new Blob([rawStorage]).size : 0;
   } catch { /* */ }
   const storageKB = Math.round(storageUsed / 1024);
   const maxKB = 5120; // ~5MB typical localStorage limit

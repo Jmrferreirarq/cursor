@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Bot, Shield, Database, BarChart3, Zap, AlertTriangle, CheckCircle2,
-  Info, XCircle, Copy, Check, RefreshCw, Sparkles, Loader2,
+  Info, XCircle, Check, Sparkles, Loader2,
   Heart, FileText, ClipboardCopy, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { toast } from 'sonner';

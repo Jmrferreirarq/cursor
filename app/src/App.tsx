@@ -101,7 +101,17 @@ function App() {
                 <Route path="/planner" element={<PlannerPage />} />
                 <Route path="/performance" element={<PerformancePage />} />
                 <Route path="/editorial-dna" element={<EditorialDNAPage />} />
-                <Route path="/agent" element={<AgentPage />} />
+                <Route path="/agent" element={
+                  <ErrorBoundary fallback={
+                    <div className="p-8 rounded-xl border border-destructive/50 bg-destructive/5">
+                      <h2 className="text-lg font-semibold text-destructive mb-2">Erro no Agente</h2>
+                      <p className="text-muted-foreground text-sm mb-4">Ocorreu um erro ao carregar. Abre a consola (F12) para detalhes.</p>
+                      <button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90">Recarregar</button>
+                    </div>
+                  }>
+                    <AgentPage />
+                  </ErrorBoundary>
+                } />
                 <Route path="/technical" element={<TechnicalHubPage />} />
                 <Route path="/technical/details" element={<ConstructionDetailsPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
