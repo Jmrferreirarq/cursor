@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Image, Video, AlertTriangle } from 'lucide-react';
+import { X, Upload, Image, Video, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
+import { hasApiKey, analyzeWithAI, aiResultToContentPack } from '@/services/ai';
 import type { MediaType, MediaObjective, MediaStatus, MediaRestriction, MediaAsset } from '@/types';
 
 interface Props {
@@ -34,7 +36,7 @@ const RESTRICTIONS: { value: MediaRestriction; label: string; icon: string }[] =
 
 export default function MediaUploadDialog({ open, onClose }: Props) {
   const { projects } = useData();
-  const { addAsset } = useMedia();
+  const { addAsset, updateAsset, addContentPack } = useMedia();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [files, setFiles] = useState<File[]>([]);
@@ -43,6 +45,8 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
   const [objective, setObjective] = useState<MediaObjective>('portfolio');
   const [restrictions, setRestrictions] = useState<MediaRestriction[]>([]);
   const [tags, setTags] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const aiEnabled = hasApiKey();
 
   const toggleRestriction = (r: MediaRestriction) => {
     setRestrictions((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
@@ -61,37 +65,63 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (files.length === 0) return;
+    setUploading(true);
 
-    files.forEach((file) => {
+    const projectName = projectId ? projects.find((p) => p.id === projectId)?.name : undefined;
+
+    for (const file of files) {
       const isVideo = file.type.startsWith('video/');
-      const reader = new FileReader();
-      reader.onload = () => {
-        const src = reader.result as string;
-        const asset: MediaAsset = {
-          id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          name: file.name.replace(/\.[^.]+$/, ''),
-          type: isVideo ? 'video' : 'image',
-          src,
-          thumbnail: isVideo ? undefined : src,
-          projectId: projectId || undefined,
-          mediaType,
-          objective,
-          status: 'por-classificar',
-          restrictions,
-          tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
-          qualityScore: undefined,
-          risks: [],
-          uploadedAt: new Date().toISOString(),
-          fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        };
-        addAsset(asset);
+      const src = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+
+      const asset: MediaAsset = {
+        id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name.replace(/\.[^.]+$/, ''),
+        type: isVideo ? 'video' : 'image',
+        src,
+        thumbnail: isVideo ? undefined : src,
+        projectId: projectId || undefined,
+        mediaType,
+        objective,
+        status: 'por-classificar',
+        restrictions,
+        tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+        qualityScore: undefined,
+        risks: [],
+        uploadedAt: new Date().toISOString(),
+        fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
       };
-      reader.readAsDataURL(file);
-    });
+      addAsset(asset);
+
+      // Auto AI analysis if API key is configured
+      if (aiEnabled && !isVideo) {
+        toast.info(`AI a analisar "${asset.name}"...`);
+        try {
+          const result = await analyzeWithAI(asset, projectName);
+          updateAsset(asset.id, {
+            tags: result.tags,
+            qualityScore: result.qualityScore,
+            risks: result.risks,
+            story: result.story,
+            status: 'analisado',
+          });
+          const pack = aiResultToContentPack(asset.id, result);
+          addContentPack(pack);
+          toast.success(`"${asset.name}" — AI gerou ${result.copies.length} copies + ${result.tags.length} tags`);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'Erro na análise AI';
+          toast.error(msg);
+        }
+      }
+    }
 
     // Reset and close
+    setUploading(false);
     setFiles([]);
     setProjectId('');
     setMediaType('obra');
@@ -255,21 +285,37 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
             </div>
           </div>
 
+          {/* AI Status */}
+          {files.length > 0 && (
+            <div className={`mx-6 mb-4 flex items-center gap-3 p-3 rounded-xl border ${aiEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+              <Sparkles className={`w-4 h-4 shrink-0 ${aiEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+              <p className="text-xs">
+                {aiEnabled
+                  ? 'AI Copilot ativo — após upload, a AI analisa e gera conteúdo automaticamente.'
+                  : 'AI Copilot inativo — configura a API key nas definições para ativar análise automática.'}
+              </p>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="flex justify-end gap-3 px-6 py-4 border-t border-border bg-muted/20">
             <button
               onClick={onClose}
-              className="px-5 py-2.5 border border-border rounded-xl font-medium hover:bg-muted transition-colors"
+              disabled={uploading}
+              className="px-5 py-2.5 border border-border rounded-xl font-medium hover:bg-muted transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleSubmit}
-              disabled={files.length === 0}
+              disabled={files.length === 0 || uploading}
               className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Upload className="w-4 h-4 inline mr-2" />
-              Upload {files.length > 0 ? `(${files.length})` : ''}
+              {uploading ? (
+                <><Loader2 className="w-4 h-4 inline mr-2 animate-spin" />AI a processar...</>
+              ) : (
+                <><Upload className="w-4 h-4 inline mr-2" />Upload {files.length > 0 ? `(${files.length})` : ''}{aiEnabled ? ' + AI' : ''}</>
+              )}
             </button>
           </div>
         </motion.div>

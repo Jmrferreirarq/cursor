@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Upload, Search, Image, Video, Filter, LayoutGrid, LayoutList,
-  Sparkles, Package, Eye, Trash2, CheckSquare, Square, Zap,
+  Sparkles, Package, Eye, Trash2, CheckSquare, Square, Zap, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
 import { useData } from '@/context/DataContext';
 import { analyzeAsset } from '@/services/analysis';
+import { hasApiKey, analyzeWithAI, aiResultToContentPack } from '@/services/ai';
 import MediaUploadDialog from '@/components/media/MediaUploadDialog';
+import AISettingsDialog from '@/components/media/AISettingsDialog';
 import type { MediaAsset, MediaStatus } from '@/types';
 
 const STATUS_CONFIG: Record<MediaStatus, { label: string; color: string; bg: string }> = {
@@ -22,13 +24,15 @@ const STATUS_CONFIG: Record<MediaStatus, { label: string; color: string; bg: str
 
 export default function MediaHubPage() {
   const navigate = useNavigate();
-  const { assets, updateAsset, deleteAsset } = useMedia();
+  const { assets, updateAsset, deleteAsset, addContentPack } = useMedia();
   const { projects } = useData();
   const [showUpload, setShowUpload] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<MediaStatus | 'all'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [aiProcessing, setAiProcessing] = useState(false);
 
   const filtered = useMemo(() => {
     return assets.filter((a) => {
@@ -70,16 +74,43 @@ export default function MediaHubPage() {
     setSelected(new Set());
   };
 
-  const bulkAnalyze = () => {
+  const bulkAnalyze = async () => {
     const ids = selected.size > 0 ? Array.from(selected) : filtered.filter((a) => a.status === 'por-classificar').map((a) => a.id);
-    ids.forEach((id) => {
-      const asset = assets.find((a) => a.id === id);
-      if (asset) {
-        const result = analyzeAsset(asset);
-        updateAsset(id, { tags: result.tags, qualityScore: result.qualityScore, risks: result.risks, story: result.story, status: 'analisado' });
+    
+    if (hasApiKey()) {
+      // Use AI for analysis
+      setAiProcessing(true);
+      let done = 0;
+      for (const id of ids) {
+        const asset = assets.find((a) => a.id === id);
+        if (asset && asset.type === 'image') {
+          try {
+            const projectName = asset.projectId ? projects.find((p) => p.id === asset.projectId)?.name : undefined;
+            toast.info(`AI a analisar ${done + 1}/${ids.length}...`);
+            const result = await analyzeWithAI(asset, projectName);
+            updateAsset(id, { tags: result.tags, qualityScore: result.qualityScore, risks: result.risks, story: result.story, status: 'analisado' });
+            const pack = aiResultToContentPack(id, result);
+            addContentPack(pack);
+            done++;
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Erro AI';
+            toast.error(`${asset.name}: ${msg}`);
+          }
+        }
       }
-    });
-    toast.success(`${ids.length} asset(s) analisado(s)`);
+      setAiProcessing(false);
+      toast.success(`AI analisou ${done} asset(s) com copy gerada`);
+    } else {
+      // Fallback to local analysis
+      ids.forEach((id) => {
+        const asset = assets.find((a) => a.id === id);
+        if (asset) {
+          const result = analyzeAsset(asset);
+          updateAsset(id, { tags: result.tags, qualityScore: result.qualityScore, risks: result.risks, story: result.story, status: 'analisado' });
+        }
+      });
+      toast.success(`${ids.length} asset(s) analisado(s) (sem AI — configura a API key para análise completa)`);
+    }
     setSelected(new Set());
   };
 
@@ -100,10 +131,16 @@ export default function MediaHubPage() {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Media Inbox</h1>
           <p className="text-muted-foreground mt-2">Upload, classifica e prepara conteúdo para publicação</p>
         </div>
-        <button onClick={() => setShowUpload(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit">
-          <Upload className="w-4 h-4" />
-          <span>Upload</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setShowAISettings(true)} className={`inline-flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${hasApiKey() ? 'border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10' : 'border-amber-500/50 text-amber-500 hover:bg-amber-500/10'}`}>
+            <Sparkles className="w-4 h-4" />
+            <span className="hidden sm:inline">{hasApiKey() ? 'AI Ativo' : 'Configurar AI'}</span>
+          </button>
+          <button onClick={() => setShowUpload(true)} className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors">
+            <Upload className="w-4 h-4" />
+            <span>Upload</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Status Tabs */}
@@ -141,9 +178,9 @@ export default function MediaHubPage() {
           />
         </div>
         <div className="flex gap-2">
-          <button onClick={bulkAnalyze} className="flex items-center gap-2 px-4 py-2.5 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors">
-            <Zap className="w-4 h-4" />
-            Analisar {selected.size > 0 ? `(${selected.size})` : 'Todos'}
+          <button onClick={bulkAnalyze} disabled={aiProcessing} className="flex items-center gap-2 px-4 py-2.5 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50">
+            {aiProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : hasApiKey() ? <Sparkles className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+            {aiProcessing ? 'AI a processar...' : hasApiKey() ? `AI Analisar ${selected.size > 0 ? `(${selected.size})` : 'Todos'}` : `Analisar ${selected.size > 0 ? `(${selected.size})` : 'Todos'}`}
           </button>
           {selected.size > 0 && (
             <button onClick={bulkDelete} className="flex items-center gap-2 px-4 py-2.5 border border-destructive/50 text-destructive rounded-xl text-sm font-medium hover:bg-destructive/10 transition-colors">
@@ -200,8 +237,9 @@ export default function MediaHubPage() {
         </div>
       )}
 
-      {/* Upload Dialog */}
+      {/* Dialogs */}
       <MediaUploadDialog open={showUpload} onClose={() => setShowUpload(false)} />
+      <AISettingsDialog open={showAISettings} onClose={() => setShowAISettings(false)} />
     </div>
   );
 }
