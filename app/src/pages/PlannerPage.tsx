@@ -107,7 +107,7 @@ function KanbanView({ posts, assets, updatePost, deletePost }: {
   updatePost: (id: string, patch: Partial<ContentPost>) => void; deletePost: (id: string) => void;
 }) {
   const grouped = useMemo(() => {
-    const map: Record<PostStatus, ContentPost[]> = { idea: [], generated: [], review: [], approved: [], scheduled: [], published: [] };
+    const map: Record<string, ContentPost[]> = { inbox: [], generated: [], review: [], approved: [], scheduled: [], published: [] };
     posts.forEach((p) => { if (map[p.status]) map[p.status].push(p); });
     return map;
   }, [posts]);

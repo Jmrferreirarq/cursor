@@ -184,7 +184,7 @@ export default function ContentCalendarPage() {
             {isWeekView && <span className="text-[10px] text-muted-foreground">{WEEKDAYS[date.getDay() === 0 ? 6 : date.getDay() - 1]}</span>}
           </div>
           {dateConflicts.length > 0 && (
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" title={dateConflicts.map((c) => c.message).join(', ')} />
+            <span title={dateConflicts.map((c) => c.message).join(', ')}><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /></span>
           )}
         </div>
 
