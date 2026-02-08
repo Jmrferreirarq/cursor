@@ -197,7 +197,7 @@ export function autoFillCalendar(
       copyEn: '',
       hashtags: [],
       cta: '',
-      status: 'idea' as const,
+      status: 'inbox' as const,
       scheduledDate: s.date,
       createdAt: new Date().toISOString(),
     }));

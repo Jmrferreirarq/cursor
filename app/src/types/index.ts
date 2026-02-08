@@ -170,8 +170,9 @@ export type MediaObjective = 'atrair-clientes' | 'portfolio' | 'recrutamento' | 
 export type MediaStatus = 'rascunho' | 'por-classificar' | 'analisado' | 'pronto' | 'publicado';
 export type MediaRestriction = 'sem-rostos' | 'sem-moradas' | 'sem-marcas' | 'sem-matriculas';
 export type ContentChannel = 'ig-feed' | 'ig-reels' | 'ig-stories' | 'ig-carrossel' | 'linkedin' | 'tiktok' | 'pinterest' | 'youtube' | 'threads';
-export type PostStatus = 'idea' | 'generated' | 'review' | 'approved' | 'scheduled' | 'published';
-export type GeneratorType = 'manual' | 'auto-copy' | 'auto-narrative' | 'auto-recycle';
+export type PostStatus = 'inbox' | 'generated' | 'review' | 'approved' | 'scheduled' | 'published' | 'measured' | 'rejected';
+export type PostWeight = 'heavy' | 'light';
+export type GeneratorType = 'manual' | 'auto-copy' | 'auto-narrative' | 'auto-recycle' | 'ai-batch';
 
 export interface MediaAsset {
   id: string;
@@ -249,6 +250,21 @@ export interface ContentPost {
   publishedDate?: string;
   metrics?: PostMetrics;
   createdAt: string;
+
+  // ── Queue-driven Calendar fields ──
+  score?: number;              // 0-100 priority score
+  weight?: PostWeight;         // heavy (reel, carrossel 6+, case study) or light (foto, stories, threads)
+  isCore?: boolean;            // true = core piece, false = derivative
+  parentPostId?: string;       // links derivative to its core post
+  derivativeIds?: string[];    // core → list of derivative post IDs
+  pillar?: string;             // editorial pillar ID (p1-p6)
+  projectId?: string;          // linked project
+  objective?: MediaObjective;  // content objective
+  suggestedDate?: string;      // AI-suggested date
+  rejectionReason?: string;    // reason if rejected
+  isBuffer?: boolean;          // emergency buffer post (pre-approved light)
+  measuredAt?: string;         // when metrics were recorded
+  topPerformer?: boolean;      // engagement above threshold
 }
 
 export interface EditorialPillar {

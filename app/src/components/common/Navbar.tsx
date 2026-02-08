@@ -24,6 +24,8 @@ import {
   ChevronDown,
   Trash2,
   Bot,
+  LayoutGrid,
+  CalendarDays,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -40,6 +42,8 @@ const navItems = [
   { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
   { path: '/technical', labelKey: 'nav.technical', icon: Wrench },
   { path: '/media', labelKey: 'nav.media', icon: Image },
+  { path: '/queue', labelKey: 'nav.queue', icon: LayoutGrid },
+  { path: '/content-calendar', labelKey: 'nav.contentCalendar', icon: CalendarDays },
   { path: '/planner', labelKey: 'nav.planner', icon: Calendar },
   { path: '/library', labelKey: 'nav.library', icon: Library },
   { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },

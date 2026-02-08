@@ -114,7 +114,7 @@ export default function AssetDetailPage() {
       copyEn: enCopy?.text || '',
       hashtags: pack.hashtags,
       cta: pack.cta,
-      status: 'idea',
+      status: 'inbox',
       createdAt: new Date().toISOString(),
     });
     updateAsset(asset.id, { status: 'pronto' });

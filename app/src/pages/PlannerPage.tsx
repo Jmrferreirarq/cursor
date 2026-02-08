@@ -12,7 +12,7 @@ import { generateCalendarSuggestions, autoFillCalendar } from '@/services/autoSl
 import type { ContentPost, PostStatus, ContentChannel } from '@/types';
 
 const KANBAN_COLS: { status: PostStatus; label: string; color: string }[] = [
-  { status: 'idea', label: 'Ideias', color: 'border-zinc-500/40' },
+  { status: 'inbox', label: 'Inbox', color: 'border-zinc-500/40' },
   { status: 'generated', label: 'Gerado', color: 'border-blue-500/40' },
   { status: 'review', label: 'Em Revisão', color: 'border-amber-500/40' },
   { status: 'approved', label: 'Aprovado', color: 'border-emerald-500/40' },

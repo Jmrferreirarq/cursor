@@ -166,7 +166,7 @@ function runDiagnostics(data: AppData): DiagnosticItem[] {
 
   // Posts stuck in pipeline
   const stuck = data.contentPosts.filter((p) =>
-    ['idea', 'generated'].includes(p.status) &&
+    ['inbox', 'generated'].includes(p.status) &&
     new Date(p.createdAt).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
   );
   if (stuck.length > 0) {
