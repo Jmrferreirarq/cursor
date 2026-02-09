@@ -8,6 +8,7 @@ import { decodeProposalPayload } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
+import { generateProposalPdf } from '../lib/generateProposalPdf';
 
 const C = PROPOSAL_PALETTE;
 const A4_WIDTH_PX = 794;
@@ -74,13 +75,8 @@ function PropostaPublicPage() {
   const exportPDF = async () => {
     if (!p) return;
     setExporting(true);
-    try {
-      await document.fonts.ready;
-    } catch {
-      /* ignore */
-    }
     setCapturing(true);
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 150));
     const el = captureRef.current || pdfRef.current;
     if (!el) {
       setCapturing(false);
@@ -88,54 +84,18 @@ function PropostaPublicPage() {
       return;
     }
     const baseName = `orcamento-${(p.ref || 'proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-    const opt = {
-      margin: [15, 20, 20, 20] as [number, number, number, number],
-      filename: `${baseName}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, width: A4_WIDTH_PX, windowWidth: A4_WIDTH_PX, scrollY: 0, scrollX: 0 },
-      jsPDF: { unit: 'mm' as const, format: 'a4' as const },
-      pagebreak: { mode: ['css'], avoid: ['.pdf-no-break'] },
-    };
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      const pageOfFormat = t('proposalPageOf', lang);
-      const pdf = await html2pdf().set(opt).from(el).toPdf().get('pdf');
-      const total = pdf.internal.getNumberOfPages();
-      const w = pdf.internal.pageSize.getWidth();
-      const h = pdf.internal.pageSize.getHeight();
-      
-      // Rodapé com contactos em todas as páginas
-      const footerLeft = p.branding?.appName || 'FA-360';
-      const contactParts = [p.branding?.email, p.branding?.telefone, p.branding?.website].filter(Boolean);
-      const footerRight = contactParts.join(' • ');
-      
-      for (let i = 1; i <= total; i++) {
-        pdf.setPage(i);
-        
-        // Linha separadora do rodapé
-        pdf.setDrawColor(200);
-        pdf.setLineWidth(0.3);
-        pdf.line(25, h - 20, w - 25, h - 20);
-        
-        // Rodapé esquerdo (nome da empresa)
-        pdf.setFontSize(7);
-        pdf.setTextColor(100, 100, 100);
-        pdf.text(footerLeft, 25, h - 16, { align: 'left' });
-        
-        // Rodapé direito (contactos)
-        if (footerRight) {
-          pdf.text(footerRight, w - 25, h - 16, { align: 'right' });
-        }
-        
-        // Número da página (centrado)
-        pdf.setFontSize(8);
-        pdf.setTextColor(89);
-        const label = pageOfFormat.replace('{page}', String(i)).replace('{total}', String(total));
-        pdf.text(label, w / 2, h - 10, { align: 'center' });
-      }
-      pdf.save(opt.filename);
+      await generateProposalPdf(el, {
+        filename: `${baseName}.pdf`,
+        reference: p.ref,
+        branding: p.branding,
+        lang,
+        onProgress: (msg) => toast.loading(msg, { id: 'pdf-progress' }),
+      });
+      toast.dismiss('pdf-progress');
       toast.success('PDF guardado com sucesso');
-    } catch (e) {
+    } catch {
+      toast.dismiss('pdf-progress');
       toast.error('Erro ao gerar PDF');
     } finally {
       setCapturing(false);

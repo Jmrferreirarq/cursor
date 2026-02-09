@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { generateProposalPdf } from '../lib/generateProposalPdf';
 import { saveProposal } from '../lib/supabase';
 import { addToProposalHistory } from '../lib/proposalHistory';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
@@ -1391,7 +1392,7 @@ export default function CalculatorPage() {
     return true;
   };
 
-  const exportHonorariosPDF = () => {
+  const exportHonorariosPDF = async () => {
     if (!validarProposta() || !previewPayload) return;
     
     // Guardar proposta e cliente automaticamente
@@ -1410,7 +1411,45 @@ export default function CalculatorPage() {
       vatRate: 23,
     });
     
+    // Mostrar overlay e renderizar documento para captura
     setCapturingPDF(true);
+    
+    // Aguardar que o portal de captura renderize
+    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    
+    // Tentar encontrar o elemento renderizado
+    let el: HTMLElement | null = null;
+    for (let i = 0; i < 30; i++) {
+      el = captureRef.current;
+      if (el && el.offsetHeight > 0) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    
+    if (!el) {
+      toast.error('Erro ao preparar exportação');
+      setCapturingPDF(false);
+      return;
+    }
+    
+    try {
+      const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
+      await generateProposalPdf(el, {
+        filename: `${baseName}.pdf`,
+        reference: referenciaExibida,
+        branding: previewPayload.branding,
+        lang,
+        onProgress: (msg) => toast.loading(msg, { id: 'pdf-progress' }),
+      });
+      toast.dismiss('pdf-progress');
+      toast.success('PDF guardado com sucesso!');
+    } catch (e) {
+      console.error('Erro ao gerar PDF:', e);
+      toast.dismiss('pdf-progress');
+      toast.error('Erro ao gerar PDF');
+    } finally {
+      setCapturingPDF(false);
+    }
   };
 
   const LOCALIZACAO_LABELS: Record<string, string> = { lisboa: 'Lisboa (+15%)', litoral: 'Litoral (+5%)', interior: 'Interior (−12%)' };
@@ -1847,182 +1886,26 @@ export default function CalculatorPage() {
     if (!capturingPDF || !previewPayload) return;
     let cancelled = false;
     const run = async () => {
-      try {
-        await document.fonts.ready;
-      } catch {
-        /* ignore */
-      }
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      
       // Aguardar que o elemento esteja pronto
       for (let i = 0; i < 30; i++) {
         if (cancelled) return;
         await new Promise((r) => setTimeout(r, 100));
-        const el = previewRef.current ?? captureRef.current;
+        const el = captureRef.current;
         if (el && el.offsetHeight > 0) {
           try {
-            // Criar iframe oculto para impressão (evita "about:blank" no PDF)
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'fixed';
-            iframe.style.right = '0';
-            iframe.style.bottom = '0';
-            iframe.style.width = '0';
-            iframe.style.height = '0';
-            iframe.style.border = 'none';
-            iframe.style.visibility = 'hidden';
-            document.body.appendChild(iframe);
-
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-            if (!iframeDoc || !iframe.contentWindow) {
-              toast.error('Erro ao preparar impressão');
-              document.body.removeChild(iframe);
-              setCapturingPDF(false);
-              return;
-            }
-
-            // Estilos específicos para impressão
-            const printStyles = `
-              @page {
-                size: A4;
-                margin: 18mm 12mm 18mm 12mm;
-                
-                /* Remover cabeçalhos/rodapés automáticos do browser */
-                @top-left { content: none !important; }
-                @top-center { content: none !important; }
-                @top-right { content: none !important; }
-                @bottom-left { content: none !important; }
-                @bottom-center { content: none !important; }
-                
-                @bottom-right {
-                  content: "Pág. " counter(page);
-                  font-family: 'DM Sans', sans-serif;
-                  font-size: 8pt;
-                  color: #6b7280;
-                }
-              }
-              
-              * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-              
-              html, body {
-                margin: 0;
-                padding: 0;
-                background: white !important;
-                font-family: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
-              }
-              
-              .print-container {
-                width: 210mm;
-                margin: 0 auto;
-                background: white;
-              }
-              
-              /* Evitar cortes de conteúdo */
-              .pdf-no-break,
-              .page-break-before,
-              table, tr, li {
-                break-inside: avoid !important;
-                page-break-inside: avoid !important;
-              }
-              
-              .page-break-before {
-                break-before: page !important;
-                page-break-before: always !important;
-              }
-              
-              /* Títulos nunca ficam sozinhos - movem com conteúdo */
-              h1, h2, h3, h4, 
-              .section-title {
-                break-after: avoid !important;
-                page-break-after: avoid !important;
-                break-inside: avoid !important;
-                page-break-inside: avoid !important;
-              }
-              
-              p {
-                orphans: 3;
-                widows: 3;
-              }
-              
-              /* Títulos de secção precisam de espaço mínimo após eles */
-              .section-title + * {
-                break-before: avoid !important;
-                page-break-before: avoid !important;
-              }
-              
-              /* Containers de secção - manter título com início do conteúdo */
-              .pdf-no-break {
-                break-inside: avoid !important;
-                page-break-inside: avoid !important;
-              }
-              
-              /* Rodapé fixo em todas as páginas */
-              .print-footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: auto;
-                padding: 3mm 8mm 5mm 8mm;
-                font-size: 7.5pt;
-                font-family: 'DM Sans', sans-serif;
-                letter-spacing: 0.01em;
-                border-top: 0.5px solid #e5e7eb;
-                background: white;
-                box-sizing: border-box;
-              }
-              .print-footer table {
-                width: 100%;
-              }
-              .print-footer td {
-                white-space: nowrap;
-                vertical-align: middle;
-              }
-            `;
-
-            // Construir documento HTML para impressão
-            iframeDoc.open();
-            // Nome do ficheiro = referência do cliente
-            const pdfFileName = referenciaExibida || 'Proposta';
-            
-            iframeDoc.write(`
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="UTF-8">
-                <title>${pdfFileName}</title>
-                <link rel="preconnect" href="https://fonts.googleapis.com">
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-                <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-                <style>${printStyles}</style>
-              </head>
-              <body>
-                <div class="print-container">
-                  ${el.outerHTML}
-                </div>
-              </body>
-              </html>
-            `);
-            iframeDoc.close();
-
-            // Aguardar carregamento de fontes
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // Imprimir via iframe
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-
-            // Remover iframe após impressão
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-            }, 2000);
-
-            toast.success('Desative "Cabeçalhos e rodapés" nas opções de impressão');
+            const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
+            await generateProposalPdf(el, {
+              filename: `${baseName}.pdf`,
+              reference: referenciaExibida,
+              branding: previewPayload.branding,
+              lang,
+              onProgress: (msg) => toast.loading(msg, { id: 'pdf-progress' }),
+            });
+            toast.dismiss('pdf-progress');
+            toast.success('PDF guardado com sucesso!');
           } catch (e) {
             console.error('Erro ao gerar PDF:', e);
+            toast.dismiss('pdf-progress');
             toast.error('Erro ao gerar PDF');
           }
           setCapturingPDF(false);

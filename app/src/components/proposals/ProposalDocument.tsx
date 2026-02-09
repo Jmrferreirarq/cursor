@@ -33,6 +33,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
   return (
     <div
       className={`${className}`}
+      data-pdf-ref={p.ref || ''}
       style={{
         fontFamily: "'DM Sans', 'Segoe UI', system-ui, sans-serif",
         width: '210mm',
@@ -213,7 +214,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Estimativa de Investimento em Infraestruturas (Fase 2) */}
             {p.lotCustosInfra && p.lotCustosInfra.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f8fafc', borderRadius: 2, border: `1px solid ${C.cinzaLinha}` }}>
+              <div className="pdf-no-break" style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f8fafc', borderRadius: 2, border: `1px solid ${C.cinzaLinha}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: C.grafite, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Estimativa de Investimento em Infraestruturas
                 </p>
