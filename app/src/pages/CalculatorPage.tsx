@@ -1288,7 +1288,7 @@ export default function CalculatorPage() {
           lotCenarioA.lotes ? { ...lotCenarioA, label: 'A' } : null,
           lotCenarioB.lotes ? { ...lotCenarioB, label: 'B' } : null,
           lotNumAlternativas === '3' && lotCenarioC.lotes ? { ...lotCenarioC, label: 'C' } : null,
-        ].filter(Boolean),
+        ].filter((x): x is NonNullable<typeof x> => x !== null),
         lotCondicionantes: Array.from(lotCondicionantes).map(id => {
           const c = CONDICIONANTES_LOTEAMENTO.find(x => x.id === id);
           return c ? c.label : id;
@@ -2602,7 +2602,7 @@ export default function CalculatorPage() {
                 </div>
               </div>
 
-              {/* ═══ SECÇÃO LOTEAMENTO ═══ */}
+              {/* --- SECCAO LOTEAMENTO --- */}
               {isLoteamento && (
                 <div className="mt-4 p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-5">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
