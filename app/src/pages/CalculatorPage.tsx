@@ -100,6 +100,28 @@ const ESPECIALIDADES_SUGESTAO: Record<string, { minValor: number; rate: number }
   topografia: { minValor: 1200, rate: 3 },
 };
 
+// --- Fase 2: Modelo Paramétrico de Custos de Infraestruturas ---
+type CatalogoItem = { id: string; nome: string; unidade: 'ml' | 'lote' | 'm2' | 'vg'; custoUnitario: number; custoRamal?: number; pctHonorario: number };
+const CATALOGO_CUSTOS_INFRA: CatalogoItem[] = [
+  { id: 'infra_viarias', nome: 'Infraestruturas viárias', unidade: 'ml', custoUnitario: 220, pctHonorario: 0.065 },
+  { id: 'aguas_esgotos', nome: 'Rede de abastecimento de água', unidade: 'ml', custoUnitario: 55, custoRamal: 400, pctHonorario: 0.07 },
+  { id: 'infra_pluviais', nome: 'Drenagem pluvial', unidade: 'ml', custoUnitario: 50, pctHonorario: 0.065 },
+  { id: 'aguas_esgotos_dom', nome: 'Drenagem doméstica', unidade: 'ml', custoUnitario: 60, custoRamal: 450, pctHonorario: 0.07 },
+  { id: 'eletrico', nome: 'Rede elétrica (MT/BT)', unidade: 'lote', custoUnitario: 2000, pctHonorario: 0.08 },
+  { id: 'infra_ip', nome: 'Iluminação pública', unidade: 'ml', custoUnitario: 100, pctHonorario: 0.07 },
+  { id: 'ited', nome: 'ITED / Telecomunicações', unidade: 'lote', custoUnitario: 550, pctHonorario: 0.06 },
+  { id: 'gas', nome: 'Rede de gás', unidade: 'ml', custoUnitario: 40, custoRamal: 280, pctHonorario: 0.065 },
+  { id: 'paisagismo', nome: 'Arranjos exteriores', unidade: 'm2', custoUnitario: 35, pctHonorario: 0.08 },
+  { id: 'topografia', nome: 'Levantamento topográfico', unidade: 'm2', custoUnitario: 0.8, pctHonorario: 1.0 },
+  { id: 'geotecnia', nome: 'Estudo geotécnico', unidade: 'vg', custoUnitario: 1200, pctHonorario: 1.0 },
+];
+
+const BANDAS_PRECISAO: Record<string, { label: string; margem: number; descricao: string }> = {
+  classe_5: { label: 'Estudo de viabilidade', margem: 0.45, descricao: '±40–50%' },
+  classe_4: { label: 'PIP / Estudo prévio', margem: 0.30, descricao: '±25–35%' },
+  classe_3: { label: 'Projeto de licenciamento', margem: 0.175, descricao: '±15–20%' },
+};
+
 // Especialidades de projeto (subconsultores/parceiros)
 const ESPECIALIDADES: { id: string; name: string }[] = [
   { id: 'estruturas', name: 'Estruturas e fundações' },
@@ -906,8 +928,87 @@ export default function CalculatorPage() {
   const [lotAssuncoesManuais, setLotAssuncoesManuais] = useState('');
   const [lotDependenciasManuais, setLotDependenciasManuais] = useState('');
 
+  // Fase 2: Modelo paramétrico de custos de infraestruturas
+  const [lotCenarioRef, setLotCenarioRef] = useState<'A' | 'B' | 'C'>('A');
+  const [lotCustosInfraOverrides, setLotCustosInfraOverrides] = useState<Record<string, string>>({});
+  const [lotContingenciaOverride, setLotContingenciaOverride] = useState('');
+
   // Helper: é tipologia de loteamento?
   const isLoteamento = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(projectType);
+
+  // Função: calcular custos paramétricos de infraestruturas (Fase 2)
+  type InfraCustoItem = { infraId: string; nome: string; unidade: string; quantidade: number; custoUnitario: number; custoRamal: number; subtotal: number; honorarioProjeto: number };
+  const calcularCustosInfra = (): { items: InfraCustoItem[]; contingenciaPct: number; subtotalObra: number; totalComContingencia: number; bandaClasse: string; margemPct: number; custoMin: number; custoMax: number } => {
+    // Cenário de referência
+    const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
+    const numLotes = parseInt(cenRef.lotes, 10) || parseInt(lotNumLotes, 10) || 4;
+    const temViaInterna = cenRef.accessModel === 'via_interna' || cenRef.accessModel === 'misto';
+    const viaComp = parseFloat(cenRef.viaInternaComprimento) || 0;
+    const frenteTerreno = parseFloat(lotFrenteTerreno) || 0;
+    // Comprimento de rede: se via interna, usar comprimento; senão ~80% da frente
+    const comprimentoRede = temViaInterna && viaComp > 0 ? viaComp : frenteTerreno * 0.8;
+    const areaEstudo = parseFloat(lotAreaEstudo) || 0;
+    const areaVerde = areaEstudo * 0.15; // ~15% cedências verdes
+    // Especialidades relevantes para o tipo de loteamento
+    const espIds = new Set(TIPOLOGIA_ESPECIALIDADES[projectType] ?? []);
+    // Calcular cada item
+    const items: InfraCustoItem[] = CATALOGO_CUSTOS_INFRA
+      .filter(cat => {
+        // Filtrar: só incluir infras relevantes para o projectType
+        // aguas_esgotos_dom mapeia para aguas_esgotos na tipologia
+        if (cat.id === 'aguas_esgotos_dom') return espIds.has('aguas_esgotos');
+        return espIds.has(cat.id);
+      })
+      .map(cat => {
+        const overrideUnit = parseFloat(lotCustosInfraOverrides[cat.id] || '') || 0;
+        const custoUnit = overrideUnit > 0 ? overrideUnit : cat.custoUnitario;
+        const ramal = cat.custoRamal ?? 0;
+        let quantidade = 0;
+        let subtotal = 0;
+        if (cat.unidade === 'ml') {
+          quantidade = comprimentoRede;
+          subtotal = quantidade * custoUnit + (ramal > 0 ? ramal * numLotes : 0);
+        } else if (cat.unidade === 'lote') {
+          quantidade = numLotes;
+          subtotal = quantidade * custoUnit;
+        } else if (cat.unidade === 'm2') {
+          quantidade = cat.id === 'topografia' ? areaEstudo : areaVerde;
+          subtotal = quantidade * custoUnit;
+        } else { // vg
+          quantidade = 1;
+          subtotal = custoUnit;
+        }
+        subtotal = Math.round(subtotal);
+        const honorarioProjeto = Math.round(subtotal * cat.pctHonorario);
+        return { infraId: cat.id, nome: cat.nome, unidade: cat.unidade, quantidade: Math.round(quantidade * 10) / 10, custoUnitario: custoUnit, custoRamal: ramal, subtotal, honorarioProjeto };
+      });
+    const subtotalObra = items.reduce((s, i) => s + i.subtotal, 0);
+    // Contingência
+    const overrideCont = parseFloat(lotContingenciaOverride);
+    let contingenciaPct: number;
+    if (!isNaN(overrideCont) && lotContingenciaOverride.trim() !== '') {
+      contingenciaPct = overrideCont;
+    } else {
+      contingenciaPct = 10;
+      if (!lotTemTopografia) contingenciaPct += 5;
+      if (complexity === 'alta') contingenciaPct += 5;
+      const criticas = ['ren_ran', 'dominio_hidrico', 'servidoes', 'zona_inundavel'];
+      const temCriticas = criticas.some(c => lotCondicionantes.has(c));
+      if (temCriticas) contingenciaPct += 5;
+    }
+    const totalComContingencia = Math.round(subtotalObra * (1 + contingenciaPct / 100));
+    // Banda de precisão
+    let bandaClasse = 'classe_5';
+    if (fasesIncluidas.has('lot_projeto') || fasesIncluidas.has('lot_notificacoes')) {
+      bandaClasse = 'classe_3';
+    } else if (fasesIncluidas.has('lot_pip')) {
+      bandaClasse = 'classe_4';
+    }
+    const margem = BANDAS_PRECISAO[bandaClasse]?.margem ?? 0.45;
+    const custoMin = Math.round(totalComContingencia * (1 - margem));
+    const custoMax = Math.round(totalComContingencia * (1 + margem));
+    return { items, contingenciaPct, subtotalObra, totalComContingencia, bandaClasse, margemPct: margem * 100, custoMin, custoMax };
+  };
 
   // Áreas
   const [areaValue, setAreaValue] = useState('');
@@ -1112,6 +1213,27 @@ export default function CalculatorPage() {
   // Auto-preencher sugestões de especialidades quando a tipologia ou área mudam
   useEffect(() => {
     if (activeCalculator !== 'honorarios' || !projectType) return;
+    // Para loteamento, usar modelo paramétrico (Fase 2)
+    if (isLoteamento) {
+      const ci = calcularCustosInfra();
+      if (ci.items.length === 0) return;
+      const next: Record<string, string> = {};
+      for (const item of ci.items) {
+        const espId = item.infraId === 'aguas_esgotos_dom' ? 'aguas_esgotos' : item.infraId;
+        const prev = parseFloat(next[espId] || '0');
+        const val = Math.round((prev + item.honorarioProjeto) / 50) * 50;
+        next[espId] = String(val);
+      }
+      // Coordenação de especialidades: ~2% do total de obra
+      const espIds = TIPOLOGIA_ESPECIALIDADES[projectType] ?? [];
+      if (espIds.includes('coord_especialidades')) {
+        const coordVal = Math.round((ci.totalComContingencia * 0.02) / 50) * 50;
+        next['coord_especialidades'] = String(Math.max(400, coordVal));
+      }
+      setEspecialidadesValores((prev) => ({ ...prev, ...next }));
+      return;
+    }
+    // Edifícios: modelo original minValor + rate * area
     let areaRef = 0;
     if (honorMode === 'area') {
       areaRef = parseFloat(area) || 0;
@@ -1131,7 +1253,7 @@ export default function CalculatorPage() {
       next[id] = String(val);
     }
     setEspecialidadesValores((prev) => ({ ...prev, ...next }));
-  }, [projectType, activeCalculator, area, valorObra, honorMode]);
+  }, [projectType, activeCalculator, area, valorObra, honorMode, isLoteamento, lotFrenteTerreno, lotNumLotes, lotAreaEstudo, lotCenarioRef, lotCenarioA, lotCenarioB, lotCenarioC, lotCustosInfraOverrides, lotContingenciaOverride, lotTemTopografia, complexity, lotCondicionantes]);
 
   // Atualiza extras com fórmula (tetoMinimo + taxaPorM2) quando a área muda
   useEffect(() => {
@@ -1423,6 +1545,25 @@ export default function CalculatorPage() {
           ...gerarDependenciasLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia', [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])]),
           ...(lotDependenciasManuais.trim() ? lotDependenciasManuais.trim().split('\n').filter(Boolean) : []),
         ],
+        // Fase 2: Custos paramétricos de infraestruturas
+        ...(() => {
+          const ci = calcularCustosInfra();
+          const banda = BANDAS_PRECISAO[ci.bandaClasse];
+          return {
+            lotCustosInfra: ci.items.map(i => ({
+              nome: i.nome, unidade: i.unidade, quantidade: i.quantidade,
+              custoUnitario: i.custoUnitario, custoRamal: i.custoRamal > 0 ? i.custoRamal : undefined,
+              subtotal: i.subtotal, honorario: i.honorarioProjeto,
+            })),
+            lotContingenciaPct: ci.contingenciaPct,
+            lotCustoObraSubtotal: ci.subtotalObra,
+            lotCustoObraTotal: ci.totalComContingencia,
+            lotCustoObraMin: ci.custoMin,
+            lotCustoObraMax: ci.custoMax,
+            lotBandaPrecisao: banda?.label ?? '',
+            lotBandaDescricao: banda?.descricao ?? '',
+          };
+        })(),
       } : {}),
       notas: isLoteamento ? [
         t('notes.validity', lang),
@@ -2001,6 +2142,8 @@ export default function CalculatorPage() {
           lotCondicionantes: Array.from(lotCondicionantes),
           lotEntregaveis: Array.from(lotEntregaveis),
           lotAssuncoesManuais, lotDependenciasManuais,
+          // Fase 2: Custos paramétricos
+          lotCenarioRef, lotCustosInfraOverrides, lotContingenciaOverride,
         },
       });
       
@@ -2108,6 +2251,10 @@ export default function CalculatorPage() {
     setLotEntregaveis(new Set(['viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission']));
     setLotAssuncoesManuais('');
     setLotDependenciasManuais('');
+    // Fase 2: Custos paramétricos
+    setLotCenarioRef('A');
+    setLotCustosInfraOverrides({});
+    setLotContingenciaOverride('');
   };
 
   // Carregar proposta guardada na calculadora
@@ -2186,6 +2333,10 @@ export default function CalculatorPage() {
       setLotEntregaveis(new Set(state.lotEntregaveis || ['viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission']));
       setLotAssuncoesManuais(state.lotAssuncoesManuais || '');
       setLotDependenciasManuais(state.lotDependenciasManuais || '');
+      // Fase 2: Custos paramétricos
+      setLotCenarioRef(state.lotCenarioRef || 'A');
+      setLotCustosInfraOverrides(state.lotCustosInfraOverrides || {});
+      setLotContingenciaOverride(state.lotContingenciaOverride || '');
     }
 
     // Limpar estados de link
@@ -3028,6 +3179,111 @@ export default function CalculatorPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* 6b. Estimativa de Custo de Infraestruturas (Fase 2) */}
+                  {(() => {
+                    const infra = calcularCustosInfra();
+                    const banda = BANDAS_PRECISAO[infra.bandaClasse];
+                    return (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Estimativa de Custo de Infraestruturas</label>
+                        <p className="text-xs text-muted-foreground mb-3">Modelo paramétrico — valores de referência para planeamento do investimento.</p>
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-xs text-muted-foreground">Cenário de referência:</span>
+                          {(['A', 'B', 'C'] as const).filter(c => c !== 'C' || lotNumAlternativas === '3').map(c => (
+                            <button key={c} onClick={() => setLotCenarioRef(c)}
+                              className={`px-3 py-1 text-xs rounded-lg border transition-colors ${lotCenarioRef === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted border-border hover:border-primary/50'}`}>
+                              Cenário {c}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs border-collapse">
+                            <thead>
+                              <tr className="border-b border-border">
+                                <th className="text-left py-1.5 pr-2 font-medium">Infraestrutura</th>
+                                <th className="text-center py-1.5 px-2 font-medium w-14">Unid.</th>
+                                <th className="text-right py-1.5 px-2 font-medium w-16">Qtd.</th>
+                                <th className="text-right py-1.5 px-2 font-medium w-24">P. Unit. (€)</th>
+                                <th className="text-right py-1.5 px-2 font-medium w-20">Ramal (€)</th>
+                                <th className="text-right py-1.5 pl-2 font-medium w-24">Subtotal (€)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {infra.items.map((item) => (
+                                <tr key={item.infraId} className="border-b border-border/50 hover:bg-muted/50">
+                                  <td className="py-1.5 pr-2">{item.nome}</td>
+                                  <td className="text-center py-1.5 px-2 text-muted-foreground">{item.unidade}</td>
+                                  <td className="text-right py-1.5 px-2">{item.quantidade}</td>
+                                  <td className="text-right py-1.5 px-2">
+                                    <input type="number" min="0" step="1"
+                                      value={lotCustosInfraOverrides[item.infraId] ?? ''}
+                                      placeholder={String(CATALOGO_CUSTOS_INFRA.find(c => c.id === item.infraId)?.custoUnitario ?? '')}
+                                      onChange={(e) => setLotCustosInfraOverrides(prev => ({ ...prev, [item.infraId]: e.target.value }))}
+                                      className="w-20 px-1.5 py-0.5 text-xs text-right bg-muted border border-border rounded" />
+                                  </td>
+                                  <td className="text-right py-1.5 px-2 text-muted-foreground">
+                                    {item.custoRamal > 0 ? `${item.custoRamal}` : '—'}
+                                  </td>
+                                  <td className="text-right py-1.5 pl-2 font-medium">{item.subtotal.toLocaleString('pt-PT')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr className="border-t border-border">
+                                <td colSpan={5} className="py-1.5 pr-2 text-right font-medium">Subtotal obra</td>
+                                <td className="text-right py-1.5 pl-2 font-medium">{infra.subtotalObra.toLocaleString('pt-PT')} €</td>
+                              </tr>
+                              <tr className="border-b border-border/50">
+                                <td colSpan={4} className="py-1.5 pr-2 text-right">Contingência</td>
+                                <td className="text-right py-1.5 px-2">
+                                  <input type="number" min="0" max="50" step="1"
+                                    value={lotContingenciaOverride}
+                                    placeholder={String(infra.contingenciaPct)}
+                                    onChange={(e) => setLotContingenciaOverride(e.target.value)}
+                                    className="w-14 px-1.5 py-0.5 text-xs text-right bg-muted border border-border rounded" />
+                                  <span className="ml-0.5">%</span>
+                                </td>
+                                <td className="text-right py-1.5 pl-2">
+                                  {(infra.totalComContingencia - infra.subtotalObra).toLocaleString('pt-PT')} €
+                                </td>
+                              </tr>
+                              <tr className="bg-muted/30 font-semibold">
+                                <td colSpan={5} className="py-2 pr-2 text-right">Total estimado (obra)</td>
+                                <td className="text-right py-2 pl-2">{infra.totalComContingencia.toLocaleString('pt-PT')} €</td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                        <div className="mt-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 text-xs">
+                          <span className="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 font-medium">
+                            {banda?.label} — {banda?.descricao}
+                          </span>
+                          <span className="text-muted-foreground">
+                            Intervalo: {infra.custoMin.toLocaleString('pt-PT')} € – {infra.custoMax.toLocaleString('pt-PT')} €
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const ci = calcularCustosInfra();
+                            const next: Record<string, string> = {};
+                            for (const item of ci.items) {
+                              // Mapear infra -> especialidade: aguas_esgotos_dom -> aguas_esgotos
+                              const espId = item.infraId === 'aguas_esgotos_dom' ? 'aguas_esgotos' : item.infraId;
+                              // Se já existe valor para esta esp (ex: aguas_esgotos), somar
+                              const prev = parseFloat(next[espId] || '0');
+                              const val = Math.round((prev + item.honorarioProjeto) / 50) * 50;
+                              next[espId] = String(val);
+                            }
+                            setEspecialidadesValores(prev => ({ ...prev, ...next }));
+                            toast.success('Honorários de especialidades atualizados a partir do custo estimado de obra.');
+                          }}
+                          className="mt-3 px-3 py-1.5 text-xs rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors">
+                          Atualizar honorários de especialidades
+                        </button>
+                      </div>
+                    );
+                  })()}
 
                   {/* 7. Assuncoes + Dependencias (separadas) */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

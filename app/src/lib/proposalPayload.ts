@@ -167,6 +167,23 @@ export const proposalPayloadSchema = z.object({
   lotEntregaveis: z.array(z.string()).optional(),
   lotAssuncoes: z.array(z.string()).optional(),
   lotDependencias: z.array(z.string()).optional(),
+  // Fase 2: Modelo paramétrico de custos de infraestruturas
+  lotCustosInfra: z.array(z.object({
+    nome: z.string(),
+    unidade: z.string(),
+    quantidade: z.number(),
+    custoUnitario: z.number(),
+    custoRamal: z.number().optional(),
+    subtotal: z.number(),
+    honorario: z.number(),
+  })).optional(),
+  lotContingenciaPct: z.number().optional(),
+  lotCustoObraSubtotal: z.number().optional(),
+  lotCustoObraTotal: z.number().optional(),
+  lotCustoObraMin: z.number().optional(),
+  lotCustoObraMax: z.number().optional(),
+  lotBandaPrecisao: z.string().optional(),
+  lotBandaDescricao: z.string().optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -200,6 +217,11 @@ const MINIFY_KEYS: Record<string, string> = {
   lotEntregaveis: 'len', lotAssuncoes: 'las', lotDependencias: 'ldp',
   label: 'lb', lotes: 'lt', areaMedia: 'am', cedencias: 'ced', nota: 'no',
   accessModel: 'acm', accessModelLabel: 'aml2', viaInternaComprimento: 'vic',
+  // Fase 2: Custos infra
+  lotCustosInfra: 'lci', lotContingenciaPct: 'lcpct', lotCustoObraSubtotal: 'lcos',
+  lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
+  lotBandaPrecisao: 'lbp', lotBandaDescricao: 'lbd',
+  quantidade: 'qt', custoUnitario: 'cu', custoRamal: 'cr', subtotal: 'st', honorario: 'hon', unidade: 'un',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

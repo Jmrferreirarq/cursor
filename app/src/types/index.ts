@@ -99,6 +99,10 @@ export interface CalculatorState {
   lotEntregaveis?: string[];
   lotAssuncoesManuais?: string;
   lotDependenciasManuais?: string;
+  // Fase 2: Custos paramétricos de infraestruturas
+  lotCenarioRef?: 'A' | 'B' | 'C';
+  lotCustosInfraOverrides?: Record<string, string>;
+  lotContingenciaOverride?: string;
 }
 
 export interface Proposal {
