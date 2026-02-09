@@ -31,6 +31,11 @@ const projectTypes: Record<string, string> = {
   'anexo': 'Anexo / Ampliação',
   'agricola': 'Agrícola / Rural',
   'urbanismo': 'Urbanismo',
+  // Loteamento
+  'loteamento_urbano': 'Loteamento Urbano',
+  'loteamento_industrial': 'Loteamento Industrial / Logístico',
+  'destaque_parcela': 'Destaque de Parcela',
+  'reparcelamento': 'Reparcelamento',
   // Apoios de Praia (POC)
   'praia_apm': 'Apoio de Praia Mínimo (APM)',
   'praia_aps': 'Apoio de Praia Simples (APS)',

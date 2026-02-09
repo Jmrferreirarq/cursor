@@ -93,6 +93,11 @@ const ESPECIALIDADES_SUGESTAO: Record<string, { minValor: number; rate: number }
   conservacao: { minValor: 1000, rate: 6.5 },
   acustica: { minValor: 400, rate: 2.5 },
   iluminacao: { minValor: 350, rate: 1.5 },
+  // Loteamento / Infraestruturas
+  infra_viarias: { minValor: 1500, rate: 4 },
+  infra_pluviais: { minValor: 800, rate: 2.5 },
+  infra_ip: { minValor: 600, rate: 1.5 },
+  topografia: { minValor: 1200, rate: 3 },
 };
 
 // Especialidades de projeto (subconsultores/parceiros)
@@ -113,6 +118,11 @@ const ESPECIALIDADES: { id: string; name: string }[] = [
   { id: 'conservacao', name: 'Conservação e restauro' },
   { id: 'acustica', name: 'Estudo acústico' },
   { id: 'iluminacao', name: 'Iluminação' },
+  // Loteamento / Infraestruturas urbanas
+  { id: 'infra_viarias', name: 'Infraestruturas viárias e pavimentos' },
+  { id: 'infra_pluviais', name: 'Rede de águas pluviais e drenagem' },
+  { id: 'infra_ip', name: 'Iluminação pública (IP)' },
+  { id: 'topografia', name: 'Topografia e levantamento' },
 ];
 
 // Extras opcionais (serviços adicionais que o cliente pode optar por incluir)
@@ -202,6 +212,7 @@ const EXCLUSOES_GENERICAS_ARQ = [
 const CATEGORIA_EXCECOES_REMOVER: Record<string, string[]> = {
   Urbanismo: ['arq_fiscalizacao', 'arq_coord_seguranca', 'arq_certificacao', 'arq_acompanhamento', 'arq_geotecnia'],
   'Apoios de Praia': ['arq_geotecnia', 'arq_certificacao', 'arq_obra_clandestina'],
+  Loteamento: ['arq_certificacao', 'arq_acompanhamento'],
 };
 
 // Exceções por TIPOLOGIA (sobrepõe-se à categoria; exclusões a remover das genéricas)
@@ -217,6 +228,11 @@ const EXCLUSOES_EXTRA_TIPOLOGIA: Record<string, string[]> = {
   interiores: ['arq_fornecimento_mobiliario'],
   restauro: ['arq_arqueologia'],
   paisagismo: ['arq_plantio_manutencao'],
+  // Loteamento — exclusões específicas
+  loteamento_urbano: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade'],
+  loteamento_industrial: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade'],
+  destaque_parcela: ['arq_lot_alvara'],
+  reparcelamento: ['arq_lot_alvara', 'arq_lot_cedencias'],
   // Apoios de Praia — exclusões específicas do domínio hídrico
   praia_apm: ['arq_poc_concessao', 'arq_poc_ambiental'],
   praia_aps: ['arq_poc_concessao', 'arq_poc_ambiental'],
@@ -254,6 +270,10 @@ const EXCLUSOES_ARQUITETURA: { id: string; label: string }[] = [
   { id: 'arq_impressao', label: 'Impressão de projetos (disponibilizados em formato digital)' },
   { id: 'arq_taxas_entidades', label: 'Taxas ANEPC, ADENE, Gás, Colectores e outras entidades licenciadoras' },
   { id: 'arq_mapa_quantidades', label: 'Mapas de quantidades e listas de materiais' },
+  // Loteamento
+  { id: 'arq_lot_alvara', label: 'Alvará de loteamento e respetivas taxas urbanísticas' },
+  { id: 'arq_lot_cedencias', label: 'Cedências ao domínio público (terrenos, infraestruturas)' },
+  { id: 'arq_lot_caducidade', label: 'Processos de caducidade ou renovação de alvará' },
   // Apoios de Praia (POC)
   { id: 'arq_poc_concessao', label: 'Processo de concessão / TUPEM (domínio público marítimo)' },
   { id: 'arq_poc_ambiental', label: 'Estudos ambientais e pareceres APA / ICNF (domínio hídrico)' },
@@ -381,6 +401,11 @@ const TIPOLOGIA_ESPECIALIDADES: Record<string, string[]> = {
   paisagismo: ['aguas_esgotos', 'eletrico', 'iluminacao'],
   anexo: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'coord_especialidades'],
   agricola: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'coord_especialidades'],
+  // Loteamento / Operações urbanísticas
+  loteamento_urbano: ['topografia', 'geotecnia', 'aguas_esgotos', 'infra_pluviais', 'infra_viarias', 'eletrico', 'infra_ip', 'ited', 'gas', 'paisagismo', 'acustica', 'coord_especialidades'],
+  loteamento_industrial: ['topografia', 'geotecnia', 'aguas_esgotos', 'infra_pluviais', 'infra_viarias', 'eletrico', 'infra_ip', 'ited', 'coord_especialidades'],
+  destaque_parcela: ['topografia', 'coord_especialidades'],
+  reparcelamento: ['topografia', 'geotecnia', 'aguas_esgotos', 'infra_pluviais', 'infra_viarias', 'eletrico', 'infra_ip', 'coord_especialidades'],
   // Apoios de Praia (POC Alcobaça–Cabo Espichel)
   praia_apm: ['estruturas', 'eletrico', 'coord_especialidades'],
   praia_aps: ['estruturas', 'aguas_esgotos', 'eletrico', 'scie', 'coord_especialidades'],
@@ -429,6 +454,11 @@ const TIPOLOGIAS_HONORARIOS: { id: string; name: string; minValor: number; rate:
   { id: 'paisagismo', name: 'Arranjos exteriores', minValor: 2000, rate: 25, categoria: 'Especiais' },
   { id: 'anexo', name: 'Anexo / ampliação', minValor: 1200, rate: 30, categoria: 'Especiais' },
   { id: 'agricola', name: 'Agrícola / rural', minValor: 1500, rate: 22, categoria: 'Especiais' },
+  // Loteamento / Operações urbanísticas
+  { id: 'loteamento_urbano', name: 'Loteamento urbano', minValor: 4000, rate: 10, categoria: 'Loteamento' },
+  { id: 'loteamento_industrial', name: 'Loteamento industrial / logístico', minValor: 3500, rate: 8, categoria: 'Loteamento' },
+  { id: 'destaque_parcela', name: 'Destaque de parcela', minValor: 1500, rate: 3, categoria: 'Loteamento' },
+  { id: 'reparcelamento', name: 'Reparcelamento', minValor: 2500, rate: 6, categoria: 'Loteamento' },
   // Apoios de Praia — POC Alcobaça–Cabo Espichel (Regulamento de Gestão das Praias Marítimas)
   { id: 'praia_apm', name: 'Apoio de Praia Mínimo (APM)', minValor: 1200, rate: 55, categoria: 'Apoios de Praia' },
   { id: 'praia_aps', name: 'Apoio de Praia Simples (APS)', minValor: 2000, rate: 45, categoria: 'Apoios de Praia' },
@@ -489,6 +519,11 @@ const CUSTOS_CONSTRUCAO_M2: Record<string, { min: number; med: number; max: numb
   paisagismo: { min: 80, med: 150, max: 300, duracao: '1-3 meses' },
   anexo: { min: 800, med: 1100, max: 1500, duracao: '3-6 meses' },
   agricola: { min: 300, med: 500, max: 800, duracao: '4-8 meses' },
+  // Loteamento (infraestruturas urbanísticas por m² de terreno)
+  loteamento_urbano: { min: 80, med: 130, max: 200, duracao: '12-24 meses' },
+  loteamento_industrial: { min: 60, med: 100, max: 160, duracao: '10-20 meses' },
+  destaque_parcela: { min: 0, med: 0, max: 0, duracao: '3-6 meses' },
+  reparcelamento: { min: 50, med: 90, max: 140, duracao: '8-16 meses' },
   // Apoios de Praia (construção modular/leve, ambiente marítimo)
   praia_apm: { min: 800, med: 1200, max: 1800, duracao: '2-4 meses' },
   praia_aps: { min: 900, med: 1300, max: 1900, duracao: '3-5 meses' },
@@ -535,6 +570,11 @@ const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   conservacao: 'Projeto de conservação e restauro, intervenção em património edificado com critérios de preservação.',
   acustica: 'Estudo acústico, controlo de ruído e melhoria da qualidade sonora nos espaços.',
   iluminacao: 'Projeto de iluminação, natural e artificial, e integração com a arquitetura.',
+  // Loteamento / Infraestruturas
+  infra_viarias: 'Projeto de infraestruturas viárias, arruamentos, passeios, pavimentos e sinalização, incluindo perfis transversais e longitudinais.',
+  infra_pluviais: 'Projeto de rede de águas pluviais e sistema de drenagem superficial e enterrada do loteamento.',
+  infra_ip: 'Projeto de iluminação pública (IP), incluindo dimensionamento da rede, seleção de luminárias e postos de transformação.',
+  topografia: 'Levantamento topográfico, altimétrico e planimétrico do terreno para suporte ao projeto de loteamento.',
 };
 
 const constructionRates: Record<string, number> = {
@@ -2285,7 +2325,7 @@ export default function CalculatorPage() {
                     className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
                   >
                     <option value="">— Selecionar tipologia —</option>
-                    {['Habitação', 'Reabilitação', 'Comércio e Serviços', 'Indústria', 'Equipamentos', 'Urbanismo', 'Especiais', 'Apoios de Praia']
+                    {['Habitação', 'Reabilitação', 'Comércio e Serviços', 'Indústria', 'Equipamentos', 'Loteamento', 'Urbanismo', 'Especiais', 'Apoios de Praia']
                       .filter((cat) => TIPOLOGIAS_HONORARIOS.some((t) => t.categoria === cat))
                       .map((cat) => (
                       <optgroup key={cat} label={cat}>
