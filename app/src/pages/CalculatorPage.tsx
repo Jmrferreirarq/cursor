@@ -201,6 +201,7 @@ const EXCLUSOES_GENERICAS_ARQ = [
 // Exceções por CATEGORIA (herdadas por todas as tipologias da categoria)
 const CATEGORIA_EXCECOES_REMOVER: Record<string, string[]> = {
   Urbanismo: ['arq_fiscalizacao', 'arq_coord_seguranca', 'arq_certificacao', 'arq_acompanhamento', 'arq_geotecnia'],
+  'Apoios de Praia': ['arq_geotecnia', 'arq_certificacao', 'arq_obra_clandestina'],
 };
 
 // Exceções por TIPOLOGIA (sobrepõe-se à categoria; exclusões a remover das genéricas)
@@ -216,6 +217,15 @@ const EXCLUSOES_EXTRA_TIPOLOGIA: Record<string, string[]> = {
   interiores: ['arq_fornecimento_mobiliario'],
   restauro: ['arq_arqueologia'],
   paisagismo: ['arq_plantio_manutencao'],
+  // Apoios de Praia — exclusões específicas do domínio hídrico
+  praia_apm: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_aps: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_apc: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_eap: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_appd: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_ab: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_ar: ['arq_poc_concessao', 'arq_poc_ambiental'],
+  praia_ec: ['arq_poc_concessao', 'arq_poc_ambiental'],
 };
 
 // Exclusões de arquitetura (não incluídas nos honorários)
@@ -244,6 +254,9 @@ const EXCLUSOES_ARQUITETURA: { id: string; label: string }[] = [
   { id: 'arq_impressao', label: 'Impressão de projetos (disponibilizados em formato digital)' },
   { id: 'arq_taxas_entidades', label: 'Taxas ANEPC, ADENE, Gás, Colectores e outras entidades licenciadoras' },
   { id: 'arq_mapa_quantidades', label: 'Mapas de quantidades e listas de materiais' },
+  // Apoios de Praia (POC)
+  { id: 'arq_poc_concessao', label: 'Processo de concessão / TUPEM (domínio público marítimo)' },
+  { id: 'arq_poc_ambiental', label: 'Estudos ambientais e pareceres APA / ICNF (domínio hídrico)' },
 ];
 
 // Exclusões por especialidade (id da especialidade -> lista de exclusões)
@@ -368,6 +381,15 @@ const TIPOLOGIA_ESPECIALIDADES: Record<string, string[]> = {
   paisagismo: ['aguas_esgotos', 'eletrico', 'iluminacao'],
   anexo: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'coord_especialidades'],
   agricola: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'coord_especialidades'],
+  // Apoios de Praia (POC Alcobaça–Cabo Espichel)
+  praia_apm: ['estruturas', 'eletrico', 'coord_especialidades'],
+  praia_aps: ['estruturas', 'aguas_esgotos', 'eletrico', 'scie', 'coord_especialidades'],
+  praia_apc: ['estruturas', 'aguas_esgotos', 'eletrico', 'avac', 'scie', 'coord_especialidades'],
+  praia_eap: ['estruturas', 'aguas_esgotos', 'gas', 'eletrico', 'avac', 'scie', 'coord_especialidades'],
+  praia_appd: ['estruturas', 'eletrico', 'coord_especialidades'],
+  praia_ab: ['estruturas', 'coord_especialidades'],
+  praia_ar: ['estruturas', 'eletrico', 'coord_especialidades'],
+  praia_ec: ['estruturas', 'aguas_esgotos', 'eletrico', 'scie', 'coord_especialidades'],
 };
 
 // Tipologias: minValor = base mínima do projeto; rate = €/m² (acrescenta aos m²)
@@ -407,6 +429,15 @@ const TIPOLOGIAS_HONORARIOS: { id: string; name: string; minValor: number; rate:
   { id: 'paisagismo', name: 'Arranjos exteriores', minValor: 2000, rate: 25, categoria: 'Especiais' },
   { id: 'anexo', name: 'Anexo / ampliação', minValor: 1200, rate: 30, categoria: 'Especiais' },
   { id: 'agricola', name: 'Agrícola / rural', minValor: 1500, rate: 22, categoria: 'Especiais' },
+  // Apoios de Praia — POC Alcobaça–Cabo Espichel (Regulamento de Gestão das Praias Marítimas)
+  { id: 'praia_apm', name: 'Apoio de Praia Mínimo (APM)', minValor: 1200, rate: 55, categoria: 'Apoios de Praia' },
+  { id: 'praia_aps', name: 'Apoio de Praia Simples (APS)', minValor: 2000, rate: 45, categoria: 'Apoios de Praia' },
+  { id: 'praia_apc', name: 'Apoio de Praia Completo (APC)', minValor: 3500, rate: 40, categoria: 'Apoios de Praia' },
+  { id: 'praia_eap', name: 'Equipamento c/ funções Apoio Praia (EAP)', minValor: 4000, rate: 42, categoria: 'Apoios de Praia' },
+  { id: 'praia_appd', name: 'Apoio Praia Prática Desportiva (APPD)', minValor: 1500, rate: 48, categoria: 'Apoios de Praia' },
+  { id: 'praia_ab', name: 'Apoio Balnear (AB)', minValor: 800, rate: 50, categoria: 'Apoios de Praia' },
+  { id: 'praia_ar', name: 'Apoio Recreativo (AR)', minValor: 1000, rate: 45, categoria: 'Apoios de Praia' },
+  { id: 'praia_ec', name: 'Equipamento Complementar (Ec)', minValor: 1200, rate: 50, categoria: 'Apoios de Praia' },
 ];
 
 // Tipologias onde o número de pisos influencia os honorários (multiplicador)
@@ -458,6 +489,15 @@ const CUSTOS_CONSTRUCAO_M2: Record<string, { min: number; med: number; max: numb
   paisagismo: { min: 80, med: 150, max: 300, duracao: '1-3 meses' },
   anexo: { min: 800, med: 1100, max: 1500, duracao: '3-6 meses' },
   agricola: { min: 300, med: 500, max: 800, duracao: '4-8 meses' },
+  // Apoios de Praia (construção modular/leve, ambiente marítimo)
+  praia_apm: { min: 800, med: 1200, max: 1800, duracao: '2-4 meses' },
+  praia_aps: { min: 900, med: 1300, max: 1900, duracao: '3-5 meses' },
+  praia_apc: { min: 1000, med: 1400, max: 2000, duracao: '4-8 meses' },
+  praia_eap: { min: 1100, med: 1500, max: 2200, duracao: '6-10 meses' },
+  praia_appd: { min: 700, med: 1000, max: 1500, duracao: '2-4 meses' },
+  praia_ab: { min: 600, med: 900, max: 1300, duracao: '1-2 meses' },
+  praia_ar: { min: 600, med: 900, max: 1400, duracao: '2-3 meses' },
+  praia_ec: { min: 800, med: 1200, max: 1800, duracao: '2-4 meses' },
 };
 
 // Multiplicador por pisos: 1–2 → 1.0, 3 → 1.05, 4+ → 1.10
