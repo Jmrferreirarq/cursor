@@ -2051,6 +2051,33 @@ export default function CalculatorPage() {
     setImovelLocal('lisboa');
     setImovelTipo('apartamento');
     setImovelEstado('bom');
+    // Reset campos de loteamento
+    setLotIdentificacao('');
+    setLotAreaTerreno('');
+    setLotFonteArea('');
+    setLotAreaEstudo('');
+    setLotNumLotes('');
+    setLotFrenteTerreno('');
+    setLotNumAlternativas('2');
+    setLotInstrumento('PDM');
+    setLotClassificacaoSolo('');
+    setLotAlturaMaxima('');
+    setLotAfastamentos('');
+    setLotAreaMinimaLote('');
+    setLotIndiceConstrucao('');
+    setLotIndiceImplantacao('');
+    setLotTipoHabitacao('isoladas');
+    setLotObjetivoPrincipal('max_lotes');
+    setLotTemTopografia(false);
+    setLotTemCaderneta(false);
+    setLotTemExtratoPDM(false);
+    setLotCenarioA({ ...cenarioDefault });
+    setLotCenarioB({ ...cenarioDefault });
+    setLotCenarioC({ ...cenarioDefault });
+    setLotCondicionantes(new Set());
+    setLotEntregaveis(new Set(['viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission']));
+    setLotAssuncoesManuais('');
+    setLotDependenciasManuais('');
   };
 
   // Carregar proposta guardada na calculadora
