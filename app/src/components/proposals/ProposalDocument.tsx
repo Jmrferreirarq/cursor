@@ -272,67 +272,6 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </div>
             )}
 
-            {/* Estimativa de Investimento em Infraestruturas (Fase 2) */}
-            {p.lotCustosInfra && p.lotCustosInfra.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
-                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Estimativa de Investimento em Infraestruturas
-                </p>
-                <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
-                  Estimativa parametrica para efeitos de planeamento do investimento. Valores sujeitos a confirmacao apos levantamento topografico e consulta a entidades gestoras.
-                </p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '2mm' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `2px solid #0369a1` }}>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#0369a1', fontWeight: 700 }}>Infraestrutura</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#0369a1', fontWeight: 700, width: '12mm' }}>Unid.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', color: '#0369a1', fontWeight: 700, width: '14mm' }}>Qtd.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', color: '#0369a1', fontWeight: 700, width: '18mm' }}>P. Unit.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', color: '#0369a1', fontWeight: 700, width: '22mm' }}>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {p.lotCustosInfra.map((item, i) => (
-                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                        <td style={{ padding: '1.5mm 2mm' }}>{item.nome}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: C.cinzaMarca }}>{item.unidade}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.quantidade}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>
-                          {item.custoUnitario.toLocaleString('pt-PT')} {'\u20AC'}
-                          {item.custoRamal ? <span style={{ fontSize: fs(6), color: C.cinzaMarca }}> +{item.custoRamal}{'\u20AC'}/ramal</span> : null}
-                        </td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{item.subtotal.toLocaleString('pt-PT')} {'\u20AC'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ borderTop: `1px solid ${C.cinzaLinha}` }}>
-                      <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>Subtotal</td>
-                      <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{(p.lotCustoObraSubtotal ?? 0).toLocaleString('pt-PT')} {'\u20AC'}</td>
-                    </tr>
-                    {p.lotContingenciaPct != null && p.lotContingenciaPct > 0 && (
-                      <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                        <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right', color: C.cinzaMarca }}>Contingencia ({p.lotContingenciaPct}%)</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: C.cinzaMarca }}>{((p.lotCustoObraTotal ?? 0) - (p.lotCustoObraSubtotal ?? 0)).toLocaleString('pt-PT')} {'\u20AC'}</td>
-                      </tr>
-                    )}
-                    <tr style={{ background: '#e0f2fe' }}>
-                      <td colSpan={4} style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, fontSize: fs(9) }}>Total estimado (obra)</td>
-                      <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, fontSize: fs(9) }}>{(p.lotCustoObraTotal ?? 0).toLocaleString('pt-PT')} {'\u20AC'}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <div style={{ display: 'flex', gap: '3mm', alignItems: 'center', fontSize: fs(7), color: C.cinzaMarca }}>
-                  <span style={{ padding: '1mm 2mm', background: '#fef3c7', borderRadius: 2, color: '#92400e', fontWeight: 600 }}>
-                    {p.lotBandaPrecisao} — {p.lotBandaDescricao}
-                  </span>
-                  <span>
-                    Intervalo estimado: {(p.lotCustoObraMin ?? 0).toLocaleString('pt-PT')} {'\u20AC'} – {(p.lotCustoObraMax ?? 0).toLocaleString('pt-PT')} {'\u20AC'}
-                  </span>
-                </div>
-              </div>
-            )}
-
             {/* Assuncoes + Dependencias lado a lado */}
             <div style={{ display: 'flex', gap: '3mm', marginBottom: '4mm' }}>
               {p.lotAssuncoes && p.lotAssuncoes.length > 0 && (

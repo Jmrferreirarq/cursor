@@ -939,15 +939,17 @@ export default function CalculatorPage() {
   // Função: calcular custos paramétricos de infraestruturas (Fase 2)
   type InfraCustoItem = { infraId: string; nome: string; unidade: string; quantidade: number; custoUnitario: number; custoRamal: number; subtotal: number; honorarioProjeto: number };
   const calcularCustosInfra = (): { items: InfraCustoItem[]; contingenciaPct: number; subtotalObra: number; totalComContingencia: number; bandaClasse: string; margemPct: number; custoMin: number; custoMax: number } => {
+    const emptyResult = { items: [] as InfraCustoItem[], contingenciaPct: 0, subtotalObra: 0, totalComContingencia: 0, bandaClasse: 'classe_5' as string, margemPct: 45, custoMin: 0, custoMax: 0 };
     // Cenário de referência
     const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
-    const numLotes = parseInt(cenRef.lotes, 10) || parseInt(lotNumLotes, 10) || 4;
+    const numLotes = Math.max(0, parseInt(cenRef.lotes, 10) || parseInt(lotNumLotes, 10) || 0);
+    if (numLotes <= 0) return emptyResult;
     const temViaInterna = cenRef.accessModel === 'via_interna' || cenRef.accessModel === 'misto';
-    const viaComp = parseFloat(cenRef.viaInternaComprimento) || 0;
-    const frenteTerreno = parseFloat(lotFrenteTerreno) || 0;
+    const viaComp = Math.max(0, parseFloat(cenRef.viaInternaComprimento) || 0);
+    const frenteTerreno = Math.max(0, parseFloat(lotFrenteTerreno) || 0);
     // Comprimento de rede: se via interna, usar comprimento; senão ~80% da frente
     const comprimentoRede = temViaInterna && viaComp > 0 ? viaComp : frenteTerreno * 0.8;
-    const areaEstudo = parseFloat(lotAreaEstudo) || 0;
+    const areaEstudo = Math.max(0, parseFloat(lotAreaEstudo) || 0);
     const areaVerde = areaEstudo * 0.15; // ~15% cedências verdes
     // Especialidades relevantes para o tipo de loteamento
     const espIds = new Set(TIPOLOGIA_ESPECIALIDADES[projectType] ?? []);
