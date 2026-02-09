@@ -611,7 +611,11 @@ export default function CalculatorPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [projetoNome, setProjetoNome] = useState('');
   const [referenciaProposta, setReferenciaProposta] = useState('');
-  const [localProposta, setLocalProposta] = useState('');
+  const [localProposta, setLocalPropostaRaw] = useState('');
+  // Auto-correção: "Camara" → "Câmara", "camara" → "Câmara"
+  const setLocalProposta = (val: string) => {
+    setLocalPropostaRaw(val.replace(/\bCamar[aá]\b/gi, 'Câmara'));
+  };
   const [linkGoogleMaps, setLinkGoogleMaps] = useState('');
   const [extrasValores, setExtrasValores] = useState<Record<string, string>>({});
   const [despesasReembolsaveis, setDespesasReembolsaveis] = useState('');
@@ -1045,7 +1049,7 @@ export default function CalculatorPage() {
       data: formatDate(new Date(), lang),
       cliente: clienteNome,
       projeto: projetoNome,
-      local: localProposta,
+      local: localProposta.replace(/\bCamara\b/gi, 'Câmara').replace(/\bCamará\b/gi, 'Câmara'),
       linkGoogleMaps: linkGoogleMaps.trim() || undefined,
       modo: honorMode === 'area' ? `${t('calc.modeByArea', lang)} (${area} m²)` : `${t('calc.modeByPct', lang)} (${valorObra}€)`,
       area: honorMode === 'area' ? area : undefined,
@@ -1054,7 +1058,7 @@ export default function CalculatorPage() {
       complexidade: complexity ? t(`complexity.${complexity}`, lang) : '',
       ...(TIPOLOGIAS_COM_PISOS.includes(projectType) && numPisos.trim() ? { pisos: parseInt(numPisos, 10) || undefined } : {}),
       fasesPct: Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0),
-      localizacao: localProposta.trim() || (LOCALIZACAO_LABELS[honorLocalizacao] ?? honorLocalizacao),
+      localizacao: (localProposta.trim() || (LOCALIZACAO_LABELS[honorLocalizacao] ?? honorLocalizacao)).replace(/\bCamara\b/gi, 'Câmara').replace(/\bCamará\b/gi, 'Câmara'),
       iva: '23%',
       despesasReemb: parseFloat(despesasReembolsaveis) || undefined,
       valorArq,
