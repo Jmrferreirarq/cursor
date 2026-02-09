@@ -229,10 +229,10 @@ const EXCLUSOES_EXTRA_TIPOLOGIA: Record<string, string[]> = {
   restauro: ['arq_arqueologia'],
   paisagismo: ['arq_plantio_manutencao'],
   // Loteamento — exclusões específicas
-  loteamento_urbano: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade'],
-  loteamento_industrial: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade'],
-  destaque_parcela: ['arq_lot_alvara'],
-  reparcelamento: ['arq_lot_alvara', 'arq_lot_cedencias'],
+  loteamento_urbano: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade', 'arq_lot_topografia', 'arq_lot_estudo_hidraulico', 'arq_lot_pareceres_apa', 'arq_lot_exec_infra', 'arq_lot_registos', 'arq_lot_arq_moradias'],
+  loteamento_industrial: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_caducidade', 'arq_lot_topografia', 'arq_lot_estudo_hidraulico', 'arq_lot_pareceres_apa', 'arq_lot_exec_infra', 'arq_lot_registos', 'arq_lot_arq_moradias'],
+  destaque_parcela: ['arq_lot_alvara', 'arq_lot_topografia', 'arq_lot_registos'],
+  reparcelamento: ['arq_lot_alvara', 'arq_lot_cedencias', 'arq_lot_topografia', 'arq_lot_pareceres_apa', 'arq_lot_registos'],
   // Apoios de Praia — exclusões específicas do domínio hídrico
   praia_apm: ['arq_poc_concessao', 'arq_poc_ambiental'],
   praia_aps: ['arq_poc_concessao', 'arq_poc_ambiental'],
@@ -274,6 +274,12 @@ const EXCLUSOES_ARQUITETURA: { id: string; label: string }[] = [
   { id: 'arq_lot_alvara', label: 'Alvará de loteamento e respetivas taxas urbanísticas' },
   { id: 'arq_lot_cedencias', label: 'Cedências ao domínio público (terrenos, infraestruturas)' },
   { id: 'arq_lot_caducidade', label: 'Processos de caducidade ou renovação de alvará' },
+  { id: 'arq_lot_topografia', label: 'Levantamento topográfico e geotécnico' },
+  { id: 'arq_lot_estudo_hidraulico', label: 'Estudos hidráulicos específicos / bacias de retenção' },
+  { id: 'arq_lot_pareceres_apa', label: 'Pareceres APA / ICNF / domínio hídrico / REN-RAN' },
+  { id: 'arq_lot_exec_infra', label: 'Projeto de execução de infraestruturas (arruamentos, redes)' },
+  { id: 'arq_lot_registos', label: 'Registos, escrituras e operações de destaque/retificação' },
+  { id: 'arq_lot_arq_moradias', label: 'Projetos de arquitetura das moradias/edifícios dos lotes individuais' },
   // Apoios de Praia (POC)
   { id: 'arq_poc_concessao', label: 'Processo de concessão / TUPEM (domínio público marítimo)' },
   { id: 'arq_poc_ambiental', label: 'Estudos ambientais e pareceres APA / ICNF (domínio hídrico)' },
@@ -552,6 +558,110 @@ const ESCALOES_DECRESCIMENTO: [number, number][] = [
   [Infinity, 0.75],
 ];
 
+// ── Loteamento: Condicionantes urbanísticas ──
+const CONDICIONANTES_LOTEAMENTO: { id: string; label: string; impacto: 'baixo' | 'medio' | 'alto' }[] = [
+  { id: 'ren', label: 'REN (Reserva Ecológica Nacional)', impacto: 'alto' },
+  { id: 'ran', label: 'RAN (Reserva Agrícola Nacional)', impacto: 'alto' },
+  { id: 'dominio_hidrico', label: 'Domínio hídrico / linhas de água', impacto: 'alto' },
+  { id: 'patrimonio', label: 'Património classificado / zona proteção', impacto: 'medio' },
+  { id: 'arruamentos_novos', label: 'Arruamentos novos necessários', impacto: 'medio' },
+  { id: 'infra_criticas', label: 'Infraestruturas críticas (rede elétrica MT/AT, gás)', impacto: 'medio' },
+  { id: 'servidoes', label: 'Servidões administrativas', impacto: 'medio' },
+  { id: 'topografia_acentuada', label: 'Topografia acentuada (declive >15%)', impacto: 'medio' },
+  { id: 'zona_inundavel', label: 'Zona inundável / risco', impacto: 'alto' },
+  { id: 'acesso_condicionado', label: 'Acesso condicionado / sem frente de estrada', impacto: 'baixo' },
+  { id: 'pp_vigente', label: 'Plano de Pormenor (PP) vigente', impacto: 'baixo' },
+  { id: 'alvara_anterior', label: 'Alvará de loteamento anterior', impacto: 'baixo' },
+];
+
+// Fases específicas de loteamento (substituem ICHPOP)
+const FASES_LOTEAMENTO: { id: string; name: string; pct: number; desc: string; descricao: string }[] = [
+  {
+    id: 'lot_viabilidade',
+    name: 'Estudo de viabilidade | Adjudicação',
+    pct: 25,
+    desc: 'Análise e cenários',
+    descricao: 'Recolha e validação de dados (PDM, condicionantes, servidões, infraestruturas existentes). Desenvolvimento de 2–3 cenários de implantação com variação de nº de lotes, acessos e cedências. Quadro de áreas comparativo e recomendação técnica. Entrega ao cliente para decisão.',
+  },
+  {
+    id: 'lot_pip',
+    name: 'Pedido de Informação Prévia (PIP)',
+    pct: 15,
+    desc: 'Submissão PIP (opcional)',
+    descricao: 'Elaboração e submissão do PIP à Câmara Municipal para validação prévia da solução urbanística. Inclui memória descritiva, peças desenhadas e quadro regulamentar. Fase opcional — se não contratada, a percentagem redistribui-se.',
+  },
+  {
+    id: 'lot_projeto',
+    name: 'Projeto de Loteamento | Entrega',
+    pct: 30,
+    desc: 'Entrega na Câmara',
+    descricao: 'Elaboração do projeto de loteamento para licenciamento: planta de síntese, planta de implantação, quadro de áreas e lotes, perfis, memória descritiva e justificativa, regulamento do loteamento e peças complementares exigidas. Entrega do processo completo na Câmara Municipal.',
+  },
+  {
+    id: 'lot_notificacoes',
+    name: 'Notificações e Diligências',
+    pct: 20,
+    desc: 'Análise na Câmara',
+    descricao: 'Acompanhamento do processo na Câmara Municipal. Resposta a notificações, pedidos de esclarecimento e diligências de entidades consultadas (APA, ICNF, gestoras de infraestruturas). Inclui 1 ciclo de revisão por notificação.',
+  },
+  {
+    id: 'lot_aprovacao',
+    name: 'Aprovação Final | Alvará',
+    pct: 10,
+    desc: 'Entrega final',
+    descricao: 'Entrega das peças finais para emissão do alvará de loteamento. Inclui eventual retificação de áreas após topografia definitiva e compatibilização com condições impostas pela Câmara.',
+  },
+];
+
+// Gera assunções automáticas com base nas condicionantes selecionadas
+function gerarAssuncoesLoteamento(condicionantes: Set<string>, temTopografia: boolean): string[] {
+  const assuncoes: string[] = [];
+  if (!temTopografia) {
+    assuncoes.push('Áreas e limites de propriedade a confirmar após levantamento topográfico.');
+  }
+  if (condicionantes.has('ren')) {
+    assuncoes.push('Delimitação da REN conforme carta em vigor; sujeita a confirmação pela CCDR.');
+  }
+  if (condicionantes.has('ran')) {
+    assuncoes.push('Área da RAN conforme carta em vigor; desanexação não contemplada nesta proposta.');
+  }
+  if (condicionantes.has('dominio_hidrico')) {
+    assuncoes.push('Linhas de água identificadas em cartografia; delimitação definitiva sujeita a validação pela APA.');
+  }
+  if (condicionantes.has('arruamentos_novos')) {
+    assuncoes.push('Novos arruamentos sujeitos a aprovação camarária e dimensionamento conforme regulamento municipal.');
+  }
+  if (condicionantes.has('infra_criticas')) {
+    assuncoes.push('Ligações a infraestruturas existentes sujeitas a parecer das entidades gestoras (EDP, Águas, Gás).');
+  }
+  if (condicionantes.has('zona_inundavel')) {
+    assuncoes.push('Zona inundável identificada; solução sujeita a estudo hidráulico específico (não incluído).');
+  }
+  if (condicionantes.has('patrimonio')) {
+    assuncoes.push('Proximidade a património classificado; sujeito a parecer da DGPC/DRC.');
+  }
+  if (condicionantes.size === 0) {
+    assuncoes.push('Inexistência de condicionantes não identificadas à data da proposta.');
+  }
+  assuncoes.push('Acessos existentes ao prédio em condições de utilização.');
+  return assuncoes;
+}
+
+// Calcula complexidade sugerida com base nas condicionantes
+function calcularComplexidadeLoteamento(condicionantes: Set<string>): string {
+  let score = 0;
+  for (const id of condicionantes) {
+    const cond = CONDICIONANTES_LOTEAMENTO.find(c => c.id === id);
+    if (!cond) continue;
+    if (cond.impacto === 'alto') score += 3;
+    else if (cond.impacto === 'medio') score += 2;
+    else score += 1;
+  }
+  if (score >= 6) return 'alta';
+  if (score >= 3) return 'media';
+  return 'baixa';
+}
+
 // Descrições das especialidades (para a proposta)
 const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   estruturas: 'Projeto de estruturas e fundações — dimensionamento conforme regulamentação aplicável (incluindo ação sísmica EC8). Não inclui campanhas geotécnicas, ensaios ou estudos específicos extraordinários.',
@@ -687,6 +797,25 @@ export default function CalculatorPage() {
   const [notasExtras, setNotasExtras] = useState('');
   const [areaUnit, setAreaUnit] = useState('m2');
 
+  // ── Campos específicos de loteamento ──
+  const [lotIdentificacao, setLotIdentificacao] = useState(''); // artigo matricial + descrição
+  const [lotAreaTerreno, setLotAreaTerreno] = useState(''); // área total do prédio (m²)
+  const [lotFonteArea, setLotFonteArea] = useState(''); // fonte: matriz/topografia/escritura
+  const [lotAreaEstudo, setLotAreaEstudo] = useState(''); // área em estudo (m²)
+  const [lotNumLotes, setLotNumLotes] = useState(''); // nº lotes pretendidos
+  const [lotNumAlternativas, setLotNumAlternativas] = useState('2'); // 2 ou 3 cenários
+  // Cenários A/B/C
+  const [lotCenarioA, setLotCenarioA] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
+  const [lotCenarioB, setLotCenarioB] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
+  const [lotCenarioC, setLotCenarioC] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
+  // Condicionantes urbanísticas (afetam complexidade e prazo)
+  const [lotCondicionantes, setLotCondicionantes] = useState<Set<string>>(new Set());
+  // Assunções de base (geradas automaticamente + manuais)
+  const [lotAssuncoesManuais, setLotAssuncoesManuais] = useState('');
+
+  // Helper: é tipologia de loteamento?
+  const isLoteamento = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(projectType);
+
   // Áreas
   const [areaValue, setAreaValue] = useState('');
   const [fromUnit, setFromUnit] = useState('m2');
@@ -749,8 +878,9 @@ export default function CalculatorPage() {
         variavel = areaNum * rate * mult;
       }
       let val = minValor + variavel;
+      const fasesList = isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES;
       const pctFases = Array.from(fasesIncluidas).reduce(
-        (s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0),
+        (s, id) => s + (fasesList.find((p) => p.id === id)?.pct ?? 0),
         0
       );
       val = (val * pctFases) / 100;
@@ -762,8 +892,9 @@ export default function CalculatorPage() {
     const obra = parseFloat(valorObra) || 0;
     const pct = parseFloat(pctHonor) || 8;
     let val = (obra * pct) / 100;
+    const fasesList = isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES;
     const pctFases = Array.from(fasesIncluidas).reduce(
-      (s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0),
+      (s, id) => s + (fasesList.find((p) => p.id === id)?.pct ?? 0),
       0
     );
     val = (val * pctFases) / 100;
@@ -853,6 +984,25 @@ export default function CalculatorPage() {
       if (tipologia) setProjetoNome(`Projeto ${tipologia.name}`);
     } else {
       setProjetoNome('');
+    }
+  }, [projectType, activeCalculator]);
+
+  // Ajustar fases incluídas quando se muda entre loteamento e edificação
+  useEffect(() => {
+    if (activeCalculator !== 'honorarios' || !projectType) return;
+    const lotTipos = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'];
+    const isLot = lotTipos.includes(projectType);
+    const currentIsLot = Array.from(fasesIncluidas).some(id => id.startsWith('lot_'));
+    // Se mudou de tipo (loteamento <-> edificação), resetar fases
+    if (isLot && !currentIsLot) {
+      // Mudou para loteamento — definir fases de loteamento
+      const defaultFases = projectType === 'destaque_parcela'
+        ? ['lot_viabilidade', 'lot_projeto', 'lot_aprovacao']
+        : ['lot_viabilidade', 'lot_pip', 'lot_projeto', 'lot_notificacoes', 'lot_aprovacao'];
+      setFasesIncluidas(new Set(defaultFases));
+    } else if (!isLot && currentIsLot) {
+      // Mudou de loteamento para edificação — resetar fases ICHPOP
+      setFasesIncluidas(new Set(['estudo', 'ante', 'licenciamento_entrega', 'licenciamento_notificacao', 'aprovacao_final']));
     }
   }, [projectType, activeCalculator]);
 
@@ -1039,14 +1189,16 @@ export default function CalculatorPage() {
   const LOCALIZACAO_LABELS: Record<string, string> = { lisboa: 'Lisboa (+15%)', litoral: 'Litoral (+5%)', interior: 'Interior (−12%)' };
 
   const buildProposalPayload = (): ProposalPayload => {
-    const soma = Array.from(fasesIncluidas).reduce((s, i) => s + (ICHPOP_PHASES.find((x) => x.id === i)?.pct ?? 0), 0);
+    const currentPhases = isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES;
+    const soma = Array.from(fasesIncluidas).reduce((s, i) => s + (currentPhases.find((x) => x.id === i)?.pct ?? 0), 0);
+    const headerLabel = isLoteamento ? 'Urbanismo (até aprovação)' : t('proposal.paymentPhasesArq', lang);
     const fasesPagamento: { nome: string; pct?: number; valor?: number; isHeader?: boolean }[] = [
-      { nome: `${t('proposal.paymentPhasesArq', lang)} — 100%`, isHeader: true },
+      { nome: `${headerLabel} — 100%`, isHeader: true },
       ...Array.from(fasesIncluidas).map((id) => {
-        const p = ICHPOP_PHASES.find((x) => x.id === id);
+        const p = currentPhases.find((x) => x.id === id);
         if (!p) return null;
         const v = soma > 0 ? (valorArq * p.pct) / soma : 0;
-        const nome = t(`phases.${id}_name`, lang);
+        const nome = isLoteamento ? p.name : t(`phases.${id}_name`, lang);
         return { nome, pct: p.pct, valor: v };
       }).filter(Boolean) as { nome: string; pct: number; valor: number }[],
     ];
@@ -1073,10 +1225,10 @@ export default function CalculatorPage() {
       }
     });
     const descricaoFases = Array.from(fasesIncluidas).map((id) => {
-      const p = ICHPOP_PHASES.find((x) => x.id === id);
+      const p = currentPhases.find((x) => x.id === id);
       if (!p) return null;
-      const nome = t(`phases.${id}_name`, lang);
-      const descricao = t(`phases.${id}_desc`, lang);
+      const nome = isLoteamento ? p.name : t(`phases.${id}_name`, lang);
+      const descricao = isLoteamento ? (p as typeof FASES_LOTEAMENTO[number]).descricao ?? '' : t(`phases.${id}_desc`, lang);
       return { nome, pct: p.pct, descricao };
     }).filter(Boolean) as { nome: string; pct: number; descricao: string }[];
     const especialidadesDescricoes = espComValor.map((e) => {
@@ -1097,7 +1249,7 @@ export default function CalculatorPage() {
       tipologia: TIPOLOGIAS_HONORARIOS.find((tp) => tp.id === projectType)?.name ?? '',
       complexidade: complexity ? t(`complexity.${complexity}`, lang) : '',
       ...(TIPOLOGIAS_COM_PISOS.includes(projectType) && numPisos.trim() ? { pisos: parseInt(numPisos, 10) || undefined } : {}),
-      fasesPct: Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0),
+      fasesPct: Array.from(fasesIncluidas).reduce((s, id) => s + (currentPhases.find((p) => p.id === id)?.pct ?? 0), 0),
       localizacao: (localProposta.trim() || (LOCALIZACAO_LABELS[honorLocalizacao] ?? honorLocalizacao)).replace(/\bCamara\b/gi, 'Câmara').replace(/\bCamará\b/gi, 'Câmara'),
       iva: '23%',
       despesasReemb: parseFloat(despesasReembolsaveis) || undefined,
@@ -1114,12 +1266,53 @@ export default function CalculatorPage() {
       valorIVA,
       fasesPagamento,
       descricaoFases,
-      notaBim: t('longText.notaBim', lang),
-      notaReunioes: honorMode === 'pct' ? t('longText.reunioesModoPct', lang) : areaRef <= 150 ? t('longText.reunioesAte150', lang) : areaRef <= 300 ? t('longText.reunioes150a300', lang) : t('longText.reunioesAcima300', lang),
+      notaBim: isLoteamento
+        ? 'A proposta é desenvolvida com recurso a modelo digital urbanístico, compatibilização de peças desenhadas e coordenação de especialidades de infraestruturas. A metodologia inclui análise georreferenciada, sobreposição de condicionantes e produção de peças em formato editável (DWG/PDF).'
+        : t('longText.notaBim', lang),
+      notaReunioes: isLoteamento
+        ? `Estão incluídas 8 reuniões de trabalho (presenciais ou remotas): apresentação de cenários, validação com o cliente, diligências na Câmara Municipal e coordenação com entidades. Reuniões adicionais serão faturadas a 75€/h.`
+        : (honorMode === 'pct' ? t('longText.reunioesModoPct', lang) : areaRef <= 150 ? t('longText.reunioesAte150', lang) : areaRef <= 300 ? t('longText.reunioes150a300', lang) : t('longText.reunioesAcima300', lang)),
       apresentacao: t('longText.apresentacao', lang),
       especialidadesDescricoes,
       exclusoes: exclusoesLabels,
-      notas: [
+      // Dados de loteamento (opcionais, presentes apenas para tipologias de loteamento)
+      ...(isLoteamento ? {
+        isLoteamento: true,
+        lotIdentificacao: lotIdentificacao.trim() || undefined,
+        lotAreaTerreno: lotAreaTerreno.trim() || undefined,
+        lotFonteArea: lotFonteArea || undefined,
+        lotAreaEstudo: lotAreaEstudo.trim() || undefined,
+        lotNumLotes: lotNumLotes.trim() || undefined,
+        lotNumAlternativas: parseInt(lotNumAlternativas) || 2,
+        lotCenarios: [
+          lotCenarioA.lotes ? { ...lotCenarioA, label: 'A' } : null,
+          lotCenarioB.lotes ? { ...lotCenarioB, label: 'B' } : null,
+          lotNumAlternativas === '3' && lotCenarioC.lotes ? { ...lotCenarioC, label: 'C' } : null,
+        ].filter(Boolean),
+        lotCondicionantes: Array.from(lotCondicionantes).map(id => {
+          const c = CONDICIONANTES_LOTEAMENTO.find(x => x.id === id);
+          return c ? c.label : id;
+        }),
+        lotComplexidadeSugerida: calcularComplexidadeLoteamento(lotCondicionantes),
+        lotAssuncoes: [
+          ...gerarAssuncoesLoteamento(lotCondicionantes, lotFonteArea === 'topografia'),
+          ...(lotAssuncoesManuais.trim() ? lotAssuncoesManuais.trim().split('\n').filter(Boolean) : []),
+        ],
+      } : {}),
+      notas: isLoteamento ? [
+        t('notes.validity', lang),
+        t('notes.paymentTranches', lang),
+        'Alterações ao programa/briefing após validação do cenário selecionado serão objeto de proposta complementar.',
+        t('notes.vatLegal', lang),
+        'Visitas ao local e diligências na Câmara Municipal incluídas (até ao limite de reuniões definido).',
+        'Proposta não inclui acompanhamento de obra, fiscalização ou projeto de execução de infraestruturas (salvo se indicado nas especialidades).',
+        'Inclui 2 ciclos de revisão por fase + 1 ciclo de resposta a notificações da Câmara Municipal.',
+        t('notes.revisionLimit', lang),
+        t('notes.notificationCycles', lang),
+        'O licenciamento é de loteamento — não inclui projetos de arquitetura das moradias/edifícios dos lotes individuais.',
+        t('notes.clientResponseTime', lang),
+        ...(lotFonteArea !== 'topografia' ? ['Áreas e limites de propriedade sujeitos a confirmação por levantamento topográfico (não incluído).'] : []),
+      ] : [
         t('notes.validity', lang),
         t('notes.paymentTranches', lang),
         t('notes.changesAfterStudy', lang),
@@ -1237,14 +1430,36 @@ export default function CalculatorPage() {
       mostrarGuiaObra,
       // Resumo executivo automático
       ...(mostrarResumo ? {
-        resumoExecutivo: {
+        resumoExecutivo: isLoteamento ? {
+          incluido: [
+            'Análise urbanística e condicionantes (PDM, servidões, REN/RAN)',
+            `${lotNumAlternativas} alternativas de implantação com quadro de áreas`,
+            'Planta de síntese do loteamento + quadro de áreas',
+            'Memória descritiva e justificativa (viabilidade / licenciamento)',
+            'Preparação e submissão do processo na Câmara Municipal',
+            ...(espComValor.length > 0 ? ['Coordenação de especialidades de infraestruturas'] : []),
+            `${Array.from(fasesIncluidas).reduce((s, id) => s + (currentPhases.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases de urbanismo`,
+            '8 reuniões até aprovação (incluindo diligências na Câmara)',
+            '2 ciclos revisão/fase + 1 ciclo notificações (limite contratual)',
+          ],
+          naoIncluido: [
+            'Taxas e emolumentos camarários',
+            ...(lotFonteArea !== 'topografia' ? ['Levantamento topográfico / geotécnico'] : []),
+            'Pareceres externos (APA/ICNF/infraestruturas)',
+            'Projetos de execução de infraestruturas (se não incluídos)',
+            'Projetos de arquitetura das moradias dos lotes',
+            'Alterações de briefing após validação do cenário',
+          ],
+          prazoEstimado: lotCondicionantes.size >= 3 ? '18-24 meses (típico)' : lotCondicionantes.size >= 1 ? '12-18 meses (típico)' : '10-14 meses (típico)',
+          proximoPasso: 'Adjudicação + reunião de arranque',
+        } : {
           incluido: [
             'Projeto de Arquitetura até decisão municipal',
             'Assistência à Obra (8 visitas incluídas)',
             'Imagens 3D não fotorealistas (apoio à decisão)',
             'Pormenorização genérica de pontos-chave',
             ...(espComValor.length > 0 ? ['Projetos de Especialidades'] : []),
-            `${Array.from(fasesIncluidas).reduce((s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases ICHPOP`,
+            `${Array.from(fasesIncluidas).reduce((s, id) => s + (currentPhases.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases ICHPOP`,
             `${honorMode === 'pct' ? '8-12' : areaRef <= 150 ? '6-8' : areaRef <= 300 ? '8-12' : '12-15'} reuniões até aprovação`,
             '2 ciclos revisão/fase + 1 ciclo notificações (limite contratual)',
           ],
@@ -1260,7 +1475,11 @@ export default function CalculatorPage() {
       } : {}),
       // Cenários de prazo automáticos
       ...(mostrarCenarios ? {
-        cenariosPrazo: {
+        cenariosPrazo: isLoteamento ? {
+          melhorCaso: lotCondicionantes.size >= 3 ? '12-14 meses' : '6-8 meses',
+          casoTipico: lotCondicionantes.size >= 3 ? '18-24 meses' : lotCondicionantes.size >= 1 ? '12-18 meses' : '10-14 meses',
+          piorCaso: lotCondicionantes.size >= 3 ? '30+ meses' : '18+ meses',
+        } : {
           melhorCaso: '6-8 meses',
           casoTipico: '10-14 meses',
           piorCaso: '18+ meses',
@@ -1961,10 +2180,14 @@ export default function CalculatorPage() {
             </div>
 
             <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-border">
-              <p className="text-sm font-medium mb-3">Fases incluídas no serviço</p>
-              <p className="text-xs text-muted-foreground mb-3">Base (até licenciamento aprovado). Pormenores genéricos incluídos no licenciamento. Fiscalização e Projeto de Execução são extras.</p>
+              <p className="text-sm font-medium mb-3">{isLoteamento ? 'Fases do loteamento' : 'Fases incluídas no serviço'}</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                {isLoteamento
+                  ? 'Urbanismo (viabilidade → aprovação). Especialidades de infraestruturas são contratadas separadamente.'
+                  : 'Base (até licenciamento aprovado). Pormenores genéricos incluídos no licenciamento. Fiscalização e Projeto de Execução são extras.'}
+              </p>
               <div className="flex flex-wrap gap-4">
-                {ICHPOP_PHASES.map((phase) => (
+                {(isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES).map((phase) => (
                   <label key={phase.id} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1986,7 +2209,7 @@ export default function CalculatorPage() {
                 <span className="text-xs text-muted-foreground">
                   Total fases:{' '}
                   {Array.from(fasesIncluidas).reduce(
-                    (s, id) => s + (ICHPOP_PHASES.find((p) => p.id === id)?.pct ?? 0),
+                    (s, id) => s + ((isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES).find((p) => p.id === id)?.pct ?? 0),
                     0
                   )}
                   %
@@ -2377,6 +2600,190 @@ export default function CalculatorPage() {
                   </label>
                 </div>
               </div>
+
+              {/* ═══ SECÇÃO LOTEAMENTO ═══ */}
+              {isLoteamento && (
+                <div className="mt-4 p-5 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-5">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-amber-500 rounded-full" />
+                    Dados do Loteamento
+                  </h3>
+
+                  {/* Identificação e áreas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Identificação predial</label>
+                      <input
+                        type="text"
+                        value={lotIdentificacao}
+                        onChange={(e) => setLotIdentificacao(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="Ex: Art.º 1234 — Rústico, Secção B"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Fonte da área</label>
+                      <select
+                        value={lotFonteArea}
+                        onChange={(e) => setLotFonteArea(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                      >
+                        <option value="">— Selecionar —</option>
+                        <option value="matriz">Caderneta predial (matriz)</option>
+                        <option value="topografia">Levantamento topográfico</option>
+                        <option value="escritura">Escritura / registo predial</option>
+                        <option value="estimativa">Estimativa (a confirmar)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Área total do prédio (m²)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={lotAreaTerreno}
+                        onChange={(e) => setLotAreaTerreno(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="Ex: 5000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Área em estudo (m²)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={lotAreaEstudo}
+                        onChange={(e) => setLotAreaEstudo(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="Ex: 4200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nº lotes pretendidos</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="50"
+                        value={lotNumLotes}
+                        onChange={(e) => setLotNumLotes(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                        placeholder="Ex: 6"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Condicionantes urbanísticas */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Condicionantes urbanísticas</label>
+                    <p className="text-xs text-muted-foreground mb-2">Selecione as condicionantes identificadas — afetam a complexidade e o prazo estimado.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {CONDICIONANTES_LOTEAMENTO.map((c) => (
+                        <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={lotCondicionantes.has(c.id)}
+                            onChange={(e) => {
+                              const next = new Set(lotCondicionantes);
+                              if (e.target.checked) next.add(c.id); else next.delete(c.id);
+                              setLotCondicionantes(next);
+                            }}
+                          />
+                          <span>{c.label}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                            c.impacto === 'alto' ? 'bg-red-500/10 text-red-400' :
+                            c.impacto === 'medio' ? 'bg-yellow-500/10 text-yellow-400' :
+                            'bg-green-500/10 text-green-400'
+                          }`}>
+                            {c.impacto}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {lotCondicionantes.size > 0 && (
+                      <p className="text-xs text-amber-400 mt-2">
+                        Complexidade sugerida: <strong className="uppercase">{calcularComplexidadeLoteamento(lotCondicionantes)}</strong>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Cenários de loteamento */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <label className="text-sm font-medium">Cenários de loteamento</label>
+                      <select
+                        value={lotNumAlternativas}
+                        onChange={(e) => setLotNumAlternativas(e.target.value)}
+                        className="px-3 py-1.5 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                      >
+                        <option value="2">2 alternativas (A/B)</option>
+                        <option value="3">3 alternativas (A/B/C)</option>
+                      </select>
+                    </div>
+                    <div className={`grid grid-cols-1 ${lotNumAlternativas === '3' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+                      {[
+                        { label: 'Cenário A', state: lotCenarioA, setter: setLotCenarioA },
+                        { label: 'Cenário B', state: lotCenarioB, setter: setLotCenarioB },
+                        ...(lotNumAlternativas === '3' ? [{ label: 'Cenário C', state: lotCenarioC, setter: setLotCenarioC }] : []),
+                      ].map(({ label, state, setter }) => (
+                        <div key={label} className="p-3 bg-muted/50 border border-border rounded-lg space-y-2">
+                          <p className="text-sm font-semibold">{label}</p>
+                          <input
+                            type="number"
+                            min="1"
+                            value={state.lotes}
+                            onChange={(e) => setter({ ...state, lotes: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                            placeholder="Nº lotes"
+                          />
+                          <input
+                            type="number"
+                            min="0"
+                            value={state.areaMedia}
+                            onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                            placeholder="Área média/lote (m²)"
+                          />
+                          <input
+                            type="text"
+                            value={state.cedencias}
+                            onChange={(e) => setter({ ...state, cedencias: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                            placeholder="Cedências estimadas (m²)"
+                          />
+                          <input
+                            type="text"
+                            value={state.nota}
+                            onChange={(e) => setter({ ...state, nota: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                            placeholder="Nota / risco (1 linha)"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Assunções de base (preview) */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Assunções de base (automáticas + manuais)</label>
+                    <div className="text-xs text-muted-foreground space-y-1 mb-2">
+                      {gerarAssuncoesLoteamento(lotCondicionantes, lotFonteArea === 'topografia').map((a, i) => (
+                        <p key={i} className="flex items-start gap-1.5">
+                          <span className="mt-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full flex-shrink-0" />
+                          {a}
+                        </p>
+                      ))}
+                    </div>
+                    <textarea
+                      value={lotAssuncoesManuais}
+                      onChange={(e) => setLotAssuncoesManuais(e.target.value)}
+                      className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                      rows={2}
+                      placeholder="Assunções adicionais (uma por linha)..."
+                    />
+                  </div>
+                </div>
+              )}
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>

@@ -129,6 +129,24 @@ export const proposalPayloadSchema = z.object({
     maxTotal: z.number(),
     duracao: z.string(),
   }).optional(),
+  // ── Campos de Loteamento ──
+  isLoteamento: z.boolean().optional(),
+  lotIdentificacao: z.string().optional(),
+  lotAreaTerreno: z.string().optional(),
+  lotFonteArea: z.string().optional(),
+  lotAreaEstudo: z.string().optional(),
+  lotNumLotes: z.string().optional(),
+  lotNumAlternativas: z.number().optional(),
+  lotCenarios: z.array(z.object({
+    label: z.string(),
+    lotes: z.string(),
+    areaMedia: z.string().optional(),
+    cedencias: z.string().optional(),
+    nota: z.string().optional(),
+  })).optional(),
+  lotCondicionantes: z.array(z.string()).optional(),
+  lotComplexidadeSugerida: z.string().optional(),
+  lotAssuncoes: z.array(z.string()).optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -152,6 +170,11 @@ const MINIFY_KEYS: Record<string, string> = {
   mostrarGuiaObra: 'mgo', tipologiaId: 'tid', tipologiaCategoria: 'tca', areaNum: 'arn',
   // Custos de construção
   custosConstrucao: 'cc', min: 'mi', med: 'me', max: 'ma', minTotal: 'mit', medTotal: 'met', maxTotal: 'mat',
+  // Loteamento
+  isLoteamento: 'isl', lotIdentificacao: 'lid', lotAreaTerreno: 'lat', lotFonteArea: 'lfa',
+  lotAreaEstudo: 'lae', lotNumLotes: 'lnl', lotNumAlternativas: 'lna', lotCenarios: 'lce',
+  lotCondicionantes: 'lco', lotComplexidadeSugerida: 'lcs', lotAssuncoes: 'las',
+  label: 'lb', lotes: 'lt', areaMedia: 'am', cedencias: 'ced', nota: 'no',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

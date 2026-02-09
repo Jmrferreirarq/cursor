@@ -100,6 +100,119 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
+        {/* ── SECÇÃO LOTEAMENTO — Dados do terreno + Cenários + Condicionantes ── */}
+        {p.isLoteamento && (
+          <>
+            {/* Dados do terreno */}
+            {(p.lotIdentificacao || p.lotAreaTerreno || p.lotAreaEstudo) && (
+              <div style={{ background: '#fffbeb', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #fbbf24' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Dados do Terreno
+                </p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
+                  <tbody>
+                    {p.lotIdentificacao && (
+                      <tr>
+                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Identificação predial</td>
+                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotIdentificacao}</td>
+                      </tr>
+                    )}
+                    {p.lotAreaTerreno && (
+                      <tr>
+                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Área total do prédio</td>
+                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaTerreno).toLocaleString('pt-PT')} m² {p.lotFonteArea ? `(${p.lotFonteArea})` : ''}</td>
+                      </tr>
+                    )}
+                    {p.lotAreaEstudo && (
+                      <tr>
+                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Área em estudo</td>
+                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaEstudo).toLocaleString('pt-PT')} m²</td>
+                      </tr>
+                    )}
+                    {p.lotNumLotes && (
+                      <tr>
+                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Nº lotes pretendidos</td>
+                        <td style={{ padding: '1mm 2mm', color: C.grafite, fontWeight: 600 }}>{p.lotNumLotes}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Cenários de loteamento (A/B/C) */}
+            {p.lotCenarios && p.lotCenarios.length > 0 && (
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid #f59e0b` }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Cenários de Loteamento
+                </p>
+                <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
+                  Inclui {p.lotCenarios.length} opções de implantação com quadro de áreas e recomendação.
+                </p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                  <thead>
+                    <tr style={{ background: '#fef3c7' }}>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Cenário</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Lotes</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Área média</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Cedências</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Nota</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.lotCenarios.map((c, i) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>Cenário {c.label}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m²` : '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias || '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', color: C.cinzaMarca, fontSize: fs(7) }}>{c.nota || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Condicionantes identificadas */}
+            {p.lotCondicionantes && p.lotCondicionantes.length > 0 && (
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#fff1f2', borderRadius: 2, border: '1px solid #fecdd3' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#9f1239', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Condicionantes Identificadas
+                </p>
+                <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 1mm 0' }}>
+                  Complexidade urbanística: <strong style={{ textTransform: 'uppercase' }}>{p.lotComplexidadeSugerida ?? 'média'}</strong>
+                </p>
+                <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none' }}>
+                  {p.lotCondicionantes.map((c, i) => (
+                    <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: fs(8) }}>⚠</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Assunções de base */}
+            {p.lotAssuncoes && p.lotAssuncoes.length > 0 && (
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f0fdf4', borderRadius: 2, border: '1px solid #bbf7d0' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Assunções de Base
+                </p>
+                <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite }}>
+                  {p.lotAssuncoes.map((a, i) => (
+                    <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                      <span style={{ color: '#16a34a', fontWeight: 700, fontSize: fs(8) }}>•</span>
+                      <span>{a}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+
         {/* RESUMO EXECUTIVO — Decisão em 60 segundos */}
         {p.mostrarResumo && p.resumoExecutivo && (
           <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}` }}>
@@ -118,7 +231,10 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </span>
               <span style={{ color: C.onAccentMuted }}>|</span>
               <span style={{ fontSize: fs(9), color: C.onAccent }}>
-                Arquitetura {p.especialidades && p.especialidades.length > 0 ? '+ Especialidades ' : ''}+ 8 visitas
+                {p.isLoteamento
+                  ? `Urbanismo + ${p.lotNumAlternativas ?? 2} cenários${p.especialidades && p.especialidades.length > 0 ? ' + Especialidades' : ''}`
+                  : `Arquitetura ${p.especialidades && p.especialidades.length > 0 ? '+ Especialidades ' : ''}+ 8 visitas`
+                }
               </span>
             </div>
             
@@ -268,14 +384,14 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 </tr>
               )}
               
-              {/* ═══ SECÇÃO: ARQUITETURA ═══ */}
+              {/* ═══ SECÇÃO: ARQUITETURA / URBANISMO ═══ */}
               <tr style={{ background: C.accent, color: C.onAccent }}>
                 <td colSpan={2} style={{ padding: '2.5mm 3mm', fontWeight: 600, fontSize: fs(9), textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {lang === 'en' ? 'Architecture' : 'Arquitetura'}
+                  {p.isLoteamento ? 'Urbanismo' : (lang === 'en' ? 'Architecture' : 'Arquitetura')}
                 </td>
               </tr>
               <tr style={{ background: C.offWhite, borderBottom: `1px solid ${C.cinzaLinha}`, fontWeight: 600 }}>
-                <td style={{ padding: '3mm', color: C.grafite }}>{t('proposal.archFees', lang)}</td>
+                <td style={{ padding: '3mm', color: C.grafite }}>{p.isLoteamento ? 'Honorários Urbanismo' : t('proposal.archFees', lang)}</td>
                 <td style={{ textAlign: 'right', padding: '3mm' }}>
                   <span style={{ fontWeight: 600 }}>{formatCurrency(p.valorArq, lang)}</span>
                   <span style={{ fontSize: fs(8), color: C.cinzaMarca, fontWeight: 400, marginLeft: '2mm' }}>
@@ -284,12 +400,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 </td>
               </tr>
               
-              {/* ═══ SECÇÃO: ESPECIALIDADES (só se existirem) ═══ */}
+              {/* ═══ SECÇÃO: ESPECIALIDADES / INFRAESTRUTURAS ═══ */}
               {p.especialidades.length > 0 && (
                 <>
                   <tr style={{ background: C.accent, color: C.onAccent }}>
                     <td colSpan={2} style={{ padding: '2.5mm 3mm', fontWeight: 600, fontSize: fs(9), textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {lang === 'en' ? 'Specialties' : 'Especialidades'}
+                      {p.isLoteamento ? 'Especialidades de Infraestruturas' : (lang === 'en' ? 'Specialties' : 'Especialidades')}
                     </td>
                   </tr>
                   {p.especialidades.map((e) => (
@@ -398,7 +514,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           <p className="section-title" style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section3', lang)}</p>
           {p.notaBim && (
             <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
-              <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.accent }}>{t('proposal.bimMethodology', lang)}</p>
+              <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.accent }}>{p.isLoteamento ? 'Metodologia de trabalho' : t('proposal.bimMethodology', lang)}</p>
               <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaBim}</p>
             </div>
           )}
@@ -409,7 +525,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             </div>
           )}
           <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
-            <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.architectureProject', lang)}</p>
+            <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{p.isLoteamento ? 'Projeto de Urbanismo / Loteamento' : t('proposal.architectureProject', lang)}</p>
             {p.descricaoFases.map((f) => (
               <div key={f.nome} className="pdf-no-break" style={{ marginBottom: '4mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <p className="pdf-no-break" style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite, pageBreakInside: 'avoid' }}>• {f.nome} ({f.pct}%)</p>
@@ -419,7 +535,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           </div>
           {p.especialidadesDescricoes.length > 0 && (
             <div style={{ padding: '3mm 0', borderBottom: `1px solid ${C.cinzaLinha}` }}>
-              <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{t('proposal.specialtiesProject', lang)}</p>
+              <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 3mm 0', color: C.accent }}>{p.isLoteamento ? 'Especialidades de Infraestruturas' : t('proposal.specialtiesProject', lang)}</p>
               {p.especialidadesDescricoes.map((e) => (
                 <div key={e.nome} className="pdf-no-break" style={{ marginBottom: '4mm', wordBreak: 'break-word', overflowWrap: 'break-word', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <p className="pdf-no-break" style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 1mm 0', color: C.grafite, pageBreakInside: 'avoid' }}>• {e.nome}</p>
@@ -706,10 +822,10 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               <p className="section-title" style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section5', lang)}</p>
               
               <div style={{ display: 'flex', gap: '3mm' }}>
-                {/* Coluna Arquitetura */}
+                {/* Coluna Arquitetura / Urbanismo */}
                 <div style={{ flex: 1, padding: '2mm', background: C.offWhite, borderRadius: 2 }}>
                   <p style={{ fontSize: fs(8), fontWeight: 600, color: C.accent, margin: '0 0 1.5mm 0' }}>
-                    {lang === 'en' ? 'Architecture' : 'Arquitetura'}
+                    {p.isLoteamento ? 'Urbanismo' : (lang === 'en' ? 'Architecture' : 'Arquitetura')}
                   </p>
                   <ul style={{ margin: 0, paddingLeft: '3mm', fontSize: fs(7), color: C.cinzaMarca, lineHeight: 1.4, listStyleType: 'none' }}>
                     {arqExclusoes.map((label) => (
