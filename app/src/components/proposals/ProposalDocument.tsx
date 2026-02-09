@@ -100,93 +100,95 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
-        {/* ── SECÇÃO LOTEAMENTO — Dados do terreno + Cenários + Condicionantes ── */}
+        {/* SECCAO LOTEAMENTO - Terreno + Contexto + Cenarios + Condicionantes + Entregaveis + Assuncoes + Dependencias */}
         {p.isLoteamento && (
           <>
-            {/* Dados do terreno */}
+            {/* Dados do terreno + frente */}
             {(p.lotIdentificacao || p.lotAreaTerreno || p.lotAreaEstudo) && (
               <div style={{ background: '#fffbeb', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #fbbf24' }}>
-                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Dados do Terreno
-                </p>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dados do Terreno</p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
                   <tbody>
-                    {p.lotIdentificacao && (
-                      <tr>
-                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Identificação predial</td>
-                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotIdentificacao}</td>
-                      </tr>
-                    )}
-                    {p.lotAreaTerreno && (
-                      <tr>
-                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Área total do prédio</td>
-                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaTerreno).toLocaleString('pt-PT')} m² {p.lotFonteArea ? `(${p.lotFonteArea})` : ''}</td>
-                      </tr>
-                    )}
-                    {p.lotAreaEstudo && (
-                      <tr>
-                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Área em estudo</td>
-                        <td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaEstudo).toLocaleString('pt-PT')} m²</td>
-                      </tr>
-                    )}
-                    {p.lotNumLotes && (
-                      <tr>
-                        <td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Nº lotes pretendidos</td>
-                        <td style={{ padding: '1mm 2mm', color: C.grafite, fontWeight: 600 }}>{p.lotNumLotes}</td>
-                      </tr>
-                    )}
+                    {p.lotIdentificacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Identificacao predial</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotIdentificacao}</td></tr>}
+                    {p.lotAreaTerreno && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area total do predio</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaTerreno).toLocaleString('pt-PT')} m2 {p.lotFonteArea ? `(${p.lotFonteArea})` : ''}</td></tr>}
+                    {p.lotAreaEstudo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area em estudo</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaEstudo).toLocaleString('pt-PT')} m2</td></tr>}
+                    {p.lotFrenteTerreno && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 600 }}>Frente do terreno</td><td style={{ padding: '1mm 2mm', color: '#92400e', fontWeight: 700 }}>{p.lotFrenteTerreno} m (driver principal)</td></tr>}
+                    {p.lotNumLotes && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>N. lotes pretendidos</td><td style={{ padding: '1mm 2mm', color: C.grafite, fontWeight: 600 }}>{p.lotNumLotes}</td></tr>}
+                    {p.lotTipoHabitacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Tipo de habitacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotTipoHabitacao}</td></tr>}
+                    {p.lotObjetivo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Objetivo principal</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotObjetivo}</td></tr>}
                   </tbody>
                 </table>
               </div>
             )}
 
-            {/* Cenários de loteamento (A/B/C) */}
+            {/* Contexto urbanistico */}
+            {(p.lotInstrumento || p.lotClassificacaoSolo || p.lotParametros) && (
+              <div style={{ background: '#eff6ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #bfdbfe' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contexto Urbanistico</p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                  <tbody>
+                    {p.lotInstrumento && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Instrumento</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotInstrumento}</td></tr>}
+                    {p.lotClassificacaoSolo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Classificacao do solo</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotClassificacaoSolo}</td></tr>}
+                    {p.lotParametros?.alturaMaxima && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Altura maxima</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.alturaMaxima}</td></tr>}
+                    {p.lotParametros?.afastamentos && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Afastamentos</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.afastamentos}</td></tr>}
+                    {p.lotParametros?.areaMinimaLote && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area minima de lote</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.areaMinimaLote}</td></tr>}
+                    {p.lotParametros?.indiceConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de construcao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceConstrucao}</td></tr>}
+                    {p.lotParametros?.indiceImplantacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de implantacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceImplantacao}</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Cenarios A/B/C com access_model */}
             {p.lotCenarios && p.lotCenarios.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid #f59e0b` }}>
-                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Cenários de Loteamento
-                </p>
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: '3px solid #f59e0b' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cenarios de Loteamento</p>
                 <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
-                  Inclui {p.lotCenarios.length} opções de implantação com quadro de áreas e recomendação.
+                  Inclui {p.lotCenarios.length} opcoes de implantacao. Driver critico: acesso direto vs via interna.
                 </p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
                   <thead>
                     <tr style={{ background: '#fef3c7' }}>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Cenário</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Cenario</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Lotes</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Área média</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Cedências</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Nota</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Acesso</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Area media</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Cedencias</th>
                     </tr>
                   </thead>
                   <tbody>
                     {p.lotCenarios.map((c, i) => (
                       <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>Cenário {c.label}</td>
+                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>Cenario {c.label}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m²` : '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', fontSize: fs(7) }}>{c.accessModelLabel || '—'}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias || '—'}</td>
-                        <td style={{ padding: '1.5mm 2mm', color: C.cinzaMarca, fontSize: fs(7) }}>{c.nota || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {p.lotCenarios.some(c => c.nota) && (
+                  <div style={{ marginTop: '2mm', fontSize: fs(7), color: C.cinzaMarca }}>
+                    {p.lotCenarios.filter(c => c.nota).map((c, i) => (
+                      <p key={i} style={{ margin: '0 0 0.5mm 0' }}><strong>Cenario {c.label}:</strong> {c.nota}</p>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Condicionantes identificadas */}
             {p.lotCondicionantes && p.lotCondicionantes.length > 0 && (
               <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#fff1f2', borderRadius: 2, border: '1px solid #fecdd3' }}>
-                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#9f1239', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Condicionantes Identificadas
-                </p>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#9f1239', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Condicionantes Identificadas</p>
                 <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 1mm 0' }}>
-                  Complexidade urbanística: <strong style={{ textTransform: 'uppercase' }}>{p.lotComplexidadeSugerida ?? 'média'}</strong>
+                  Complexidade urbanistica: <strong style={{ textTransform: 'uppercase' }}>{p.lotComplexidadeSugerida ?? 'media'}</strong>
                 </p>
                 <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none' }}>
                   {p.lotCondicionantes.map((c, i) => (
                     <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
-                      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: fs(8) }}>⚠</span>
+                      <span style={{ color: '#dc2626', fontWeight: 700, fontSize: fs(8) }}>!</span>
                       <span>{c}</span>
                     </li>
                   ))}
@@ -194,22 +196,50 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </div>
             )}
 
-            {/* Assunções de base */}
-            {p.lotAssuncoes && p.lotAssuncoes.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f0fdf4', borderRadius: 2, border: '1px solid #bbf7d0' }}>
-                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Assunções de Base
-                </p>
-                <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite }}>
-                  {p.lotAssuncoes.map((a, i) => (
-                    <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
-                      <span style={{ color: '#16a34a', fontWeight: 700, fontSize: fs(8) }}>•</span>
-                      <span>{a}</span>
+            {/* Entregaveis */}
+            {p.lotEntregaveis && p.lotEntregaveis.length > 0 && (
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f5f3ff', borderRadius: 2, border: '1px solid #ddd6fe' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Entregaveis Incluidos</p>
+                <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite, columns: 2 }}>
+                  {p.lotEntregaveis.map((e, i) => (
+                    <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm', breakInside: 'avoid' }}>
+                      <span style={{ color: '#7c3aed', fontWeight: 700, fontSize: fs(8) }}>V</span>
+                      <span>{e}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
+
+            {/* Assuncoes + Dependencias lado a lado */}
+            <div style={{ display: 'flex', gap: '3mm', marginBottom: '4mm' }}>
+              {p.lotAssuncoes && p.lotAssuncoes.length > 0 && (
+                <div style={{ flex: 1, padding: '3mm 4mm', background: '#f0fdf4', borderRadius: 2, border: '1px solid #bbf7d0' }}>
+                  <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Assuncoes de Base</p>
+                  <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite }}>
+                    {p.lotAssuncoes.map((a, i) => (
+                      <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                        <span style={{ color: '#16a34a', fontWeight: 700 }}>-</span>
+                        <span>{a}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {p.lotDependencias && p.lotDependencias.length > 0 && (
+                <div style={{ flex: 1, padding: '3mm 4mm', background: '#fefce8', borderRadius: 2, border: '1px solid #fde68a' }}>
+                  <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#854d0e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dependencias</p>
+                  <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite }}>
+                    {p.lotDependencias.map((d, i) => (
+                      <li key={i} style={{ margin: '0 0 1mm 0', display: 'flex', alignItems: 'flex-start', gap: '1.5mm' }}>
+                        <span style={{ color: '#d97706', fontWeight: 700 }}>!</span>
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </>
         )}
 

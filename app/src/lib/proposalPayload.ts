@@ -136,17 +136,37 @@ export const proposalPayloadSchema = z.object({
   lotFonteArea: z.string().optional(),
   lotAreaEstudo: z.string().optional(),
   lotNumLotes: z.string().optional(),
+  lotFrenteTerreno: z.string().optional(),
   lotNumAlternativas: z.number().optional(),
+  // Contexto urbanistico
+  lotInstrumento: z.string().optional(),
+  lotClassificacaoSolo: z.string().optional(),
+  lotParametros: z.object({
+    alturaMaxima: z.string().optional(),
+    afastamentos: z.string().optional(),
+    areaMinimaLote: z.string().optional(),
+    indiceConstrucao: z.string().optional(),
+    indiceImplantacao: z.string().optional(),
+  }).optional(),
+  // Programa
+  lotTipoHabitacao: z.string().optional(),
+  lotObjetivo: z.string().optional(),
+  // Cenarios com access_model
   lotCenarios: z.array(z.object({
     label: z.string(),
     lotes: z.string(),
     areaMedia: z.string().optional(),
     cedencias: z.string().optional(),
     nota: z.string().optional(),
+    accessModel: z.string().optional(),
+    accessModelLabel: z.string().optional(),
+    viaInternaComprimento: z.string().optional(),
   })).optional(),
   lotCondicionantes: z.array(z.string()).optional(),
   lotComplexidadeSugerida: z.string().optional(),
+  lotEntregaveis: z.array(z.string()).optional(),
   lotAssuncoes: z.array(z.string()).optional(),
+  lotDependencias: z.array(z.string()).optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -172,9 +192,14 @@ const MINIFY_KEYS: Record<string, string> = {
   custosConstrucao: 'cc', min: 'mi', med: 'me', max: 'ma', minTotal: 'mit', medTotal: 'met', maxTotal: 'mat',
   // Loteamento
   isLoteamento: 'isl', lotIdentificacao: 'lid', lotAreaTerreno: 'lat', lotFonteArea: 'lfa',
-  lotAreaEstudo: 'lae', lotNumLotes: 'lnl', lotNumAlternativas: 'lna', lotCenarios: 'lce',
-  lotCondicionantes: 'lco', lotComplexidadeSugerida: 'lcs', lotAssuncoes: 'las',
+  lotAreaEstudo: 'lae', lotNumLotes: 'lnl', lotFrenteTerreno: 'lft', lotNumAlternativas: 'lna',
+  lotInstrumento: 'lin', lotClassificacaoSolo: 'lcls', lotParametros: 'lpm',
+  alturaMaxima: 'alm', afastamentos: 'afs', areaMinimaLote: 'aml', indiceConstrucao: 'icn', indiceImplantacao: 'iim',
+  lotTipoHabitacao: 'lth', lotObjetivo: 'lob',
+  lotCenarios: 'lce', lotCondicionantes: 'lco', lotComplexidadeSugerida: 'lcs',
+  lotEntregaveis: 'len', lotAssuncoes: 'las', lotDependencias: 'ldp',
   label: 'lb', lotes: 'lt', areaMedia: 'am', cedencias: 'ced', nota: 'no',
+  accessModel: 'acm', accessModelLabel: 'aml2', viaInternaComprimento: 'vic',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

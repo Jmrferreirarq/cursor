@@ -662,6 +662,68 @@ function calcularComplexidadeLoteamento(condicionantes: Set<string>): string {
   return 'baixa';
 }
 
+// ── Loteamento: Entregáveis (checklist) ──
+const ENTREGAVEIS_LOTEAMENTO: { id: string; label: string; obrigatorio: boolean }[] = [
+  { id: 'viability_report', label: 'Relatório de viabilidade urbanística', obrigatorio: true },
+  { id: 'alternatives', label: 'Alternativas de implantação (A/B/C)', obrigatorio: true },
+  { id: 'synthesis_plan', label: 'Planta de síntese do loteamento', obrigatorio: true },
+  { id: 'descriptive_report', label: 'Memória descritiva e justificativa', obrigatorio: true },
+  { id: 'areas_table', label: 'Quadro de áreas e lotes', obrigatorio: true },
+  { id: 'pip', label: 'Pedido de Informação Prévia (PIP)', obrigatorio: false },
+  { id: 'licensing_submission', label: 'Preparação e submissão do licenciamento', obrigatorio: true },
+  { id: 'specialties_coord', label: 'Coordenação de especialidades de infraestruturas', obrigatorio: false },
+  { id: 'regulation', label: 'Regulamento do loteamento', obrigatorio: false },
+  { id: 'massing_3d', label: 'Volumetria 3D (apoio à decisão)', obrigatorio: false },
+];
+
+// Gera dependências automáticas (separadas das assunções)
+function gerarDependenciasLoteamento(
+  condicionantes: Set<string>,
+  temTopografia: boolean,
+  cenarios: { accessModel: string; viaInternaComprimento: string }[],
+): string[] {
+  const deps: string[] = [];
+  if (!temTopografia) {
+    deps.push('Necessário levantamento topográfico para fechar áreas, cedências e cotas de infraestruturas.');
+  }
+  if (condicionantes.has('ren') || condicionantes.has('ran')) {
+    deps.push('Parecer da CCDR para delimitação de REN/RAN — pode condicionar a área útil de loteamento.');
+  }
+  if (condicionantes.has('dominio_hidrico')) {
+    deps.push('Parecer da APA para delimitação do domínio hídrico e faixa non aedificandi.');
+  }
+  if (cenarios.some(c => c.accessModel === 'via_interna' || c.accessModel === 'misto')) {
+    deps.push('Dimensionamento da via interna sujeito a validação camarária (perfil transversal tipo, pavimentação, infraestruturas).');
+  }
+  if (condicionantes.has('infra_criticas')) {
+    deps.push('Confirmação de capacidade de redes junto das entidades gestoras (EDP, Águas, Gás).');
+  }
+  return deps;
+}
+
+// Labels para access_model
+const ACCESS_MODEL_LABELS: Record<string, string> = {
+  direto_frente: 'Acesso direto pela frente',
+  misto: 'Misto (frente + via interna parcial)',
+  via_interna: 'Via interna (arruamento novo)',
+};
+
+// Labels para housing_type
+const HOUSING_TYPE_LABELS: Record<string, string> = {
+  isoladas: 'Moradias isoladas',
+  geminadas: 'Moradias geminadas',
+  em_banda: 'Moradias em banda',
+  misto: 'Misto (isoladas + geminadas)',
+};
+
+// Labels para objetivo principal
+const OBJETIVO_LABELS: Record<string, string> = {
+  max_lotes: 'Maximizar nº de lotes',
+  max_area_lote: 'Maximizar área por lote',
+  reduzir_infra: 'Reduzir custos de infraestrutura',
+  acelerar_licenciamento: 'Acelerar licenciamento',
+};
+
 // Descrições das especialidades (para a proposta)
 const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   estruturas: 'Projeto de estruturas e fundações — dimensionamento conforme regulamentação aplicável (incluindo ação sísmica EC8). Não inclui campanhas geotécnicas, ensaios ou estudos específicos extraordinários.',
@@ -798,20 +860,51 @@ export default function CalculatorPage() {
   const [areaUnit, setAreaUnit] = useState('m2');
 
   // ── Campos específicos de loteamento ──
-  const [lotIdentificacao, setLotIdentificacao] = useState(''); // artigo matricial + descrição
-  const [lotAreaTerreno, setLotAreaTerreno] = useState(''); // área total do prédio (m²)
-  const [lotFonteArea, setLotFonteArea] = useState(''); // fonte: matriz/topografia/escritura
-  const [lotAreaEstudo, setLotAreaEstudo] = useState(''); // área em estudo (m²)
-  const [lotNumLotes, setLotNumLotes] = useState(''); // nº lotes pretendidos
-  const [lotNumAlternativas, setLotNumAlternativas] = useState('2'); // 2 ou 3 cenários
-  // Cenários A/B/C
-  const [lotCenarioA, setLotCenarioA] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
-  const [lotCenarioB, setLotCenarioB] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
-  const [lotCenarioC, setLotCenarioC] = useState({ lotes: '', areaMedia: '', cedencias: '', nota: '' });
-  // Condicionantes urbanísticas (afetam complexidade e prazo)
+  // Cabeçalho / terreno
+  const [lotIdentificacao, setLotIdentificacao] = useState('');
+  const [lotAreaTerreno, setLotAreaTerreno] = useState('');
+  const [lotFonteArea, setLotFonteArea] = useState('');
+  const [lotAreaEstudo, setLotAreaEstudo] = useState('');
+  const [lotNumLotes, setLotNumLotes] = useState('');
+  const [lotFrenteTerreno, setLotFrenteTerreno] = useState(''); // frente do terreno (m) — driver principal
+  const [lotNumAlternativas, setLotNumAlternativas] = useState('2');
+
+  // Contexto urbanístico
+  const [lotInstrumento, setLotInstrumento] = useState<string>('PDM'); // PDM/PU/PP/outro
+  const [lotClassificacaoSolo, setLotClassificacaoSolo] = useState(''); // ex: "Solo Urbano — Espaços Residenciais"
+  const [lotAlturaMaxima, setLotAlturaMaxima] = useState('');
+  const [lotAfastamentos, setLotAfastamentos] = useState('');
+  const [lotAreaMinimaLote, setLotAreaMinimaLote] = useState('');
+  const [lotIndiceConstrucao, setLotIndiceConstrucao] = useState('');
+  const [lotIndiceImplantacao, setLotIndiceImplantacao] = useState('');
+
+  // Programa
+  const [lotTipoHabitacao, setLotTipoHabitacao] = useState<string>('isoladas'); // isoladas/geminadas/em_banda/misto
+  const [lotObjetivoPrincipal, setLotObjetivoPrincipal] = useState<string>('max_lotes'); // max_lotes/max_area_lote/reduzir_infra/acelerar_licenciamento
+
+  // Documentos disponíveis
+  const [lotTemTopografia, setLotTemTopografia] = useState(false);
+  const [lotTemCaderneta, setLotTemCaderneta] = useState(false);
+  const [lotTemExtratoPDM, setLotTemExtratoPDM] = useState(false);
+
+  // Cenários A/B/C (enriquecidos com access_model)
+  type LotCenario = { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
+  const cenarioDefault: LotCenario = { lotes: '', areaMedia: '', cedencias: '', nota: '', accessModel: 'direto_frente', viaInternaComprimento: '' };
+  const [lotCenarioA, setLotCenarioA] = useState<LotCenario>({ ...cenarioDefault });
+  const [lotCenarioB, setLotCenarioB] = useState<LotCenario>({ ...cenarioDefault });
+  const [lotCenarioC, setLotCenarioC] = useState<LotCenario>({ ...cenarioDefault });
+
+  // Condicionantes urbanísticas
   const [lotCondicionantes, setLotCondicionantes] = useState<Set<string>>(new Set());
-  // Assunções de base (geradas automaticamente + manuais)
+
+  // Entregáveis (checklist que alimenta o resumo)
+  const [lotEntregaveis, setLotEntregaveis] = useState<Set<string>>(new Set([
+    'viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission',
+  ]));
+
+  // Assunções + Dependências (separadas)
   const [lotAssuncoesManuais, setLotAssuncoesManuais] = useState('');
+  const [lotDependenciasManuais, setLotDependenciasManuais] = useState('');
 
   // Helper: é tipologia de loteamento?
   const isLoteamento = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(projectType);
@@ -1283,20 +1376,42 @@ export default function CalculatorPage() {
         lotFonteArea: lotFonteArea || undefined,
         lotAreaEstudo: lotAreaEstudo.trim() || undefined,
         lotNumLotes: lotNumLotes.trim() || undefined,
+        lotFrenteTerreno: lotFrenteTerreno.trim() || undefined,
         lotNumAlternativas: parseInt(lotNumAlternativas) || 2,
+        // Contexto urbanistico
+        lotInstrumento: lotInstrumento || undefined,
+        lotClassificacaoSolo: lotClassificacaoSolo.trim() || undefined,
+        lotParametros: {
+          alturaMaxima: lotAlturaMaxima.trim() || undefined,
+          afastamentos: lotAfastamentos.trim() || undefined,
+          areaMinimaLote: lotAreaMinimaLote.trim() || undefined,
+          indiceConstrucao: lotIndiceConstrucao.trim() || undefined,
+          indiceImplantacao: lotIndiceImplantacao.trim() || undefined,
+        },
+        // Programa
+        lotTipoHabitacao: HOUSING_TYPE_LABELS[lotTipoHabitacao] ?? lotTipoHabitacao,
+        lotObjetivo: OBJETIVO_LABELS[lotObjetivoPrincipal] ?? lotObjetivoPrincipal,
+        // Cenarios com access_model
         lotCenarios: [
-          lotCenarioA.lotes ? { ...lotCenarioA, label: 'A' } : null,
-          lotCenarioB.lotes ? { ...lotCenarioB, label: 'B' } : null,
-          lotNumAlternativas === '3' && lotCenarioC.lotes ? { ...lotCenarioC, label: 'C' } : null,
+          lotCenarioA.lotes ? { ...lotCenarioA, label: 'A', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioA.accessModel] ?? lotCenarioA.accessModel } : null,
+          lotCenarioB.lotes ? { ...lotCenarioB, label: 'B', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioB.accessModel] ?? lotCenarioB.accessModel } : null,
+          lotNumAlternativas === '3' && lotCenarioC.lotes ? { ...lotCenarioC, label: 'C', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioC.accessModel] ?? lotCenarioC.accessModel } : null,
         ].filter((x): x is NonNullable<typeof x> => x !== null),
         lotCondicionantes: Array.from(lotCondicionantes).map(id => {
           const c = CONDICIONANTES_LOTEAMENTO.find(x => x.id === id);
           return c ? c.label : id;
         }),
         lotComplexidadeSugerida: calcularComplexidadeLoteamento(lotCondicionantes),
+        // Entregaveis
+        lotEntregaveis: ENTREGAVEIS_LOTEAMENTO.filter(e => lotEntregaveis.has(e.id)).map(e => e.label),
+        // Assuncoes e dependencias (separadas)
         lotAssuncoes: [
-          ...gerarAssuncoesLoteamento(lotCondicionantes, lotFonteArea === 'topografia'),
+          ...gerarAssuncoesLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia'),
           ...(lotAssuncoesManuais.trim() ? lotAssuncoesManuais.trim().split('\n').filter(Boolean) : []),
+        ],
+        lotDependencias: [
+          ...gerarDependenciasLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia', [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])]),
+          ...(lotDependenciasManuais.trim() ? lotDependenciasManuais.trim().split('\n').filter(Boolean) : []),
         ],
       } : {}),
       notas: isLoteamento ? [
@@ -1432,11 +1547,10 @@ export default function CalculatorPage() {
       ...(mostrarResumo ? {
         resumoExecutivo: isLoteamento ? {
           incluido: [
-            'Análise urbanística e condicionantes (PDM, servidões, REN/RAN)',
+            ...(lotFrenteTerreno ? [`Frente do terreno: ${lotFrenteTerreno} m (driver principal de custo)`] : []),
+            `Análise urbanística e condicionantes (${lotInstrumento || 'PDM'}, servidões, REN/RAN)`,
             `${lotNumAlternativas} alternativas de implantação com quadro de áreas`,
-            'Planta de síntese do loteamento + quadro de áreas',
-            'Memória descritiva e justificativa (viabilidade / licenciamento)',
-            'Preparação e submissão do processo na Câmara Municipal',
+            ...ENTREGAVEIS_LOTEAMENTO.filter(e => lotEntregaveis.has(e.id)).map(e => e.label),
             ...(espComValor.length > 0 ? ['Coordenação de especialidades de infraestruturas'] : []),
             `${Array.from(fasesIncluidas).reduce((s, id) => s + (currentPhases.find((p) => p.id === id)?.pct ?? 0), 0)}% das fases de urbanismo`,
             '8 reuniões até aprovação (incluindo diligências na Câmara)',
@@ -1444,7 +1558,7 @@ export default function CalculatorPage() {
           ],
           naoIncluido: [
             'Taxas e emolumentos camarários',
-            ...(lotFonteArea !== 'topografia' ? ['Levantamento topográfico / geotécnico'] : []),
+            ...(!lotTemTopografia && lotFonteArea !== 'topografia' ? ['Levantamento topográfico / geotécnico'] : []),
             'Pareceres externos (APA/ICNF/infraestruturas)',
             'Projetos de execução de infraestruturas (se não incluídos)',
             'Projetos de arquitetura das moradias dos lotes',
@@ -2610,94 +2724,150 @@ export default function CalculatorPage() {
                     Dados do Loteamento
                   </h3>
 
-                  {/* Identificação e áreas */}
+                  {/* 1. Identificacao e terreno */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Identificação predial</label>
-                      <input
-                        type="text"
-                        value={lotIdentificacao}
-                        onChange={(e) => setLotIdentificacao(e.target.value)}
+                      <label className="block text-sm font-medium mb-1">Identificacao predial</label>
+                      <input type="text" value={lotIdentificacao} onChange={(e) => setLotIdentificacao(e.target.value)}
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                        placeholder="Ex: Art.º 1234 — Rústico, Secção B"
-                      />
+                        placeholder="Ex: Art. 1234 - Rustico, Seccao B" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Fonte da área</label>
-                      <select
-                        value={lotFonteArea}
-                        onChange={(e) => setLotFonteArea(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                      >
-                        <option value="">— Selecionar —</option>
+                      <label className="block text-sm font-medium mb-1">Fonte da area</label>
+                      <select value={lotFonteArea} onChange={(e) => setLotFonteArea(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none">
+                        <option value="">-- Selecionar --</option>
                         <option value="matriz">Caderneta predial (matriz)</option>
-                        <option value="topografia">Levantamento topográfico</option>
+                        <option value="topografia">Levantamento topografico</option>
                         <option value="escritura">Escritura / registo predial</option>
                         <option value="estimativa">Estimativa (a confirmar)</option>
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Área total do prédio (m²)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={lotAreaTerreno}
-                        onChange={(e) => setLotAreaTerreno(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                        placeholder="Ex: 5000"
-                      />
+                      <label className="block text-sm font-medium mb-1">Area total (m2)</label>
+                      <input type="number" min="0" value={lotAreaTerreno} onChange={(e) => setLotAreaTerreno(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="5000" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Área em estudo (m²)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={lotAreaEstudo}
-                        onChange={(e) => setLotAreaEstudo(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                        placeholder="Ex: 4200"
-                      />
+                      <label className="block text-sm font-medium mb-1">Area em estudo (m2)</label>
+                      <input type="number" min="0" value={lotAreaEstudo} onChange={(e) => setLotAreaEstudo(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="4200" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Nº lotes pretendidos</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="50"
-                        value={lotNumLotes}
-                        onChange={(e) => setLotNumLotes(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                        placeholder="Ex: 6"
-                      />
+                      <label className="block text-sm font-medium mb-1">Frente do terreno (m)</label>
+                      <input type="number" min="1" value={lotFrenteTerreno} onChange={(e) => setLotFrenteTerreno(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="81" />
+                      <p className="text-[10px] text-amber-400 mt-0.5">Driver principal de custo</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">N. lotes pretendidos</label>
+                      <input type="number" min="1" max="50" value={lotNumLotes} onChange={(e) => setLotNumLotes(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="6" />
                     </div>
                   </div>
 
-                  {/* Condicionantes urbanísticas */}
+                  {/* 2. Contexto urbanistico */}
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg space-y-3">
+                    <p className="text-sm font-semibold flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                      Contexto urbanistico
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Instrumento de planeamento</label>
+                        <select value={lotInstrumento} onChange={(e) => setLotInstrumento(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                          <option value="PDM">PDM</option>
+                          <option value="PU">PU (Plano de Urbanizacao)</option>
+                          <option value="PP">PP (Plano de Pormenor)</option>
+                          <option value="outro">Outro</option>
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium mb-1">Classificacao do solo</label>
+                        <input type="text" value={lotClassificacaoSolo} onChange={(e) => setLotClassificacaoSolo(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                          placeholder="Ex: Solo Urbano - Espacos Residenciais" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Altura max.</label>
+                        <input type="text" value={lotAlturaMaxima} onChange={(e) => setLotAlturaMaxima(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="7m / 2 pisos" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Afastamentos</label>
+                        <input type="text" value={lotAfastamentos} onChange={(e) => setLotAfastamentos(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="3m lat. / 5m post." />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Area min. lote</label>
+                        <input type="text" value={lotAreaMinimaLote} onChange={(e) => setLotAreaMinimaLote(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="300 m2" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Indice constr.</label>
+                        <input type="text" value={lotIndiceConstrucao} onChange={(e) => setLotIndiceConstrucao(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="0.6" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Indice implant.</label>
+                        <input type="text" value={lotIndiceImplantacao} onChange={(e) => setLotIndiceImplantacao(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="0.4" />
+                      </div>
+                    </div>
+                    {/* Documentos disponiveis */}
+                    <div className="flex flex-wrap gap-4 pt-1">
+                      <p className="text-xs font-medium text-muted-foreground">Documentos disponiveis:</p>
+                      {[
+                        { id: 'topo', label: 'Levant. topografico', val: lotTemTopografia, set: setLotTemTopografia },
+                        { id: 'cad', label: 'Caderneta predial', val: lotTemCaderneta, set: setLotTemCaderneta },
+                        { id: 'pdm', label: 'Extrato PDM/PU/PP', val: lotTemExtratoPDM, set: setLotTemExtratoPDM },
+                      ].map(d => (
+                        <label key={d.id} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                          <input type="checkbox" checked={d.val} onChange={(e) => d.set(e.target.checked)} />
+                          <span>{d.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. Programa */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Tipo de habitacao</label>
+                      <select value={lotTipoHabitacao} onChange={(e) => setLotTipoHabitacao(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none">
+                        {Object.entries(HOUSING_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Objetivo principal</label>
+                      <select value={lotObjetivoPrincipal} onChange={(e) => setLotObjetivoPrincipal(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none">
+                        {Object.entries(OBJETIVO_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* 4. Condicionantes urbanisticas */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Condicionantes urbanísticas</label>
-                    <p className="text-xs text-muted-foreground mb-2">Selecione as condicionantes identificadas — afetam a complexidade e o prazo estimado.</p>
+                    <label className="block text-sm font-medium mb-2">Condicionantes urbanisticas</label>
+                    <p className="text-xs text-muted-foreground mb-2">Afetam complexidade, prazo e previsibilidade de custos.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {CONDICIONANTES_LOTEAMENTO.map((c) => (
                         <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={lotCondicionantes.has(c.id)}
+                          <input type="checkbox" checked={lotCondicionantes.has(c.id)}
                             onChange={(e) => {
                               const next = new Set(lotCondicionantes);
                               if (e.target.checked) next.add(c.id); else next.delete(c.id);
                               setLotCondicionantes(next);
-                            }}
-                          />
+                            }} />
                           <span>{c.label}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                            c.impacto === 'alto' ? 'bg-red-500/10 text-red-400' :
-                            c.impacto === 'medio' ? 'bg-yellow-500/10 text-yellow-400' :
-                            'bg-green-500/10 text-green-400'
-                          }`}>
-                            {c.impacto}
-                          </span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${c.impacto === 'alto' ? 'bg-red-500/10 text-red-400' : c.impacto === 'medio' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-green-500/10 text-green-400'}`}>{c.impacto}</span>
                         </label>
                       ))}
                     </div>
@@ -2708,80 +2878,98 @@ export default function CalculatorPage() {
                     )}
                   </div>
 
-                  {/* Cenários de loteamento */}
+                  {/* 5. Cenarios A/B/C (com access_model) */}
                   <div>
                     <div className="flex items-center gap-3 mb-3">
-                      <label className="text-sm font-medium">Cenários de loteamento</label>
-                      <select
-                        value={lotNumAlternativas}
-                        onChange={(e) => setLotNumAlternativas(e.target.value)}
-                        className="px-3 py-1.5 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                      >
+                      <label className="text-sm font-medium">Cenarios de loteamento</label>
+                      <select value={lotNumAlternativas} onChange={(e) => setLotNumAlternativas(e.target.value)}
+                        className="px-3 py-1.5 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
                         <option value="2">2 alternativas (A/B)</option>
                         <option value="3">3 alternativas (A/B/C)</option>
                       </select>
                     </div>
                     <div className={`grid grid-cols-1 ${lotNumAlternativas === '3' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
                       {[
-                        { label: 'Cenário A', state: lotCenarioA, setter: setLotCenarioA },
-                        { label: 'Cenário B', state: lotCenarioB, setter: setLotCenarioB },
-                        ...(lotNumAlternativas === '3' ? [{ label: 'Cenário C', state: lotCenarioC, setter: setLotCenarioC }] : []),
+                        { label: 'Cenario A', state: lotCenarioA, setter: setLotCenarioA },
+                        { label: 'Cenario B', state: lotCenarioB, setter: setLotCenarioB },
+                        ...(lotNumAlternativas === '3' ? [{ label: 'Cenario C', state: lotCenarioC, setter: setLotCenarioC }] : []),
                       ].map(({ label, state, setter }) => (
                         <div key={label} className="p-3 bg-muted/50 border border-border rounded-lg space-y-2">
                           <p className="text-sm font-semibold">{label}</p>
-                          <input
-                            type="number"
-                            min="1"
-                            value={state.lotes}
-                            onChange={(e) => setter({ ...state, lotes: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                            placeholder="Nº lotes"
-                          />
-                          <input
-                            type="number"
-                            min="0"
-                            value={state.areaMedia}
-                            onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                            placeholder="Área média/lote (m²)"
-                          />
-                          <input
-                            type="text"
-                            value={state.cedencias}
-                            onChange={(e) => setter({ ...state, cedencias: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                            placeholder="Cedências estimadas (m²)"
-                          />
-                          <input
-                            type="text"
-                            value={state.nota}
-                            onChange={(e) => setter({ ...state, nota: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                            placeholder="Nota / risco (1 linha)"
-                          />
+                          <input type="number" min="1" value={state.lotes} onChange={(e) => setter({ ...state, lotes: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="N. lotes" />
+                          <select value={state.accessModel} onChange={(e) => setter({ ...state, accessModel: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                            {Object.entries(ACCESS_MODEL_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
+                          {(state.accessModel === 'via_interna' || state.accessModel === 'misto') && (
+                            <input type="number" min="0" value={state.viaInternaComprimento}
+                              onChange={(e) => setter({ ...state, viaInternaComprimento: e.target.value })}
+                              className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                              placeholder="Comprimento via interna (m)" />
+                          )}
+                          <input type="number" min="0" value={state.areaMedia} onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Area media/lote (m2)" />
+                          <input type="text" value={state.cedencias} onChange={(e) => setter({ ...state, cedencias: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Cedencias estimadas (m2)" />
+                          <input type="text" value={state.nota} onChange={(e) => setter({ ...state, nota: e.target.value })}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Nota / risco (1 linha)" />
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Assunções de base (preview) */}
+                  {/* 6. Entregaveis (checklist) */}
                   <div>
-                    <label className="block text-sm font-medium mb-2">Assunções de base (automáticas + manuais)</label>
-                    <div className="text-xs text-muted-foreground space-y-1 mb-2">
-                      {gerarAssuncoesLoteamento(lotCondicionantes, lotFonteArea === 'topografia').map((a, i) => (
-                        <p key={i} className="flex items-start gap-1.5">
-                          <span className="mt-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full flex-shrink-0" />
-                          {a}
-                        </p>
+                    <label className="block text-sm font-medium mb-2">Entregaveis incluidos</label>
+                    <p className="text-xs text-muted-foreground mb-2">Alimentam automaticamente o resumo da proposta.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {ENTREGAVEIS_LOTEAMENTO.map((e) => (
+                        <label key={e.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input type="checkbox" checked={lotEntregaveis.has(e.id)}
+                            disabled={e.obrigatorio}
+                            onChange={(ev) => {
+                              const next = new Set(lotEntregaveis);
+                              if (ev.target.checked) next.add(e.id); else next.delete(e.id);
+                              setLotEntregaveis(next);
+                            }} />
+                          <span className={e.obrigatorio ? 'text-muted-foreground' : ''}>{e.label}</span>
+                          {e.obrigatorio && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400">obrigatorio</span>}
+                        </label>
                       ))}
                     </div>
-                    <textarea
-                      value={lotAssuncoesManuais}
-                      onChange={(e) => setLotAssuncoesManuais(e.target.value)}
-                      className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
-                      rows={2}
-                      placeholder="Assunções adicionais (uma por linha)..."
-                    />
+                  </div>
+
+                  {/* 7. Assuncoes + Dependencias (separadas) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Assuncoes de base</label>
+                      <div className="text-xs text-muted-foreground space-y-1 mb-2">
+                        {gerarAssuncoesLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia').map((a, i) => (
+                          <p key={i} className="flex items-start gap-1.5">
+                            <span className="mt-0.5 w-1.5 h-1.5 bg-amber-400 rounded-full flex-shrink-0" />
+                            {a}
+                          </p>
+                        ))}
+                      </div>
+                      <textarea value={lotAssuncoesManuais} onChange={(e) => setLotAssuncoesManuais(e.target.value)}
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                        rows={2} placeholder="Assuncoes adicionais (uma por linha)..." />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Dependencias</label>
+                      <div className="text-xs text-muted-foreground space-y-1 mb-2">
+                        {gerarDependenciasLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia', [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])]).map((d, i) => (
+                          <p key={i} className="flex items-start gap-1.5">
+                            <span className="mt-0.5 w-1.5 h-1.5 bg-red-400 rounded-full flex-shrink-0" />
+                            {d}
+                          </p>
+                        ))}
+                      </div>
+                      <textarea value={lotDependenciasManuais} onChange={(e) => setLotDependenciasManuais(e.target.value)}
+                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                        rows={2} placeholder="Dependencias adicionais (uma por linha)..." />
+                    </div>
                   </div>
                 </div>
               )}
