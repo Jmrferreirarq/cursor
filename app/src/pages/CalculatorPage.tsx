@@ -2528,6 +2528,7 @@ export default function CalculatorPage() {
             </div>
 
             {honorMode === 'area' ? (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium mb-2">Área (m²) *</label>
@@ -2784,6 +2785,7 @@ export default function CalculatorPage() {
                   </div>
                 </div>
               )}
+              </>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
