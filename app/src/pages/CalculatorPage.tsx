@@ -812,6 +812,30 @@ export default function CalculatorPage() {
     }
   }, [projectType, activeCalculator]);
 
+  // Auto-preencher sugestões de especialidades quando a tipologia ou área mudam
+  useEffect(() => {
+    if (activeCalculator !== 'honorarios' || !projectType) return;
+    let areaRef = 0;
+    if (honorMode === 'area') {
+      areaRef = parseFloat(area) || 0;
+    } else {
+      const obra = parseFloat(valorObra) || 0;
+      areaRef = obra > 0 ? Math.round(obra / 1000) : 0;
+    }
+    if (areaRef <= 0) return;
+    const espIds = TIPOLOGIA_ESPECIALIDADES[projectType] ?? [];
+    if (espIds.length === 0) return;
+    const next: Record<string, string> = {};
+    for (const id of espIds) {
+      const sug = ESPECIALIDADES_SUGESTAO[id];
+      if (!sug) continue;
+      const variavel = sug.rate > 0 ? areaRef * sug.rate : 0;
+      const val = Math.round(Math.max(sug.minValor, variavel) / 50) * 50;
+      next[id] = String(val);
+    }
+    setEspecialidadesValores((prev) => ({ ...prev, ...next }));
+  }, [projectType, activeCalculator, area, valorObra, honorMode]);
+
   // Atualiza extras com fórmula (tetoMinimo + taxaPorM2) quando a área muda
   useEffect(() => {
     if (activeCalculator !== 'honorarios') return;
