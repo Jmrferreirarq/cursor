@@ -1099,6 +1099,16 @@ export default function CalculatorPage() {
     }
   }, [projectType, activeCalculator]);
 
+  // Auto-set complexidade a partir de condicionantes (loteamento)
+  useEffect(() => {
+    if (!isLoteamento || activeCalculator !== 'honorarios') return;
+    if (lotCondicionantes.size > 0) {
+      setComplexity(calcularComplexidadeLoteamento(lotCondicionantes));
+    } else {
+      setComplexity('media');
+    }
+  }, [lotCondicionantes, isLoteamento, activeCalculator]);
+
   // Auto-preencher sugestões de especialidades quando a tipologia ou área mudam
   useEffect(() => {
     if (activeCalculator !== 'honorarios' || !projectType) return;
@@ -1441,11 +1451,21 @@ export default function CalculatorPage() {
         t('notes.licensingNotExecution', lang),
         t('notes.clientResponseTime', lang),
       ],
-      duracaoEstimada: DURACAO_ESTIMADA_FASES.map((d) => {
-        const duracao = formatarDuracaoSemanasMeses(d, lang, t);
-        const nome = t(`phases.${d.id}_name`, lang);
-        return { nome, duracao };
-      }).filter((x) => x.duracao),
+      duracaoEstimada: isLoteamento
+        ? FASES_LOTEAMENTO.filter(f => fasesIncluidas.has(f.id)).map(f => ({
+            nome: f.name,
+            duracao: f.id === 'lot_viabilidade' ? '3-4 semanas'
+              : f.id === 'lot_pip' ? '2-4 meses (inclui análise Câmara)'
+              : f.id === 'lot_projeto' ? '4-6 semanas'
+              : f.id === 'lot_notificacoes' ? '2-6 meses (conforme Câmara)'
+              : f.id === 'lot_aprovacao' ? '2-4 semanas'
+              : 'A definir',
+          }))
+        : DURACAO_ESTIMADA_FASES.map((d) => {
+            const duracao = formatarDuracaoSemanasMeses(d, lang, t);
+            const nome = t(`phases.${d.id}_name`, lang);
+            return { nome, duracao };
+          }).filter((x) => x.duracao),
       extrasComDescricao: [
         // Projeto de Execução Base
         ...(() => {
@@ -1971,6 +1991,16 @@ export default function CalculatorPage() {
           mostrarGuiaObra,
           linkGoogleMaps,
           areaUnit,
+          // Loteamento
+          lotIdentificacao, lotAreaTerreno, lotFonteArea, lotAreaEstudo, lotNumLotes, lotFrenteTerreno,
+          lotNumAlternativas, lotInstrumento, lotClassificacaoSolo,
+          lotAlturaMaxima, lotAfastamentos, lotAreaMinimaLote, lotIndiceConstrucao, lotIndiceImplantacao,
+          lotTipoHabitacao, lotObjetivoPrincipal,
+          lotTemTopografia, lotTemCaderneta, lotTemExtratoPDM,
+          lotCenarioA, lotCenarioB, lotCenarioC,
+          lotCondicionantes: Array.from(lotCondicionantes),
+          lotEntregaveis: Array.from(lotEntregaveis),
+          lotAssuncoesManuais, lotDependenciasManuais,
         },
       });
       
@@ -2128,6 +2158,36 @@ export default function CalculatorPage() {
     setReferenciaProposta(proposal.reference || '');
     setLocalProposta(proposal.location || '');
     
+    // Restaurar campos de loteamento (se existirem)
+    if (state.lotIdentificacao !== undefined) {
+      setLotIdentificacao(state.lotIdentificacao || '');
+      setLotAreaTerreno(state.lotAreaTerreno || '');
+      setLotFonteArea(state.lotFonteArea || '');
+      setLotAreaEstudo(state.lotAreaEstudo || '');
+      setLotNumLotes(state.lotNumLotes || '');
+      setLotFrenteTerreno(state.lotFrenteTerreno || '');
+      setLotNumAlternativas(state.lotNumAlternativas || '2');
+      setLotInstrumento(state.lotInstrumento || 'PDM');
+      setLotClassificacaoSolo(state.lotClassificacaoSolo || '');
+      setLotAlturaMaxima(state.lotAlturaMaxima || '');
+      setLotAfastamentos(state.lotAfastamentos || '');
+      setLotAreaMinimaLote(state.lotAreaMinimaLote || '');
+      setLotIndiceConstrucao(state.lotIndiceConstrucao || '');
+      setLotIndiceImplantacao(state.lotIndiceImplantacao || '');
+      setLotTipoHabitacao(state.lotTipoHabitacao || 'isoladas');
+      setLotObjetivoPrincipal(state.lotObjetivoPrincipal || 'max_lotes');
+      setLotTemTopografia(state.lotTemTopografia || false);
+      setLotTemCaderneta(state.lotTemCaderneta || false);
+      setLotTemExtratoPDM(state.lotTemExtratoPDM || false);
+      if (state.lotCenarioA) setLotCenarioA(state.lotCenarioA);
+      if (state.lotCenarioB) setLotCenarioB(state.lotCenarioB);
+      if (state.lotCenarioC) setLotCenarioC(state.lotCenarioC);
+      setLotCondicionantes(new Set(state.lotCondicionantes || []));
+      setLotEntregaveis(new Set(state.lotEntregaveis || ['viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission']));
+      setLotAssuncoesManuais(state.lotAssuncoesManuais || '');
+      setLotDependenciasManuais(state.lotDependenciasManuais || '');
+    }
+
     // Limpar estados de link
     setLinkPropostaExibido(null);
     setLinkPropostaCurto(null);
@@ -2731,16 +2791,18 @@ export default function CalculatorPage() {
                     <p className="text-xs text-muted-foreground mt-1">{t('calc.pisosHint', lang)}</p>
                   </div>
                 )}
-                <div className="flex flex-col gap-3 items-end pb-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={curvaDecrescimento}
-                      onChange={(e) => setCurvaDecrescimento(e.target.checked)}
-                    />
-                    <span className="text-sm">Curva de decrescimento (área &gt;100 m²)</span>
-                  </label>
-                </div>
+                {!isLoteamento && (
+                  <div className="flex flex-col gap-3 items-end pb-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={curvaDecrescimento}
+                        onChange={(e) => setCurvaDecrescimento(e.target.checked)}
+                      />
+                      <span className="text-sm">Curva de decrescimento (área &gt;100 m²)</span>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* --- SECCAO LOTEAMENTO --- */}

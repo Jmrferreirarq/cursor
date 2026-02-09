@@ -1074,7 +1074,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         })()}
 
         {/* GUIA DE OBRA — Faseamento e Custos de Construção */}
-        {p.mostrarGuiaObra && p.tipologiaCategoria && (() => {
+        {p.mostrarGuiaObra && !p.isLoteamento && p.tipologiaCategoria && (() => {
           const phases = getPhasesByCategory(p.tipologiaCategoria);
           const costs = p.tipologiaId ? getCostsByTypology(p.tipologiaId) : undefined;
           const estimates = p.tipologiaId && p.areaNum ? calculateConstructionEstimate(p.tipologiaId, p.areaNum) : null;

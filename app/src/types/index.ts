@@ -72,6 +72,33 @@ export interface CalculatorState {
   mostrarGuiaObra: boolean;
   linkGoogleMaps: string;
   areaUnit: string;
+  // Loteamento (optional — only present when isLoteamento)
+  lotIdentificacao?: string;
+  lotAreaTerreno?: string;
+  lotFonteArea?: string;
+  lotAreaEstudo?: string;
+  lotNumLotes?: string;
+  lotFrenteTerreno?: string;
+  lotNumAlternativas?: string;
+  lotInstrumento?: string;
+  lotClassificacaoSolo?: string;
+  lotAlturaMaxima?: string;
+  lotAfastamentos?: string;
+  lotAreaMinimaLote?: string;
+  lotIndiceConstrucao?: string;
+  lotIndiceImplantacao?: string;
+  lotTipoHabitacao?: string;
+  lotObjetivoPrincipal?: string;
+  lotTemTopografia?: boolean;
+  lotTemCaderneta?: boolean;
+  lotTemExtratoPDM?: boolean;
+  lotCenarioA?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
+  lotCenarioB?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
+  lotCenarioC?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
+  lotCondicionantes?: string[];
+  lotEntregaveis?: string[];
+  lotAssuncoesManuais?: string;
+  lotDependenciasManuais?: string;
 }
 
 export interface Proposal {

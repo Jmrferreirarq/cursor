@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { t as tLocale } from '../locales';
 
-export type Language = 'pt' | 'en';
+type Language = 'pt' | 'en';
 
 interface Translations {
   [key: string]: string | Translations;
@@ -18,17 +17,11 @@ const ptTranslations: Translations = {
     marketing: 'Marketing',
     technical: 'Técnico',
     proposals: 'Propostas',
-    media: 'Media',
-    queue: 'Queue',
-    contentCalendar: 'Calendário',
-    planner: 'Planner',
-    performance: 'Performance',
-    editorialDna: 'Editorial DNA',
+    media: 'Mídia',
     library: 'Biblioteca',
     inbox: 'Inbox',
     brand: 'Marca',
     calculator: 'Calculadora',
-    agent: 'Agente',
   },
   dashboard: {
     title: 'Comando Operacional',
@@ -62,7 +55,10 @@ const ptTranslations: Translations = {
     noBlocks: 'Sem bloqueios críticos.',
     resolve: 'Resolver',
     configure: 'Configurar',
-    backupData: 'Backup de Dados',
+    neuralLink: 'Neural Link',
+    offline: 'OFFLINE',
+    lastSync: 'Última Sync',
+    sheetsPending: 'Conexão Sheets pendente',
     productionHours: 'PRODUÇÃO • HORAS (SEMANA)',
     detail: 'Detalhe',
     belowTarget: 'Abaixo do alvo — pode haver capacidade livre.',
@@ -99,16 +95,10 @@ const enTranslations: Translations = {
     technical: 'Technical',
     proposals: 'Proposals',
     media: 'Media',
-    queue: 'Queue',
-    contentCalendar: 'Calendar',
-    planner: 'Planner',
-    performance: 'Performance',
-    editorialDna: 'Editorial DNA',
     library: 'Library',
     inbox: 'Inbox',
     brand: 'Brand',
     calculator: 'Calculator',
-    agent: 'Agent',
   },
   dashboard: {
     title: 'Operational Command',
@@ -142,7 +132,10 @@ const enTranslations: Translations = {
     noBlocks: 'No critical blockers.',
     resolve: 'Resolve',
     configure: 'Configure',
-    backupData: 'Data Backup',
+    neuralLink: 'Neural Link',
+    offline: 'OFFLINE',
+    lastSync: 'Last Sync',
+    sheetsPending: 'Sheets connection pending',
     productionHours: 'PRODUCTION • HOURS (WEEK)',
     detail: 'Detail',
     belowTarget: 'Below target — there may be free capacity.',
@@ -177,8 +170,6 @@ interface LanguageContextType {
   toggleLanguage: () => void;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string | Translations;
-  /** Traduz usando idioma específico (útil para proposta partilhada) */
-  tKey: (key: string, lang?: Language) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -219,12 +210,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return value || key;
   };
 
-  const tKey = (key: string, lang?: Language): string => {
-    return tLocale(key, lang ?? language);
-  };
-
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t, tKey }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
