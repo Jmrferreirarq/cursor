@@ -32,6 +32,7 @@ import { ClientAutocomplete } from '../components/clients/ClientAutocomplete';
 import { t, formatDate, formatCurrency as formatCurrencyLocale } from '../locales';
 import { toast } from 'sonner';
 import type { Client } from '../types';
+import { municipios, type ParametrosUrbanisticos } from '../data/municipios';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
 const APP_SLOGAN = import.meta.env.VITE_APP_SLOGAN ?? '';
@@ -933,14 +934,49 @@ export default function CalculatorPage() {
   const [lotFrenteTerreno, setLotFrenteTerreno] = useState(''); // frente do terreno (m) — driver principal
   const [lotNumAlternativas, setLotNumAlternativas] = useState('2');
 
+  // Terreno — profundidade
+  const [lotProfundidade, setLotProfundidade] = useState(''); // profundidade estimada do terreno (m)
+
   // Contexto urbanístico
+  const [lotMunicipioId, setLotMunicipioId] = useState(''); // id do município seleccionado
   const [lotInstrumento, setLotInstrumento] = useState<string>('PDM'); // PDM/PU/PP/outro
   const [lotClassificacaoSolo, setLotClassificacaoSolo] = useState(''); // ex: "Solo Urbano — Espaços Residenciais"
   const [lotAlturaMaxima, setLotAlturaMaxima] = useState('');
-  const [lotAfastamentos, setLotAfastamentos] = useState('');
+  const [lotAfastamentoFrontal, setLotAfastamentoFrontal] = useState('');
+  const [lotAfastamentoLateral, setLotAfastamentoLateral] = useState('');
+  const [lotAfastamentoPosterior, setLotAfastamentoPosterior] = useState('');
   const [lotAreaMinimaLote, setLotAreaMinimaLote] = useState('');
   const [lotIndiceConstrucao, setLotIndiceConstrucao] = useState('');
   const [lotIndiceImplantacao, setLotIndiceImplantacao] = useState('');
+  const [lotProfundidadeMaxConstrucao, setLotProfundidadeMaxConstrucao] = useState('');
+  const [lotPercentagemCedencias, setLotPercentagemCedencias] = useState('15'); // default 15%
+
+  // Município seleccionado (computed)
+  const lotMunicipioSel = useMemo(() => {
+    if (!lotMunicipioId) return null;
+    return municipios.find(m => m.id === lotMunicipioId) ?? null;
+  }, [lotMunicipioId]);
+
+  // Lista de municípios para dropdown (frequentes primeiro)
+  const lotMunicipiosOptions = useMemo(() => {
+    const freq = municipios.filter(m => m.frequente).sort((a, b) => a.nome.localeCompare(b.nome));
+    const outros = municipios.filter(m => !m.frequente).sort((a, b) => a.nome.localeCompare(b.nome));
+    return { freq, outros };
+  }, []);
+
+  // Preencher parâmetros ao mudar município
+  const preencherParametrosMunicipio = (params: ParametrosUrbanisticos | undefined) => {
+    if (!params) return;
+    if (params.alturaMaxima) setLotAlturaMaxima(params.alturaMaxima);
+    if (params.afastamentoFrontal) setLotAfastamentoFrontal(params.afastamentoFrontal);
+    if (params.afastamentoLateral) setLotAfastamentoLateral(params.afastamentoLateral);
+    if (params.afastamentoPosterior) setLotAfastamentoPosterior(params.afastamentoPosterior);
+    if (params.areaMinimaLote) setLotAreaMinimaLote(params.areaMinimaLote);
+    if (params.indiceConstrucao) setLotIndiceConstrucao(params.indiceConstrucao);
+    if (params.indiceImplantacao) setLotIndiceImplantacao(params.indiceImplantacao);
+    if (params.profundidadeMaxConstrucao) setLotProfundidadeMaxConstrucao(params.profundidadeMaxConstrucao);
+    if (params.percentagemCedencias) setLotPercentagemCedencias(params.percentagemCedencias);
+  };
 
   // Programa
   const [lotTipoHabitacao, setLotTipoHabitacao] = useState<string>('isoladas'); // isoladas/geminadas/em_banda/misto
@@ -977,6 +1013,13 @@ export default function CalculatorPage() {
 
   // Helper: é tipologia de loteamento?
   const isLoteamento = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(projectType);
+
+  // Sincronizar Área principal com Área em estudo para loteamento
+  useEffect(() => {
+    if (isLoteamento && lotAreaEstudo && !area) {
+      setArea(lotAreaEstudo);
+    }
+  }, [isLoteamento, lotAreaEstudo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Função: calcular custos paramétricos de infraestruturas (Fase 2)
   type InfraCustoItem = { infraId: string; nome: string; unidade: string; quantidade: number; custoUnitario: number; custoRamal: number; subtotal: number; honorarioProjeto: number };
@@ -1595,12 +1638,18 @@ export default function CalculatorPage() {
         // Contexto urbanistico
         lotInstrumento: lotInstrumento || undefined,
         lotClassificacaoSolo: lotClassificacaoSolo.trim() || undefined,
+        lotMunicipio: lotMunicipioSel?.nome || undefined,
+        lotProfundidade: lotProfundidade.trim() || undefined,
         lotParametros: {
           alturaMaxima: lotAlturaMaxima.trim() || undefined,
-          afastamentos: lotAfastamentos.trim() || undefined,
+          afastamentoFrontal: lotAfastamentoFrontal.trim() || undefined,
+          afastamentoLateral: lotAfastamentoLateral.trim() || undefined,
+          afastamentoPosterior: lotAfastamentoPosterior.trim() || undefined,
           areaMinimaLote: lotAreaMinimaLote.trim() || undefined,
           indiceConstrucao: lotIndiceConstrucao.trim() || undefined,
           indiceImplantacao: lotIndiceImplantacao.trim() || undefined,
+          profundidadeMaxConstrucao: lotProfundidadeMaxConstrucao.trim() || undefined,
+          percentagemCedencias: lotPercentagemCedencias.trim() || undefined,
         },
         // Programa
         lotTipoHabitacao: HOUSING_TYPE_LABELS[lotTipoHabitacao] ?? lotTipoHabitacao,
@@ -2070,8 +2119,11 @@ export default function CalculatorPage() {
           areaUnit,
           // Loteamento
           lotIdentificacao, lotAreaTerreno, lotFonteArea, lotAreaEstudo, lotNumLotes, lotFrenteTerreno,
+          lotProfundidade, lotMunicipioId,
           lotNumAlternativas, lotInstrumento, lotClassificacaoSolo,
-          lotAlturaMaxima, lotAfastamentos, lotAreaMinimaLote, lotIndiceConstrucao, lotIndiceImplantacao,
+          lotAlturaMaxima, lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior,
+          lotAreaMinimaLote, lotIndiceConstrucao, lotIndiceImplantacao,
+          lotProfundidadeMaxConstrucao, lotPercentagemCedencias,
           lotTipoHabitacao, lotObjetivoPrincipal,
           lotTemTopografia, lotTemCaderneta, lotTemExtratoPDM,
           lotCenarioA, lotCenarioB, lotCenarioC,
@@ -2249,14 +2301,20 @@ export default function CalculatorPage() {
       setLotAreaEstudo(state.lotAreaEstudo || '');
       setLotNumLotes(state.lotNumLotes || '');
       setLotFrenteTerreno(state.lotFrenteTerreno || '');
+      setLotProfundidade(state.lotProfundidade || '');
+      setLotMunicipioId(state.lotMunicipioId || '');
       setLotNumAlternativas(state.lotNumAlternativas || '2');
       setLotInstrumento(state.lotInstrumento || 'PDM');
       setLotClassificacaoSolo(state.lotClassificacaoSolo || '');
       setLotAlturaMaxima(state.lotAlturaMaxima || '');
-      setLotAfastamentos(state.lotAfastamentos || '');
+      setLotAfastamentoFrontal(state.lotAfastamentoFrontal || '');
+      setLotAfastamentoLateral(state.lotAfastamentoLateral || '');
+      setLotAfastamentoPosterior(state.lotAfastamentoPosterior || '');
       setLotAreaMinimaLote(state.lotAreaMinimaLote || '');
       setLotIndiceConstrucao(state.lotIndiceConstrucao || '');
       setLotIndiceImplantacao(state.lotIndiceImplantacao || '');
+      setLotProfundidadeMaxConstrucao(state.lotProfundidadeMaxConstrucao || '');
+      setLotPercentagemCedencias(state.lotPercentagemCedencias || '15');
       setLotTipoHabitacao(state.lotTipoHabitacao || 'isoladas');
       setLotObjetivoPrincipal(state.lotObjetivoPrincipal || 'max_lotes');
       setLotTemTopografia(state.lotTemTopografia || false);
@@ -2819,15 +2877,28 @@ export default function CalculatorPage() {
               <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Área (m²) *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    {isLoteamento ? 'Área em estudo (m²)' : 'Área (m²) *'}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={area}
-                    onChange={(e) => setArea(e.target.value)}
+                    onChange={(e) => {
+                      setArea(e.target.value);
+                      if (isLoteamento) setLotAreaEstudo(e.target.value);
+                    }}
                     className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
-                    placeholder="Ex: 150"
+                    placeholder={isLoteamento ? 'Preenchido na secção abaixo' : 'Ex: 150'}
                   />
+                  {isLoteamento && lotAreaEstudo && area !== lotAreaEstudo && (
+                    <button
+                      onClick={() => setArea(lotAreaEstudo)}
+                      className="text-[10px] text-blue-400 hover:text-blue-300 mt-0.5"
+                    >
+                      Sincronizar com area em estudo ({lotAreaEstudo} m2)
+                    </button>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Tipologia</label>
@@ -2920,22 +2991,36 @@ export default function CalculatorPage() {
                       </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Area total (m2)</label>
-                      <input type="number" min="0" value={lotAreaTerreno} onChange={(e) => setLotAreaTerreno(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="5000" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Area em estudo (m2)</label>
-                      <input type="number" min="0" value={lotAreaEstudo} onChange={(e) => setLotAreaEstudo(e.target.value)}
-                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="4200" />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">Frente do terreno (m)</label>
                       <input type="number" min="1" value={lotFrenteTerreno} onChange={(e) => setLotFrenteTerreno(e.target.value)}
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="81" />
                       <p className="text-[10px] text-amber-400 mt-0.5">Driver principal de custo</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Profundidade est. (m)</label>
+                      <input type="number" min="1" value={lotProfundidade} onChange={(e) => setLotProfundidade(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="40" />
+                      {parseFloat(lotProfundidadeMaxConstrucao) > 0 && parseFloat(lotProfundidade) > parseFloat(lotProfundidadeMaxConstrucao) && (
+                        <p className="text-[10px] text-red-400 mt-0.5">Excede prof. max. construcao ({lotProfundidadeMaxConstrucao}m)</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Area total (m2)</label>
+                      <input type="number" min="0" value={lotAreaTerreno} onChange={(e) => setLotAreaTerreno(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                        placeholder={parseFloat(lotFrenteTerreno) > 0 && parseFloat(lotProfundidade) > 0 ? `auto: ${(parseFloat(lotFrenteTerreno) * parseFloat(lotProfundidade)).toFixed(0)}` : '5000'} />
+                      {!lotAreaTerreno && parseFloat(lotFrenteTerreno) > 0 && parseFloat(lotProfundidade) > 0 && (
+                        <p className="text-[10px] text-blue-400 mt-0.5">
+                          Est.: {(parseFloat(lotFrenteTerreno) * parseFloat(lotProfundidade)).toFixed(0)} m2
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Area em estudo (m2)</label>
+                      <input type="number" min="0" value={lotAreaEstudo} onChange={(e) => setLotAreaEstudo(e.target.value)}
+                        className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="4200" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">N. lotes pretendidos</label>
@@ -2976,18 +3061,30 @@ export default function CalculatorPage() {
                           </button>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
-                          {sugestoes.map(s => (
-                            <button key={s.tipo}
-                              onClick={() => setLotNumLotes(String(s.lotes))}
-                              className="flex flex-col items-center gap-0.5 p-2 rounded-lg bg-muted/50 border border-border hover:border-blue-500/40 transition-colors cursor-pointer group"
-                            >
-                              <span className={`text-lg font-bold ${s.tipo === 'isoladas' ? 'text-emerald-400' : s.tipo === 'geminadas' ? 'text-amber-400' : 'text-rose-400'}`}>
-                                {s.lotes}
-                              </span>
-                              <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{s.label}</span>
-                              <span className="text-[9px] text-muted-foreground">~{s.largura.toFixed(1)}m/lote</span>
-                            </button>
-                          ))}
+                          {sugestoes.map(s => {
+                            const prof = parseFloat(lotProfundidade) || 0;
+                            const areaLoteEst = prof > 0 ? Math.round(s.largura * prof) : 0;
+                            const profMax = parseFloat(lotProfundidadeMaxConstrucao) || 0;
+                            const excedeProfMax = profMax > 0 && prof > profMax;
+                            return (
+                              <button key={s.tipo}
+                                onClick={() => setLotNumLotes(String(s.lotes))}
+                                className="flex flex-col items-center gap-0.5 p-2 rounded-lg bg-muted/50 border border-border hover:border-blue-500/40 transition-colors cursor-pointer group"
+                              >
+                                <span className={`text-lg font-bold ${s.tipo === 'isoladas' ? 'text-emerald-400' : s.tipo === 'geminadas' ? 'text-amber-400' : 'text-rose-400'}`}>
+                                  {s.lotes}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{s.label}</span>
+                                <span className="text-[9px] text-muted-foreground">~{s.largura.toFixed(1)}m/lote</span>
+                                {areaLoteEst > 0 && (
+                                  <span className="text-[9px] text-blue-400">~{areaLoteEst} m2/lote</span>
+                                )}
+                                {excedeProfMax && (
+                                  <span className="text-[8px] text-red-400">Prof. &gt; {profMax}m</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -2999,9 +3096,38 @@ export default function CalculatorPage() {
                       <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
                       Contexto urbanistico
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Município + Instrumento */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs font-medium mb-1">Instrumento de planeamento</label>
+                        <label className="block text-xs font-medium mb-1">Municipio</label>
+                        <select
+                          value={lotMunicipioId}
+                          onChange={(e) => {
+                            const id = e.target.value;
+                            setLotMunicipioId(id);
+                            const mun = municipios.find(m => m.id === id);
+                            if (mun?.parametros) {
+                              preencherParametrosMunicipio(mun.parametros);
+                              toast.success(`Parametros de ${mun.nome} pre-preenchidos (editaveis)`);
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                        >
+                          <option value="">-- Selecionar --</option>
+                          <optgroup label="Frequentes">
+                            {lotMunicipiosOptions.freq.map(m => (
+                              <option key={m.id} value={m.id}>{m.nome}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Outros">
+                            {lotMunicipiosOptions.outros.map(m => (
+                              <option key={m.id} value={m.id}>{m.nome}</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Instrumento</label>
                         <select value={lotInstrumento} onChange={(e) => setLotInstrumento(e.target.value)}
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
                           <option value="PDM">PDM</option>
@@ -3017,21 +3143,51 @@ export default function CalculatorPage() {
                           placeholder="Ex: Solo Urbano - Espacos Residenciais" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {/* Badge do município + Repor */}
+                    {lotMunicipioSel?.parametros && (
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md text-[10px] font-medium">
+                          {lotMunicipioSel.nome} ({lotInstrumento})
+                        </span>
+                        <button
+                          onClick={() => {
+                            preencherParametrosMunicipio(lotMunicipioSel.parametros);
+                            toast.success('Parametros repostos');
+                          }}
+                          className="px-2 py-0.5 text-[10px] text-muted-foreground hover:text-foreground border border-border rounded-md hover:bg-muted transition-colors"
+                        >
+                          Repor valores PDM
+                        </button>
+                      </div>
+                    )}
+                    {/* Parâmetros urbanísticos — 2 linhas */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div>
                         <label className="block text-xs font-medium mb-1">Altura max.</label>
                         <input type="text" value={lotAlturaMaxima} onChange={(e) => setLotAlturaMaxima(e.target.value)}
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="7m / 2 pisos" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Afastamentos</label>
-                        <input type="text" value={lotAfastamentos} onChange={(e) => setLotAfastamentos(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="3m lat. / 5m post." />
+                        <label className="block text-xs font-medium mb-1">Afast. frontal</label>
+                        <input type="text" value={lotAfastamentoFrontal} onChange={(e) => setLotAfastamentoFrontal(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Alinham. dominante" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Area min. lote</label>
+                        <label className="block text-xs font-medium mb-1">Afast. lateral (m)</label>
+                        <input type="text" value={lotAfastamentoLateral} onChange={(e) => setLotAfastamentoLateral(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="3" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Afast. posterior (m)</label>
+                        <input type="text" value={lotAfastamentoPosterior} onChange={(e) => setLotAfastamentoPosterior(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="6" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Area min. lote (m2)</label>
                         <input type="text" value={lotAreaMinimaLote} onChange={(e) => setLotAreaMinimaLote(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="300 m2" />
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="300" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1">Indice constr.</label>
@@ -3042,6 +3198,16 @@ export default function CalculatorPage() {
                         <label className="block text-xs font-medium mb-1">Indice implant.</label>
                         <input type="text" value={lotIndiceImplantacao} onChange={(e) => setLotIndiceImplantacao(e.target.value)}
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="0.4" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Prof. max. constr. (m)</label>
+                        <input type="text" value={lotProfundidadeMaxConstrucao} onChange={(e) => setLotProfundidadeMaxConstrucao(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="17" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Cedencias (%)</label>
+                        <input type="text" value={lotPercentagemCedencias} onChange={(e) => setLotPercentagemCedencias(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="15" />
                       </div>
                     </div>
                     {/* Documentos disponiveis */}
@@ -3126,6 +3292,11 @@ export default function CalculatorPage() {
                         const inferido = largura > 0 ? inferirTipoHabitacao(largura) : null;
                         const tipoEfetivo = state.tipoHabitacao === 'auto' && inferido ? inferido.tipo : state.tipoHabitacao;
                         const conflito = state.tipoHabitacao !== 'auto' && inferido && !inferido.todas.includes(state.tipoHabitacao);
+                        // Auto-cálculos
+                        const areaEst = parseFloat(lotAreaEstudo) || 0;
+                        const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+                        const cedenciasAuto = areaEst > 0 ? Math.round(areaEst * pctCed / 100) : 0;
+                        const areaMediaAuto = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - cedenciasAuto) / nLotes) : 0;
                         return (
                         <div key={label} className={`p-3 bg-muted/50 border rounded-lg space-y-2 ${conflito ? 'border-red-500/60' : 'border-border'}`}>
                           <p className="text-sm font-semibold">{label}</p>
@@ -3172,10 +3343,26 @@ export default function CalculatorPage() {
                             <option value="auto">Automatico ({inferido ? inferido.label : '—'})</option>
                             {Object.entries(HOUSING_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                           </select>
-                          <input type="number" min="0" value={state.areaMedia} onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Area media/lote (m2)" />
-                          <input type="text" value={state.cedencias} onChange={(e) => setter({ ...state, cedencias: e.target.value })}
-                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Cedencias estimadas (m2)" />
+                          {/* Área média/lote — auto-calculado com override */}
+                          <div className="relative">
+                            <input type="number" min="0" value={state.areaMedia} onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
+                              className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                              placeholder={areaMediaAuto > 0 ? `auto: ${areaMediaAuto} m2` : 'Area media/lote (m2)'} />
+                            {state.areaMedia && areaMediaAuto > 0 && (
+                              <button onClick={() => setter({ ...state, areaMedia: '' })} title="Repor automatico"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground hover:text-foreground">↺</button>
+                            )}
+                          </div>
+                          {/* Cedências estimadas — auto-calculado com override */}
+                          <div className="relative">
+                            <input type="text" value={state.cedencias} onChange={(e) => setter({ ...state, cedencias: e.target.value })}
+                              className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                              placeholder={cedenciasAuto > 0 ? `auto: ${cedenciasAuto} m2 (${pctCed}%)` : 'Cedencias estimadas (m2)'} />
+                            {state.cedencias && cedenciasAuto > 0 && (
+                              <button onClick={() => setter({ ...state, cedencias: '' })} title="Repor automatico"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground hover:text-foreground">↺</button>
+                            )}
+                          </div>
                           <input type="text" value={state.nota} onChange={(e) => setter({ ...state, nota: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Nota / risco (1 linha)" />
                         </div>);

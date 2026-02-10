@@ -16,6 +16,18 @@ export interface TopicoRegulamentar {
   itens: string[];           // Bullet points dos requisitos a cumprir
 }
 
+export interface ParametrosUrbanisticos {
+  alturaMaxima?: string;              // Ex: "7m / 2 pisos"
+  afastamentoFrontal?: string;        // Ex: "alinhamento dominante"
+  afastamentoLateral?: string;        // Ex: "3" (metros)
+  afastamentoPosterior?: string;      // Ex: "6" (metros)
+  areaMinimaLote?: string;            // Ex: "300" (m²)
+  indiceConstrucao?: string;          // Ex: "0.6"
+  indiceImplantacao?: string;         // Ex: "0.4"
+  profundidadeMaxConstrucao?: string; // Ex: "15" (metros)
+  percentagemCedencias?: string;      // Ex: "15" (%)
+}
+
 export interface Municipio {
   id: string;
   nome: string;
@@ -30,6 +42,7 @@ export interface Municipio {
   frequente?: boolean;       // Município onde o atelier trabalha frequentemente
   documentos?: DocumentoMunicipal[]; // Documentos locais do atelier
   topicos?: TopicoRegulamentar[];    // Resumo regulamentar estruturado
+  parametros?: ParametrosUrbanisticos; // Parâmetros urbanísticos para pré-preenchimento
 }
 
 export interface DistritoInfo {
@@ -200,6 +213,17 @@ export const municipios: Municipio[] = [
         tipo: 'nomenclatura',
       },
     ],
+    parametros: {
+      alturaMaxima: '9m / 2-3 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.6',
+      indiceImplantacao: '0.4',
+      profundidadeMaxConstrucao: '17',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'ilhavo',
@@ -293,6 +317,17 @@ export const municipios: Municipio[] = [
         tipo: 'regulamento',
       },
     ],
+    parametros: {
+      alturaMaxima: '9m / 2-3 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '250',
+      indiceConstrucao: '0.65',
+      indiceImplantacao: '0.45',
+      profundidadeMaxConstrucao: '16',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'vagos',
@@ -334,6 +369,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.5',
+      indiceImplantacao: '0.35',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'ovar',
@@ -375,6 +421,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.55',
+      indiceImplantacao: '0.4',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'agueda',
@@ -405,6 +462,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.55',
+      indiceImplantacao: '0.4',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'estarreja',
@@ -435,6 +503,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.5',
+      indiceImplantacao: '0.35',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'murtosa',
@@ -513,6 +592,17 @@ export const municipios: Municipio[] = [
         tipo: 'regulamento',
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '350',
+      indiceConstrucao: '0.5',
+      indiceImplantacao: '0.35',
+      profundidadeMaxConstrucao: '14',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'oliveira-de-azemeis',
@@ -579,6 +669,17 @@ export const municipios: Municipio[] = [
         tipo: 'regulamento',
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '300',
+      indiceConstrucao: '0.55',
+      indiceImplantacao: '0.4',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'santa-maria-da-feira',
@@ -680,6 +781,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '350',
+      indiceConstrucao: '0.5',
+      indiceImplantacao: '0.35',
+      profundidadeMaxConstrucao: '15',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'mealhada',
@@ -815,6 +927,17 @@ export const municipios: Municipio[] = [
         tipo: 'regulamento',
       },
     ],
+    parametros: {
+      alturaMaxima: '10m / 2-3 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '250',
+      indiceConstrucao: '0.65',
+      indiceImplantacao: '0.45',
+      profundidadeMaxConstrucao: '18',
+      percentagemCedencias: '15',
+    },
   },
   {
     id: 'matosinhos',
@@ -867,6 +990,17 @@ export const municipios: Municipio[] = [
         ],
       },
     ],
+    parametros: {
+      alturaMaxima: '7m / 2 pisos',
+      afastamentoFrontal: 'Alinhamento dominante',
+      afastamentoLateral: '3',
+      afastamentoPosterior: '6',
+      areaMinimaLote: '400',
+      indiceConstrucao: '0.4',
+      indiceImplantacao: '0.3',
+      profundidadeMaxConstrucao: '14',
+      percentagemCedencias: '15',
+    },
   },
 
   // ═══════════════════════════════════════════════════════════════
