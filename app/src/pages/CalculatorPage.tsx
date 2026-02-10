@@ -766,6 +766,20 @@ function calcularLarguraLote(frenteTerreno: number, numLotes: number, accessMode
   return (frenteTerreno * factor) / numLotes;
 }
 
+// Sugere n.º máximo de lotes por tipologia, dado a frente do terreno
+// Desconta 2×3m = 6m para afastamentos laterais extremos do prédio
+function sugerirLotesPorFrente(frenteTerreno: number): { tipo: string; label: string; lotes: number; largura: number; cor: string }[] {
+  if (frenteTerreno <= 0) return [];
+  const frenteUtil = Math.max(0, frenteTerreno - 6); // 3m afastamento cada lado
+  return HOUSING_WIDTH_RULES.map(r => {
+    let lotes = Math.floor(frenteUtil / r.minWidth);
+    // Geminadas devem ser par (duas a duas)
+    if (r.tipo === 'geminadas' && lotes % 2 !== 0) lotes = Math.max(0, lotes - 1);
+    const largura = lotes > 0 ? frenteUtil / lotes : 0;
+    return { tipo: r.tipo, label: r.label, lotes, largura, cor: r.cor };
+  }).filter(s => s.lotes > 0);
+}
+
 // Labels para objetivo principal
 const OBJETIVO_LABELS: Record<string, string> = {
   max_lotes: 'Maximizar nº de lotes',
@@ -2929,6 +2943,55 @@ export default function CalculatorPage() {
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="6" />
                     </div>
                   </div>
+                  {/* Sugestão automática de lotes por tipologia */}
+                  {(() => {
+                    const frente = parseFloat(lotFrenteTerreno) || 0;
+                    const sugestoes = sugerirLotesPorFrente(frente);
+                    if (sugestoes.length === 0) return null;
+                    return (
+                      <div className="px-4 py-3 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-medium text-blue-400">Sugestao automatica — {frente}m de frente (util: {Math.max(0, frente - 6).toFixed(0)}m)</p>
+                          <button
+                            onClick={() => {
+                              const s = sugestoes;
+                              if (s.length >= 1) {
+                                setLotCenarioA(prev => ({ ...prev, lotes: String(s[0].lotes), tipoHabitacao: 'auto' }));
+                                setLotNumAlternativas(s.length >= 3 ? '3' : '2');
+                              }
+                              if (s.length >= 2) {
+                                setLotCenarioB(prev => ({ ...prev, lotes: String(s[1].lotes), tipoHabitacao: 'auto' }));
+                              }
+                              if (s.length >= 3) {
+                                setLotCenarioC(prev => ({ ...prev, lotes: String(s[2].lotes), tipoHabitacao: 'auto' }));
+                              }
+                              // Preencher N. lotes pretendidos com a sugestão intermédia
+                              if (s.length >= 2) setLotNumLotes(String(s[1].lotes));
+                              else if (s.length >= 1) setLotNumLotes(String(s[0].lotes));
+                              toast.success(`Cenarios preenchidos: ${s.map(x => `${x.lotes} ${x.label.toLowerCase()}`).join(' | ')}`);
+                            }}
+                            className="px-3 py-1 text-[10px] rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-colors font-medium"
+                          >
+                            Preencher cenarios
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {sugestoes.map(s => (
+                            <button key={s.tipo}
+                              onClick={() => setLotNumLotes(String(s.lotes))}
+                              className="flex flex-col items-center gap-0.5 p-2 rounded-lg bg-muted/50 border border-border hover:border-blue-500/40 transition-colors cursor-pointer group"
+                            >
+                              <span className={`text-lg font-bold ${s.tipo === 'isoladas' ? 'text-emerald-400' : s.tipo === 'geminadas' ? 'text-amber-400' : 'text-rose-400'}`}>
+                                {s.lotes}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{s.label}</span>
+                              <span className="text-[9px] text-muted-foreground">~{s.largura.toFixed(1)}m/lote</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* 2. Contexto urbanistico */}
                   <div className="p-4 bg-muted/30 border border-border rounded-lg space-y-3">
