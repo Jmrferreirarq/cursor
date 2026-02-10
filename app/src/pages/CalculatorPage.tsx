@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
+// react-dom: apenas usado para ProposalDocument (importação mantida para compatibilidade)
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -22,7 +21,7 @@ import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type Pr
 import { generateProposalPdf } from '../lib/generateProposalPdf';
 import { saveProposal } from '../lib/supabase';
 import { addToProposalHistory } from '../lib/proposalHistory';
-import { ProposalDocument } from '../components/proposals/ProposalDocument';
+// ProposalDocument é usado via ProposalPreviewPaginated (não precisa de import direto aqui)
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { ProposalHistoryModal } from '../components/proposals/ProposalHistoryModal';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
@@ -1635,45 +1634,52 @@ export default function CalculatorPage() {
       vatRate: 23,
     });
     
-    // Abordagem direta: criar container temporário fora do React tree
-    // Evita problemas de position:fixed + createPortal + html2canvas
+    // ABORDAGEM: Clonar o preview DOM que já está renderizado corretamente
+    // Evita TODOS os problemas de React re-render + createPortal + position:fixed
     toast.loading('A preparar PDF...', { id: 'pdf-progress' });
     
-    const container = document.createElement('div');
-    container.className = 'light';
-    container.style.cssText = [
+    // Obter o preview que já está visível e funcional no ecrã
+    const previewEl = previewRef.current;
+    if (!previewEl) {
+      toast.dismiss('pdf-progress');
+      toast.error('Preview não encontrado. Abre a pré-visualização primeiro.');
+      return;
+    }
+    
+    // Deep clone do DOM que já renderizou corretamente
+    const clone = previewEl.cloneNode(true) as HTMLElement;
+    
+    // Preparar o clone para captura: posição offscreen, sem sombras, fundo branco
+    clone.className = 'light';
+    clone.style.cssText = [
       'position:absolute',
       'left:-9999px',
       'top:0',
       'width:794px',
       'min-width:794px',
+      'max-width:794px',
       'background:#ffffff',
       'color:#1F2328',
-      'font-family:DM Sans,Segoe UI,system-ui,sans-serif',
       'overflow:visible',
-      'z-index:-1',
+      'box-shadow:none',
+      'border-radius:0',
+      'background-image:none',
+      'font-family:DM Sans,Segoe UI,system-ui,sans-serif',
     ].join(';');
-    document.body.appendChild(container);
     
-    // Renderizar ProposalDocument num React root isolado (sem portal)
-    let pdfRoot: ReturnType<typeof createRoot> | null = null;
+    document.body.appendChild(clone);
+    
+    // Aguardar layout do clone
+    await new Promise((r) => setTimeout(r, 300));
+    
     try {
-      pdfRoot = createRoot(container);
-      flushSync(() => {
-        pdfRoot!.render(<ProposalDocument payload={previewPayload} lang={lang} />);
-      });
-      
-      // Aguardar paint + layout
-      await new Promise((r) => setTimeout(r, 500));
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      
-      // Verificar que o conteúdo renderizou (pelo menos >200px de conteúdo real)
-      if (container.scrollHeight < 200 || container.innerHTML.length < 100) {
-        throw new Error('ProposalDocument não renderizou conteúdo');
+      // Verificar que o clone tem conteúdo
+      if (clone.scrollHeight < 200) {
+        throw new Error(`Clone sem conteúdo (height=${clone.scrollHeight})`);
       }
       
       const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-      await generateProposalPdf(container, {
+      await generateProposalPdf(clone, {
         filename: `${baseName}.pdf`,
         reference: referenciaExibida,
         branding: previewPayload.branding,
@@ -1687,9 +1693,8 @@ export default function CalculatorPage() {
       toast.dismiss('pdf-progress');
       toast.error(`Erro ao gerar PDF: ${e instanceof Error ? e.message : 'desconhecido'}`);
     } finally {
-      // Limpar: desmontar React root e remover container do DOM
-      try { pdfRoot?.unmount(); } catch { /* ignore */ }
-      try { document.body.removeChild(container); } catch { /* ignore */ }
+      // Remover clone do DOM
+      try { document.body.removeChild(clone); } catch { /* ignore */ }
     }
   };
 
