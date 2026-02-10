@@ -217,6 +217,24 @@ export const proposalPayloadSchema = z.object({
     totalComIVA: z.number(),
     deltaBase: z.number().optional(),
   })).optional(),
+  // Investimento global do promotor
+  lotInvestimentoPromotor: z.object({
+    infraTotal: z.number(),
+    honorariosTotal: z.number(),
+    construcaoAreaMediaLote: z.number(),
+    construcaoNLotes: z.number(),
+    construcaoMin: z.number(),
+    construcaoMed: z.number(),
+    construcaoMax: z.number(),
+    construcaoTotalMin: z.number(),
+    construcaoTotalMed: z.number(),
+    construcaoTotalMax: z.number(),
+    investimentoTotalMin: z.number(),
+    investimentoTotalMed: z.number(),
+    investimentoTotalMax: z.number(),
+    duracaoEstimada: z.string().optional(),
+    nota: z.string().optional(),
+  }).optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -263,6 +281,12 @@ const MINIFY_KEYS: Record<string, string> = {
   lotPoolSize: 'lps', lotPoolPerUnit: 'lppu', lotExternalWorks: 'lew', lotWaterproofing: 'lwp',
   lotAddonsPool: 'lap', lotAddonsPoolTotal: 'lapt', lotOpcoesCotacao: 'loc2',
   unidades: 'uns', valorUnit: 'vu', deltaBase: 'db',
+  lotInvestimentoPromotor: 'lip', infraTotal: 'itr', honorariosTotal: 'htr',
+  construcaoAreaMediaLote: 'caml', construcaoNLotes: 'cnl',
+  construcaoMin: 'cmi', construcaoMed: 'cme', construcaoMax: 'cma',
+  construcaoTotalMin: 'ctmi', construcaoTotalMed: 'ctme', construcaoTotalMax: 'ctma',
+  investimentoTotalMin: 'itmi', investimentoTotalMed: 'itme', investimentoTotalMax: 'itma',
+  duracaoEstimada: 'dee', nota: 'nta',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

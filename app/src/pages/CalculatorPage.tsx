@@ -1879,6 +1879,45 @@ export default function CalculatorPage() {
           if (opcoes.length === 0) return {};
           return { lotOpcoesCotacao: opcoes };
         })(),
+        // Investimento global do promotor
+        ...(() => {
+          const ci = calcularCustosInfra();
+          const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
+          const nLotes = Math.max(0, parseInt(cenRef.lotes, 10) || parseInt(lotNumLotes, 10) || 0);
+          if (nLotes <= 0) return {};
+          const areaEst = parseFloat(lotAreaEstudo) || 0;
+          const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+          const cedencias = areaEst > 0 ? Math.round(areaEst * pctCed / 100) : 0;
+          const areaMediaLote = areaEst > 0 ? Math.round((areaEst - cedencias) / nLotes) : 0;
+          if (areaMediaLote <= 0) return {};
+          // Custos de construcao por moradia (habitacao unifamiliar como referencia)
+          const custosMoradia = { min: 1000, med: 1400, max: 2000 };
+          // Indice de implantacao tipico (~40-60% do lote), 2 pisos tipico -> ABC ~= lote * 0.5 * 2 = lote
+          // Para simplificar: ABC estimada ~= areaMediaLote * 0.7 (conservador)
+          const abcEstimada = Math.round(areaMediaLote * 0.7);
+          const construcaoMin = abcEstimada * custosMoradia.min;
+          const construcaoMed = abcEstimada * custosMoradia.med;
+          const construcaoMax = abcEstimada * custosMoradia.max;
+          return {
+            lotInvestimentoPromotor: {
+              infraTotal: ci.totalComContingencia,
+              honorariosTotal: totalSemIVA,
+              construcaoAreaMediaLote: abcEstimada,
+              construcaoNLotes: nLotes,
+              construcaoMin,
+              construcaoMed,
+              construcaoMax,
+              construcaoTotalMin: construcaoMin * nLotes,
+              construcaoTotalMed: construcaoMed * nLotes,
+              construcaoTotalMax: construcaoMax * nLotes,
+              investimentoTotalMin: ci.totalComContingencia + totalSemIVA + construcaoMin * nLotes,
+              investimentoTotalMed: ci.totalComContingencia + totalSemIVA + construcaoMed * nLotes,
+              investimentoTotalMax: ci.totalComContingencia + totalSemIVA + construcaoMax * nLotes,
+              duracaoEstimada: '18-36 meses',
+              nota: 'Valores indicativos para planeamento financeiro do promotor. Custos de construcao baseados em valores de referencia chave na mao (habitacao unifamiliar). Nao inclui terreno, licencas camararias ou financiamento.',
+            },
+          };
+        })(),
       } : {}),
       notas: isLoteamento ? [
         t('notes.validity', lang),

@@ -1082,8 +1082,106 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           )}
         </div>
 
-        {/* ESTIMATIVA DE INVESTIMENTO EM OBRA - segue após notas */}
-        {p.custosConstrucao && p.areaNum && p.areaNum > 0 && (() => {
+        {/* ESTIMATIVA DE INVESTIMENTO — Versao Loteamento (Promotor) vs Edificacao */}
+        {p.isLoteamento && p.lotInvestimentoPromotor && (() => {
+          const inv = p.lotInvestimentoPromotor;
+          const fmtN = (n: number) => n.toLocaleString('pt-PT');
+          return (
+          <div className="pdf-no-break" style={{ marginTop: '6mm', marginBottom: '6mm', padding: '4mm 5mm', background: C.offWhite, borderRadius: 3, border: `2px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 1mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Investimento Global do Promotor
+            </p>
+            <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 4mm 0' }}>
+              Visao consolidada para planeamento financeiro &mdash; {inv.construcaoNLotes} lotes, ABC estimada {fmtN(inv.construcaoAreaMediaLote)} m2/moradia
+            </p>
+
+            {/* Tabela principal */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '3mm' }}>
+              <thead>
+                <tr style={{ background: C.accent }}>
+                  <th style={{ padding: '2mm 3mm', textAlign: 'left', color: C.onAccent, fontWeight: 700 }}>Componente</th>
+                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Economico</th>
+                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Medio</th>
+                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                  <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Infraestruturas de urbanizacao</td>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
+                    <strong>{fmtN(inv.infraTotal)} &euro;</strong>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(igual em todos os cenarios)</span>
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                  <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Honorarios (loteamento)</td>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
+                    <strong>{fmtN(inv.honorariosTotal)} &euro;</strong>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(conforme proposta)</span>
+                  </td>
+                </tr>
+                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: '#f8fafc' }}>
+                  <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>
+                    Construcao moradias
+                    <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, fontWeight: 400 }}>
+                      {inv.construcaoNLotes} un. &times; {fmtN(inv.construcaoAreaMediaLote)} m2 (chave na mao)
+                    </span>
+                  </td>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMin)}&euro;/un.</span><br />
+                    <strong>{fmtN(inv.construcaoTotalMin)} &euro;</strong>
+                  </td>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMed)}&euro;/un.</span><br />
+                    <strong>{fmtN(inv.construcaoTotalMed)} &euro;</strong>
+                  </td>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMax)}&euro;/un.</span><br />
+                    <strong>{fmtN(inv.construcaoTotalMax)} &euro;</strong>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr style={{ background: C.accentSoft, borderTop: `2px solid ${C.accent}` }}>
+                  <td style={{ padding: '2.5mm 3mm', fontWeight: 700, color: C.accent }}>Investimento Total</td>
+                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMin)} &euro;</td>
+                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, fontSize: fs(9), color: C.accent }}>{fmtN(inv.investimentoTotalMed)} &euro;</td>
+                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMax)} &euro;</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            {/* Barra visual */}
+            <div style={{ marginBottom: '3mm' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '2mm', fontSize: fs(6.5), color: C.cinzaMarca }}>
+                <span>{fmtN(inv.investimentoTotalMin)}&euro;</span>
+                <div style={{ flex: 1, height: '4mm', background: `linear-gradient(to right, #e8f5e9 0%, ${C.accentSoft} 40%, #fff3e0 100%)`, borderRadius: 2, position: 'relative' }}>
+                  <div style={{ position: 'absolute', left: '40%', top: '-1mm', bottom: '-1mm', width: '2px', background: C.accent }} />
+                </div>
+                <span>{fmtN(inv.investimentoTotalMax)}&euro;</span>
+              </div>
+              <p style={{ fontSize: fs(6), color: C.cinzaMarca, margin: '1mm 0 0 0', textAlign: 'center' }}>
+                Intervalo de investimento total estimado (infraestruturas + honorarios + construcao)
+              </p>
+            </div>
+
+            {/* Duracao */}
+            {inv.duracaoEstimada && (
+              <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
+                Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>{inv.duracaoEstimada}</strong> (licenciamento + construcao)
+              </p>
+            )}
+
+            {/* Disclaimer */}
+            <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: 0, fontStyle: 'italic', lineHeight: 1.4 }}>
+              * {inv.nota || 'Valores indicativos para planeamento financeiro. Nao inclui terreno, licencas camararias ou financiamento.'}
+            </p>
+          </div>
+          );
+        })()}
+
+        {/* ESTIMATIVA DE INVESTIMENTO EM OBRA — Edificacao (nao-loteamento) */}
+        {!p.isLoteamento && p.custosConstrucao && p.areaNum && p.areaNum > 0 && (() => {
           // Valores fixos por m² (chave na mão)
           const custoMin = 1200;
           const custoMed = 1500;
