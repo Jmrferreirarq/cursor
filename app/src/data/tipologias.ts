@@ -1817,3 +1817,397 @@ if (TIPOLOGIA_DIPLOMAS['loteamento']) {
     { diplomaId: 'cimi-cimt', relevancia: 'condicional' as const, nota: 'Avaliação patrimonial dos lotes e taxas de IMI/IMT na transmissão' },
   );
 }
+
+// Receptáculos postais — obrigatórios em todos os edifícios
+const DIPLOMAS_RECEPTACULO_POSTAL: TipologiaDiploma[] = [
+  { diplomaId: 'receptaculo-postal-dr8-90', relevancia: 'obrigatorio', nota: 'Instalação obrigatória de caixa de correio — dimensões e localização junto à entrada' },
+  { diplomaId: 'receptaculo-postal-dr21-98', relevancia: 'obrigatorio', nota: 'Actualização das regras — baterias de caixas em habitação colectiva' },
+];
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'turismo', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(...DIPLOMAS_RECEPTACULO_POSTAL);
+  }
+}
+
+// Residências de ensino superior — tipologias relevantes
+const DIPLOMA_RESIDENCIAS: TipologiaDiploma = {
+  diplomaId: 'residencias-ensino-superior',
+  relevancia: 'condicional',
+  nota: 'Aplicável apenas a residências estudantis. Define áreas mínimas, espaços comuns e acessibilidades.',
+};
+
+for (const tipId of ['multifamiliar', 'equipamento', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_RESIDENCIAS);
+  }
+}
+
+// Reabilitação — diplomas complementares específicos
+if (TIPOLOGIA_DIPLOMAS['reabilitacao']) {
+  TIPOLOGIA_DIPLOMAS['reabilitacao'].push(
+    { diplomaId: 'portaria-301-2019', relevancia: 'obrigatorio' as const, nota: 'Acessibilidades em reabilitação — soluções alternativas quando o DL 163/2006 não é integralmente cumprível' },
+    { diplomaId: 'portaria-304-2014', relevancia: 'obrigatorio' as const, nota: 'Complemento ao RERU — identifica elementos funcionais e condições mínimas de habitabilidade' },
+    { diplomaId: 'fnre', relevancia: 'condicional' as const, nota: 'Fundo de financiamento para reabilitação — informação útil para clientes em ARU' },
+  );
+}
+
+// DR 5/2019 Conceitos Técnicos — transversal a todas as tipologias
+const DIPLOMA_CONCEITOS: TipologiaDiploma = {
+  diplomaId: 'dr-5-2019',
+  relevancia: 'obrigatorio',
+  nota: 'Definições oficiais: área de implantação, construção, cércea, índices — referência obrigatória para interpretar PDMs',
+};
+
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_CONCEITOS);
+}
+
+// Fichas SCE e qualificação profissional — transversal a todas as tipologias
+const DIPLOMAS_TRANSVERSAIS_NOVOS: TipologiaDiploma[] = [
+  { diplomaId: 'portaria-349a-2013', relevancia: 'obrigatorio', nota: 'Ficha de síntese SCE obrigatória na instrução do processo de licenciamento' },
+  { diplomaId: 'lei-40-2015', relevancia: 'frequente', nota: 'Qualificação dos técnicos — quem pode subscrever cada projecto' },
+  { diplomaId: 'lei-75-2013', relevancia: 'condicional', nota: 'Competências das câmaras municipais em matéria de urbanismo' },
+];
+
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(...DIPLOMAS_TRANSVERSAIS_NOVOS);
+}
+
+// Portaria 349-C/2013 RECS — comércio/serviços, equipamento, turismo, industrial
+const DIPLOMA_RECS: TipologiaDiploma = {
+  diplomaId: 'portaria-349c-2013',
+  relevancia: 'obrigatorio',
+  nota: 'Requisitos energéticos para edifícios de comércio e serviços — AVAC, iluminação, ventilação',
+};
+
+for (const tipId of ['comercio_servicos', 'equipamento', 'turismo', 'industrial']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_RECS);
+  }
+}
+
+// Licenciamento Zero — comércio/serviços e turismo
+const DIPLOMA_LICENCIAMENTO_ZERO: TipologiaDiploma = {
+  diplomaId: 'dl-48-2011',
+  relevancia: 'frequente',
+  nota: 'Licenciamento Zero — dispensa de licença para estabelecimentos comerciais e restauração',
+};
+
+for (const tipId of ['comercio_servicos', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_LICENCIAMENTO_ZERO);
+  }
+}
+
+// Gás — todas as tipologias com cozinhas/aquecimento
+const DIPLOMA_GAS: TipologiaDiploma = {
+  diplomaId: 'dl-521-99',
+  relevancia: 'frequente',
+  nota: 'Regulamento base de instalações de gás — ventilação, condutas e segurança',
+};
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'turismo', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_GAS);
+  }
+}
+
+// Estruturas (RSA/REBAP) — todas as tipologias com projecto de estruturas
+const DIPLOMAS_ESTRUTURAS_HISTORICOS: TipologiaDiploma[] = [
+  { diplomaId: 'rsa', relevancia: 'condicional', nota: 'RSA — regulamento anterior aos Eurocódigos, referência para edifícios existentes' },
+  { diplomaId: 'rebap', relevancia: 'condicional', nota: 'REBAP — betão armado, referência para verificação de estruturas existentes' },
+];
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(...DIPLOMAS_ESTRUTURAS_HISTORICOS);
+  }
+}
+
+// TMU — todas excepto reabilitação (que pode ter isenção)
+const DIPLOMA_TMU: TipologiaDiploma = {
+  diplomaId: 'portaria-216e-2008',
+  relevancia: 'frequente',
+  nota: 'Cálculo da TMU — taxa pela realização de infraestruturas urbanísticas',
+};
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'turismo', 'loteamento']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_TMU);
+  }
+}
+
+// Reabilitação — diplomas adicionais
+if (TIPOLOGIA_DIPLOMAS['reabilitacao']) {
+  TIPOLOGIA_DIPLOMAS['reabilitacao'].push(
+    { diplomaId: 'lei-32-2012', relevancia: 'frequente' as const, nota: 'Alteração ao RJRU — ARU, benefícios fiscais, instrumentos de intervenção' },
+    { diplomaId: 'dl-80-2006', relevancia: 'condicional' as const, nota: 'RCCTE revogado — referência para edifícios licenciados entre 2006 e 2013' },
+    { diplomaId: 'portaria-216e-2008', relevancia: 'condicional' as const, nota: 'TMU — pode haver isenção em ARU, verificar regulamento municipal' },
+  );
+}
+
+// Turismo — classificação de empreendimentos
+if (TIPOLOGIA_DIPLOMAS['turismo']) {
+  TIPOLOGIA_DIPLOMAS['turismo'].push(
+    { diplomaId: 'portaria-327-2008', relevancia: 'obrigatorio' as const, nota: 'Classificação de empreendimentos turísticos — requisitos por estrela, áreas mínimas' },
+  );
+}
+
+// Radão — moradias e multifamiliar em zonas graníticas
+const DIPLOMA_RADAO: TipologiaDiploma = {
+  diplomaId: 'lei-108-2018',
+  relevancia: 'condicional',
+  nota: 'Protecção contra radão — relevante em zonas graníticas, caves e pisos térreos',
+};
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'equipamento']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_RADAO);
+  }
+}
+
+// Propriedade horizontal — multifamiliar e reabilitação
+for (const tipId of ['multifamiliar', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-268-94', relevancia: 'frequente' as const, nota: 'Obras em fracções e partes comuns — autorização do condomínio' },
+    );
+  }
+}
+
+// NZEB — todos os edifícios novos
+const DIPLOMA_NZEB: TipologiaDiploma = {
+  diplomaId: 'dl-101d-2020-nzeb',
+  relevancia: 'obrigatorio',
+  nota: 'NZEB obrigatório desde 2021 — classe energética A, integração de renováveis',
+};
+
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(DIPLOMA_NZEB);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAPEAMENTO DOS 29 DIPLOMAS RESTANTES
+// ═══════════════════════════════════════════════════════════════
+
+// --- Acessibilidade via pública — todas as tipologias com acesso público ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'turismo', 'loteamento', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'acessibilidade-via-publica', relevancia: 'frequente' as const, nota: 'Acessibilidade na via pública — passeios, passadeiras, rampas de acesso ao edifício' },
+    );
+  }
+}
+
+// --- DL 101-D/2020 (alteração ao SCE) — todas as tipologias ---
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(
+    { diplomaId: 'dl-101-d-2020', relevancia: 'obrigatorio' as const, nota: 'Alteração ao SCE — requisitos energéticos actualizados para REH e RECS' },
+  );
+}
+
+// --- DL 224/2015 (alteração SCIE) — todas as tipologias ---
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(
+    { diplomaId: 'dl-224-2015', relevancia: 'frequente' as const, nota: 'Alteração ao DL 220/2008 — clarificações ao regime SCIE' },
+  );
+}
+
+// --- Portaria 424/2025 (instalações eléctricas) — todas com projecto eléctrico ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'turismo', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-424-2025', relevancia: 'frequente' as const, nota: 'Regulamentação complementar de instalações eléctricas de BT' },
+    );
+  }
+}
+
+// --- DL 92/2017 (gás — alteração) — tipologias com gás ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'turismo', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-92-2017', relevancia: 'frequente' as const, nota: 'Alteração ao regime de gás — actualização das regras de segurança' },
+    );
+  }
+}
+
+// --- Domínio público marítimo — loteamento e turismo (zona costeira) ---
+for (const tipId of ['loteamento', 'turismo', 'equipamento']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dominio-publico-maritimo', relevancia: 'condicional' as const, nota: 'Domínio público marítimo — aplicável a projectos em zona costeira' },
+    );
+  }
+}
+
+// --- NRAU e Lei 6/2006 (arrendamento) — multifamiliar, reabilitação, comércio ---
+for (const tipId of ['multifamiliar', 'reabilitacao', 'comercio_servicos']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'nrau', relevancia: 'condicional' as const, nota: 'NRAU — regime de arrendamento, relevante se o imóvel vai ser arrendado' },
+      { diplomaId: 'lei-6-2006', relevancia: 'condicional' as const, nota: 'NRAU versão base — tipos de contrato, duração e actualização de rendas' },
+    );
+  }
+}
+
+// --- Mais Habitação — habitação e reabilitação ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'mais-habitacao', relevancia: 'condicional' as const, nota: 'Mais Habitação — incentivos, alterações ao RJUE e arrendamento acessível' },
+    );
+  }
+}
+
+// --- EOA (Estatuto OA) — transversal (exercício profissional) ---
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(
+    { diplomaId: 'eoa', relevancia: 'condicional' as const, nota: 'Estatuto da Ordem dos Arquitectos — direitos e deveres profissionais' },
+  );
+}
+
+// --- Regime arbóreo — loteamento e equipamento ---
+for (const tipId of ['loteamento', 'equipamento', 'moradia_isolada', 'moradia_geminada', 'moradia_banda']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'regime-arboreo', relevancia: 'condicional' as const, nota: 'Protecção de arvoredo — abate de árvores pode exigir autorização' },
+    );
+  }
+}
+
+// --- Eurocódigos em falta (EC3 aço, EC5 madeira) — estruturas ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'en-1993', relevancia: 'condicional' as const, nota: 'Eurocódigo 3 — estruturas de aço (se aplicável)' },
+      { diplomaId: 'en-1995', relevancia: 'condicional' as const, nota: 'Eurocódigo 5 — estruturas de madeira (se aplicável)' },
+      { diplomaId: 'eurocod-6', relevancia: 'condicional' as const, nota: 'Eurocódigo 6 — estruturas de alvenaria (se aplicável)' },
+    );
+  }
+}
+
+// --- Portaria 101/96 (estaleiros) — todas com fase de obra ---
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(
+    { diplomaId: 'portaria-101-96', relevancia: 'frequente' as const, nota: 'Segurança em estaleiros — andaimes, trabalhos em altura, escavações' },
+  );
+}
+
+// --- DL 142/2008 (RJCN — conservação da natureza) --- 
+for (const tipId of ['loteamento', 'equipamento', 'moradia_isolada', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-142-2008', relevancia: 'condicional' as const, nota: 'Conservação da natureza — áreas protegidas, Rede Natura, habitats' },
+    );
+  }
+}
+
+// --- Lei Bases da Habitação ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'lei-bases-habitacao', relevancia: 'condicional' as const, nota: 'Lei de Bases da Habitação — direito à habitação, função social da propriedade' },
+    );
+  }
+}
+
+// --- Autoprotecção SCIE --- 
+for (const tipId of ['multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-220-2008-autoproteccao', relevancia: 'frequente' as const, nota: 'Medidas de autoprotecção SCIE — planos de segurança, formação, simulacros' },
+    );
+  }
+}
+
+// --- LBPSOTU (Lei 31/2014) ---
+for (const tipId of ['loteamento', 'equipamento']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'lei-31-2014', relevancia: 'condicional' as const, nota: 'Lei de Bases do Solo e Ordenamento — classificação do solo, programação territorial' },
+    );
+  }
+}
+
+// --- DL 309/2002 (uso balnear) ---
+for (const tipId of ['turismo', 'equipamento']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-309-2002', relevancia: 'condicional' as const, nota: 'Qualidade das águas balneares — piscinas e zonas de banho' },
+    );
+  }
+}
+
+// --- Rectificação receptáculo postal (informativo, ligado aos outros) ---
+for (const tipId of ['multifamiliar', 'comercio_servicos', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'receptaculo-postal-retificacao-22e-98', relevancia: 'condicional' as const, nota: 'Rectificação ao DR 21/98 — leitura conjunta com os receptáculos postais' },
+    );
+  }
+}
+
+// --- Portaria 232/2008 (revogada, referência histórica) ---
+for (const tipId of ['reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-232-2008', relevancia: 'condicional' as const, nota: 'Elementos instrutórios (revogada) — referência para processos antigos transitados' },
+    );
+  }
+}
+
+// --- SCIE: Portaria 773/2009 e Lei 123/2019 ---
+for (const tipId of ['multifamiliar', 'comercio_servicos', 'equipamento', 'industrial', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-773-2009', relevancia: 'condicional' as const, nota: 'Procedimentos administrativos SCIE — registo ANPC, credenciação' },
+      { diplomaId: 'lei-123-2019', relevancia: 'frequente' as const, nota: 'Alteração ao RJ-SCIE — actualizações de 2019' },
+    );
+  }
+}
+
+// --- Portaria 138/2005 (ascensores) --- 
+for (const tipId of ['multifamiliar', 'comercio_servicos', 'equipamento', 'turismo', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-138-2005', relevancia: 'frequente' as const, nota: 'Ascensores e plataformas elevatórias — dimensões mínimas para acessibilidade' },
+    );
+  }
+}
+
+// --- Portaria 53/71 (higiene e segurança) ---
+for (const tipId of ['industrial', 'equipamento', 'comercio_servicos']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-53-71', relevancia: 'condicional' as const, nota: 'Higiene e segurança no trabalho — condições em estabelecimentos' },
+    );
+  }
+}
+
+// --- DL 129/2002 (RRAE versão base) --- 
+for (const tipId of ['reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'dl-129-2002', relevancia: 'condicional' as const, nota: 'RRAE versão base — referência para edifícios licenciados entre 2002 e 2008' },
+    );
+  }
+}
+
+// --- Portaria 420/2015 (avaliação de imóveis) ---
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar', 'comercio_servicos', 'reabilitacao']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(
+      { diplomaId: 'portaria-420-2015', relevancia: 'condicional' as const, nota: 'Avaliação de imóveis — coeficientes VPT para cálculo de IMI' },
+    );
+  }
+}
+
+// --- RUEA (Açores) — condicional em todas ---
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(
+    { diplomaId: 'ruea', relevancia: 'condicional' as const, nota: 'Regime especial dos Açores — apenas aplicável na Região Autónoma' },
+  );
+}

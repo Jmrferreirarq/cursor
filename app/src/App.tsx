@@ -42,6 +42,7 @@ import CalculatorPage from './pages/CalculatorPage';
 import LegislacaoPage from './pages/LegislacaoPage';
 import ConsultaLegislacaoPage from './pages/ConsultaLegislacaoPage';
 import ChecklistPage from './pages/ChecklistPage';
+import MunicipiosPage from './pages/MunicipiosPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
 import PropostaShortPage from './pages/PropostaShortPage';
 import PortfolioPublicPage from './pages/PortfolioPublicPage';
@@ -132,6 +133,7 @@ function App() {
                 <Route path="/legislacao" element={<LegislacaoPage />} />
                 <Route path="/consulta-legislacao" element={<ConsultaLegislacaoPage />} />
                 <Route path="/checklist" element={<ChecklistPage />} />
+                <Route path="/municipios" element={<MunicipiosPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
                 <Route path="/media" element={<MediaHubPage />} />
                 <Route path="/library" element={<MaterialLibraryPage />} />

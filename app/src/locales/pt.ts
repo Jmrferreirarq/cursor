@@ -10,6 +10,7 @@ export const pt = {
     marketing: 'Marketing',
     technical: 'Tecnico',
     legislacao: 'Legislacao',
+    municipios: 'Municipios',
     consultaLegislacao: 'Consulta Legal',
     media: 'Media',
     queue: 'Fila',

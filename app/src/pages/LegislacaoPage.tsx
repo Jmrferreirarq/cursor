@@ -4,7 +4,7 @@ import {
   Scale, Search, ChevronDown, ChevronRight, ExternalLink, BookOpen, Filter,
   Building2, Warehouse, Accessibility, Zap, Flame, Volume2, PlugZap, Wind, Wifi,
   Map, Home, GraduationCap, Sparkles, X, FileText, Link2, Tag, AlertTriangle,
-  Shield, HardHat,
+  Shield, HardHat, MapPin,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { legislacao, CATEGORIAS, type Diploma, type CategoriaLegislacao } from '../data/legislacao';
@@ -102,6 +102,13 @@ export default function LegislacaoPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/municipios')}
+            className="px-3 py-2 text-sm rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors flex items-center gap-2 font-medium"
+          >
+            <MapPin className="w-4 h-4" />
+            Municipios
+          </button>
           <button
             onClick={() => navigate('/consulta-legislacao')}
             className="px-3 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-2 font-medium"

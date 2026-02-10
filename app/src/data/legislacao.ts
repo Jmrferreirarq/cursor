@@ -2002,4 +2002,786 @@ export const legislacao: Diploma[] = [
     tags: ['simplex', 'estatísticas', 'INE', 'ficha', 'elementos', 'construção', 'dados'],
     simplex: true,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // RESIDÊNCIAS PARA ENSINO SUPERIOR
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'residencias-ensino-superior',
+    sigla: 'Portaria 35-A/2022',
+    titulo: 'Normas Técnicas para Residências de Estudantes do Ensino Superior',
+    diploma: 'Portaria n.º 35-A/2022, de 12 de janeiro',
+    categoria: 'edificacoes',
+    subcategoria: 'Habitação colectiva',
+    resumo: 'Define as normas técnicas mínimas para residências de estudantes do ensino superior: áreas mínimas dos quartos (individuais e duplos), instalações sanitárias, espaços comuns, cozinhas, lavandarias, acessibilidades e segurança contra incêndio. Aplica-se a construção nova e à reconversão de edifícios existentes para residências estudantis.',
+    aplicacao: [
+      'Projecto de residências universitárias / estudantis',
+      'Reconversão de edifícios existentes para alojamento estudantil',
+      'Áreas mínimas de quartos, IS e espaços comuns',
+      'Verificação de acessibilidades em residências',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Tipologias de residências (T0, quartos individuais, duplos, estúdios)' },
+      { artigo: 'Art. 5.º', descricao: 'Áreas mínimas dos quartos e instalações sanitárias' },
+      { artigo: 'Art. 7.º', descricao: 'Espaços comuns obrigatórios (sala convívio, cozinha, lavandaria)' },
+      { artigo: 'Art. 9.º', descricao: 'Requisitos de acessibilidade e mobilidade reduzida' },
+      { artigo: 'Art. 11.º', descricao: 'Segurança contra incêndio — aplicação do SCIE' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/35-a-2022-177824593',
+    estado: 'vigente',
+    tags: ['residências', 'estudantes', 'ensino superior', 'universidade', 'quartos', 'áreas mínimas', 'alojamento estudantil'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // RECEPTÁCULOS POSTAIS (caixas de correio)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'receptaculo-postal-dr8-90',
+    sigla: 'DR 8/90',
+    titulo: 'Receptáculo Postal — Regulamento Base',
+    diploma: 'Decreto Regulamentar n.º 8/90, de 6 de abril',
+    categoria: 'edificacoes',
+    subcategoria: 'Receptáculo postal',
+    resumo: 'Regulamenta a instalação obrigatória de receptáculos postais (caixas de correio) nos edifícios. Define dimensões mínimas, localização (junto à entrada, acessível ao distribuidor), sinalização e obrigação do proprietário. Aplicável a todo o tipo de edificações com correspondência postal.',
+    aplicacao: [
+      'Localização e dimensionamento de caixas de correio em projectos',
+      'Edifícios de habitação — caixas individuais por fracção',
+      'Edifícios de comércio/serviços — receptáculos acessíveis',
+      'Obrigação em projectos de licenciamento',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Obrigatoriedade de receptáculo postal em todos os edifícios' },
+      { artigo: 'Art. 2.º', descricao: 'Dimensões mínimas do receptáculo' },
+      { artigo: 'Art. 3.º', descricao: 'Localização — junto à entrada, acessível ao distribuidor postal' },
+      { artigo: 'Art. 5.º', descricao: 'Sinalização e identificação (nome, n.º fracção)' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-regulamentar/8-1990-334786',
+    estado: 'vigente',
+    tags: ['caixa de correio', 'receptáculo postal', 'CTT', 'correspondência', 'entrada', 'edifício'],
+  },
+  {
+    id: 'receptaculo-postal-dr21-98',
+    sigla: 'DR 21/98',
+    titulo: 'Receptáculo Postal — Alteração ao Regulamento',
+    diploma: 'Decreto Regulamentar n.º 21/98, de 4 de setembro',
+    categoria: 'edificacoes',
+    subcategoria: 'Receptáculo postal',
+    resumo: 'Altera o Decreto Regulamentar 8/90, actualizando as regras para instalação de receptáculos postais em edifícios. Introduz requisitos adicionais para edifícios de habitação colectiva (baterias de caixas) e define obrigações de manutenção pelo proprietário.',
+    aplicacao: [
+      'Actualização das regras de receptáculos postais',
+      'Baterias de caixas em edifícios colectivos',
+      'Manutenção e conservação pelo proprietário',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Alterações ao DR 8/90 — novas exigências' },
+      { artigo: 'Art. 3.º', descricao: 'Baterias de receptáculos em habitação colectiva' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-regulamentar/21-1998-517104',
+    estado: 'vigente',
+    tags: ['caixa de correio', 'receptáculo postal', 'alteração', 'habitação colectiva', 'bateria'],
+  },
+  {
+    id: 'receptaculo-postal-retificacao-22e-98',
+    sigla: 'Decl. Rect. 22-E/98',
+    titulo: 'Receptáculo Postal — Declaração de Rectificação',
+    diploma: 'Declaração de Rectificação n.º 22-E/98, de 30 de novembro',
+    categoria: 'edificacoes',
+    subcategoria: 'Receptáculo postal',
+    resumo: 'Rectifica o Decreto Regulamentar 21/98 relativo a receptáculos postais. Corrige lapsos na redacção do diploma, mantendo as obrigações e requisitos técnicos inalterados na substância.',
+    aplicacao: [
+      'Rectificação de lapsos no DR 21/98',
+      'Leitura conjunta com DR 8/90 e DR 21/98',
+    ],
+    artigosChave: [],
+    linkDRE: 'https://dre.pt/dre/detalhe/declaracao-retificacao/22-e-1998-245918',
+    estado: 'vigente',
+    tags: ['caixa de correio', 'receptáculo postal', 'rectificação', 'errata'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // REABILITAÇÃO — DIPLOMAS COMPLEMENTARES
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'portaria-301-2019',
+    sigla: 'Portaria 301/2019',
+    titulo: 'Acessibilidades em Operações de Reabilitação',
+    diploma: 'Portaria n.º 301/2019, de 12 de setembro',
+    categoria: 'acessibilidades',
+    subcategoria: 'Reabilitação',
+    resumo: 'Define as condições de acessibilidade a satisfazer em operações de reabilitação de edifícios existentes, quando não seja possível cumprir integralmente o DL 163/2006. Estabelece critérios de razoabilidade e proporcionalidade para a adaptação de edifícios antigos, definindo soluções alternativas aceitáveis para percursos, rampas, elevadores, instalações sanitárias e comunicações verticais.',
+    aplicacao: [
+      'Reabilitação de edifícios antigos — soluções alternativas de acessibilidade',
+      'Adaptação razoável quando o DL 163/2006 não é integralmente cumprível',
+      'Critérios de proporcionalidade: custo vs. benefício da acessibilidade',
+      'Soluções para escadas, IS e percursos em edifícios existentes',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Âmbito — operações urbanísticas em edifícios existentes' },
+      { artigo: 'Art. 3.º', descricao: 'Critérios de razoabilidade e proporcionalidade' },
+      { artigo: 'Art. 4.º', descricao: 'Soluções alternativas para percursos acessíveis' },
+      { artigo: 'Art. 6.º', descricao: 'Instalações sanitárias — adaptações possíveis' },
+      { artigo: 'Anexo', descricao: 'Tabela de soluções alternativas por elemento construtivo' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/301-2019-124713498',
+    estado: 'vigente',
+    tags: ['acessibilidade', 'reabilitação', 'edifícios antigos', 'soluções alternativas', 'razoabilidade', 'proporcionalidade'],
+  },
+  {
+    id: 'portaria-304-2014',
+    sigla: 'Portaria 304/2014',
+    titulo: 'Elementos Funcionais dos Edifícios — Dispensa de Requisitos (RERU/RGEU)',
+    diploma: 'Portaria n.º 304/2014, de 16 de dezembro',
+    categoria: 'edificacoes',
+    subcategoria: 'Reabilitação',
+    resumo: 'Regulamenta o DL 53/2014 (RERU), identificando os elementos funcionais dos edifícios cuja intervenção permite dispensar requisitos técnicos do RGEU, acústica, térmica e acessibilidades. Define a metodologia de avaliação do estado de conservação e as condições mínimas de habitabilidade a garantir mesmo com dispensa.',
+    aplicacao: [
+      'Identificação dos elementos funcionais para efeitos de dispensa RERU',
+      'Avaliação do estado de conservação em reabilitação',
+      'Condições mínimas de habitabilidade — limites da dispensa',
+      'Complemento obrigatório ao RERU (DL 53/2014)',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Elementos funcionais — estrutura, cobertura, paredes, pavimentos, caixilharia' },
+      { artigo: 'Art. 3.º', descricao: 'Metodologia de avaliação do estado de conservação' },
+      { artigo: 'Art. 5.º', descricao: 'Condições mínimas de habitabilidade — limites da dispensa' },
+      { artigo: 'Anexo I', descricao: 'Ficha de avaliação dos elementos funcionais' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/304-2014-63866769',
+    estado: 'vigente',
+    tags: ['RERU', 'RGEU', 'reabilitação', 'elementos funcionais', 'dispensa', 'estado de conservação', 'habitabilidade'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONCEITOS TÉCNICOS DE URBANISMO
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'dr-5-2019',
+    sigla: 'DR 5/2019',
+    titulo: 'Conceitos Técnicos nos Domínios do Ordenamento do Território e Urbanismo',
+    diploma: 'Decreto Regulamentar n.º 5/2019, de 27 de setembro',
+    categoria: 'urbanismo',
+    subcategoria: 'Definições',
+    resumo: 'Fixa os conceitos técnicos de referência nos domínios do ordenamento do território e urbanismo, a utilizar nos instrumentos de gestão territorial (PDM, PU, PP). Define com precisão: área de implantação, área de construção, área bruta, índice de utilização, índice de impermeabilização, cércea, alinhamento, recuo, volumetria, número de pisos, cave, sótão, logradouro, entre dezenas de outros conceitos. Diploma fundamental para interpretar regulamentos municipais.',
+    aplicacao: [
+      'Interpretação de parâmetros urbanísticos dos PDMs',
+      'Definição precisa de área de implantação vs. área de construção',
+      'Cálculo de índices de utilização e impermeabilização',
+      'Cércea, volumetria, número de pisos — definições oficiais',
+      'Referência obrigatória para memórias descritivas',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Conceitos — lista completa de definições técnicas' },
+      { artigo: 'Alínea a)', descricao: 'Alinhamento — linha que define o limite da implantação' },
+      { artigo: 'Alínea d)', descricao: 'Área de construção — soma das áreas de todos os pisos' },
+      { artigo: 'Alínea e)', descricao: 'Área de implantação — projecção horizontal da construção' },
+      { artigo: 'Alínea n)', descricao: 'Cércea — dimensão vertical da fachada' },
+      { artigo: 'Alínea ii)', descricao: 'Índice de utilização do solo' },
+      { artigo: 'Alínea jj)', descricao: 'Índice de impermeabilização do solo' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-regulamentar/5-2019-124988082',
+    estado: 'vigente',
+    tags: ['conceitos técnicos', 'urbanismo', 'ordenamento', 'área de implantação', 'área de construção', 'cércea', 'índice utilização', 'índice impermeabilização', 'PDM', 'definições'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // FNRE — FUNDO NACIONAL DE REABILITAÇÃO DO EDIFICADO
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'fnre',
+    sigla: 'FNRE',
+    titulo: 'Fundo Nacional de Reabilitação do Edificado — Guia',
+    diploma: 'Decreto-Lei n.º 150/2017, de 6 de dezembro (criação do FNRE)',
+    categoria: 'habitacao',
+    subcategoria: 'Financiamento',
+    resumo: 'O FNRE é um fundo de investimento imobiliário destinado a promover a reabilitação de edifícios públicos e privados, gerido pelo IHRU. Financia operações de reabilitação com condições favoráveis, sobretudo em Áreas de Reabilitação Urbana (ARU). O guia disponibiliza informação sobre condições de acesso, tipologias de intervenção elegíveis, montantes e prazos.',
+    aplicacao: [
+      'Financiamento de projectos de reabilitação urbana',
+      'Acesso a condições favoráveis de crédito para reabilitação',
+      'Intervenções em ARU — elegibilidade e montantes',
+      'Informação para clientes sobre apoios disponíveis',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Objecto do fundo — reabilitação de edifícios' },
+      { artigo: 'Art. 5.º', descricao: 'Entidade gestora — IHRU' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/150-2017-114289700',
+    estado: 'vigente',
+    tags: ['FNRE', 'reabilitação', 'financiamento', 'IHRU', 'ARU', 'fundo', 'investimento', 'edifícios'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // ELEMENTOS INSTRUTÓRIOS (versão anterior)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'portaria-232-2008',
+    sigla: 'Portaria 232/2008',
+    titulo: 'Elementos Instrutórios dos Pedidos de Operações Urbanísticas (revogada)',
+    diploma: 'Portaria n.º 232/2008, de 11 de março',
+    categoria: 'urbanismo',
+    subcategoria: 'Elementos instrutórios',
+    resumo: 'Versão anterior da portaria de elementos instrutórios para pedidos de licenciamento, comunicação prévia e autorização de utilização. Foi revogada e substituída pela Portaria 113/2015. Mantém relevância como referência histórica e para processos transitados.',
+    aplicacao: [
+      'Referência histórica — processos antigos instruídos ao abrigo desta portaria',
+      'Comparação com a Portaria 113/2015 (actual)',
+      'Processos transitados ou em revisão que invoquem este diploma',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Âmbito — elementos instrutórios para operações urbanísticas' },
+      { artigo: 'Art. 2.º', descricao: 'Licenciamento — documentos a apresentar' },
+      { artigo: 'Art. 3.º', descricao: 'Comunicação prévia — documentos a apresentar' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/232-2008-247227',
+    estado: 'revogado',
+    tags: ['elementos instrutórios', 'licenciamento', 'comunicação prévia', 'revogada', 'histórico', '2008'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PRIORIDADE ALTA — Uso frequente em projectos
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- ENERGIA: Portarias complementares ao SCE ---
+  {
+    id: 'portaria-349c-2013',
+    sigla: 'Portaria 349-C/2013',
+    titulo: 'Elementos Técnicos para RECS — Edifícios de Comércio e Serviços',
+    diploma: 'Portaria n.º 349-C/2013, de 2 de dezembro',
+    categoria: 'energia',
+    subcategoria: 'Comércio e serviços',
+    resumo: 'Define os requisitos de comportamento técnico-funcional e de eficiência dos sistemas técnicos dos edifícios de comércio e serviços (RECS). Estabelece os requisitos energéticos, de ventilação, iluminação e produção de AQS. Diploma essencial para projectos de edifícios não residenciais.',
+    aplicacao: [
+      'Projectos de edifícios de comércio e serviços — requisitos energéticos',
+      'Sistemas de climatização (AVAC) — eficiência mínima',
+      'Iluminação interior — densidade de potência máxima',
+      'Produção de águas quentes sanitárias — requisitos',
+      'Verificação regulamentar para certificação energética RECS',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Envolvente — requisitos de comportamento térmico' },
+      { artigo: 'Art. 6.º', descricao: 'Sistemas de climatização — eficiência e potência' },
+      { artigo: 'Art. 10.º', descricao: 'Iluminação — densidade de potência máxima por tipo de espaço' },
+      { artigo: 'Art. 14.º', descricao: 'Energias renováveis — contribuição mínima' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/349-c-2013-504907',
+    estado: 'vigente',
+    tags: ['RECS', 'comércio', 'serviços', 'energia', 'AVAC', 'iluminação', 'ventilação', 'certificação'],
+  },
+  {
+    id: 'portaria-349a-2013',
+    sigla: 'Portaria 349-A/2013',
+    titulo: 'Ficha de Síntese do SCE — Modelo Obrigatório',
+    diploma: 'Portaria n.º 349-A/2013, de 29 de novembro',
+    categoria: 'energia',
+    subcategoria: 'Certificação',
+    resumo: 'Estabelece o modelo da ficha de síntese que deve acompanhar os projectos submetidos a licenciamento, contendo os elementos de cálculo e verificação dos requisitos energéticos (REH ou RECS). Obrigatório para a instrução do processo camarário.',
+    aplicacao: [
+      'Instrução de processos de licenciamento — ficha energética obrigatória',
+      'Pré-certificado energético — dados de input',
+      'Verificação dos requisitos do SCE para aprovação',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Modelo da ficha de síntese SCE' },
+      { artigo: 'Anexo I', descricao: 'Ficha para edifícios de habitação (REH)' },
+      { artigo: 'Anexo II', descricao: 'Ficha para edifícios de comércio e serviços (RECS)' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/349-a-2013-504888',
+    estado: 'vigente',
+    tags: ['SCE', 'ficha de síntese', 'certificação energética', 'licenciamento', 'REH', 'RECS', 'pré-certificado'],
+  },
+
+  // --- LICENCIAMENTO ZERO ---
+  {
+    id: 'dl-48-2011',
+    sigla: 'DL 48/2011',
+    titulo: 'Licenciamento Zero — Simplificação de Actividades Económicas',
+    diploma: 'Decreto-Lei n.º 48/2011, de 1 de abril',
+    ultimaAlteracao: 'Decreto-Lei n.º 141/2012, de 11 de julho',
+    categoria: 'urbanismo',
+    subcategoria: 'Simplificação',
+    resumo: 'Simplifica o regime de acesso e exercício de diversas actividades económicas, eliminando licenças e autorizações substituídas por meras comunicações prévias. Aplica-se a estabelecimentos de restauração, bebidas, comércio a retalho, prestação de serviços, ocupação de espaço público para esplanadas e publicidade. Fundamental para projectos de comércio/serviços.',
+    aplicacao: [
+      'Abertura de estabelecimentos comerciais — dispensa de licença',
+      'Restauração e bebidas — mera comunicação prévia',
+      'Esplanadas e ocupação de espaço público — comunicação prévia',
+      'Publicidade — regime simplificado',
+      'Balcão do Empreendedor — plataforma electrónica',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Âmbito — actividades abrangidas' },
+      { artigo: 'Art. 4.º', descricao: 'Mera comunicação prévia — dispensa de licença' },
+      { artigo: 'Art. 11.º', descricao: 'Ocupação do espaço público — esplanadas' },
+      { artigo: 'Art. 16.º', descricao: 'Afixação de publicidade — comunicação prévia' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/48-2011-278775',
+    estado: 'vigente',
+    tags: ['licenciamento zero', 'restauração', 'comércio', 'esplanadas', 'comunicação prévia', 'balcão empreendedor', 'simplificação'],
+  },
+
+  // --- GÁS: Regulamento base ---
+  {
+    id: 'dl-521-99',
+    sigla: 'DL 521/99',
+    titulo: 'Requisitos Mínimos de Segurança das Instalações de Gás',
+    diploma: 'Decreto-Lei n.º 521/99, de 10 de dezembro',
+    ultimaAlteracao: 'Decreto-Lei n.º 92/2017, de 31 de julho',
+    categoria: 'gas',
+    subcategoria: 'Regulamento base',
+    resumo: 'Estabelece os requisitos mínimos de segurança a que devem obedecer as instalações de utilização de gás em edifícios, incluindo gás natural e GPL. Define condições de ventilação dos locais de instalação, condutas de evacuação de produtos da combustão, distâncias de segurança e obrigações de inspecção.',
+    aplicacao: [
+      'Projecto de instalações de gás em edifícios',
+      'Ventilação de cozinhas e locais com aparelhos a gás',
+      'Condutas de evacuação de gases (chaminés)',
+      'Inspecções periódicas obrigatórias',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Exigências essenciais de segurança' },
+      { artigo: 'Art. 8.º', descricao: 'Ventilação dos locais — regras de dimensionamento' },
+      { artigo: 'Art. 12.º', descricao: 'Condutas de evacuação de produtos da combustão' },
+      { artigo: 'Art. 18.º', descricao: 'Inspecções — periodicidade e obrigações' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/521-1999-661692',
+    estado: 'vigente',
+    tags: ['gás', 'instalações', 'segurança', 'ventilação', 'cozinha', 'GPL', 'gás natural', 'chaminé', 'combustão'],
+  },
+
+  // --- SCIE: Portaria complementar ---
+  {
+    id: 'portaria-773-2009',
+    sigla: 'Portaria 773/2009',
+    titulo: 'Procedimentos Administrativos de SCIE — Registo e Fiscalização',
+    diploma: 'Portaria n.º 773/2009, de 21 de julho',
+    categoria: 'incendios',
+    subcategoria: 'Procedimentos',
+    resumo: 'Define os procedimentos administrativos relativos à segurança contra incêndio em edifícios: registo na ANPC, credenciação de entidades, tramitação de pareceres e fiscalização. Complementa o RJ-SCIE (DL 220/2008) e o RT-SCIE (Portaria 1532/2008).',
+    aplicacao: [
+      'Registo de técnicos SCIE na ANPC',
+      'Tramitação de pareceres de SCIE junto da ANPC',
+      'Credenciação de entidades para projectos SCIE',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Registo de técnicos e entidades' },
+      { artigo: 'Art. 4.º', descricao: 'Tramitação de pareceres — ANPC' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/773-2009-493247',
+    estado: 'vigente',
+    tags: ['SCIE', 'ANPC', 'registo', 'fiscalização', 'procedimentos', 'incêndio', 'técnicos'],
+  },
+
+  // --- ACESSIBILIDADES: Portaria ascensores ---
+  {
+    id: 'portaria-138-2005',
+    sigla: 'Portaria 138/2005',
+    titulo: 'Prescrições Técnicas para Ascensores e Equipamentos de Elevação',
+    diploma: 'Portaria n.º 138/2005, de 2 de fevereiro',
+    categoria: 'acessibilidades',
+    subcategoria: 'Ascensores',
+    resumo: 'Estabelece as prescrições técnicas para a concepção, instalação, utilização e manutenção de ascensores, rampas mecânicas, escadas rolantes e plataformas elevatórias. Complementa o regime de acessibilidades (DL 163/2006) nas exigências para equipamentos de elevação em edifícios.',
+    aplicacao: [
+      'Dimensionamento de ascensores — cabina mínima para cadeira de rodas',
+      'Plataformas elevatórias — alternativa a rampas',
+      'Escadas mecânicas e rampas rolantes — requisitos',
+      'Manutenção e inspecção obrigatória',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Dimensões mínimas da cabina — acessibilidade' },
+      { artigo: 'Art. 5.º', descricao: 'Plataformas elevatórias — requisitos técnicos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/138-2005-518685',
+    estado: 'vigente',
+    tags: ['ascensores', 'elevadores', 'plataformas', 'acessibilidade', 'escadas mecânicas', 'manutenção'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PRIORIDADE MÉDIA — Tipologias específicas / fases avançadas
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- ESTRUTURAS: Regulamentos anteriores aos Eurocódigos ---
+  {
+    id: 'rsa',
+    sigla: 'RSA',
+    titulo: 'Regulamento de Segurança e Acções para Estruturas de Edifícios e Pontes',
+    diploma: 'Decreto-Lei n.º 235/83, de 31 de maio',
+    categoria: 'estruturas',
+    subcategoria: 'Acções',
+    resumo: 'Regulamento nacional de segurança estrutural que define as acções a considerar no dimensionamento: peso próprio, sobrecargas, vento, sismo, temperatura e neve. Anterior aos Eurocódigos, mas ainda referenciado em projectos e verificações, especialmente em edifícios existentes e na transição para os Eurocódigos.',
+    aplicacao: [
+      'Referência para verificação de edifícios existentes',
+      'Acções regulamentares: sobrecargas por tipo de utilização',
+      'Acção do vento — pressão dinâmica e coeficientes',
+      'Acção sísmica — zonamento e espectros (histórico)',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 8.º', descricao: 'Sobrecargas em pavimentos — valores por tipo de ocupação' },
+      { artigo: 'Art. 20.º', descricao: 'Acção do vento — pressão dinâmica' },
+      { artigo: 'Art. 28.º', descricao: 'Acção sísmica — zonamento do território' },
+      { artigo: 'Art. 35.º', descricao: 'Combinações de acções — estados limites' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/235-1983-382981',
+    estado: 'vigente',
+    tags: ['RSA', 'estruturas', 'acções', 'sobrecargas', 'vento', 'sismo', 'segurança estrutural', 'dimensionamento'],
+  },
+  {
+    id: 'rebap',
+    sigla: 'REBAP',
+    titulo: 'Regulamento de Estruturas de Betão Armado e Pré-Esforçado',
+    diploma: 'Decreto-Lei n.º 349-C/83, de 30 de julho',
+    categoria: 'estruturas',
+    subcategoria: 'Betão',
+    resumo: 'Regulamento nacional de dimensionamento de estruturas de betão armado e pré-esforçado. Define critérios de verificação da segurança, dimensionamento de secções, armaduras mínimas, recobrimentos e pormenorização. Anterior ao Eurocódigo 2 mas ainda utilizado como referência complementar.',
+    aplicacao: [
+      'Dimensionamento de vigas, pilares, lajes e fundações',
+      'Armaduras mínimas e recobrimentos',
+      'Verificação de edifícios existentes dimensionados pelo REBAP',
+      'Referência complementar ao Eurocódigo 2',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 12.º', descricao: 'Materiais — classes de betão e aço' },
+      { artigo: 'Art. 89.º', descricao: 'Armaduras mínimas de flexão' },
+      { artigo: 'Art. 94.º', descricao: 'Recobrimentos mínimos' },
+      { artigo: 'Art. 124.º', descricao: 'Disposições construtivas — pormenorização' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/349-c-1983-382768',
+    estado: 'vigente',
+    tags: ['REBAP', 'betão armado', 'pré-esforçado', 'armaduras', 'recobrimento', 'estruturas', 'dimensionamento'],
+  },
+
+  // --- AUTARQUIAS ---
+  {
+    id: 'lei-75-2013',
+    sigla: 'Lei 75/2013',
+    titulo: 'Regime Jurídico das Autarquias Locais',
+    diploma: 'Lei n.º 75/2013, de 12 de setembro',
+    categoria: 'urbanismo',
+    subcategoria: 'Autarquias',
+    resumo: 'Estabelece o regime jurídico das autarquias locais, define as competências das câmaras municipais, assembleias municipais e juntas de freguesia. Define as competências municipais em matéria de urbanismo, habitação, ordenamento do território e obras municipais. Diploma de referência para compreender a organização dos municípios.',
+    aplicacao: [
+      'Competências das câmaras em matéria de urbanismo',
+      'Delegação de competências em matéria de licenciamento',
+      'Organização dos serviços municipais de urbanismo',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 33.º', descricao: 'Competências da câmara municipal — urbanismo e ordenamento' },
+      { artigo: 'Art. 34.º', descricao: 'Competências delegáveis do presidente da câmara' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/75-2013-500023',
+    estado: 'vigente',
+    tags: ['autarquias', 'câmara municipal', 'competências', 'urbanismo', 'freguesia', 'municípios', 'delegação'],
+  },
+
+  // --- TAXAS URBANÍSTICAS ---
+  {
+    id: 'portaria-216e-2008',
+    sigla: 'Portaria 216-E/2008',
+    titulo: 'Taxa pela Realização de Infra-estruturas Urbanísticas (TMU)',
+    diploma: 'Portaria n.º 216-E/2008, de 3 de março',
+    categoria: 'urbanismo',
+    subcategoria: 'Taxas',
+    resumo: 'Fixa os parâmetros para o cálculo da taxa pela realização, manutenção e reforço de infraestruturas urbanísticas (TMU). Define a fórmula de cálculo que inclui a área de construção, o uso, a localização e o coeficiente de infraestruturas. Base de cálculo para as taxas cobradas pelos municípios.',
+    aplicacao: [
+      'Cálculo da TMU em operações de loteamento e edificação',
+      'Estimativa de custos de taxas urbanísticas para clientes',
+      'Base de cálculo dos regulamentos municipais de taxas',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Fórmula de cálculo da TMU' },
+      { artigo: 'Art. 2.º', descricao: 'Coeficientes de ponderação por uso e localização' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/216-e-2008-247230',
+    estado: 'vigente',
+    tags: ['TMU', 'taxas', 'infraestruturas', 'urbanísticas', 'câmara', 'loteamento', 'cálculo'],
+  },
+
+  // --- QUALIFICAÇÃO PROFISSIONAL ---
+  {
+    id: 'lei-40-2015',
+    sigla: 'Lei 40/2015',
+    titulo: 'Qualificação Profissional dos Técnicos de Construção',
+    diploma: 'Lei n.º 40/2015, de 1 de junho',
+    categoria: 'profissao',
+    subcategoria: 'Qualificação',
+    resumo: 'Define o regime de qualificação profissional exigível aos técnicos responsáveis pela elaboração e subscrição de projectos, pela fiscalização de obra e pela direcção de obra. Estabelece as competências específicas de arquitectos, engenheiros e engenheiros técnicos, delimitando quem pode subscrever cada tipo de projecto.',
+    aplicacao: [
+      'Verificação de competências — quem pode subscrever cada projecto',
+      'Arquitectos: projectos de arquitectura, interiores, paisagismo',
+      'Engenheiros: projectos de estruturas, instalações, SCIE',
+      'Direcção e fiscalização de obra — qualificações exigidas',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Qualificação de projectistas — habilitações por especialidade' },
+      { artigo: 'Art. 6.º', descricao: 'Director de obra — qualificação exigida' },
+      { artigo: 'Art. 7.º', descricao: 'Director de fiscalização — qualificação exigida' },
+      { artigo: 'Art. 14.º', descricao: 'Obras de escassa relevância urbanística — excepções' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/40-2015-67356974',
+    estado: 'vigente',
+    tags: ['qualificação', 'projectista', 'director de obra', 'fiscalização', 'arquitecto', 'engenheiro', 'competências'],
+  },
+
+  // --- SCIE: Alteração 2019 ---
+  {
+    id: 'lei-123-2019',
+    sigla: 'Lei 123/2019',
+    titulo: 'Alteração ao Regime Jurídico da SCIE',
+    diploma: 'Lei n.º 123/2019, de 18 de outubro',
+    categoria: 'incendios',
+    subcategoria: 'Alteração',
+    resumo: 'Procede à alteração do DL 220/2008 (RJ-SCIE), actualizando e clarificando diversos aspectos do regime de segurança contra incêndio: classificação de utilizações-tipo, responsabilidades dos técnicos, procedimentos de licenciamento e medidas de autoprotecção.',
+    aplicacao: [
+      'Alterações ao regime de SCIE — versão actualizada',
+      'Novas obrigações de autoprotecção',
+      'Classificação de UT — clarificações',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Alterações ao DL 220/2008 — artigos revistos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/123-2019-125571091',
+    estado: 'vigente',
+    tags: ['SCIE', 'incêndio', 'alteração', 'autoprotecção', 'utilizações-tipo', '2019'],
+  },
+
+  // --- HIGIENE E SEGURANÇA NO TRABALHO ---
+  {
+    id: 'portaria-53-71',
+    sigla: 'Portaria 53/71',
+    titulo: 'Regulamento Geral de Higiene e Segurança do Trabalho nos Estabelecimentos Industriais',
+    diploma: 'Portaria n.º 53/71, de 3 de fevereiro',
+    categoria: 'estaleiros',
+    subcategoria: 'Higiene e segurança',
+    resumo: 'Regulamento geral de higiene e segurança nos locais de trabalho. Define condições mínimas de iluminação, ventilação, temperatura, instalações sanitárias, vestiários e refeitórios. Aplica-se a todos os estabelecimentos industriais, incluindo estaleiros de construção civil.',
+    aplicacao: [
+      'Condições de higiene em estaleiros de obra',
+      'Instalações sanitárias e vestiários em obra',
+      'Iluminação e ventilação nos locais de trabalho',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Iluminação — níveis mínimos' },
+      { artigo: 'Art. 11.º', descricao: 'Instalações sanitárias — requisitos' },
+      { artigo: 'Art. 13.º', descricao: 'Vestiários e refeitórios' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/53-1971-462858',
+    estado: 'vigente',
+    tags: ['higiene', 'segurança', 'trabalho', 'estaleiro', 'iluminação', 'sanitários', 'vestiários'],
+  },
+
+  // --- ACÚSTICA: versões base ---
+  {
+    id: 'dl-129-2002',
+    sigla: 'DL 129/2002',
+    titulo: 'Regulamento dos Requisitos Acústicos dos Edifícios (versão base)',
+    diploma: 'Decreto-Lei n.º 129/2002, de 11 de maio',
+    ultimaAlteracao: 'Decreto-Lei n.º 96/2008, de 9 de junho',
+    categoria: 'acustica',
+    subcategoria: 'Regulamento base',
+    resumo: 'Versão base do RRAE que estabelece os requisitos acústicos dos edifícios: isolamento sonoro a sons aéreos e de percussão, nível sonoro dos equipamentos e condicionamento acústico interior. O DL 96/2008 alterou os valores limite. Ler em conjunto com a versão consolidada.',
+    aplicacao: [
+      'Referência histórica — edifícios licenciados entre 2002 e 2008',
+      'Base do regime acústico — conceitos e definições',
+      'Leitura conjunta com DL 96/2008',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 5.º', descricao: 'Edifícios habitacionais — índices de isolamento' },
+      { artigo: 'Art. 7.º', descricao: 'Edifícios comerciais e serviços — requisitos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/129-2002-303021',
+    estado: 'vigente',
+    tags: ['RRAE', 'acústica', 'isolamento', 'sons aéreos', 'percussão', 'regulamento base'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PRIORIDADE BAIXA — Referência e casos específicos
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- RADÃO ---
+  {
+    id: 'lei-108-2018',
+    sigla: 'Lei 108/2018',
+    titulo: 'Protecção Contra a Exposição ao Radão em Edifícios',
+    diploma: 'Lei n.º 108/2018, de 3 de dezembro',
+    categoria: 'edificacoes',
+    subcategoria: 'Radão',
+    resumo: 'Estabelece o regime de protecção contra a exposição ao radão em edifícios. O radão é um gás radioactivo natural que se acumula em espaços fechados, especialmente em caves e pisos térreos sobre solos graníticos. Define limites de concentração, obrigações de medição e medidas de mitigação.',
+    aplicacao: [
+      'Edifícios em zonas de risco de radão (zonas graníticas)',
+      'Medição obrigatória em edifícios públicos e habitação',
+      'Medidas construtivas de mitigação — ventilação do solo',
+      'Limite de referência: 300 Bq/m³',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Nível de referência — 300 Bq/m³' },
+      { artigo: 'Art. 5.º', descricao: 'Edifícios públicos — medição obrigatória' },
+      { artigo: 'Art. 7.º', descricao: 'Medidas de mitigação construtivas' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/108-2018-117202653',
+    estado: 'vigente',
+    tags: ['radão', 'radioactividade', 'cave', 'granito', 'ventilação', 'saúde', 'medição'],
+  },
+
+  // --- AVALIAÇÃO DE IMÓVEIS ---
+  {
+    id: 'portaria-420-2015',
+    sigla: 'Portaria 420/2015',
+    titulo: 'Critérios e Coeficientes de Avaliação de Imóveis',
+    diploma: 'Portaria n.º 420/2015, de 31 de dezembro',
+    categoria: 'habitacao',
+    subcategoria: 'Avaliação',
+    resumo: 'Actualiza os coeficientes de localização, afectação e qualidade para efeitos de avaliação patrimonial tributária de imóveis (Valor Patrimonial Tributário — VPT). Define os zonamentos e coeficientes de cada município. Relevante para cálculo de IMI e IMT.',
+    aplicacao: [
+      'Cálculo do VPT de imóveis — coeficientes actualizados',
+      'Estimativa de IMI para clientes',
+      'Coeficientes de localização por município',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Coeficientes de localização — actualização por município' },
+      { artigo: 'Art. 2.º', descricao: 'Coeficientes de qualidade e conforto' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/420-2015-72420454',
+    estado: 'vigente',
+    tags: ['avaliação', 'VPT', 'IMI', 'imóveis', 'coeficientes', 'localização', 'patrimonial'],
+  },
+
+  // --- REGULAMENTOS TÉRMICOS HISTÓRICOS ---
+  {
+    id: 'dl-80-2006',
+    sigla: 'RCCTE',
+    titulo: 'Regulamento das Características de Comportamento Térmico dos Edifícios (revogado)',
+    diploma: 'Decreto-Lei n.º 80/2006, de 4 de abril',
+    categoria: 'energia',
+    subcategoria: 'Térmico (histórico)',
+    resumo: 'Regulamento que definiu os requisitos de comportamento térmico dos edifícios de habitação: coeficientes de transmissão térmica da envolvente, necessidades de aquecimento e arrefecimento, classe energética. Revogado pelo DL 118/2013 (SCE/REH), mas necessário para verificação de edifícios licenciados entre 2006 e 2013.',
+    aplicacao: [
+      'Referência para edifícios licenciados entre 2006 e 2013',
+      'Verificação de edifícios existentes dimensionados pelo RCCTE',
+      'Comparação com o actual REH (DL 118/2013)',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 4.º', descricao: 'Requisitos energéticos — Nic, Nvc, Nac, Ntc' },
+      { artigo: 'Anexo III', descricao: 'Coeficientes de transmissão térmica máximos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/80-2006-672459',
+    estado: 'revogado',
+    tags: ['RCCTE', 'térmico', 'envolvente', 'coeficientes', 'classe energética', 'revogado', 'histórico'],
+  },
+
+  // --- REABILITAÇÃO: Lei de bases ---
+  {
+    id: 'lei-32-2012',
+    sigla: 'Lei 32/2012',
+    titulo: 'Regime Jurídico da Reabilitação Urbana (alteração)',
+    diploma: 'Lei n.º 32/2012, de 14 de agosto',
+    categoria: 'urbanismo',
+    subcategoria: 'Reabilitação',
+    resumo: 'Altera o Regime Jurídico da Reabilitação Urbana (DL 307/2009), reforçando os instrumentos de intervenção em ARU: operações de reabilitação urbana simples e sistemática, direito de preferência, expropriação, venda forçada e demolição. Clarifica a delimitação de ARU e os benefícios fiscais associados.',
+    aplicacao: [
+      'Delimitação de Áreas de Reabilitação Urbana (ARU)',
+      'Benefícios fiscais em ARU (IVA reduzido, isenção IMI/IMT)',
+      'Instrumentos de intervenção — venda forçada, demolição',
+      'Alterações ao DL 307/2009 — versão actualizada',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Alterações ao DL 307/2009 — artigos revistos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/32-2012-175405',
+    estado: 'vigente',
+    tags: ['reabilitação', 'ARU', 'benefícios fiscais', 'IVA', 'IMI', 'venda forçada', 'alteração'],
+  },
+
+  // --- NZEB ---
+  {
+    id: 'dl-101d-2020-nzeb',
+    sigla: 'NZEB',
+    titulo: 'Edifícios com Necessidades Quase Nulas de Energia (NZEB)',
+    diploma: 'Decreto-Lei n.º 101-D/2020, de 7 de dezembro (+ DL 118/2013)',
+    categoria: 'energia',
+    subcategoria: 'NZEB',
+    resumo: 'Os requisitos NZEB (Nearly Zero Energy Buildings) são obrigatórios para todos os edifícios novos desde 31/12/2020, conforme a Directiva Europeia 2010/31/UE transposta pelo DL 118/2013 e actualizada pelo DL 101-D/2020. Exigem um desempenho energético muito elevado, com a energia necessária quase totalmente coberta por fontes renováveis. Nota: esta entrada é um complemento ao DL 101-D/2020 já registado, focando especificamente os requisitos NZEB.',
+    aplicacao: [
+      'Todos os edifícios novos desde 2021 — requisito NZEB obrigatório',
+      'Classe energética mínima A (novos) ou B- (grandes reabilitações)',
+      'Integração obrigatória de renováveis (solar, biomassa)',
+      'Reforço do isolamento térmico da envolvente',
+    ],
+    artigosChave: [
+      { artigo: 'DL 101-D/2020 Art. 3.º', descricao: 'Requisitos mínimos de desempenho energético' },
+      { artigo: 'DL 101-D/2020 Art. 5.º', descricao: 'Edifícios com necessidades quase nulas de energia' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/101-d-2020-150870704',
+    estado: 'vigente',
+    tags: ['NZEB', 'energia', 'renováveis', 'edifícios novos', 'classe A', 'eficiência', 'directiva europeia'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // OASRS — Diplomas adicionais identificados
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- REGIME DE ARRENDAMENTO (complementar) ---
+  {
+    id: 'lei-6-2006',
+    sigla: 'NRAU (base)',
+    titulo: 'Novo Regime do Arrendamento Urbano — Versão Base',
+    diploma: 'Lei n.º 6/2006, de 27 de fevereiro',
+    ultimaAlteracao: 'Lei n.º 13/2019, de 12 de fevereiro',
+    categoria: 'habitacao',
+    subcategoria: 'Arrendamento',
+    resumo: 'Versão base do Novo Regime do Arrendamento Urbano (NRAU). Revoga o RAU e estabelece o regime geral do arrendamento urbano: tipos de contrato (habitação e não habitacional), duração, renda, actualização, transmissão e cessação. Alterado múltiplas vezes, incluindo pela Lei 31/2012 e Lei 13/2019.',
+    aplicacao: [
+      'Contratos de arrendamento — regime geral',
+      'Actualização de rendas — mecanismos legais',
+      'Cessação do arrendamento — denúncia e oposição à renovação',
+      'Obras em imóveis arrendados — responsabilidades',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 4.º', descricao: 'Tipos de arrendamento — habitacional e não habitacional' },
+      { artigo: 'Art. 14.º', descricao: 'Duração e renovação do contrato' },
+      { artigo: 'Art. 24.º', descricao: 'Actualização de rendas — mecanismo transitório' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/6-2006-681297',
+    estado: 'vigente',
+    tags: ['NRAU', 'arrendamento', 'renda', 'contrato', 'habitação', 'actualização', 'cessação'],
+  },
+
+  // --- EMPREENDIMENTOS TURÍSTICOS (complementar ao DL 39/2008) ---
+  {
+    id: 'portaria-327-2008',
+    sigla: 'Portaria 327/2008',
+    titulo: 'Classificação e Requisitos de Empreendimentos Turísticos',
+    diploma: 'Portaria n.º 327/2008, de 28 de abril',
+    categoria: 'edificacoes',
+    subcategoria: 'Turismo',
+    resumo: 'Define os requisitos específicos para a classificação de empreendimentos turísticos: hotéis (1 a 5 estrelas), apartamentos turísticos, aldeamentos, turismo de habitação e turismo no espaço rural. Estabelece áreas mínimas, equipamentos obrigatórios e serviços por categoria.',
+    aplicacao: [
+      'Classificação de hotéis — requisitos por estrela',
+      'Áreas mínimas de quartos e suites',
+      'Equipamentos obrigatórios por categoria',
+      'Turismo de habitação e rural — requisitos específicos',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Hotéis — requisitos por classificação (1 a 5 estrelas)' },
+      { artigo: 'Art. 7.º', descricao: 'Apartamentos turísticos — áreas mínimas' },
+      { artigo: 'Art. 10.º', descricao: 'Turismo de habitação — requisitos' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/327-2008-249386',
+    estado: 'vigente',
+    tags: ['turismo', 'hotel', 'classificação', 'estrelas', 'apartamentos', 'habitação', 'rural', 'áreas mínimas'],
+  },
+
+  // --- REGIME DE OBRAS EM PARTES COMUNS ---
+  {
+    id: 'dl-268-94',
+    sigla: 'DL 268/94',
+    titulo: 'Propriedade Horizontal — Título Constitutivo e Obras',
+    diploma: 'Decreto-Lei n.º 268/94, de 25 de outubro',
+    categoria: 'habitacao',
+    subcategoria: 'Propriedade horizontal',
+    resumo: 'Altera o regime da propriedade horizontal no Código Civil, clarificando regras sobre o título constitutivo, partes comuns, obras em fracções autónomas e deliberações de condomínio. Relevante para projectos de alteração em edifícios em propriedade horizontal.',
+    aplicacao: [
+      'Obras em fracções autónomas — necessidade de autorização do condomínio',
+      'Alteração de partes comuns — maioria qualificada',
+      'Título constitutivo — modificação e registo',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Alterações ao Código Civil — propriedade horizontal' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/268-1994-228054',
+    estado: 'vigente',
+    tags: ['propriedade horizontal', 'condomínio', 'fracção', 'partes comuns', 'obras', 'título constitutivo'],
+  },
 ];

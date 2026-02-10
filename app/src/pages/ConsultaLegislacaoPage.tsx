@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Scale, Search, ChevronDown, ChevronRight, ExternalLink, BookOpen, Filter,
@@ -6,10 +6,12 @@ import {
   Map, Home, GraduationCap, Shield, HardHat, ArrowLeft, Download, Printer,
   CheckCircle2, AlertCircle, Info, X, FileText, Link2, Tag, Building, Factory,
   Hammer, Landmark, Hotel, TreePine, Sparkles, ClipboardList, ChevronUp,
+  Copy, Check, AlertTriangle, Clock, PenTool, FileCheck, Ruler,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { legislacao, CATEGORIAS, type Diploma, type CategoriaLegislacao } from '../data/legislacao';
 import { TIPOLOGIAS, TIPOLOGIA_DIPLOMAS, type Tipologia, type TipologiaDiploma } from '../data/tipologias';
+import { REQUISITOS_POR_DIPLOMA, FASES_PROJECTO, type Requisito, type FaseProjeto, type Criticidade } from '../data/requisitosConformidade';
 
 // Icon maps
 const TIPOLOGIA_ICON_MAP: Record<string, React.ElementType> = {
@@ -18,6 +20,10 @@ const TIPOLOGIA_ICON_MAP: Record<string, React.ElementType> = {
 
 const CATEGORIA_ICON_MAP: Record<string, React.ElementType> = {
   Building2, Warehouse, Accessibility, Zap, Flame, Volume2, PlugZap, Wind, Wifi, Map, Home, GraduationCap, Shield, HardHat,
+};
+
+const FASE_ICON_MAP: Record<string, React.ElementType> = {
+  Search, PenTool, FileCheck, Ruler, HardHat,
 };
 
 const COR_MAP: Record<string, { bg: string; border: string; text: string; badge: string; light: string }> = {
@@ -31,12 +37,22 @@ const COR_MAP: Record<string, { bg: string; border: string; text: string; badge:
   slate:   { bg: 'bg-slate-500/10',   border: 'border-slate-500/30',   text: 'text-slate-600 dark:text-slate-400',   badge: 'bg-slate-500/20 text-slate-700 dark:text-slate-300',   light: 'bg-slate-50 dark:bg-slate-950/30' },
   lime:    { bg: 'bg-lime-500/10',    border: 'border-lime-500/30',    text: 'text-lime-600 dark:text-lime-400',    badge: 'bg-lime-500/20 text-lime-700 dark:text-lime-300',    light: 'bg-lime-50 dark:bg-lime-950/30' },
   pink:    { bg: 'bg-pink-500/10',    border: 'border-pink-500/30',    text: 'text-pink-600 dark:text-pink-400',    badge: 'bg-pink-500/20 text-pink-700 dark:text-pink-300',    light: 'bg-pink-50 dark:bg-pink-950/30' },
+  stone:   { bg: 'bg-stone-500/10',   border: 'border-stone-500/30',   text: 'text-stone-600 dark:text-stone-400',   badge: 'bg-stone-500/20 text-stone-700 dark:text-stone-300',   light: 'bg-stone-50 dark:bg-stone-950/30' },
+  red:     { bg: 'bg-red-500/10',     border: 'border-red-500/30',     text: 'text-red-600 dark:text-red-400',     badge: 'bg-red-500/20 text-red-700 dark:text-red-300',     light: 'bg-red-50 dark:bg-red-950/30' },
+  yellow:  { bg: 'bg-yellow-500/10',  border: 'border-yellow-500/30',  text: 'text-yellow-600 dark:text-yellow-400',  badge: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300',  light: 'bg-yellow-50 dark:bg-yellow-950/30' },
+  indigo:  { bg: 'bg-indigo-500/10',  border: 'border-indigo-500/30',  text: 'text-indigo-600 dark:text-indigo-400',  badge: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',  light: 'bg-indigo-50 dark:bg-indigo-950/30' },
 };
 
 const RELEVANCIA_CONFIG: Record<string, { label: string; icon: React.ElementType; cor: string; bg: string }> = {
   obrigatorio: { label: 'Obrigatório', icon: CheckCircle2, cor: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/30' },
   frequente:   { label: 'Frequente',   icon: AlertCircle,  cor: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' },
   condicional: { label: 'Condicional', icon: Info,          cor: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
+};
+
+const CRITICIDADE_CONFIG: Record<Criticidade, { label: string; cor: string; bg: string }> = {
+  critico:     { label: 'Crítico',     cor: 'text-red-600 dark:text-red-400',   bg: 'bg-red-500/10 border-red-500/30' },
+  importante:  { label: 'Importante',  cor: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' },
+  informativo: { label: 'Informativo', cor: 'text-blue-600 dark:text-blue-400',  bg: 'bg-blue-500/10 border-blue-500/30' },
 };
 
 const diplomaMap = useMemoLookup();
@@ -54,6 +70,7 @@ export default function ConsultaLegislacaoPage() {
   const [filterRelevancia, setFilterRelevancia] = useState<string | null>(null);
   const [filterCategoria, setFilterCategoria] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [copied, setCopied] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   const tipologia = TIPOLOGIAS.find(t => t.id === selectedTipologia);
@@ -69,6 +86,34 @@ export default function ConsultaLegislacaoPage() {
       }))
       .filter(td => td.diploma);
   }, [selectedTipologia]);
+
+  // Requisitos for all diplomas in this typology
+  const allRequisitos = useMemo(() => {
+    const reqs: Requisito[] = [];
+    for (const td of tipologiaDiplomas) {
+      const dr = REQUISITOS_POR_DIPLOMA[td.diplomaId];
+      if (dr) reqs.push(...dr);
+    }
+    return reqs;
+  }, [tipologiaDiplomas]);
+
+  // Requisitos stats by phase
+  const reqStatsByPhase = useMemo(() => {
+    const phaseMap: Record<FaseProjeto, { total: number; critico: number; importante: number; informativo: number }> = {} as any;
+    for (const f of FASES_PROJECTO) {
+      phaseMap[f.id] = { total: 0, critico: 0, importante: 0, informativo: 0 };
+    }
+    for (const r of allRequisitos) {
+      if (phaseMap[r.fase]) {
+        phaseMap[r.fase].total++;
+        phaseMap[r.fase][r.criticidade]++;
+      }
+    }
+    return phaseMap;
+  }, [allRequisitos]);
+
+  // Total critical requirements
+  const totalCriticos = allRequisitos.filter(r => r.criticidade === 'critico').length;
 
   // Filter diplomas
   const filteredDiplomas = useMemo(() => {
@@ -117,6 +162,71 @@ export default function ConsultaLegislacaoPage() {
     const catIds = new Set(tipologiaDiplomas.map(d => d.diploma.categoria));
     return CATEGORIAS.filter(c => catIds.has(c.id));
   }, [tipologiaDiplomas]);
+
+  // Get requisitos count for a diploma
+  const getRequisitosForDiploma = useCallback((diplomaId: string): Requisito[] => {
+    return REQUISITOS_POR_DIPLOMA[diplomaId] || [];
+  }, []);
+
+  // Export legal framework text
+  const generateEnquadramentoLegal = useCallback(() => {
+    if (!tipologia) return '';
+    const lines: string[] = [];
+    lines.push(`ENQUADRAMENTO LEGAL — ${tipologia.nome.toUpperCase()}`);
+    lines.push(`${'═'.repeat(60)}`);
+    lines.push(`Gerado em ${new Date().toLocaleDateString('pt-PT')} | FA-360 Platform`);
+    lines.push('');
+
+    // Summary
+    lines.push(`RESUMO: ${stats.total} diplomas aplicáveis (${stats.obrigatorio} obrigatórios, ${stats.frequente} frequentes, ${stats.condicional} condicionais)`);
+    lines.push(`REQUISITOS: ${allRequisitos.length} requisitos verificáveis (${totalCriticos} críticos)`);
+    lines.push('');
+
+    for (const { categoria, diplomas } of grouped) {
+      lines.push(`─── ${categoria.nome.toUpperCase()} (${ diplomas.length}) ───`);
+      lines.push('');
+
+      for (const item of diplomas) {
+        const d = item.diploma;
+        const relLabel = RELEVANCIA_CONFIG[item.relevancia]?.label || item.relevancia;
+        const reqs = getRequisitosForDiploma(d.id);
+
+        lines.push(`  ${d.sigla} — ${d.titulo}`);
+        lines.push(`  Diploma: ${d.diploma}`);
+        lines.push(`  Relevância: ${relLabel}`);
+        if (d.linkDRE) lines.push(`  DRE: ${d.linkDRE}`);
+        lines.push(`  Resumo: ${d.resumo.slice(0, 300)}${d.resumo.length > 300 ? '...' : ''}`);
+
+        if (item.nota) {
+          lines.push(`  Nota: ${item.nota}`);
+        }
+
+        if (reqs.length > 0) {
+          lines.push(`  Requisitos (${reqs.length}):`);
+          for (const r of reqs) {
+            const faseNome = FASES_PROJECTO.find(f => f.id === r.fase)?.nome || r.fase;
+            const critLabel = CRITICIDADE_CONFIG[r.criticidade]?.label || r.criticidade;
+            lines.push(`    [${faseNome}] [${critLabel}] ${r.texto}`);
+          }
+        }
+
+        lines.push('');
+      }
+    }
+
+    lines.push('─── NOTA ───');
+    lines.push('Este documento é de apoio técnico. Consulte sempre o diploma oficial no DRE para efeitos legais.');
+
+    return lines.join('\n');
+  }, [tipologia, stats, allRequisitos, totalCriticos, grouped, getRequisitosForDiploma]);
+
+  const handleCopyEnquadramento = useCallback(() => {
+    const text = generateEnquadramentoLegal();
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }, [generateEnquadramentoLegal]);
 
   const handlePrint = () => {
     window.print();
@@ -185,7 +295,7 @@ export default function ConsultaLegislacaoPage() {
             const Icon = TIPOLOGIA_ICON_MAP[tip.icon] || Building2;
             const cor = COR_MAP[tip.cor] || COR_MAP.blue;
             const diplomaCount = TIPOLOGIA_DIPLOMAS[tip.id]?.length || 0;
-            const obrigatorioCount = TIPOLOGIA_DIPLOMAS[tip.id]?.filter(d => d.relevancia === 'obrigatorio').length || 0;
+            const obrigatorioCount = TIPOLOGIA_DIPLOMAS[tip.id]?.filter((d: TipologiaDiploma) => d.relevancia === 'obrigatorio').length || 0;
 
             return (
               <motion.button
@@ -223,8 +333,7 @@ export default function ConsultaLegislacaoPage() {
             <Info className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
             <div className="text-sm text-muted-foreground space-y-1">
               <p><strong>Como funciona:</strong> Selecione a tipologia do projecto para obter uma lista completa e organizada de toda a legislação aplicável.</p>
-              <p>Cada diploma é classificado como <span className="text-red-600 dark:text-red-400 font-medium">Obrigatório</span>, <span className="text-amber-600 dark:text-amber-400 font-medium">Frequente</span> ou <span className="text-blue-600 dark:text-blue-400 font-medium">Condicional</span>, com notas explicativas sobre a sua aplicação.</p>
-              <p>Pode imprimir ou exportar o relatório para utilização em reuniões, memórias descritivas e processos de licenciamento.</p>
+              <p>Cada diploma é classificado como <span className="text-red-600 dark:text-red-400 font-medium">Obrigatório</span>, <span className="text-amber-600 dark:text-amber-400 font-medium">Frequente</span> ou <span className="text-blue-600 dark:text-blue-400 font-medium">Condicional</span>, com notas explicativas, links para o DRE e requisitos de conformidade por fase de projecto.</p>
             </div>
           </div>
         </div>
@@ -260,11 +369,15 @@ export default function ConsultaLegislacaoPage() {
             </div>
             <div className="flex items-center gap-2 print:hidden">
               <button
-                onClick={() => navigate('/legislacao')}
-                className="flex items-center gap-2 px-3 py-2 bg-muted hover:bg-muted/80 rounded-lg text-sm font-medium transition-colors"
+                onClick={handleCopyEnquadramento}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  copied
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    : 'bg-muted hover:bg-muted/80'
+                }`}
               >
-                <Scale className="w-4 h-4" />
-                Biblioteca
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Copiado' : 'Copiar Enquadramento'}
               </button>
               <button
                 onClick={handlePrint}
@@ -276,11 +389,11 @@ export default function ConsultaLegislacaoPage() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-4 gap-3 mt-4">
+          {/* Stats row */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
             <div className="text-center p-3 bg-background/60 rounded-xl">
               <p className="text-xl font-bold">{stats.total}</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Diplomas</p>
             </div>
             <button
               onClick={() => setFilterRelevancia(filterRelevancia === 'obrigatorio' ? null : 'obrigatorio')}
@@ -303,13 +416,57 @@ export default function ConsultaLegislacaoPage() {
               <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{stats.condicional}</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Condicionais</p>
             </button>
+            <div className="text-center p-3 bg-background/60 rounded-xl">
+              <p className="text-xl font-bold">{allRequisitos.length}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Requisitos</p>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Phase Overview Panel */}
+      {allRequisitos.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4 print:p-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Requisitos por Fase de Projecto</h3>
+            {totalCriticos > 0 && (
+              <span className="ml-auto flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 font-medium">
+                <AlertTriangle className="w-3 h-3" />
+                {totalCriticos} críticos
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {FASES_PROJECTO.map(fase => {
+              const pStats = reqStatsByPhase[fase.id];
+              const FIcon = FASE_ICON_MAP[fase.icon] || FileCheck;
+              const fCor = COR_MAP[fase.cor] || COR_MAP.blue;
+              return (
+                <div key={fase.id} className={`p-3 rounded-lg border ${fCor.border} ${fCor.light}`}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <FIcon className={`w-3.5 h-3.5 ${fCor.text}`} />
+                    <span className="text-xs font-semibold truncate">{fase.nome}</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-lg font-bold">{pStats.total}</span>
+                    <span className="text-[10px] text-muted-foreground">req.</span>
+                  </div>
+                  {pStats.critico > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                      <span className="text-[10px] text-red-600 dark:text-red-400 font-medium">{pStats.critico} crítico{pStats.critico > 1 ? 's' : ''}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-3 print:hidden">
-        {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
@@ -326,7 +483,6 @@ export default function ConsultaLegislacaoPage() {
           )}
         </div>
 
-        {/* Category filter */}
         <select
           value={filterCategoria || ''}
           onChange={e => setFilterCategoria(e.target.value || null)}
@@ -338,7 +494,6 @@ export default function ConsultaLegislacaoPage() {
           ))}
         </select>
 
-        {/* Clear filters */}
         {(filterRelevancia || filterCategoria || searchQuery) && (
           <button
             onClick={() => { setFilterRelevancia(null); setFilterCategoria(null); setSearchQuery(''); }}
@@ -386,46 +541,79 @@ export default function ConsultaLegislacaoPage() {
                   const isExpanded = expandedDiploma === d.id;
                   const relCfg = RELEVANCIA_CONFIG[item.relevancia];
                   const RelIcon = relCfg.icon;
+                  const reqs = getRequisitosForDiploma(d.id);
+                  const critCount = reqs.filter(r => r.criticidade === 'critico').length;
 
                   return (
                     <div
                       key={d.id}
                       className={`bg-card border rounded-xl overflow-hidden transition-all ${isExpanded ? 'border-primary/30 shadow-md' : 'border-border hover:border-muted-foreground/20'} print:break-inside-avoid`}
                     >
-                      {/* Card Header */}
-                      <button
-                        onClick={() => setExpandedDiploma(isExpanded ? null : d.id)}
-                        className="w-full flex items-start gap-3 p-4 text-left print:p-3"
-                      >
-                        <div className={`w-8 h-8 rounded-lg border ${relCfg.bg} flex items-center justify-center shrink-0 mt-0.5`}>
-                          <RelIcon className={`w-4 h-4 ${relCfg.cor}`} />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold text-primary">{d.sigla}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${relCfg.bg} border ${relCfg.cor}`}>
-                              {relCfg.label}
-                            </span>
-                            {d.simplex && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
-                                <Sparkles className="w-2.5 h-2.5" />
-                                Simplex
-                              </span>
-                            )}
+                      {/* Card Header — always visible */}
+                      <div className="flex items-start gap-3 p-4 print:p-3">
+                        <button
+                          onClick={() => setExpandedDiploma(isExpanded ? null : d.id)}
+                          className="flex items-start gap-3 flex-1 text-left min-w-0"
+                        >
+                          <div className={`w-8 h-8 rounded-lg border ${relCfg.bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                            <RelIcon className={`w-4 h-4 ${relCfg.cor}`} />
                           </div>
-                          <p className="text-sm font-medium mt-1 leading-snug">{d.titulo}</p>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1 italic">{item.nota}</p>
-                        </div>
 
-                        <div className="print:hidden">
-                          {isExpanded ? (
-                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex-1 min-w-0">
+                            {/* Top row: sigla + badges */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-primary">{d.sigla}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${relCfg.bg} border ${relCfg.cor}`}>
+                                {relCfg.label}
+                              </span>
+                              {d.simplex && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                                  <Sparkles className="w-2.5 h-2.5" />
+                                  Simplex
+                                </span>
+                              )}
+                              {reqs.length > 0 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground font-medium">
+                                  {reqs.length} req.{critCount > 0 && <span className="text-red-500 ml-0.5">({critCount} crít.)</span>}
+                                </span>
+                              )}
+                            </div>
+                            {/* Title */}
+                            <p className="text-sm font-medium mt-1 leading-snug">{d.titulo}</p>
+                            {/* Compact summary — always visible */}
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{d.resumo}</p>
+                            {/* Nota */}
+                            <p className="text-xs mt-1.5 italic text-muted-foreground/80 line-clamp-1">{item.nota}</p>
+                          </div>
+                        </button>
+
+                        {/* Right side: DRE link + expand */}
+                        <div className="flex items-center gap-1.5 shrink-0 print:hidden">
+                          {d.linkDRE && (
+                            <a
+                              href={d.linkDRE}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={e => e.stopPropagation()}
+                              className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-medium hover:bg-primary/20 transition-colors"
+                              title="Abrir no Diário da República"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              DRE
+                            </a>
                           )}
+                          <button
+                            onClick={() => setExpandedDiploma(isExpanded ? null : d.id)}
+                            className="p-1 rounded hover:bg-muted transition-colors"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </button>
                         </div>
-                      </button>
+                      </div>
 
                       {/* Expanded Detail */}
                       <AnimatePresence>
@@ -450,16 +638,10 @@ export default function ConsultaLegislacaoPage() {
                                 <p className="text-sm">{item.nota}</p>
                               </div>
 
-                              {/* Resumo */}
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Resumo</p>
-                                <p className="text-sm leading-relaxed">{d.resumo}</p>
-                              </div>
-
                               {/* Quando se aplica */}
-                              {d.aplicacao.length > 0 && (
+                              {d.aplicacao && d.aplicacao.length > 0 && (
                                 <div>
-                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Quando se aplica</p>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">O que cumprir</p>
                                   <ul className="space-y-1">
                                     {d.aplicacao.map((a: string, i: number) => (
                                       <li key={i} className="flex items-start gap-2 text-sm">
@@ -472,7 +654,7 @@ export default function ConsultaLegislacaoPage() {
                               )}
 
                               {/* Artigos-chave */}
-                              {d.artigosChave.length > 0 && (
+                              {d.artigosChave && d.artigosChave.length > 0 && (
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Artigos-chave</p>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
@@ -486,6 +668,51 @@ export default function ConsultaLegislacaoPage() {
                                 </div>
                               )}
 
+                              {/* ═══ REQUISITOS DE CONFORMIDADE ═══ */}
+                              {reqs.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                    Requisitos de Conformidade ({reqs.length})
+                                  </p>
+                                  <div className="space-y-3">
+                                    {FASES_PROJECTO.map(fase => {
+                                      const faseReqs = reqs.filter(r => r.fase === fase.id);
+                                      if (faseReqs.length === 0) return null;
+                                      const fCor = COR_MAP[fase.cor] || COR_MAP.blue;
+                                      const FIcon = FASE_ICON_MAP[fase.icon] || FileCheck;
+
+                                      return (
+                                        <div key={fase.id} className={`rounded-lg border ${fCor.border} overflow-hidden`}>
+                                          <div className={`flex items-center gap-2 px-3 py-2 ${fCor.light}`}>
+                                            <FIcon className={`w-3.5 h-3.5 ${fCor.text}`} />
+                                            <span className="text-xs font-semibold">{fase.nome}</span>
+                                            <span className="text-[10px] text-muted-foreground ml-auto">{faseReqs.length} req.</span>
+                                          </div>
+                                          <div className="divide-y divide-border">
+                                            {faseReqs.map(req => {
+                                              const critCfg = CRITICIDADE_CONFIG[req.criticidade];
+                                              return (
+                                                <div key={req.id} className="px-3 py-2 flex items-start gap-2">
+                                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 mt-0.5 border ${critCfg.bg} ${critCfg.cor}`}>
+                                                    {critCfg.label}
+                                                  </span>
+                                                  <div className="min-w-0">
+                                                    <p className="text-xs font-medium leading-snug">{req.texto}</p>
+                                                    {req.detalhe && (
+                                                      <p className="text-[11px] text-muted-foreground mt-0.5">{req.detalhe}</p>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Links */}
                               <div className="flex flex-wrap gap-2 pt-1">
                                 {d.linkDRE && (
@@ -493,10 +720,10 @@ export default function ConsultaLegislacaoPage() {
                                     href={d.linkDRE}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-muted/60 hover:bg-muted rounded-lg text-xs font-medium transition-colors"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-medium transition-colors"
                                   >
                                     <ExternalLink className="w-3 h-3" />
-                                    DRE
+                                    Consultar no DRE
                                   </a>
                                 )}
                                 {d.linkPGDL && (
@@ -518,9 +745,16 @@ export default function ConsultaLegislacaoPage() {
 
                       {/* Print: always show key info */}
                       <div className="hidden print:block px-4 pb-3 text-xs space-y-1">
-                        <p><strong>Diploma:</strong> {d.diploma}</p>
+                        <p><strong>Diploma:</strong> {d.diploma} {d.linkDRE && `| ${d.linkDRE}`}</p>
                         <p className="italic">{item.nota}</p>
-                        <p className="text-[10px] text-muted-foreground">{d.resumo.slice(0, 200)}...</p>
+                        <p className="text-[10px] text-muted-foreground">{d.resumo.slice(0, 250)}...</p>
+                        {reqs.length > 0 && (
+                          <div className="mt-1 pl-2 border-l-2 border-primary/30">
+                            {reqs.filter(r => r.criticidade === 'critico').slice(0, 3).map(r => (
+                              <p key={r.id} className="text-[10px]"><strong>[Crítico]</strong> {r.texto}</p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
