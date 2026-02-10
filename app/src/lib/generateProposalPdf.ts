@@ -57,7 +57,7 @@ export async function generateProposalPdf(
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
     pagebreak: {
       mode: ['css', 'legacy'] as string[],
-      avoid: ['.pdf-no-break', 'table', 'thead', 'tr', 'h1', 'h2', 'h3', 'figure', 'blockquote', 'ul', 'ol'],
+      avoid: ['.pdf-no-break', 'tr', 'thead', 'h1', 'h2', 'h3', 'li'],
     },
   };
 
