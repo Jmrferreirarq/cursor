@@ -1639,16 +1639,18 @@ export default function CalculatorPage() {
     // Mostrar overlay e renderizar documento para captura
     setCapturingPDF(true);
     
-    // Aguardar que o portal de captura renderize
-    await new Promise((r) => setTimeout(r, 300));
+    // Aguardar que o portal de captura renderize completamente
+    await new Promise((r) => setTimeout(r, 600));
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise((r) => setTimeout(r, 200));
     
-    // Tentar encontrar o elemento renderizado
+    // Tentar encontrar o elemento renderizado (verificar que tem conteúdo real)
     let el: HTMLElement | null = null;
     for (let i = 0; i < 30; i++) {
       el = captureRef.current;
-      if (el && el.offsetHeight > 0) break;
-      await new Promise((r) => setTimeout(r, 100));
+      // Verificar offsetHeight > minHeight (1123) para garantir que o conteúdo renderizou
+      if (el && el.scrollHeight > 100) break;
+      await new Promise((r) => setTimeout(r, 150));
     }
     
     if (!el) {
@@ -2162,12 +2164,14 @@ export default function CalculatorPage() {
     if (!capturingPDF || !previewPayload) return;
     let cancelled = false;
     const run = async () => {
-      // Aguardar que o elemento esteja pronto
+      // Aguardar renderização inicial
+      await new Promise((r) => setTimeout(r, 800));
+      // Aguardar que o elemento esteja pronto com conteúdo real
       for (let i = 0; i < 30; i++) {
         if (cancelled) return;
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => setTimeout(r, 150));
         const el = captureRef.current;
-        if (el && el.offsetHeight > 0) {
+        if (el && el.scrollHeight > 100) {
           try {
             const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
             await generateProposalPdf(el, {
@@ -2528,14 +2532,17 @@ export default function CalculatorPage() {
 
   const pdfCapturePortal = capturingPDF && previewPayload && createPortal(
     <>
+      {/* Overlay de carregamento — z-index ABAIXO do documento para não interferir com html2canvas */}
       <div
-        className="fixed inset-0 z-[99999] flex items-center justify-center bg-background/80 text-foreground"
+        style={{ position: 'fixed', inset: 0, zIndex: 99997, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}
         aria-hidden
       >
-        <span className="text-sm font-medium">{t('proposalSaving', lang)}</span>
+        <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{t('proposalSaving', lang)}</span>
       </div>
+      {/* Documento de captura — isolado do dark mode do body */}
       <div
         ref={(r) => { captureRef.current = r; }}
+        className="light"
         style={{
           position: 'fixed',
           left: 0,
@@ -2543,9 +2550,13 @@ export default function CalculatorPage() {
           width: 794,
           minWidth: 794,
           minHeight: 1123,
-          backgroundColor: '#fff',
+          backgroundColor: '#ffffff',
+          color: '#1F2328',
           zIndex: 99998,
           overflow: 'visible',
+          isolation: 'isolate',
+          colorScheme: 'light',
+          WebkitTextFillColor: 'initial',
         }}
       >
         <ProposalDocument payload={previewPayload} lang={lang} />

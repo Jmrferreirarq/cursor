@@ -509,7 +509,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </thead>
               <tbody>
                 {p.lotOpcoesCotacao.map((opt, i) => {
-                  const isLast = i === p.lotOpcoesCotacao!.length - 1;
+                  const isLast = i === (p.lotOpcoesCotacao?.length ?? 0) - 1;
                   const isBase = i === 0;
                   return (
                     <tr key={i} style={{
