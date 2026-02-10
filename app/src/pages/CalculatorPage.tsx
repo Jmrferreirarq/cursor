@@ -2035,9 +2035,10 @@ export default function CalculatorPage() {
       let isShortLink = false;
       let finalUrl: string;
       
-      // Gerar URL longa como base
+      // Gerar URL longa como base — usar domínio fixo se configurado
+      const publicOrigin = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
       const encoded = encodeProposalPayload(payload);
-      const longUrl = `${window.location.origin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
+      const longUrl = `${publicOrigin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
       finalUrl = longUrl;
       
       // Tentar gerar link curto via API (só em produção)
@@ -2059,7 +2060,7 @@ export default function CalculatorPage() {
           if (response.ok) {
             const data = await response.json();
             if (data.shortId) {
-              finalUrl = `${window.location.origin}${base}/p/${data.shortId}`;
+              finalUrl = `${publicOrigin}${base}/p/${data.shortId}`;
               isShortLink = true;
               console.log('[Link] Link curto criado:', finalUrl);
             }
