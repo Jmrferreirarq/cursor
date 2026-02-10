@@ -37,13 +37,13 @@ import { useData } from '@/context/DataContext';
 
 interface NavItem {
   path: string;
-  labelKey: string;
+  label: string;
   icon: React.ElementType;
   exact?: boolean;
 }
 
 interface NavGroup {
-  labelKey: string;
+  label: string;
   icon: React.ElementType;
   children: NavItem[];
 }
@@ -55,38 +55,38 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 }
 
 const navEntries: NavEntry[] = [
-  { path: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/proposals', labelKey: 'nav.proposals', icon: FileText },
-  { path: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
-  { path: '/clients', labelKey: 'nav.clients', icon: Users },
-  { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
-  { path: '/financial', labelKey: 'nav.financial', icon: Wallet },
-  { path: '/calendar', labelKey: 'nav.calendar', icon: Calendar },
-  { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
-  { path: '/technical', labelKey: 'nav.technical', icon: Wrench },
+  { path: '/', label: 'Início', icon: LayoutDashboard, exact: true },
+  { path: '/proposals', label: 'Propostas', icon: FileText },
+  { path: '/projects', label: 'Projectos', icon: FolderKanban },
+  { path: '/clients', label: 'Clientes', icon: Users },
+  { path: '/tasks', label: 'Tarefas', icon: CheckSquare },
+  { path: '/financial', label: 'Finanças', icon: Wallet },
+  { path: '/calendar', label: 'Agenda', icon: Calendar },
+  { path: '/marketing', label: 'Marketing', icon: Megaphone },
+  { path: '/technical', label: 'Técnico', icon: Wrench },
   // ─── Legislação dropdown ───
   {
-    labelKey: 'nav.legislacao',
+    label: 'Legal',
     icon: Scale,
     children: [
-      { path: '/legislacao', labelKey: 'nav.legislacaoBiblioteca', icon: BookOpen },
-      { path: '/consulta-legislacao', labelKey: 'nav.legislacaoTipologia', icon: ClipboardList },
-      { path: '/checklist', labelKey: 'nav.legislacaoChecklist', icon: CheckSquare },
-      { path: '/municipios', labelKey: 'nav.municipios', icon: MapPin },
+      { path: '/legislacao', label: 'Biblioteca', icon: BookOpen },
+      { path: '/consulta-legislacao', label: 'Tipologia', icon: ClipboardList },
+      { path: '/checklist', label: 'Checklist', icon: CheckSquare },
+      { path: '/municipios', label: 'Municípios', icon: MapPin },
     ],
   },
-  { path: '/media', labelKey: 'nav.media', icon: Image },
-  { path: '/queue', labelKey: 'nav.queue', icon: LayoutGrid },
-  { path: '/content-calendar', labelKey: 'nav.contentCalendar', icon: CalendarDays },
-  { path: '/planner', labelKey: 'nav.planner', icon: Calendar },
-  { path: '/library', labelKey: 'nav.library', icon: Library },
-  { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
-  { path: '/brand', labelKey: 'nav.brand', icon: Palette },
-  { path: '/calculator', labelKey: 'nav.calculator', icon: Calculator },
-  { path: '/agent', labelKey: 'nav.agent', icon: Bot },
+  { path: '/media', label: 'Media', icon: Image },
+  { path: '/queue', label: 'Fila', icon: LayoutGrid },
+  { path: '/content-calendar', label: 'Conteúdo', icon: CalendarDays },
+  { path: '/planner', label: 'Plano', icon: Calendar },
+  { path: '/library', label: 'Arquivo', icon: Library },
+  { path: '/inbox', label: 'Inbox', icon: Inbox },
+  { path: '/brand', label: 'Marca', icon: Palette },
+  { path: '/calculator', label: 'Calc.', icon: Calculator },
+  { path: '/agent', label: 'AI', icon: Bot },
 ];
 
-// Flat list of all nav items (for mobile menu)
+// Flat list for mobile menu
 const allNavItems: NavItem[] = navEntries.flatMap(entry =>
   isGroup(entry) ? entry.children : [entry]
 );
@@ -99,7 +99,7 @@ export default function Navbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
   const { resetAllData } = useData();
 
   const handleResetData = async () => {
@@ -108,10 +108,6 @@ export default function Navbar() {
     setShowResetConfirm(false);
     setUserMenuOpen(false);
     window.location.reload();
-  };
-  const getLabel = (key: string) => {
-    const result = t(key);
-    return typeof result === 'string' ? result : key;
   };
 
   useEffect(() => {
@@ -150,16 +146,16 @@ export default function Navbar() {
           <div className="hidden xl:flex items-center gap-0.5 overflow-x-auto">
             {navEntries.map((entry) => {
               if (isGroup(entry)) {
-                const isOpen = openDropdown === entry.labelKey;
+                const isOpen = openDropdown === entry.label;
                 const currentPath = window.location.pathname;
                 const isChildActive = entry.children.some(c => currentPath === c.path);
 
                 return (
-                  <div key={entry.labelKey} className="relative group" ref={isOpen ? dropdownRef : undefined}>
+                  <div key={entry.label} className="relative group" ref={isOpen ? dropdownRef : undefined}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setOpenDropdown(isOpen ? null : entry.labelKey);
+                        setOpenDropdown(isOpen ? null : entry.label);
                       }}
                       className={`relative flex items-center gap-0.5 p-2.5 rounded-lg transition-all duration-200 ${
                         isChildActive
@@ -171,7 +167,7 @@ export default function Navbar() {
                       <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       {/* Tooltip */}
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                        Legal
+                        {entry.label}
                       </span>
                     </button>
 
@@ -199,7 +195,7 @@ export default function Navbar() {
                               }
                             >
                               <child.icon className="w-4 h-4 shrink-0" />
-                              <span>{getLabel(child.labelKey)}</span>
+                              <span>{child.label}</span>
                             </NavLink>
                           ))}
                         </motion.div>
@@ -227,7 +223,7 @@ export default function Navbar() {
                   <item.icon className="w-[18px] h-[18px]" />
                   {/* Tooltip */}
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                    {getLabel(item.labelKey)}
+                    {item.label}
                   </span>
                 </NavLink>
               );
@@ -352,7 +348,7 @@ export default function Navbar() {
                     }
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
-                    <span>{getLabel(item.labelKey)}</span>
+                    <span>{item.label}</span>
                   </NavLink>
                 </motion.div>
               ))}
