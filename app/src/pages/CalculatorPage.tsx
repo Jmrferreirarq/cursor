@@ -598,6 +598,48 @@ const CONDICIONANTES_LOTEAMENTO: { id: string; label: string; impacto: 'baixo' |
   { id: 'alvara_anterior', label: 'Alvará de loteamento anterior', impacto: 'baixo' },
 ];
 
+// ── Loteamento: Cave, Piscina e Arranjos Exteriores ──
+const BASEMENT_OPTIONS = {
+  nenhuma: { label: 'Sem cave', factor: 1.00 },
+  parcial: { label: 'Cave parcial', factor: 1.12 },
+  total:   { label: 'Cave total', factor: 1.20 },
+} as const;
+
+const POOL_OPTIONS = {
+  nenhuma:  { label: 'Sem piscina', factor: 1.00 },
+  skimmer:  { label: 'Piscina skimmer', factor: 1.03 },
+  overflow: { label: 'Piscina overflow', factor: 1.06 },
+} as const;
+
+const POOL_SIZE_LABELS: Record<string, string> = {
+  pequena: 'Pequena (< 20 m2)',
+  media:   'Media (20-40 m2)',
+  grande:  'Grande (> 40 m2)',
+};
+
+const EXTERNAL_WORKS_LEVELS = {
+  base:     { label: 'Base (minimo regulamentar)', factor: 1.0 },
+  completo: { label: 'Completo (projeto de exteriores)', factor: 1.4 },
+} as const;
+
+// Add-ons por unidade — valores medianos dos ranges de mercado
+const CATALOGO_ADDONS: Record<string, { nome: string; valor: number }> = {
+  // Licenciamento
+  pool_arch_lic:   { nome: 'Arquitetura piscina (lic.)', valor: 650 },
+  pool_eng_lic:    { nome: 'Estruturas+hidraulica piscina (lic.)', valor: 1050 },
+  pool_coord_lic:  { nome: 'Coordenacao piscina (lic.)', valor: 175 },
+  // Execucao
+  pool_arch_exec:  { nome: 'Arquitetura piscina (exec.)', valor: 1050 },
+  pool_eng_exec:   { nome: 'Estruturas+hidraulica piscina (exec.)', valor: 1650 },
+  pool_coord_exec: { nome: 'Coordenacao piscina (exec.)', valor: 250 },
+  // Cave (quando rampas/contencoes complexas)
+  basement_arch:   { nome: 'Arquitetura cave (rampas/org.)', valor: 600 },
+  basement_eng:    { nome: 'Estruturas cave (contencoes)', valor: 1000 },
+};
+
+// IDs de infraestrutura afetados pelo multiplicador de cave
+const BASEMENT_AFFECTED_IDS = new Set(['aguas_esgotos', 'aguas_esgotos_dom', 'infra_pluviais', 'geotecnia']);
+
 // Fases específicas de loteamento (substituem ICHPOP)
 const FASES_LOTEAMENTO: { id: string; name: string; pct: number; desc: string; descricao: string }[] = [
   {
@@ -1002,6 +1044,16 @@ export default function CalculatorPage() {
     'viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission',
   ]));
 
+  // Equipamentos e caves
+  const [lotBasement, setLotBasement] = useState<'nenhuma'|'parcial'|'total'>('nenhuma');
+  const [lotBasementArea, setLotBasementArea] = useState('');
+  const [lotPool, setLotPool] = useState<'nenhuma'|'skimmer'|'overflow'>('nenhuma');
+  const [lotPoolPerUnit, setLotPoolPerUnit] = useState(true);
+  const [lotPoolUnits, setLotPoolUnits] = useState('');
+  const [lotPoolSize, setLotPoolSize] = useState<'pequena'|'media'|'grande'>('media');
+  const [lotWaterproofing, setLotWaterproofing] = useState<'normal'|'alta'>('normal');
+  const [lotExternalWorks, setLotExternalWorks] = useState<'base'|'completo'>('base');
+
   // Assunções + Dependências (separadas)
   const [lotAssuncoesManuais, setLotAssuncoesManuais] = useState('');
   const [lotDependenciasManuais, setLotDependenciasManuais] = useState('');
@@ -1067,6 +1119,16 @@ export default function CalculatorPage() {
           subtotal = custoUnit;
         }
         subtotal = Math.round(subtotal);
+        // Multiplicador de cave (aguas, pluviais, geotecnia)
+        const bFactor = BASEMENT_OPTIONS[lotBasement].factor;
+        if (BASEMENT_AFFECTED_IDS.has(cat.id) && bFactor > 1) {
+          subtotal = Math.round(subtotal * bFactor);
+        }
+        // Multiplicador de arranjos exteriores (paisagismo)
+        if (cat.id === 'paisagismo') {
+          const extFactor = EXTERNAL_WORKS_LEVELS[lotExternalWorks].factor;
+          subtotal = Math.round(subtotal * extFactor);
+        }
         const honorarioProjeto = Math.round(subtotal * cat.pctHonorario);
         return { infraId: cat.id, nome: cat.nome, unidade: cat.unidade, quantidade: Math.round(quantidade * 10) / 10, custoUnitario: custoUnit, custoRamal: ramal, subtotal, honorarioProjeto };
       });
@@ -1083,6 +1145,8 @@ export default function CalculatorPage() {
       const criticas = ['ren_ran', 'dominio_hidrico', 'servidoes', 'zona_inundavel'];
       const temCriticas = criticas.some(c => lotCondicionantes.has(c));
       if (temCriticas) contingenciaPct += 5;
+      // Impermeabilização complexa (lençol freático / solos problemáticos)
+      if (lotWaterproofing === 'alta') contingenciaPct += 3;
     }
     const totalComContingencia = Math.round(subtotalObra * (1 + contingenciaPct / 100));
     // Banda de precisão
@@ -1096,6 +1160,82 @@ export default function CalculatorPage() {
     const custoMin = Math.round(totalComContingencia * (1 - margem));
     const custoMax = Math.round(totalComContingencia * (1 + margem));
     return { items, contingenciaPct, subtotalObra, totalComContingencia, bandaClasse, margemPct: margem * 100, custoMin, custoMax };
+  };
+
+  // ── Add-ons de piscina (por unidade) ──
+  const calcularAddonsPool = (): { items: { id: string; nome: string; unidades: number; valorUnit: number; subtotal: number }[]; total: number } => {
+    if (lotPool === 'nenhuma') return { items: [], total: 0 };
+    const nUnits = lotPoolPerUnit
+      ? Math.max(0, parseInt(lotPoolUnits, 10) || parseInt(lotNumLotes, 10) || 0)
+      : 1; // piscina comum = 1 unidade
+    if (nUnits <= 0) return { items: [], total: 0 };
+    const addonIds: string[] = [];
+    // Licenciamento
+    if (fasesIncluidas.has('lot_projeto') || fasesIncluidas.has('lot_notificacoes')) {
+      addonIds.push('pool_arch_lic', 'pool_eng_lic', 'pool_coord_lic');
+    }
+    const poolFactor = POOL_OPTIONS[lotPool].factor;
+    const items = addonIds.map(id => {
+      const cat = CATALOGO_ADDONS[id];
+      if (!cat) return null;
+      const valorUnit = Math.round(cat.valor * poolFactor);
+      return { id, nome: cat.nome, unidades: nUnits, valorUnit, subtotal: Math.round(valorUnit * nUnits) };
+    }).filter((x): x is NonNullable<typeof x> => x !== null);
+    return { items, total: items.reduce((s, i) => s + i.subtotal, 0) };
+  };
+
+  // ── Gerador de opções de cotação (Base / +Cave / +Piscina / +Ambos) ──
+  const gerarOpcoesCotacao = (): { label: string; totalSemIVA: number; totalComIVA: number; deltaBase?: number }[] => {
+    if (lotBasement === 'nenhuma' && lotPool === 'nenhuma') return [];
+    // Valores actuais (com cave + pool se configurados)
+    const valorArqAtual = calculateHonorariosArquiteturaBase();
+    const valorEspAtual = calculateHonorariosEspecialidades();
+    const addonsAtual = calcularAddonsPool();
+    const despReemb = parseFloat(despesasReembolsaveis) || 0;
+    const servicosAtual = valorArqAtual + valorEspAtual + addonsAtual.total;
+    const ivaAtual = servicosAtual * 0.23;
+    const totalSemIVAAtual = servicosAtual + despReemb;
+    const totalComIVAAtual = totalSemIVAAtual + ivaAtual;
+
+    // Calcular delta de cave (diferença nos honorários de especialidades via infra)
+    const bFactor = BASEMENT_OPTIONS[lotBasement].factor;
+    const basementDeltaEsp = bFactor > 1 ? Math.round(valorEspAtual * (1 - 1 / bFactor)) : 0;
+    // Calcular delta de paisagismo (external works)
+    const extFactor = EXTERNAL_WORKS_LEVELS[lotExternalWorks].factor;
+    const extDelta = extFactor > 1 ? Math.round(valorEspAtual * 0.05 * (extFactor - 1)) : 0; // ~5% do esp é paisagismo
+    const caveDelta = basementDeltaEsp + extDelta;
+    const poolDelta = addonsAtual.total;
+
+    const opcoes: { label: string; totalSemIVA: number; totalComIVA: number; deltaBase?: number }[] = [];
+
+    // Base (sem cave, sem pool)
+    const baseSemIVA = totalSemIVAAtual - caveDelta - poolDelta;
+    const baseIVA = (baseSemIVA - despReemb) * 0.23;
+    opcoes.push({ label: 'Base', totalSemIVA: Math.round(baseSemIVA), totalComIVA: Math.round(baseSemIVA + baseIVA) });
+
+    if (lotBasement !== 'nenhuma' && lotPool === 'nenhuma') {
+      // Só cave
+      opcoes.push({ label: `+ ${BASEMENT_OPTIONS[lotBasement].label}`, totalSemIVA: Math.round(totalSemIVAAtual), totalComIVA: Math.round(totalComIVAAtual), deltaBase: Math.round(caveDelta) });
+    } else if (lotBasement === 'nenhuma' && lotPool !== 'nenhuma') {
+      // Só pool
+      opcoes.push({ label: `+ ${POOL_OPTIONS[lotPool].label}`, totalSemIVA: Math.round(totalSemIVAAtual), totalComIVA: Math.round(totalComIVAAtual), deltaBase: Math.round(poolDelta) });
+    } else {
+      // Ambos — mostrar separados e combinado
+      const caveOnlySemIVA = baseSemIVA + caveDelta;
+      const caveOnlyIVA = (caveOnlySemIVA - despReemb) * 0.23;
+      opcoes.push({ label: `+ ${BASEMENT_OPTIONS[lotBasement].label}`, totalSemIVA: Math.round(caveOnlySemIVA), totalComIVA: Math.round(caveOnlySemIVA + caveOnlyIVA), deltaBase: Math.round(caveDelta) });
+
+      const poolOnlySemIVA = baseSemIVA + poolDelta;
+      const poolOnlyIVA = (poolOnlySemIVA - despReemb) * 0.23;
+      opcoes.push({ label: `+ ${POOL_OPTIONS[lotPool].label}`, totalSemIVA: Math.round(poolOnlySemIVA), totalComIVA: Math.round(poolOnlySemIVA + poolOnlyIVA), deltaBase: Math.round(poolDelta) });
+
+      // Combinado (desconto 3%)
+      const combinadoDelta = Math.round((caveDelta + poolDelta) * 0.97);
+      const combinadoSemIVA = baseSemIVA + combinadoDelta;
+      const combinadoIVA = (combinadoSemIVA - despReemb) * 0.23;
+      opcoes.push({ label: `+ ${BASEMENT_OPTIONS[lotBasement].label} + ${POOL_OPTIONS[lotPool].label}`, totalSemIVA: Math.round(combinadoSemIVA), totalComIVA: Math.round(combinadoSemIVA + combinadoIVA), deltaBase: Math.round(combinadoDelta) });
+    }
+    return opcoes;
   };
 
   // Áreas
@@ -1714,6 +1854,30 @@ export default function CalculatorPage() {
             lotBandaPrecisao: banda?.label ?? '',
             lotBandaDescricao: banda?.descricao ?? '',
           };
+        })(),
+        // Equipamentos (cave, piscina, exteriores)
+        lotBasement: lotBasement !== 'nenhuma' ? BASEMENT_OPTIONS[lotBasement].label : undefined,
+        lotBasementArea: lotBasement !== 'nenhuma' && lotBasementArea ? lotBasementArea : undefined,
+        lotPool: lotPool !== 'nenhuma' ? POOL_OPTIONS[lotPool].label : undefined,
+        lotPoolUnits: lotPool !== 'nenhuma' ? (parseInt(lotPoolUnits, 10) || parseInt(lotNumLotes, 10) || 0) : undefined,
+        lotPoolSize: lotPool !== 'nenhuma' ? POOL_SIZE_LABELS[lotPoolSize] : undefined,
+        lotPoolPerUnit: lotPool !== 'nenhuma' ? lotPoolPerUnit : undefined,
+        lotExternalWorks: EXTERNAL_WORKS_LEVELS[lotExternalWorks].label,
+        lotWaterproofing: lotWaterproofing === 'alta' ? 'Alta (lencol freatico / solos problematicos)' : 'Normal',
+        // Add-ons piscina
+        ...(() => {
+          const ap = calcularAddonsPool();
+          if (ap.items.length === 0) return {};
+          return {
+            lotAddonsPool: ap.items.map(i => ({ nome: i.nome, unidades: i.unidades, valorUnit: i.valorUnit, subtotal: i.subtotal })),
+            lotAddonsPoolTotal: ap.total,
+          };
+        })(),
+        // Opcoes de cotacao
+        ...(() => {
+          const opcoes = gerarOpcoesCotacao();
+          if (opcoes.length === 0) return {};
+          return { lotOpcoesCotacao: opcoes };
         })(),
       } : {}),
       notas: isLoteamento ? [
@@ -3320,6 +3484,75 @@ export default function CalculatorPage() {
                     {lotCondicionantes.size > 0 && (
                       <p className="text-xs text-amber-400 mt-2">
                         Complexidade sugerida: <strong className="uppercase">{calcularComplexidadeLoteamento(lotCondicionantes)}</strong>
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 4b. Equipamentos e Caves */}
+                  <div>
+                    <label className="block text-sm font-medium mb-3">Equipamentos e caves</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {/* Cave */}
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Cave</label>
+                        <select value={lotBasement} onChange={(e) => setLotBasement(e.target.value as typeof lotBasement)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                          {Object.entries(BASEMENT_OPTIONS).map(([k, v]) => <option key={k} value={k}>{v.label}{v.factor > 1 ? ` (×${v.factor})` : ''}</option>)}
+                        </select>
+                        {lotBasement !== 'nenhuma' && (
+                          <input type="number" min="0" value={lotBasementArea} onChange={(e) => setLotBasementArea(e.target.value)}
+                            className="w-full mt-1.5 px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                            placeholder="Area cave (m2, opcional)" />
+                        )}
+                      </div>
+                      {/* Piscina */}
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Piscina</label>
+                        <select value={lotPool} onChange={(e) => setLotPool(e.target.value as typeof lotPool)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                          {Object.entries(POOL_OPTIONS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                        </select>
+                        {lotPool !== 'nenhuma' && (
+                          <div className="space-y-1.5 mt-1.5">
+                            <select value={lotPoolSize} onChange={(e) => setLotPoolSize(e.target.value as typeof lotPoolSize)}
+                              className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                              {Object.entries(POOL_SIZE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                            </select>
+                            <label className="flex items-center gap-2 text-xs cursor-pointer">
+                              <input type="checkbox" checked={lotPoolPerUnit} onChange={(e) => setLotPoolPerUnit(e.target.checked)} />
+                              <span>Piscina por moradia (vs. piscina comum)</span>
+                            </label>
+                            {lotPoolPerUnit && (
+                              <input type="number" min="0" value={lotPoolUnits} onChange={(e) => setLotPoolUnits(e.target.value)}
+                                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                                placeholder={`Moradias com piscina (max ${lotNumLotes || '?'})`} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {/* Arranjos ext. + Impermeabilização */}
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs text-muted-foreground mb-1">Arranjos exteriores</label>
+                          <select value={lotExternalWorks} onChange={(e) => setLotExternalWorks(e.target.value as typeof lotExternalWorks)}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                            {Object.entries(EXTERNAL_WORKS_LEVELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-muted-foreground mb-1">Impermeabilizacao</label>
+                          <select value={lotWaterproofing} onChange={(e) => setLotWaterproofing(e.target.value as typeof lotWaterproofing)}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                            <option value="normal">Normal</option>
+                            <option value="alta">Alta (lencol freatico / solos problematicos)</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Hint: piscina sem exteriores = risco */}
+                    {lotPool !== 'nenhuma' && lotExternalWorks === 'base' && (
+                      <p className="text-[11px] px-3 py-1.5 mt-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        Piscina sem arranjos exteriores completos aumenta risco de patologias e conflitos de obra. Considere nivel &quot;Completo&quot;.
                       </p>
                     )}
                   </div>

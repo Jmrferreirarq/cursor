@@ -148,6 +148,32 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </div>
             )}
 
+            {/* Equipamentos (cave, piscina, exteriores) */}
+            {(p.lotBasement || p.lotPool || p.lotExternalWorks) && (
+              <div style={{ background: '#f5f3ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #c4b5fd' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Equipamentos e Caves</p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                  <tbody>
+                    {p.lotBasement && (
+                      <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Cave</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotBasement}{p.lotBasementArea ? ` (${p.lotBasementArea} m2)` : ''}</td></tr>
+                    )}
+                    {p.lotPool && (
+                      <>
+                        <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Piscina</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotPool}{p.lotPoolSize ? ` — ${p.lotPoolSize}` : ''}</td></tr>
+                        <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Moradias c/ piscina</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotPoolPerUnit ? `${p.lotPoolUnits ?? '—'} unidade(s)` : 'Piscina comum (1 un.)'}</td></tr>
+                      </>
+                    )}
+                    {p.lotExternalWorks && (
+                      <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Arranjos exteriores</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotExternalWorks}</td></tr>
+                    )}
+                    {p.lotWaterproofing && (
+                      <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Impermeabilizacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotWaterproofing}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {/* Cenarios A/B/C com access_model */}
             {p.lotCenarios && p.lotCenarios.length > 0 && (
               <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: '3px solid #f59e0b' }}>
@@ -282,6 +308,39 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     Intervalo estimado: {(p.lotCustoObraMin ?? 0).toLocaleString('pt-PT')} &euro; &ndash; {(p.lotCustoObraMax ?? 0).toLocaleString('pt-PT')} &euro;
                   </span>
                 </div>
+              </div>
+            )}
+
+            {/* Add-ons de piscina */}
+            {p.lotAddonsPool && p.lotAddonsPool.length > 0 && (
+              <div className="pdf-no-break" style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#faf5ff', borderRadius: 2, border: '1px solid #e9d5ff', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Add-ons Piscina (por unidade)</p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                  <thead>
+                    <tr style={{ background: '#ede9fe' }}>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 700, color: '#5b21b6' }}>Descricao</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 700, color: '#5b21b6' }}>Un.</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, color: '#5b21b6' }}>Valor/un.</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, color: '#5b21b6' }}>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.lotAddonsPool.map((item, i) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                        <td style={{ padding: '1.5mm 2mm' }}>{item.nome}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{item.unidades}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.valorUnit.toLocaleString('pt-PT')} &euro;</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{item.subtotal.toLocaleString('pt-PT')} &euro;</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background: '#7c3aed', color: '#fff' }}>
+                      <td colSpan={3} style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>Total Add-ons Piscina</td>
+                      <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>{(p.lotAddonsPoolTotal ?? 0).toLocaleString('pt-PT')} &euro;</td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             )}
 
@@ -429,6 +488,47 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 → {t('proposal.nextStep', lang)}: {p.resumoExecutivo.proximoPasso ?? t('proposal.nextStepText', lang)}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Opcoes de cotacao (cave/piscina/ambos) */}
+        {p.lotOpcoesCotacao && p.lotOpcoesCotacao.length > 0 && (
+          <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: '#fffbeb', borderRadius: 3, border: '2px solid #fbbf24', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Opcoes de Cotacao</p>
+            <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 3mm 0' }}>
+              Comparativo de valor conforme equipamentos selecionados. A opcao configurada esta destacada.
+            </p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+              <thead>
+                <tr style={{ background: '#fef3c7' }}>
+                  <th style={{ padding: '2mm', textAlign: 'left', fontWeight: 700, color: '#92400e' }}>Opcao</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>Total s/ IVA</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>Total c/ IVA</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>Delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {p.lotOpcoesCotacao.map((opt, i) => {
+                  const isLast = i === p.lotOpcoesCotacao!.length - 1;
+                  const isBase = i === 0;
+                  return (
+                    <tr key={i} style={{
+                      borderBottom: `1px solid ${C.cinzaLinha}`,
+                      background: isLast && !isBase ? '#fef9c3' : 'transparent',
+                      fontWeight: isLast && !isBase ? 600 : 400,
+                    }}>
+                      <td style={{ padding: '2mm' }}>{opt.label}</td>
+                      <td style={{ padding: '2mm', textAlign: 'right' }}>{opt.totalSemIVA.toLocaleString('pt-PT')} &euro;</td>
+                      <td style={{ padding: '2mm', textAlign: 'right' }}>{opt.totalComIVA.toLocaleString('pt-PT')} &euro;</td>
+                      <td style={{ padding: '2mm', textAlign: 'right', color: opt.deltaBase ? '#b45309' : C.cinzaMarca }}>{opt.deltaBase ? `+${opt.deltaBase.toLocaleString('pt-PT')} €` : '—'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '2mm 0 0 0' }}>
+              Nota: A opcao combinada inclui desconto de 3% sobre os add-ons individuais.
+            </p>
           </div>
         )}
 

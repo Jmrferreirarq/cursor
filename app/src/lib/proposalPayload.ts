@@ -193,6 +193,30 @@ export const proposalPayloadSchema = z.object({
   lotCustoObraMax: z.number().optional(),
   lotBandaPrecisao: z.string().optional(),
   lotBandaDescricao: z.string().optional(),
+  // Equipamentos (cave, piscina, exteriores)
+  lotBasement: z.string().optional(),
+  lotBasementArea: z.string().optional(),
+  lotPool: z.string().optional(),
+  lotPoolUnits: z.number().optional(),
+  lotPoolSize: z.string().optional(),
+  lotPoolPerUnit: z.boolean().optional(),
+  lotExternalWorks: z.string().optional(),
+  lotWaterproofing: z.string().optional(),
+  // Add-ons de piscina
+  lotAddonsPool: z.array(z.object({
+    nome: z.string(),
+    unidades: z.number(),
+    valorUnit: z.number(),
+    subtotal: z.number(),
+  })).optional(),
+  lotAddonsPoolTotal: z.number().optional(),
+  // Opcoes de cotacao
+  lotOpcoesCotacao: z.array(z.object({
+    label: z.string(),
+    totalSemIVA: z.number(),
+    totalComIVA: z.number(),
+    deltaBase: z.number().optional(),
+  })).optional(),
 });
 
 export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
@@ -234,6 +258,11 @@ const MINIFY_KEYS: Record<string, string> = {
   lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
   lotBandaPrecisao: 'lbp', lotBandaDescricao: 'lbd',
   quantidade: 'qt', custoUnitario: 'cu', custoRamal: 'cr', subtotal: 'st', honorario: 'hon', unidade: 'un',
+  // Equipamentos
+  lotBasement: 'lbs', lotBasementArea: 'lba', lotPool: 'lpl', lotPoolUnits: 'lpu',
+  lotPoolSize: 'lps', lotPoolPerUnit: 'lppu', lotExternalWorks: 'lew', lotWaterproofing: 'lwp',
+  lotAddonsPool: 'lap', lotAddonsPoolTotal: 'lapt', lotOpcoesCotacao: 'loc2',
+  unidades: 'uns', valorUnit: 'vu', deltaBase: 'db',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(
