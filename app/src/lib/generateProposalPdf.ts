@@ -55,7 +55,10 @@ export async function generateProposalPdf(
       backgroundColor: '#ffffff',
     },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-    pagebreak: { mode: ['css'] as string[], avoid: ['.pdf-no-break'] },
+    pagebreak: {
+      mode: ['css', 'legacy'] as string[],
+      avoid: ['.pdf-no-break', 'table', 'thead', 'tr', 'h1', 'h2', 'h3', 'figure', 'blockquote', 'ul', 'ol'],
+    },
   };
 
   const html2pdf = (await import('html2pdf.js')).default;

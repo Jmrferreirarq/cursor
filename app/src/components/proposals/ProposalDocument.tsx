@@ -65,7 +65,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
       </div>
 
       <div style={{ padding: '12mm 18mm 18mm', backgroundColor: C.white, boxSizing: 'border-box', wordBreak: 'break-word', overflowWrap: 'break-word', minWidth: 0 }}>
-        <div style={{ marginTop: 0, marginBottom: '4mm' }}>
+        <div style={{ marginTop: 0, marginBottom: '4mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           <h1 style={{ fontSize: fs(14), fontWeight: 700, margin: 0, letterSpacing: '-0.01em', color: C.accent }}>
             {t('proposal.title', lang)}
           </h1>
@@ -75,7 +75,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Apresentação */}
-        <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}` }}>
+        <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, margin: '0 0 2mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.presentation', lang)}</p>
           {(p.apresentacao ?? t('longText.apresentacao', lang)).split('\n\n').map((par, i) => (
             <p key={i} style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0', lineHeight: 1.5 }}>{par}</p>
@@ -83,7 +83,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* Dados do projeto */}
-        <div style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm' }}>
+        <div style={{ background: C.offWhite, borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           {p.cliente && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.client', lang)}:</span> {p.cliente}</p>}
           {p.projeto && <p style={{ margin: '0 0 1mm 0', fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.project', lang)}:</span> {p.projeto}</p>}
           {p.local && <p style={{ margin: p.linkGoogleMaps ? '0 0 1mm 0' : 0, fontSize: fs(10), color: C.grafite }}><span style={{ color: C.cinzaMarca, fontWeight: 500 }}>{t('proposal.local', lang)}:</span> {p.local}</p>}
@@ -106,7 +106,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           <>
             {/* Dados do terreno + frente */}
             {(p.lotIdentificacao || p.lotAreaTerreno || p.lotAreaEstudo) && (
-              <div style={{ background: '#fffbeb', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #fbbf24' }}>
+              <div style={{ background: '#fffbeb', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #fbbf24', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dados do Terreno</p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(9) }}>
                   <tbody>
@@ -124,7 +124,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Contexto urbanistico */}
             {(p.lotInstrumento || p.lotClassificacaoSolo || p.lotParametros) && (
-              <div style={{ background: '#eff6ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #bfdbfe' }}>
+              <div style={{ background: '#eff6ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #bfdbfe', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contexto Urbanistico</p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
                   <tbody>
@@ -150,7 +150,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Equipamentos (cave, piscina, exteriores) */}
             {(p.lotBasement || p.lotPool || p.lotExternalWorks) && (
-              <div style={{ background: '#f5f3ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #c4b5fd' }}>
+              <div style={{ background: '#f5f3ff', borderRadius: 2, padding: '3mm 4mm', marginBottom: '4mm', border: '1px solid #c4b5fd', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Equipamentos e Caves</p>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
                   <tbody>
@@ -176,7 +176,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Cenarios A/B/C com access_model */}
             {p.lotCenarios && p.lotCenarios.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: '3px solid #f59e0b' }}>
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: '3px solid #f59e0b', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cenarios de Loteamento</p>
                 <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
                   Inclui {p.lotCenarios.length} opcoes de implantacao. Driver critico: acesso direto vs via interna.
@@ -219,7 +219,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Condicionantes identificadas */}
             {p.lotCondicionantes && p.lotCondicionantes.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#fff1f2', borderRadius: 2, border: '1px solid #fecdd3' }}>
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#fff1f2', borderRadius: 2, border: '1px solid #fecdd3', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#9f1239', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Condicionantes Identificadas</p>
                 <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 1mm 0' }}>
                   Complexidade urbanistica: <strong style={{ textTransform: 'uppercase' }}>{p.lotComplexidadeSugerida ?? 'media'}</strong>
@@ -237,7 +237,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
             {/* Entregaveis */}
             {p.lotEntregaveis && p.lotEntregaveis.length > 0 && (
-              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f5f3ff', borderRadius: 2, border: '1px solid #ddd6fe' }}>
+              <div style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f5f3ff', borderRadius: 2, border: '1px solid #ddd6fe', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#5b21b6', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Entregaveis Incluidos</p>
                 <ul style={{ margin: 0, padding: 0, fontSize: fs(8), listStyleType: 'none', color: C.grafite, columns: 2 }}>
                   {p.lotEntregaveis.map((e, i) => (
@@ -345,7 +345,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             )}
 
             {/* Assuncoes + Dependencias lado a lado */}
-            <div style={{ display: 'flex', gap: '3mm', marginBottom: '4mm' }}>
+            <div style={{ display: 'flex', gap: '3mm', marginBottom: '4mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               {p.lotAssuncoes && p.lotAssuncoes.length > 0 && (
                 <div style={{ flex: 1, padding: '3mm 4mm', background: '#f0fdf4', borderRadius: 2, border: '1px solid #bbf7d0' }}>
                   <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Assuncoes de Base</p>
@@ -378,7 +378,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* RESUMO EXECUTIVO — Decisão em 60 segundos */}
         {p.mostrarResumo && p.resumoExecutivo && (
-          <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}` }}>
+          <div style={{ marginBottom: '5mm', padding: '4mm 5mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {t('proposal.executiveSummary', lang)}
             </p>
@@ -533,7 +533,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         )}
 
         {/* Tabela de valores - começa em página nova */}
-        <div className="page-break-before" style={{ marginBottom: '5mm', paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
+        <div className="page-break-before" style={{ marginBottom: '5mm', paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), tableLayout: 'fixed' }}>
             <colgroup>
@@ -717,13 +717,13 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         <div className="page-break-before" style={{ paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always' }}>
           <p className="section-title" style={{ fontSize: fs(10), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 5mm 0', textTransform: 'uppercase', letterSpacing: '0.05em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>{t('proposal.section3', lang)}</p>
           {p.notaBim && (
-            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
+            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.accentSoft2, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.accent }}>{p.isLoteamento ? 'Metodologia de trabalho' : t('proposal.bimMethodology', lang)}</p>
               <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaBim}</p>
             </div>
           )}
           {p.notaReunioes && (
-            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.offWhite, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
+            <div className="pdf-no-break" style={{ padding: '2.5mm 3mm', background: C.offWhite, borderRadius: 2, marginBottom: '3mm', borderLeft: `3px solid ${C.cinzaLinha}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
               <p style={{ fontSize: fs(9), fontWeight: 600, margin: 0, color: C.cinzaMarca }}>{t('proposal.reunioesContexto', lang)}</p>
               <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '1mm 0 0 0', lineHeight: 1.45 }}>{p.notaReunioes}</p>
             </div>
@@ -809,6 +809,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                           marginLeft: '3mm',
                           wordBreak: 'break-word',
                           overflowWrap: 'break-word',
+                          breakInside: 'avoid',
                           pageBreakInside: 'avoid',
                           ...(isFormulaExtra
                             ? { borderLeft: `3px solid ${C.accent}`, background: C.accentSoft, padding: '3mm 4mm', borderRadius: '0 2px 2px 0', marginLeft: 0 }
@@ -837,6 +838,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         marginBottom: '4mm',
                         wordBreak: 'break-word',
                         overflowWrap: 'break-word',
+                        breakInside: 'avoid',
                         pageBreakInside: 'avoid',
                       }}
                     >
@@ -1220,7 +1222,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const totalMaxComIVA = Math.round(totalMaxSemIVA * (1 + ivaRate));
           
           return (
-          <div style={{ marginTop: '6mm', marginBottom: '6mm', padding: '4mm 5mm', background: C.offWhite, borderRadius: 3, border: `1px solid ${C.cinzaLinha}` }}>
+          <div style={{ marginTop: '6mm', marginBottom: '6mm', padding: '4mm 5mm', background: C.offWhite, borderRadius: 3, border: `1px solid ${C.cinzaLinha}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: C.accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {lang === 'en' ? 'Construction Investment Estimate' : 'Estimativa de Investimento em Obra'}
             </p>
@@ -1376,7 +1378,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           return (
             <div className="page-break-before" style={{ breakBefore: 'page', pageBreakBefore: 'always' }}>
               {/* Cabeçalho do Guia */}
-              <div style={{ marginBottom: '5mm', padding: '3mm 4mm', background: C.accent, borderRadius: 3 }}>
+              <div style={{ marginBottom: '5mm', padding: '3mm 4mm', background: C.accent, borderRadius: 3, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(12), fontWeight: 700, color: C.onAccent, margin: 0, letterSpacing: '0.02em' }}>
                   {lang === 'en' ? 'CONSTRUCTION GUIDE' : 'GUIA DE CONSTRUÇÃO'}
                 </p>
@@ -1387,7 +1389,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
               {/* Estimativa de Custos de Construção */}
               {costs && (
-                <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, pageBreakInside: 'avoid' }}>
+                <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm', background: C.accentSoft, borderRadius: 3, border: `2px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                   <p style={{ fontSize: fs(10), fontWeight: 700, color: C.accent, margin: '0 0 3mm 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     {lang === 'en' ? 'Estimated Construction Cost' : 'Estimativa de Custo de Construção'}
                   </p>
@@ -1451,7 +1453,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
               {/* Faseamento de Obra */}
               {phases && (
-                <div style={{ marginBottom: '5mm' }}>
+                <div style={{ marginBottom: '5mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                   <div className="pdf-no-break" style={{ marginBottom: '3mm', pageBreakInside: 'avoid' }}>
                     <p style={{ fontSize: fs(10), fontWeight: 700, color: C.accent, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                       {lang === 'en' ? 'Construction Phases' : 'Faseamento de Obra'} — {phases.category}
@@ -1509,7 +1511,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           pageBreakBefore: 'always' 
         }}>
           {/* Company Snapshot - Sobre a empresa */}
-          <div style={{ marginBottom: '6mm' }}>
+          <div style={{ marginBottom: '6mm', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 3mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {lang === 'en' ? 'About Us' : 'Sobre Nós'}
             </p>
@@ -1523,7 +1525,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           {(branding.architectName || p.cliente) && (
             <div className="pdf-no-break" style={{ paddingTop: '4mm', borderTop: `1px solid ${C.cinzaLinha}`, pageBreakInside: 'avoid' }}>
               {/* Mini-resumo de confirmação */}
-              <div style={{ marginBottom: '4mm', padding: '2mm 3mm', background: C.offWhite, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: fs(8) }}>
+              <div style={{ marginBottom: '4mm', padding: '2mm 3mm', background: C.offWhite, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: fs(8), breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <span style={{ color: C.cinzaMarca }}>
                   {lang === 'en' ? 'Acceptance implies agreement with all terms described.' : 'A aceitação implica concordância com todas as condições.'}
                 </span>
