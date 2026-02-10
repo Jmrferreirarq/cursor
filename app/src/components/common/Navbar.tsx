@@ -143,7 +143,7 @@ export default function Navbar() {
           </NavLink>
 
           {/* Desktop Navigation — icon-only with tooltips */}
-          <div className="hidden xl:flex items-center gap-0.5 overflow-x-auto">
+          <div className="hidden xl:flex items-center gap-0.5">
             {navEntries.map((entry) => {
               if (isGroup(entry)) {
                 const isOpen = openDropdown === entry.label;
