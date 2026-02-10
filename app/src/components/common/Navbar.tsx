@@ -157,14 +157,13 @@ export default function Navbar() {
                         e.stopPropagation();
                         setOpenDropdown(isOpen ? null : entry.label);
                       }}
-                      className={`relative flex items-center gap-0.5 p-2.5 rounded-lg transition-all duration-200 ${
+                      className={`relative flex items-center p-2.5 rounded-lg transition-all duration-200 ${
                         isChildActive
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
                       <entry.icon className="w-[18px] h-[18px]" />
-                      <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                       {/* Tooltip */}
                       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
                         {entry.label}
