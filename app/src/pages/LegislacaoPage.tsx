@@ -4,12 +4,14 @@ import {
   Scale, Search, ChevronDown, ChevronRight, ExternalLink, BookOpen, Filter,
   Building2, Warehouse, Accessibility, Zap, Flame, Volume2, PlugZap, Wind, Wifi,
   Map, Home, GraduationCap, Sparkles, X, FileText, Link2, Tag, AlertTriangle,
+  Shield, HardHat,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { legislacao, CATEGORIAS, type Diploma, type CategoriaLegislacao } from '../data/legislacao';
 
 // Map icon string to component
 const ICON_MAP: Record<string, React.ElementType> = {
-  Building2, Warehouse, Accessibility, Zap, Flame, Volume2, PlugZap, Wind, Wifi, Map, Home, GraduationCap,
+  Building2, Warehouse, Accessibility, Zap, Flame, Volume2, PlugZap, Wind, Wifi, Map, Home, GraduationCap, Shield, HardHat,
 };
 
 const ESTADO_CONFIG: Record<string, { label: string; cor: string; bg: string }> = {
@@ -19,6 +21,7 @@ const ESTADO_CONFIG: Record<string, { label: string; cor: string; bg: string }> 
 };
 
 export default function LegislacaoPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategoria, setActiveCategoria] = useState<string | null>(null);
   const [activeEstado, setActiveEstado] = useState<string | null>(null);
@@ -66,12 +69,12 @@ export default function LegislacaoPage() {
 
   // Agrupados por categoria para exibição
   const grouped = useMemo(() => {
-    const map = new Map<string, Diploma[]>();
+    const map: Record<string, Diploma[]> = {};
     for (const d of filteredDiplomas) {
-      if (!map.has(d.categoria)) map.set(d.categoria, []);
-      map.get(d.categoria)!.push(d);
+      if (!map[d.categoria]) map[d.categoria] = [];
+      map[d.categoria].push(d);
     }
-    return CATEGORIAS.filter(c => map.has(c.id)).map(c => ({ categoria: c, diplomas: map.get(c.id)! }));
+    return CATEGORIAS.filter(c => map[c.id]).map(c => ({ categoria: c, diplomas: map[c.id] }));
   }, [filteredDiplomas]);
 
   const clearFilters = () => {
@@ -99,6 +102,13 @@ export default function LegislacaoPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/consulta-legislacao')}
+            className="px-3 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity flex items-center gap-2 font-medium"
+          >
+            <BookOpen className="w-4 h-4" />
+            Consulta por Tipologia
+          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-3 py-2 text-sm rounded-lg border transition-colors flex items-center gap-2 ${showFilters ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted border-border'}`}
@@ -254,7 +264,7 @@ export default function LegislacaoPage() {
 
                 {/* Diploma Cards */}
                 <div className="space-y-2">
-                  {diplomas.map(d => {
+                  {diplomas.map((d: Diploma) => {
                     const isExpanded = expandedId === d.id;
                     const estadoCfg = ESTADO_CONFIG[d.estado];
                     return (
@@ -320,7 +330,7 @@ export default function LegislacaoPage() {
                                   <div>
                                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Quando se aplica</p>
                                     <ul className="space-y-1">
-                                      {d.aplicacao.map((a, i) => (
+                                      {d.aplicacao.map((a: string, i: number) => (
                                         <li key={i} className="flex items-start gap-2 text-sm">
                                           <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                                           {a}
@@ -335,7 +345,7 @@ export default function LegislacaoPage() {
                                   <div>
                                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Artigos-chave</p>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
-                                      {d.artigosChave.map((ac, i) => (
+                                      {d.artigosChave.map((ac: { artigo: string; descricao: string }, i: number) => (
                                         <div key={i} className="flex items-start gap-2 px-2.5 py-1.5 bg-muted/50 rounded-lg">
                                           <span className="text-[10px] font-bold text-primary whitespace-nowrap mt-0.5">{ac.artigo}</span>
                                           <span className="text-xs text-muted-foreground">{ac.descricao}</span>
@@ -348,7 +358,7 @@ export default function LegislacaoPage() {
                                 {/* Tags */}
                                 <div className="flex flex-wrap gap-1.5">
                                   <Tag className="w-3 h-3 text-muted-foreground mt-0.5" />
-                                  {d.tags.map(tag => (
+                                  {d.tags.map((tag: string) => (
                                     <button
                                       key={tag}
                                       onClick={() => setSearchQuery(tag)}

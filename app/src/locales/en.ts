@@ -10,6 +10,7 @@ export const en = {
     marketing: 'Marketing',
     technical: 'Technical',
     legislacao: 'Legislation',
+    consultaLegislacao: 'Legal Consult',
     media: 'Media',
     queue: 'Queue',
     contentCalendar: 'Content Cal.',
