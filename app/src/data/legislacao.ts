@@ -1798,4 +1798,110 @@ export const legislacao: Diploma[] = [
     estado: 'vigente' as const,
     tags: ['PDM', 'SNIT', 'plano director', 'municipal', 'parâmetros', 'classificação', 'solo'],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CÓDIGO CIVIL (REFERÊNCIA GERAL)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'codigo-civil',
+    sigla: 'CC',
+    titulo: 'Código Civil Português',
+    diploma: 'Decreto-Lei n.º 47344, de 25 de novembro de 1966',
+    ultimaAlteracao: 'Lei n.º 26/2023, de 30 de junho',
+    categoria: 'habitacao',
+    subcategoria: 'Direito civil',
+    resumo: 'O Código Civil é a base do direito privado português e contém normas fundamentais para a actividade de arquitectura e construção: direito de propriedade, relações de vizinhança (distâncias, vistas, águas), contrato de empreitada, responsabilidade civil do construtor, arrendamento urbano e propriedade horizontal. É referência transversal a toda a actividade imobiliária e de construção.',
+    aplicacao: [
+      'Direito de propriedade e restrições de vizinhança (Art. 1344.º a 1365.º)',
+      'Distâncias mínimas entre edifícios, abertura de janelas e vistas (Art. 1360.º a 1362.º)',
+      'Contrato de empreitada — direitos e obrigações (Art. 1207.º a 1230.º)',
+      'Responsabilidade civil do construtor — garantia de 5 anos (Art. 1225.º)',
+      'Propriedade horizontal — fracções, partes comuns, condomínio (Art. 1414.º a 1438.º-A)',
+      'Servidões prediais — passagem, vistas, águas (Art. 1543.º a 1575.º)',
+      'Arrendamento urbano — disposições gerais (Art. 1064.º a 1113.º)',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1225.º', descricao: 'Responsabilidade do empreiteiro — defeitos e garantia de 5 anos' },
+      { artigo: 'Art. 1344.º', descricao: 'Direito de propriedade — poderes e limites' },
+      { artigo: 'Art. 1360.º', descricao: 'Abertura de janelas, portas e varandas — distância mínima de 1,50m' },
+      { artigo: 'Art. 1362.º', descricao: 'Restrições a vistas — distâncias e servidões' },
+      { artigo: 'Art. 1207.º', descricao: 'Noção de empreitada — contrato e obrigações' },
+      { artigo: 'Art. 1414.º', descricao: 'Propriedade horizontal — princípios gerais' },
+      { artigo: 'Art. 1421.º', descricao: 'Partes comuns do edifício — imperativas e presumidas' },
+      { artigo: 'Art. 1543.º', descricao: 'Servidões prediais — noção e princípios' },
+    ],
+    linkDRE: 'https://dre.pt/dre/legislacao-consolidada/decreto-lei/1966-34509075',
+    linkPGDL: 'https://www.pgdlisboa.pt/leis/lei_mostra_articulado.php?nid=775&tabela=leis',
+    estado: 'vigente',
+    tags: ['código civil', 'propriedade', 'vizinhança', 'empreitada', 'garantia', 'janelas', 'vistas', 'servidões', 'condomínio'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CÓDIGO DO IMI / IMT
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'cimi-cimt',
+    sigla: 'CIMI/CIMT',
+    titulo: 'Código do Imposto Municipal sobre Imóveis e Imposto sobre Transmissões',
+    diploma: 'Decreto-Lei n.º 287/2003, de 12 de novembro',
+    ultimaAlteracao: 'Lei n.º 82/2023, de 29 de dezembro (OE 2024)',
+    categoria: 'habitacao',
+    subcategoria: 'Fiscalidade imobiliária',
+    resumo: 'Aprova o Código do Imposto Municipal sobre Imóveis (CIMI) e o Código do Imposto Municipal sobre as Transmissões Onerosas de Imóveis (CIMT). Define a avaliação patrimonial tributária dos imóveis, as taxas de IMI, as isenções e os benefícios fiscais aplicáveis a operações de reabilitação urbana, habitação própria permanente e arrendamento acessível.',
+    aplicacao: [
+      'Avaliação patrimonial tributária de imóveis (valor patrimonial tributário — VPT)',
+      'Taxas de IMI aplicáveis (0,3% a 0,45% para prédios urbanos)',
+      'Isenção de IMI para reabilitação urbana em ARU (3 a 5 anos)',
+      'Isenção de IMI para habitação própria permanente (VPT até 125.000€)',
+      'IMT — taxas e isenções na aquisição de imóveis',
+      'Benefícios fiscais para arrendamento acessível',
+      'Coeficientes de avaliação: localização, qualidade/conforto, vetustez',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 38.º CIMI', descricao: 'Determinação do valor patrimonial tributário (VPT)' },
+      { artigo: 'Art. 39.º CIMI', descricao: 'Fórmula de cálculo do VPT — Vt = Vc × A × Ca × Cl × Cq × Cv' },
+      { artigo: 'Art. 42.º CIMI', descricao: 'Coeficiente de localização (Cl) — zonas e municípios' },
+      { artigo: 'Art. 43.º CIMI', descricao: 'Coeficiente de qualidade e conforto (Cq)' },
+      { artigo: 'Art. 112.º CIMI', descricao: 'Taxas de IMI — prédios urbanos e rústicos' },
+      { artigo: 'Art. 17.º CIMT', descricao: 'Taxas de IMT — tabela por escalões de valor' },
+      { artigo: 'Art. 45.º EBF', descricao: 'Isenção de IMI/IMT em reabilitação urbana (ARU)' },
+    ],
+    linkDRE: 'https://dre.pt/dre/legislacao-consolidada/decreto-lei/2003-34449675',
+    estado: 'vigente',
+    tags: ['IMI', 'IMT', 'imposto', 'avaliação', 'VPT', 'fiscal', 'isenção', 'reabilitação', 'ARU', 'habitação'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // FICHA TÉCNICA DA HABITAÇÃO
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'ficha-tecnica-habitacao',
+    sigla: 'FTH',
+    titulo: 'Ficha Técnica da Habitação',
+    diploma: 'Decreto-Lei n.º 68/2004, de 25 de março',
+    ultimaAlteracao: 'Decreto-Lei n.º 10/2024, de 8 de janeiro',
+    categoria: 'edificacoes',
+    subcategoria: 'Documentação técnica',
+    resumo: 'Estabelece a obrigatoriedade de elaboração de uma ficha técnica para cada unidade de habitação (prédios urbanos destinados a habitação), a entregar ao primeiro comprador. A FTH contém a descrição das características técnicas e funcionais do imóvel: materiais utilizados, sistemas construtivos, instalações técnicas, equipamentos e acabamentos. É um documento de garantia e informação ao consumidor.',
+    aplicacao: [
+      'Obrigatória na primeira transmissão (venda) de imóveis para habitação',
+      'Elaborada pelo promotor / construtor antes da venda',
+      'Conteúdo: identificação do imóvel, descrição de materiais e sistemas construtivos',
+      'Inclui: instalações (água, gás, electricidade, telecomunicações), acabamentos, equipamentos',
+      'Deve ser entregue ao comprador no acto da escritura',
+      'Modelo aprovado pela Portaria n.º 817/2004, de 16 de julho',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 1.º', descricao: 'Objecto — obrigatoriedade da ficha técnica' },
+      { artigo: 'Art. 2.º', descricao: 'Âmbito — prédios urbanos destinados a habitação' },
+      { artigo: 'Art. 3.º', descricao: 'Conteúdo da ficha técnica — especificações obrigatórias' },
+      { artigo: 'Art. 4.º', descricao: 'Entidade responsável pela elaboração' },
+      { artigo: 'Art. 5.º', descricao: 'Entrega ao comprador — momento e forma' },
+      { artigo: 'Portaria 817/2004', descricao: 'Modelo oficial da Ficha Técnica da Habitação' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/68-2004-217064',
+    estado: 'vigente',
+    tags: ['ficha técnica', 'habitação', 'venda', 'comprador', 'materiais', 'acabamentos', 'garantia', 'FTH'],
+    simplex: true,
+  },
 ];

@@ -314,4 +314,22 @@ export const REQUISITOS_POR_DIPLOMA: Record<string, Requisito[]> = {
   'avac': [
     { id: 'avac-01', diplomaId: 'avac', texto: 'Verificar caudais mínimos de ar novo para o edifício', detalhe: 'Portaria 353-A/2013 — caudais por pessoa ou por m² conforme actividade', fase: 'execucao', criticidade: 'importante' },
   ],
+
+  // ─── CÓDIGO CIVIL ──────────────────────────────────────
+  'codigo-civil': [
+    { id: 'cc-01', diplomaId: 'codigo-civil', texto: 'Verificar distâncias mínimas de janelas e vistas ao limite da propriedade', detalhe: 'Art. 1360.º — distância mínima de 1,50m para janelas, portas, varandas e terraços com vista directa', fase: 'ante_projecto', criticidade: 'critico' },
+    { id: 'cc-02', diplomaId: 'codigo-civil', texto: 'Verificar servidões prediais existentes (passagem, vistas, águas)', detalhe: 'Art. 1543.º a 1575.º — servidões podem condicionar o projecto', fase: 'estudo_previo', criticidade: 'importante' },
+    { id: 'cc-03', diplomaId: 'codigo-civil', texto: 'Incluir cláusulas de garantia de 5 anos no contrato de empreitada', detalhe: 'Art. 1225.º — responsabilidade do empreiteiro por defeitos durante 5 anos após entrega', fase: 'obra', criticidade: 'importante' },
+  ],
+
+  // ─── FICHA TÉCNICA DA HABITAÇÃO ──────────────────────────
+  'ficha-tecnica-habitacao': [
+    { id: 'fth-01', diplomaId: 'ficha-tecnica-habitacao', texto: 'Elaborar Ficha Técnica da Habitação (FTH) antes da venda', detalhe: 'DL 68/2004 — obrigatória na primeira transmissão de imóveis para habitação', fase: 'obra', criticidade: 'critico' },
+    { id: 'fth-02', diplomaId: 'ficha-tecnica-habitacao', texto: 'Incluir na FTH: materiais, sistemas construtivos, instalações e acabamentos', detalhe: 'Modelo aprovado pela Portaria 817/2004 — descrição completa do imóvel', fase: 'obra', criticidade: 'importante' },
+  ],
+
+  // ─── CÓDIGO DO IMI/IMT ──────────────────────────────────
+  'cimi-cimt': [
+    { id: 'cimi-01', diplomaId: 'cimi-cimt', texto: 'Verificar benefícios fiscais de IMI/IMT em reabilitação urbana (ARU)', detalhe: 'Art. 45.º EBF — isenção de IMI (3-5 anos) e IMT para imóveis reabilitados em ARU', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
 };

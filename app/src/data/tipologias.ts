@@ -1758,4 +1758,50 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Necessário para verificação de conformidade com instrumentos de gestão territorial',
     },
   ],
+
+  // ─── DIPLOMAS TRANSVERSAIS (adicionados a todas as tipologias de habitação) ───
+  // Nota: estes são adicionados programaticamente abaixo
 };
+
+// Adicionar diplomas transversais a tipologias relevantes
+const DIPLOMAS_HABITACAO: TipologiaDiploma[] = [
+  { diplomaId: 'codigo-civil', relevancia: 'frequente', nota: 'Direito de propriedade, vizinhança (distâncias, vistas), empreitada e garantia de 5 anos (Art. 1225.º)' },
+  { diplomaId: 'ficha-tecnica-habitacao', relevancia: 'obrigatorio', nota: 'Ficha Técnica da Habitação obrigatória na primeira venda de imóveis para habitação' },
+  { diplomaId: 'cimi-cimt', relevancia: 'condicional', nota: 'Avaliação patrimonial (VPT), taxas de IMI/IMT e benefícios fiscais em reabilitação' },
+];
+
+const DIPLOMAS_NAO_HABITACAO: TipologiaDiploma[] = [
+  { diplomaId: 'codigo-civil', relevancia: 'frequente', nota: 'Direito de propriedade, relações de vizinhança, contrato de empreitada e responsabilidade civil' },
+  { diplomaId: 'cimi-cimt', relevancia: 'condicional', nota: 'Avaliação patrimonial tributária e taxas de IMI aplicáveis ao imóvel' },
+];
+
+// Tipologias de habitação recebem FTH + CC + CIMI
+for (const tipId of ['moradia_isolada', 'moradia_geminada', 'moradia_banda', 'multifamiliar']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(...DIPLOMAS_HABITACAO);
+  }
+}
+
+// Tipologias não-habitação recebem CC + CIMI (sem FTH)
+for (const tipId of ['comercio_servicos', 'equipamento', 'industrial', 'turismo']) {
+  if (TIPOLOGIA_DIPLOMAS[tipId]) {
+    TIPOLOGIA_DIPLOMAS[tipId].push(...DIPLOMAS_NAO_HABITACAO);
+  }
+}
+
+// Reabilitação recebe tudo (FTH pode ser necessária na venda após reabilitação)
+if (TIPOLOGIA_DIPLOMAS['reabilitacao']) {
+  TIPOLOGIA_DIPLOMAS['reabilitacao'].push(
+    { diplomaId: 'codigo-civil', relevancia: 'frequente' as const, nota: 'Garantia de 5 anos do empreiteiro (Art. 1225.º), relações de vizinhança e servidões prediais' },
+    { diplomaId: 'ficha-tecnica-habitacao', relevancia: 'frequente' as const, nota: 'Necessária na venda do imóvel reabilitado para habitação' },
+    { diplomaId: 'cimi-cimt', relevancia: 'frequente' as const, nota: 'Isenção de IMI/IMT em ARU (Art. 45.º EBF) — benefícios fiscais significativos para reabilitação' },
+  );
+}
+
+// Loteamento recebe CC + CIMI
+if (TIPOLOGIA_DIPLOMAS['loteamento']) {
+  TIPOLOGIA_DIPLOMAS['loteamento'].push(
+    { diplomaId: 'codigo-civil', relevancia: 'frequente' as const, nota: 'Servidões prediais, direito de propriedade e relações de vizinhança entre lotes' },
+    { diplomaId: 'cimi-cimt', relevancia: 'condicional' as const, nota: 'Avaliação patrimonial dos lotes e taxas de IMI/IMT na transmissão' },
+  );
+}
