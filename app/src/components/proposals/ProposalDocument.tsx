@@ -176,7 +176,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>{c.tipoHabitacaoLabel || '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', fontSize: fs(7) }}>{c.accessModelLabel || '—'}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias || '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias ? `${c.cedencias} m2` : '—'}</td>
                       </tr>
                     ))}
                   </tbody>

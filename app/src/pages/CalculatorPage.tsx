@@ -1035,7 +1035,8 @@ export default function CalculatorPage() {
     // Comprimento de rede: se via interna, usar comprimento; senão ~80% da frente
     const comprimentoRede = temViaInterna && viaComp > 0 ? viaComp : frenteTerreno * 0.8;
     const areaEstudo = Math.max(0, parseFloat(lotAreaEstudo) || 0);
-    const areaVerde = areaEstudo * 0.15; // ~15% cedências verdes
+    const pctCedInfra = Math.max(0, parseFloat(lotPercentagemCedencias) || 15) / 100;
+    const areaVerde = areaEstudo * pctCedInfra; // cedências verdes (% do município)
     // Especialidades relevantes para o tipo de loteamento
     const espIds = new Set(TIPOLOGIA_ESPECIALIDADES[projectType] ?? []);
     // Calcular cada item
@@ -1655,6 +1656,7 @@ export default function CalculatorPage() {
         lotTipoHabitacao: HOUSING_TYPE_LABELS[lotTipoHabitacao] ?? lotTipoHabitacao,
         lotObjetivo: OBJETIVO_LABELS[lotObjetivoPrincipal] ?? lotObjetivoPrincipal,
         // Cenarios com access_model + largura estimada + tipo habitação
+        // Auto-cálculo de areaMedia e cedencias como fallback quando o utilizador não preenche
         lotCenarios: [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])].map((cen, i) => {
           if (!cen.lotes) return null;
           const frente = parseFloat(lotFrenteTerreno) || 0;
@@ -1662,8 +1664,16 @@ export default function CalculatorPage() {
           const largura = calcularLarguraLote(frente, nLotes, cen.accessModel);
           const inferido = largura > 0 ? inferirTipoHabitacao(largura) : null;
           const tipoEfetivo = cen.tipoHabitacao === 'auto' && inferido ? inferido.tipo : cen.tipoHabitacao;
+          // Auto-cálculo: cedências e área média/lote (fallback quando campo vazio)
+          const areaEst = parseFloat(lotAreaEstudo) || 0;
+          const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+          const cedenciasAuto = areaEst > 0 ? Math.round(areaEst * pctCed / 100) : 0;
+          const areaMediaAuto = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - cedenciasAuto) / nLotes) : 0;
           return {
             ...cen,
+            // Usar valor manual se preenchido, senão o auto-calculado
+            areaMedia: cen.areaMedia || (areaMediaAuto > 0 ? String(areaMediaAuto) : ''),
+            cedencias: cen.cedencias || (cedenciasAuto > 0 ? String(cedenciasAuto) : ''),
             label: String.fromCharCode(65 + i), // A, B, C
             accessModelLabel: ACCESS_MODEL_LABELS[cen.accessModel] ?? cen.accessModel,
             larguraEstimada: largura > 0 ? `${largura.toFixed(1)}m` : undefined,
@@ -2898,6 +2908,9 @@ export default function CalculatorPage() {
                     className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
                     placeholder={isLoteamento ? 'Preenchido na secção abaixo' : 'Ex: 150'}
                   />
+                  {isLoteamento && lotAreaEstudo && area === lotAreaEstudo && (
+                    <p className="text-[10px] text-blue-400 mt-0.5">Calculado a partir da area em estudo</p>
+                  )}
                   {isLoteamento && lotAreaEstudo && area !== lotAreaEstudo && (
                     <button
                       onClick={() => setArea(lotAreaEstudo)}
