@@ -349,4 +349,250 @@ export const REQUISITOS_POR_DIPLOMA: Record<string, Requisito[]> = {
   'cimi-cimt': [
     { id: 'cimi-01', diplomaId: 'cimi-cimt', texto: 'Verificar benefícios fiscais de IMI/IMT em reabilitação urbana (ARU)', detalhe: 'Art. 45.º EBF — isenção de IMI (3-5 anos) e IMT para imóveis reabilitados em ARU', fase: 'estudo_previo', criticidade: 'informativo' },
   ],
+
+  // ═══════════════════════════════════════════════════════════════
+  // DIPLOMAS ADICIONADOS — expansão de cobertura
+  // ═══════════════════════════════════════════════════════════════
+
+  // ─── URBANISMO (complementos) ──────────────────────────
+  'ruea': [
+    { id: 'ruea-01', diplomaId: 'ruea', texto: 'Verificar aplicabilidade do RUEA (Açores) ao projecto', detalhe: 'Regime urbanístico específico da Região Autónoma dos Açores', fase: 'estudo_previo', criticidade: 'importante' },
+  ],
+
+  'dl-48-2011': [
+    { id: 'dl48-01', diplomaId: 'dl-48-2011', texto: 'Verificar se a actividade está isenta de licenciamento (Licenciamento Zero)', detalhe: 'DL 48/2011 — isenta certas actividades económicas de licenciamento municipal', fase: 'estudo_previo', criticidade: 'importante' },
+    { id: 'dl48-02', diplomaId: 'dl-48-2011', texto: 'Confirmar se basta mera comunicação prévia para a ocupação do espaço público', detalhe: 'Art. 3.º — regime simplificado para esplanadas, toldos, vitrinas, etc.', fase: 'licenciamento', criticidade: 'informativo' },
+  ],
+
+  'augi': [
+    { id: 'augi-01', diplomaId: 'augi', texto: 'Verificar se o terreno está em área AUGI (área urbana de génese ilegal)', detalhe: 'Lei 91/95 — regime especial para reconversão urbanística', fase: 'estudo_previo', criticidade: 'critico' },
+    { id: 'augi-02', diplomaId: 'augi', texto: 'Identificar obrigações de reconversão e infra-estruturação', detalhe: 'Comissão de administração conjunta, projecto de reconversão', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'lei-31-2014': [
+    { id: 'lei31-14-01', diplomaId: 'lei-31-2014', texto: 'Enquadrar a operação na Lei de Bases da Política de Solos', detalhe: 'Lei 31/2014 — princípios gerais de uso do solo e direitos dos proprietários', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
+
+  'mais-habitacao': [
+    { id: 'mh-01', diplomaId: 'mais-habitacao', texto: 'Verificar benefícios do programa Mais Habitação', detalhe: 'Lei 56/2023 — conversão de comércio para habitação, IVA 6%, licenciamento simplificado', fase: 'estudo_previo', criticidade: 'importante' },
+    { id: 'mh-02', diplomaId: 'mais-habitacao', texto: 'Confirmar se a conversão de uso para habitação é elegível', detalhe: 'Art. 4.º — isenção de taxas para conversão de comércios/serviços em habitação', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'lei-75-2013': [
+    { id: 'lei75-01', diplomaId: 'lei-75-2013', texto: 'Confirmar competências da câmara municipal na operação urbanística', detalhe: 'Art. 33.º — competências próprias das câmaras em matéria de urbanismo', fase: 'licenciamento', criticidade: 'informativo' },
+  ],
+
+  'portaria-216e-2008': [
+    { id: 'p216e-01', diplomaId: 'portaria-216e-2008', texto: 'Verificar cálculo da TMU aplicável ao projecto', detalhe: 'Portaria 216-E/2008 — parâmetros para cálculo de taxas municipais de urbanização', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  // ─── EDIFICAÇÕES (complementos) ──────────────────────────
+  'acessibilidade-via-publica': [
+    { id: 'avp-01', diplomaId: 'acessibilidade-via-publica', texto: 'Garantir acessibilidade na via pública adjacente ao projecto', detalhe: 'PNPA — Plano Nacional de Promoção da Acessibilidade, alinhado com DL 163/2006', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  'portaria-138-2005': [
+    { id: 'p138-01', diplomaId: 'portaria-138-2005', texto: 'Verificar obrigatoriedade de ascensor e monta-cargas conforme uso', detalhe: 'Portaria 138/2005 — especificações técnicas de elevadores em edifícios', fase: 'ante_projecto', criticidade: 'importante' },
+    { id: 'p138-02', diplomaId: 'portaria-138-2005', texto: 'Dimensionar cabina de elevador para acessibilidade (≥ 1,10 × 1,40m)', detalhe: 'Requisitos de dimensões mínimas para utilização por PMR', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'dl-309-2002': [
+    { id: 'dl309-01', diplomaId: 'dl-309-2002', texto: 'Verificar requisitos de segurança para piscinas (se aplicável)', detalhe: 'DL 309/2002 — instalação e funcionamento de recintos com diversões aquáticas', fase: 'ante_projecto', criticidade: 'importante' },
+    { id: 'dl309-02', diplomaId: 'dl-309-2002', texto: 'Prever vedações, sinalética e equipamentos de segurança', detalhe: 'Vedação perimetral, profundidades, sistema de filtragem e desinfecção', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'dl-267-2002': [
+    { id: 'dl267-01', diplomaId: 'dl-267-2002', texto: 'Verificar requisitos de instalação de equipamentos sob pressão (gás)', detalhe: 'DL 267/2002 — redes e ramais de gás, equipamentos de queima e ventilação', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'nfpa-piscinas': [
+    { id: 'nfpa-01', diplomaId: 'nfpa-piscinas', texto: 'Aplicar normas NFPA para piscinas (se projecto inclui piscina)', detalhe: 'NFPA 303 — protecção contra incêndio e segurança em instalações aquáticas', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'residencias-ensino-superior': [
+    { id: 'res-01', diplomaId: 'residencias-ensino-superior', texto: 'Verificar requisitos específicos para residências de estudantes', detalhe: 'Regime aplicável a residências para ensino superior — áreas mínimas, acessibilidade', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  'receptaculo-postal-dr8-90': [
+    { id: 'rp1-01', diplomaId: 'receptaculo-postal-dr8-90', texto: 'Prever receptáculos postais conforme regulamento', detalhe: 'DR 8/90 — caixa de correio obrigatória por fogo, localização acessível', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'receptaculo-postal-dr21-98': [
+    { id: 'rp2-01', diplomaId: 'receptaculo-postal-dr21-98', texto: 'Verificar alterações ao regulamento de receptáculos postais', detalhe: 'DR 21/98 — actualização de especificações de caixas de correio', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'receptaculo-postal-retificacao-22e-98': [
+    { id: 'rp3-01', diplomaId: 'receptaculo-postal-retificacao-22e-98', texto: 'Confirmar rectificações ao regulamento de receptáculos postais', detalhe: 'DR 22-E/98 — rectificação de especificações', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'rgc': [
+    { id: 'rgc-01', diplomaId: 'rgc', texto: 'Aplicar normas gerais de construção nas soluções construtivas', detalhe: 'Regulamento Geral das Construções — boas práticas construtivas', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  // ─── SEGURANÇA CONTRA INCÊNDIOS (complementos) ──────────
+  'dl-224-2015': [
+    { id: 'dl224-01', diplomaId: 'dl-224-2015', texto: 'Verificar alterações ao RJ-SCIE introduzidas em 2015', detalhe: 'DL 224/2015 — actualização de utilizações-tipo e categorias de risco', fase: 'estudo_previo', criticidade: 'importante' },
+  ],
+
+  'portaria-773-2009': [
+    { id: 'p773-01', diplomaId: 'portaria-773-2009', texto: 'Seguir procedimentos de certificação SCIE conforme portaria', detalhe: 'Portaria 773/2009 — procedimentos administrativos de SCIE na ANEPC', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'lei-123-2019': [
+    { id: 'lei123-01', diplomaId: 'lei-123-2019', texto: 'Verificar alterações à legislação SCIE de 2019', detalhe: 'Lei 123/2019 — alterações ao DL 220/2008 (SCIE)', fase: 'licenciamento', criticidade: 'informativo' },
+  ],
+
+  // ─── DESEMPENHO ENERGÉTICO (complementos) ──────────────
+  'dl-101-d-2020': [
+    { id: 'dl101d-01', diplomaId: 'dl-101-d-2020', texto: 'Verificar alterações ao SCE introduzidas em 2020', detalhe: 'DL 101-D/2020 — actualização do sistema de certificação energética', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'dl-101d-2020-nzeb': [
+    { id: 'nzeb-01', diplomaId: 'dl-101d-2020-nzeb', texto: 'Verificar requisitos NZEB para edifícios novos', detalhe: 'Edifícios de necessidades quase nulas de energia — obrigatório desde 2021', fase: 'ante_projecto', criticidade: 'critico' },
+    { id: 'nzeb-02', diplomaId: 'dl-101d-2020-nzeb', texto: 'Garantir contribuição mínima de energias renováveis', detalhe: 'Solar térmico/fotovoltaico/bomba de calor — cumprir quota renovável', fase: 'execucao', criticidade: 'critico' },
+  ],
+
+  'dl-80-2006': [
+    { id: 'dl80-01', diplomaId: 'dl-80-2006', texto: 'Verificar se a referência ao RCCTE ainda se aplica (diploma revogado)', detalhe: 'DL 80/2006 (RCCTE) revogado pelo DL 118/2013 — usar REH/RECS actualizado', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'portaria-349a-2013': [
+    { id: 'p349a-01', diplomaId: 'portaria-349a-2013', texto: 'Preencher ficha de síntese SCE para o edifício', detalhe: 'Portaria 349-A/2013 — elementos do SCE para edifícios de habitação e serviços', fase: 'execucao', criticidade: 'critico' },
+    { id: 'p349a-02', diplomaId: 'portaria-349a-2013', texto: 'Validar dados climáticos e parâmetros térmicos por localização', detalhe: 'Graus-dia, temperatura exterior, radiação solar — conforme município', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'portaria-349c-2013': [
+    { id: 'p349c-01', diplomaId: 'portaria-349c-2013', texto: 'Verificar requisitos RECS para edifícios de comércio e serviços', detalhe: 'Portaria 349-C/2013 — elementos técnicos do RECS', fase: 'execucao', criticidade: 'critico' },
+    { id: 'p349c-02', diplomaId: 'portaria-349c-2013', texto: 'Verificar qualidade do ar interior e ventilação em serviços', detalhe: 'Caudais mínimos de ar novo por tipo de espaço', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'portaria-232-2008': [
+    { id: 'p232-01', diplomaId: 'portaria-232-2008', texto: 'Verificar elementos instrutórios específicos de eficiência energética', detalhe: 'Portaria 232/2008 — elementos de demonstração de conformidade energética', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'fnre': [
+    { id: 'fnre-01', diplomaId: 'fnre', texto: 'Verificar enquadramento no Fundo Nacional de Reabilitação do Edificado', detalhe: 'FNRE — financiamento para reabilitação de imóveis públicos e privados', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
+
+  // ─── INSTALAÇÕES DE GÁS (complementos) ──────────────
+  'dl-521-99': [
+    { id: 'dl521-01', diplomaId: 'dl-521-99', texto: 'Elaborar projecto de rede de gás (se edifício com gás natural/GPL)', detalhe: 'DL 521/99 — projecto obrigatório para instalações de gás em edifícios', fase: 'execucao', criticidade: 'critico' },
+    { id: 'dl521-02', diplomaId: 'dl-521-99', texto: 'Garantir ventilação e exaustão adequada para aparelhos a gás', detalhe: 'Aberturas de ventilação permanente e evacuação de gases de combustão', fase: 'execucao', criticidade: 'critico' },
+  ],
+
+  'portaria-424-2025': [
+    { id: 'p424-01', diplomaId: 'portaria-424-2025', texto: 'Verificar novos requisitos regulamentares de gás (2025)', detalhe: 'Portaria 424/2025 — actualização de requisitos para instalações de gás', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  // ─── TELECOMUNICAÇÕES (complementos) ──────────────
+  'dl-92-2017': [
+    { id: 'dl92-01', diplomaId: 'dl-92-2017', texto: 'Verificar alterações ao regime ITED/ITUR (2017)', detalhe: 'DL 92/2017 — actualização de requisitos de telecomunicações em edifícios', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  // ─── CONDICIONANTES TERRITORIAIS (complementos) ──────────
+  'dominio-publico-maritimo': [
+    { id: 'dpm-01', diplomaId: 'dominio-publico-maritimo', texto: 'Verificar se o terreno está em domínio público marítimo', detalhe: 'Faixa de 50m a partir da linha de máxima preia-mar — construção proibida', fase: 'estudo_previo', criticidade: 'critico' },
+    { id: 'dpm-02', diplomaId: 'dominio-publico-maritimo', texto: 'Obter parecer da APA/capitania se junto à orla costeira', detalhe: 'Parecer obrigatório para obras em zona de domínio público hídrico', fase: 'licenciamento', criticidade: 'critico' },
+  ],
+
+  // ─── SEGURANÇA ESTRUTURAL (complementos) ──────────────
+  'rsa': [
+    { id: 'rsa-01', diplomaId: 'rsa', texto: 'Verificar acções regulamentares (RSA) ainda aplicáveis', detalhe: 'DL 235/83 — acções em edifícios e pontes; vento e sismo parcialmente substituídos pelos Eurocódigos', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'rebap': [
+    { id: 'rebap-01', diplomaId: 'rebap', texto: 'Consultar REBAP para referências em projectos existentes', detalhe: 'DL 349-C/83 — betão armado e pré-esforçado; substituído pelo EC2 em projectos novos', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'en-1993': [
+    { id: 'ec3-01', diplomaId: 'en-1993', texto: 'Elaborar projecto de estruturas metálicas conforme Eurocódigo 3', detalhe: 'EN 1993 — dimensionamento de elementos em aço (vigas, pilares, ligações)', fase: 'execucao', criticidade: 'critico' },
+  ],
+
+  'en-1995': [
+    { id: 'ec5-01', diplomaId: 'en-1995', texto: 'Elaborar projecto de estruturas de madeira conforme Eurocódigo 5', detalhe: 'EN 1995 — dimensionamento de elementos em madeira (vigas, coberturas, pavimentos)', fase: 'execucao', criticidade: 'critico' },
+  ],
+
+  'eurocod-6': [
+    { id: 'ec6-01', diplomaId: 'eurocod-6', texto: 'Verificar requisitos para alvenaria estrutural conforme Eurocódigo 6', detalhe: 'EN 1996 — dimensionamento de alvenaria portante e de enchimento', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  'portaria-101-96': [
+    { id: 'p101-01', diplomaId: 'portaria-101-96', texto: 'Verificar especificações de sinalização de estaleiro', detalhe: 'Portaria 101/96 — regulamento de sinalização de segurança em estaleiros', fase: 'obra', criticidade: 'importante' },
+  ],
+
+  'portaria-53-71': [
+    { id: 'p53-01', diplomaId: 'portaria-53-71', texto: 'Cumprir regulamento geral de segurança e higiene no trabalho', detalhe: 'Portaria 53/71 — condições de segurança em estaleiros de construção', fase: 'obra', criticidade: 'critico' },
+  ],
+
+  // ─── PROFISSÃO (complementos) ──────────────
+  'portaria-701h': [
+    { id: 'p701h-01', diplomaId: 'portaria-701h', texto: 'Seguir fases de projecto conforme Portaria 701-H/2008', detalhe: 'Define as fases: programa preliminar, estudo prévio, ante-projecto, licenciamento, execução', fase: 'estudo_previo', criticidade: 'importante' },
+    { id: 'p701h-02', diplomaId: 'portaria-701h', texto: 'Incluir conteúdo mínimo em cada fase conforme portaria', detalhe: 'Peças escritas e desenhadas obrigatórias por fase de projecto', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  'eoa': [
+    { id: 'eoa-01', diplomaId: 'eoa', texto: 'Verificar inscrição válida na Ordem dos Arquitectos', detalhe: 'Exercício profissional condicionado a inscrição activa na OA', fase: 'licenciamento', criticidade: 'critico' },
+  ],
+
+  'lei-40-2015': [
+    { id: 'lei40-01', diplomaId: 'lei-40-2015', texto: 'Verificar qualificação profissional dos técnicos de especialidade', detalhe: 'Lei 40/2015 — qualificação de técnicos responsáveis por projectos de especialidade', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'ccp': [
+    { id: 'ccp-01', diplomaId: 'ccp', texto: 'Verificar se a obra está sujeita ao Código dos Contratos Públicos', detalhe: 'DL 18/2008 — obrigatório para obras públicas e contratação por entidades públicas', fase: 'estudo_previo', criticidade: 'importante' },
+    { id: 'ccp-02', diplomaId: 'ccp', texto: 'Elaborar programa de concurso e caderno de encargos (se aplicável)', detalhe: 'Peças de procedimento para concurso público ou ajuste directo', fase: 'execucao', criticidade: 'importante' },
+  ],
+
+  // ─── HABITAÇÃO (complementos) ──────────────
+  'lei-bases-habitacao': [
+    { id: 'lbh-01', diplomaId: 'lei-bases-habitacao', texto: 'Enquadrar o projecto na Lei de Bases da Habitação', detalhe: 'Lei 83/2019 — princípios do direito à habitação e dever do Estado', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
+
+  'lei-6-2006': [
+    { id: 'lei6-01', diplomaId: 'lei-6-2006', texto: 'Verificar regime do NRAU para arrendamento (versão base)', detalhe: 'Lei 6/2006 — regime base de arrendamento urbano', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
+
+  'lei-32-2012': [
+    { id: 'lei32-01', diplomaId: 'lei-32-2012', texto: 'Verificar alterações ao RJRU introduzidas em 2012', detalhe: 'Lei 32/2012 — alteração ao regime de reabilitação urbana', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
+
+  'dl-268-94': [
+    { id: 'dl268-01', diplomaId: 'dl-268-94', texto: 'Verificar regras de obras em propriedade horizontal', detalhe: 'DL 268/94 — regime de obras em fracções autónomas e partes comuns', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'lei-108-2018': [
+    { id: 'lei108-01', diplomaId: 'lei-108-2018', texto: 'Verificar condições especiais de propriedade horizontal (2018)', detalhe: 'Lei 108/2018 — alterações ao regime de propriedade horizontal', fase: 'ante_projecto', criticidade: 'informativo' },
+  ],
+
+  // ─── TURISMO (complementos) ──────────────
+  'portaria-327-2008': [
+    { id: 'p327-01', diplomaId: 'portaria-327-2008', texto: 'Verificar classificação de empreendimentos turísticos por estrelas', detalhe: 'Portaria 327/2008 — requisitos de classificação por tipologia e categoria', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  // ─── ACESSIBILIDADES (complementos) ──────────────
+  'dl-38-2013': [
+    { id: 'dl38-01', diplomaId: 'dl-38-2013', texto: 'Verificar alterações ao regime de acessibilidades (2013)', detalhe: 'DL 38/2013 — alteração ao DL 163/2006 de acessibilidades', fase: 'ante_projecto', criticidade: 'informativo' },
+  ],
+
+  'portaria-301-2019': [
+    { id: 'p301-01', diplomaId: 'portaria-301-2019', texto: 'Verificar normas de acessibilidade da Web e conteúdos digitais', detalhe: 'Portaria 301/2019 — acessibilidade digital para organismos públicos', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  'portaria-304-2014': [
+    { id: 'p304-01', diplomaId: 'portaria-304-2014', texto: 'Verificar requisitos de acessibilidade em remodelações', detalhe: 'Portaria 304/2014 — requisitos de acessibilidade em obras de remodelação', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  'dr-5-2019': [
+    { id: 'dr5-01', diplomaId: 'dr-5-2019', texto: 'Verificar requisitos de design universal para via pública', detalhe: 'DR 5/2019 — normas de acessibilidade em espaços públicos', fase: 'ante_projecto', criticidade: 'importante' },
+  ],
+
+  // ─── ACÚSTICA (complementos) ──────────────
+  'dl-129-2002': [
+    { id: 'dl129-01', diplomaId: 'dl-129-2002', texto: 'Consultar versão base do RRAE (se referência a edifícios anteriores)', detalhe: 'DL 129/2002 — versão original do RRAE antes das alterações', fase: 'execucao', criticidade: 'informativo' },
+  ],
+
+  // ─── AVALIAÇÃO IMOBILIÁRIA ──────────────
+  'portaria-420-2015': [
+    { id: 'p420-01', diplomaId: 'portaria-420-2015', texto: 'Consultar tabelas de avaliação do IMI para referência de valores', detalhe: 'Portaria 420/2015 — coeficientes de avaliação patrimonial tributária', fase: 'estudo_previo', criticidade: 'informativo' },
+  ],
 };
