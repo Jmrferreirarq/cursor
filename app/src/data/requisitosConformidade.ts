@@ -328,6 +328,23 @@ export const REQUISITOS_POR_DIPLOMA: Record<string, Requisito[]> = {
     { id: 'fth-02', diplomaId: 'ficha-tecnica-habitacao', texto: 'Incluir na FTH: materiais, sistemas construtivos, instalações e acabamentos', detalhe: 'Modelo aprovado pela Portaria 817/2004 — descrição completa do imóvel', fase: 'obra', criticidade: 'importante' },
   ],
 
+  // ─── PORTARIAS SIMPLEX 2024 ──────────────────────────────
+  'portaria-75-2024': [
+    { id: 'p75-01', diplomaId: 'portaria-75-2024', texto: 'Verificar se o projecto é elegível para comunicação prévia com código de validação', detalhe: 'Portaria 75/2024 — submissão na plataforma electrónica com validação automática', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
+  'portaria-71a-2024': [
+    { id: 'p71a-01', diplomaId: 'portaria-71a-2024', texto: 'Utilizar os novos modelos de termos de responsabilidade (Simplex)', detalhe: 'Portaria 71-A/2024 — modelos actualizados para projectistas e directores de obra', fase: 'licenciamento', criticidade: 'critico' },
+  ],
+
+  'portaria-71b-2024': [
+    { id: 'p71b-01', diplomaId: 'portaria-71b-2024', texto: 'Preencher o livro de obra em formato electrónico na plataforma', detalhe: 'Portaria 71-B/2024 — substitui o livro de obra em papel', fase: 'obra', criticidade: 'critico' },
+  ],
+
+  'portaria-71c-2024': [
+    { id: 'p71c-01', diplomaId: 'portaria-71c-2024', texto: 'Preencher a ficha de elementos estatísticos (INE)', detalhe: 'Portaria 71-C/2024 — dados estatísticos obrigatórios sobre a operação urbanística', fase: 'licenciamento', criticidade: 'importante' },
+  ],
+
   // ─── CÓDIGO DO IMI/IMT ──────────────────────────────────
   'cimi-cimt': [
     { id: 'cimi-01', diplomaId: 'cimi-cimt', texto: 'Verificar benefícios fiscais de IMI/IMT em reabilitação urbana (ARU)', detalhe: 'Art. 45.º EBF — isenção de IMI (3-5 anos) e IMT para imóveis reabilitados em ARU', fase: 'estudo_previo', criticidade: 'informativo' },

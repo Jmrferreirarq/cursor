@@ -1798,6 +1798,18 @@ if (TIPOLOGIA_DIPLOMAS['reabilitacao']) {
   );
 }
 
+// Portarias Simplex 2024 — transversais a todas as tipologias
+const PORTARIAS_SIMPLEX: TipologiaDiploma[] = [
+  { diplomaId: 'portaria-75-2024', relevancia: 'frequente', nota: 'Comunicação prévia simplificada com código de validação automático (Simplex)' },
+  { diplomaId: 'portaria-71a-2024', relevancia: 'obrigatorio', nota: 'Novos modelos de termos de responsabilidade dos técnicos (obrigatórios desde março 2024)' },
+  { diplomaId: 'portaria-71b-2024', relevancia: 'obrigatorio', nota: 'Livro de obra electrónico — substitui o livro de obra em papel' },
+  { diplomaId: 'portaria-71c-2024', relevancia: 'frequente', nota: 'Ficha de elementos estatísticos para o INE' },
+];
+
+for (const tipId of Object.keys(TIPOLOGIA_DIPLOMAS)) {
+  TIPOLOGIA_DIPLOMAS[tipId].push(...PORTARIAS_SIMPLEX);
+}
+
 // Loteamento recebe CC + CIMI
 if (TIPOLOGIA_DIPLOMAS['loteamento']) {
   TIPOLOGIA_DIPLOMAS['loteamento'].push(
