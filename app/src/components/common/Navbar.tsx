@@ -28,12 +28,33 @@ import {
   Bot,
   LayoutGrid,
   CalendarDays,
+  ClipboardList,
+  BookOpen,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useData } from '@/context/DataContext';
 
-const navItems = [
+interface NavItem {
+  path: string;
+  labelKey: string;
+  icon: React.ElementType;
+  exact?: boolean;
+}
+
+interface NavGroup {
+  labelKey: string;
+  icon: React.ElementType;
+  children: NavItem[];
+}
+
+type NavEntry = NavItem | NavGroup;
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return 'children' in entry;
+}
+
+const navEntries: NavEntry[] = [
   { path: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, exact: true },
   { path: '/proposals', labelKey: 'nav.proposals', icon: FileText },
   { path: '/projects', labelKey: 'nav.projects', icon: FolderKanban },
@@ -43,8 +64,17 @@ const navItems = [
   { path: '/calendar', labelKey: 'nav.calendar', icon: Calendar },
   { path: '/marketing', labelKey: 'nav.marketing', icon: Megaphone },
   { path: '/technical', labelKey: 'nav.technical', icon: Wrench },
-  { path: '/legislacao', labelKey: 'nav.legislacao', icon: Scale },
-  { path: '/municipios', labelKey: 'nav.municipios', icon: MapPin },
+  // ─── Legislação dropdown ───
+  {
+    labelKey: 'nav.legislacao',
+    icon: Scale,
+    children: [
+      { path: '/legislacao', labelKey: 'nav.legislacaoBiblioteca', icon: BookOpen },
+      { path: '/consulta-legislacao', labelKey: 'nav.legislacaoTipologia', icon: ClipboardList },
+      { path: '/checklist', labelKey: 'nav.legislacaoChecklist', icon: CheckSquare },
+      { path: '/municipios', labelKey: 'nav.municipios', icon: MapPin },
+    ],
+  },
   { path: '/media', labelKey: 'nav.media', icon: Image },
   { path: '/queue', labelKey: 'nav.queue', icon: LayoutGrid },
   { path: '/content-calendar', labelKey: 'nav.contentCalendar', icon: CalendarDays },
@@ -56,11 +86,18 @@ const navItems = [
   { path: '/agent', labelKey: 'nav.agent', icon: Bot },
 ];
 
+// Flat list of all nav items (for mobile menu)
+const allNavItems: NavItem[] = navEntries.flatMap(entry =>
+  isGroup(entry) ? entry.children : [entry]
+);
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
   const { resetAllData } = useData();
@@ -82,12 +119,15 @@ export default function Navbar() {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
     };
-    if (userMenuOpen) {
+    if (userMenuOpen || openDropdown) {
       document.addEventListener('click', handleClickOutside);
     }
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [userMenuOpen]);
+  }, [userMenuOpen, openDropdown]);
 
   return (
     <>
@@ -108,23 +148,85 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden xl:flex items-center gap-1 overflow-x-auto">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end={item.exact}
-                className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`
-                }
-              >
-                <item.icon className="w-4 h-4 shrink-0" />
-                <span>{getLabel(item.labelKey)}</span>
-              </NavLink>
-            ))}
+            {navEntries.map((entry, idx) => {
+              if (isGroup(entry)) {
+                const isOpen = openDropdown === entry.labelKey;
+                // Check if any child is active
+                const currentPath = window.location.pathname;
+                const isChildActive = entry.children.some(c => currentPath === c.path);
+
+                return (
+                  <div key={entry.labelKey} className="relative" ref={isOpen ? dropdownRef : undefined}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(isOpen ? null : entry.labelKey);
+                      }}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                        isChildActive
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      <entry.icon className="w-4 h-4 shrink-0" />
+                      <span>{getLabel(entry.labelKey)}</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 6 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 top-full mt-1 w-52 bg-popover border border-border rounded-xl shadow-lg py-1.5 z-50"
+                        >
+                          {entry.children.map((child) => (
+                            <NavLink
+                              key={child.path}
+                              to={child.path}
+                              end={child.exact}
+                              onClick={() => setOpenDropdown(null)}
+                              className={({ isActive }) =>
+                                `flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                  isActive
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                }`
+                              }
+                            >
+                              <child.icon className="w-4 h-4 shrink-0" />
+                              <span>{getLabel(child.labelKey)}</span>
+                            </NavLink>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
+              // Regular nav item
+              const item = entry;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  end={item.exact}
+                  className={({ isActive }) =>
+                    `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`
+                  }
+                >
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span>{getLabel(item.labelKey)}</span>
+                </NavLink>
+              );
+            })}
           </div>
 
           {/* Right Actions */}
@@ -225,7 +327,7 @@ export default function Navbar() {
             className="fixed inset-0 top-16 bg-background z-40 xl:hidden"
           >
             <div className="p-4 space-y-1 overflow-y-auto h-full pb-24">
-              {navItems.map((item, index) => (
+              {allNavItems.map((item, index) => (
                 <motion.div
                   key={item.path}
                   initial={{ opacity: 0, x: 20 }}

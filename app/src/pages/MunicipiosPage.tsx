@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -62,6 +62,45 @@ export default function MunicipiosPage() {
   });
   const [editandoNota, setEditandoNota] = useState<string | null>(null);
   const [textoNota, setTextoNota] = useState('');
+
+  // Checklist state — persisted per municipality: { "aveiro": { "0-2": true, "1-0": true } }
+  const [checklistState, setChecklistState] = useState<Record<string, Record<string, boolean>>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fa360_municipios_checklist') || '{}');
+    } catch { return {}; }
+  });
+
+  const toggleCheckItem = useCallback((municipioId: string, key: string) => {
+    setChecklistState(prev => {
+      const mState = { ...(prev[municipioId] || {}) };
+      if (mState[key]) {
+        delete mState[key];
+      } else {
+        mState[key] = true;
+      }
+      const next = { ...prev, [municipioId]: mState };
+      // Clean up empty municipality entries
+      if (Object.keys(mState).length === 0) delete next[municipioId];
+      localStorage.setItem('fa360_municipios_checklist', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
+  const getCheckCount = useCallback((municipioId: string, topicos: TopicoRegulamentar[]) => {
+    const mState = checklistState[municipioId] || {};
+    const total = topicos.reduce((sum, t) => sum + t.itens.length, 0);
+    const checked = Object.keys(mState).length;
+    return { total, checked };
+  }, [checklistState]);
+
+  const clearChecklist = useCallback((municipioId: string) => {
+    setChecklistState(prev => {
+      const next = { ...prev };
+      delete next[municipioId];
+      localStorage.setItem('fa360_municipios_checklist', JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   const municipiosFiltrados = useMemo(() => {
     let lista = [...municipios];
@@ -447,47 +486,108 @@ export default function MunicipiosPage() {
                           )}
                         </div>
 
-                        {/* ═══ RESUMO REGULAMENTAR ═══ */}
+                        {/* ═══ RESUMO REGULAMENTAR — CHECKLIST INTERACTIVO ═══ */}
                         {(() => {
                           const topicos = m.topicos && m.topicos.length > 0 ? m.topicos : TOPICOS_GENERICOS;
                           const isGeneric = !m.topicos || m.topicos.length === 0;
+                          const mChecklist = checklistState[m.id] || {};
+                          const { total, checked } = getCheckCount(m.id, topicos);
+                          const progress = total > 0 ? Math.round((checked / total) * 100) : 0;
+
                           return (
                             <div className="space-y-3">
-                              <div className="flex items-center justify-between">
+                              {/* Header com barra de progresso */}
+                              <div className="flex items-center justify-between gap-3">
                                 <div className="font-medium text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                                   <ClipboardList className="w-3.5 h-3.5" />
-                                  Resumo Regulamentar ({topicos.length} categorias)
+                                  Resumo Regulamentar
                                 </div>
-                                {isGeneric && (
-                                  <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
-                                    <Info className="w-3 h-3" />
-                                    Checklist genérico
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-2">
+                                  {isGeneric && (
+                                    <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
+                                      <Info className="w-3 h-3" />
+                                      Genérico
+                                    </span>
+                                  )}
+                                  {checked > 0 && (
+                                    <button
+                                      onClick={() => clearChecklist(m.id)}
+                                      className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                                    >
+                                      Limpar
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
+                              {/* Progress bar */}
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                                  <motion.div
+                                    className={`h-full rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-primary'}`}
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress}%` }}
+                                    transition={{ duration: 0.3 }}
+                                  />
+                                </div>
+                                <span className={`text-xs font-semibold tabular-nums min-w-[4rem] text-right ${progress === 100 ? 'text-emerald-600 dark:text-emerald-400' : ''}`}>
+                                  {checked}/{total}
+                                </span>
+                              </div>
+
+                              {/* Categorias com checkboxes */}
                               <div className="grid gap-2">
                                 {topicos.map((topico: TopicoRegulamentar, ti: number) => {
                                   const TIcon = TOPICO_ICON_MAP[topico.icon] || FileCheck;
                                   const cor = TOPICO_COR_MAP[topico.icon] || TOPICO_COR_MAP.Ruler;
+                                  const catChecked = topico.itens.filter((_, ii) => mChecklist[`${ti}-${ii}`]).length;
+                                  const catTotal = topico.itens.length;
+                                  const catComplete = catChecked === catTotal;
 
                                   return (
                                     <div
                                       key={ti}
-                                      className={`rounded-lg border ${cor.border} overflow-hidden`}
+                                      className={`rounded-lg border ${catComplete ? 'border-emerald-500/30' : cor.border} overflow-hidden transition-colors`}
                                     >
-                                      <div className={`flex items-center gap-2 px-3 py-2.5 ${cor.bg}`}>
-                                        <TIcon className={`w-4 h-4 ${cor.icon} shrink-0`} />
-                                        <span className={`text-xs font-semibold ${cor.text}`}>{topico.categoria}</span>
-                                        <span className="text-[10px] text-muted-foreground ml-auto">{topico.itens.length} itens</span>
+                                      <div className={`flex items-center gap-2 px-3 py-2.5 ${catComplete ? 'bg-emerald-500/5' : cor.bg}`}>
+                                        <TIcon className={`w-4 h-4 ${catComplete ? 'text-emerald-500' : cor.icon} shrink-0`} />
+                                        <span className={`text-xs font-semibold ${catComplete ? 'text-emerald-600 dark:text-emerald-400' : cor.text}`}>
+                                          {topico.categoria}
+                                        </span>
+                                        <span className={`text-[10px] ml-auto font-medium ${catComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                                          {catChecked}/{catTotal}
+                                        </span>
                                       </div>
-                                      <div className="px-3 py-2 space-y-1.5">
-                                        {topico.itens.map((item: string, ii: number) => (
-                                          <div key={ii} className="flex items-start gap-2 text-sm">
-                                            <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
-                                            <span className="text-xs leading-relaxed">{item}</span>
-                                          </div>
-                                        ))}
+                                      <div className="px-1 py-1.5 space-y-0.5">
+                                        {topico.itens.map((item: string, ii: number) => {
+                                          const key = `${ti}-${ii}`;
+                                          const isChecked = !!mChecklist[key];
+
+                                          return (
+                                            <button
+                                              key={ii}
+                                              onClick={() => toggleCheckItem(m.id, key)}
+                                              className={`w-full flex items-start gap-2.5 px-2 py-1.5 rounded-md text-left transition-colors hover:bg-muted/50 group ${
+                                                isChecked ? 'opacity-70' : ''
+                                              }`}
+                                            >
+                                              <div className={`w-4 h-4 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${
+                                                isChecked
+                                                  ? 'bg-emerald-500 border-emerald-500'
+                                                  : 'border-muted-foreground/30 group-hover:border-primary/50'
+                                              }`}>
+                                                {isChecked && (
+                                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                  </svg>
+                                                )}
+                                              </div>
+                                              <span className={`text-xs leading-relaxed ${isChecked ? 'line-through text-muted-foreground' : ''}`}>
+                                                {item}
+                                              </span>
+                                            </button>
+                                          );
+                                        })}
                                       </div>
                                     </div>
                                   );

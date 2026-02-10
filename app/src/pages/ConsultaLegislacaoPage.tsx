@@ -572,6 +572,21 @@ export default function ConsultaLegislacaoPage() {
                                   Simplex
                                 </span>
                               )}
+                              {d.novidade === 'novo_2024' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-medium animate-pulse">
+                                  Novo 2024
+                                </span>
+                              )}
+                              {d.novidade === 'alterado_2024' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-600 dark:text-orange-400 font-medium">
+                                  Alterado 2024
+                                </span>
+                              )}
+                              {d.novidade === 'novo_2025' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 font-medium animate-pulse">
+                                  Novo 2025
+                                </span>
+                              )}
                               {reqs.length > 0 && (
                                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground font-medium">
                                   {reqs.length} req.{critCount > 0 && <span className="text-red-500 ml-0.5">({critCount} crít.)</span>}

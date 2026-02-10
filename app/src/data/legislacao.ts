@@ -22,6 +22,7 @@ export interface Diploma {
   estado: 'vigente' | 'revogado' | 'parcialmente_revogado';
   tags: string[];
   simplex?: boolean; // afectado pelo DL 10/2024
+  novidade?: 'novo_2024' | 'alterado_2024' | 'novo_2025'; // flag de legislação recente
 }
 
 export interface CategoriaLegislacao {
@@ -86,6 +87,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['licenciamento', 'câmara municipal', 'alvará', 'comunicação prévia', 'PIP', 'urbanização', 'edificação', 'obras'],
     simplex: true,
+    novidade: 'alterado_2024',
   },
   {
     id: 'rjigt',
@@ -113,6 +115,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['PDM', 'PU', 'PP', 'plano director', 'plano pormenor', 'ordenamento', 'classificação do solo', 'gestão territorial'],
     simplex: true,
+    novidade: 'alterado_2024',
   },
   {
     id: 'simplex',
@@ -138,6 +141,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['simplex', 'simplificação', 'licenciamento zero', 'isenção', 'mais habitação', 'comunicação prévia', 'alvará'],
     simplex: true,
+    novidade: 'novo_2024',
   },
   {
     id: 'ruea',
@@ -556,6 +560,7 @@ export const legislacao: Diploma[] = [
     linkDRE: 'https://dre.pt/dre/detalhe/portaria/424-2025-237175622',
     estado: 'vigente',
     tags: ['gás', 'regulamento técnico', 'canalizado', 'instalações', 'projecto'],
+    novidade: 'novo_2025',
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -792,6 +797,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['habitação', 'arrendamento', 'conversão de uso', 'acessível', 'mais habitação'],
     simplex: true,
+    novidade: 'novo_2024',
   },
 
   // ═══════════════════════════════════════════════════════════════
@@ -1561,6 +1567,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente' as const,
     tags: ['elementos instrutórios', 'simplex', 'simplificação', 'licenciamento', 'comunicação prévia'],
     simplex: true,
+    novidade: 'novo_2024',
   },
   {
     id: 'augi',
@@ -1931,6 +1938,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['simplex', 'comunicação prévia', 'código de validação', 'plataforma', 'simplificação', 'electrónico'],
     simplex: true,
+    novidade: 'novo_2024',
   },
   {
     id: 'portaria-71a-2024',
@@ -1955,6 +1963,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['simplex', 'termos de responsabilidade', 'projectista', 'director de obra', 'modelos', 'técnicos'],
     simplex: true,
+    novidade: 'novo_2024',
   },
   {
     id: 'portaria-71b-2024',
@@ -1979,6 +1988,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['simplex', 'livro de obra', 'electrónico', 'digital', 'plataforma', 'obra', 'registo'],
     simplex: true,
+    novidade: 'novo_2024',
   },
   {
     id: 'portaria-71c-2024',
@@ -2001,6 +2011,7 @@ export const legislacao: Diploma[] = [
     estado: 'vigente',
     tags: ['simplex', 'estatísticas', 'INE', 'ficha', 'elementos', 'construção', 'dados'],
     simplex: true,
+    novidade: 'novo_2024',
   },
 
   // ═══════════════════════════════════════════════════════════════

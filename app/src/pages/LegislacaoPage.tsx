@@ -67,6 +67,11 @@ export default function LegislacaoPage() {
   const totalFiltrado = filteredDiplomas.length;
   const totalDiplomas = legislacao.length;
 
+  // Diplomas recentes (novidade)
+  const diplomasRecentes = useMemo(() => {
+    return legislacao.filter(d => d.novidade);
+  }, []);
+
   // Agrupados por categoria para exibição
   const grouped = useMemo(() => {
     const map: Record<string, Diploma[]> = {};
@@ -131,6 +136,41 @@ export default function LegislacaoPage() {
           )}
         </div>
       </motion.div>
+
+      {/* Banner de legislação recente */}
+      {diplomasRecentes.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-violet-500/5 border border-cyan-500/20 rounded-xl p-4"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-4 h-4 text-cyan-500" />
+            <h3 className="text-sm font-semibold">Últimas Alterações Legislativas</h3>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-medium">
+              {diplomasRecentes.length} diplomas
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {diplomasRecentes.slice(0, 10).map(d => (
+              <button
+                key={d.id}
+                onClick={() => { setSearchQuery(d.sigla); setExpandedId(d.id); }}
+                className={`text-xs px-2.5 py-1 rounded-lg border transition-colors hover:shadow-sm ${
+                  d.novidade === 'novo_2024' || d.novidade === 'novo_2025'
+                    ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20'
+                    : 'bg-orange-500/10 border-orange-500/20 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20'
+                }`}
+              >
+                <span className="font-medium">{d.sigla}</span>
+                <span className="ml-1 opacity-60">
+                  {d.novidade === 'novo_2024' ? '• Novo 2024' : d.novidade === 'novo_2025' ? '• Novo 2025' : '• Alterado 2024'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Search */}
       <motion.div
@@ -302,6 +342,21 @@ export default function LegislacaoPage() {
                                 <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center gap-1">
                                   <Sparkles className="w-2.5 h-2.5" />
                                   Simplex
+                                </span>
+                              )}
+                              {d.novidade === 'novo_2024' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-medium animate-pulse">
+                                  Novo 2024
+                                </span>
+                              )}
+                              {d.novidade === 'alterado_2024' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-medium">
+                                  Alterado 2024
+                                </span>
+                              )}
+                              {d.novidade === 'novo_2025' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-medium animate-pulse">
+                                  Novo 2025
                                 </span>
                               )}
                             </div>
