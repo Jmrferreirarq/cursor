@@ -53,18 +53,22 @@ export async function generateProposalPdf(
       scrollY: 0,
       scrollX: 0,
       backgroundColor: '#ffffff',
-      // Forçar cores claras no clone para evitar herança do dark mode do body
+      // Forçar cores claras e posição estática no clone
       onclone: (clonedDoc: Document, clonedEl: HTMLElement) => {
-        // Override body dark mode styles no documento clonado
-        clonedDoc.body.style.cssText = 'background:#fff!important;color:#1F2328!important;';
+        // Override dark mode no documento clonado
+        clonedDoc.body.style.cssText = 'background:#fff!important;color:#1F2328!important;margin:0;padding:0;';
         clonedDoc.documentElement.style.cssText = 'background:#fff!important;color:#1F2328!important;color-scheme:light!important;';
         clonedDoc.documentElement.classList.remove('dark');
         clonedDoc.documentElement.classList.add('light');
         clonedDoc.body.classList.remove('dark');
         clonedDoc.body.classList.add('light');
-        // Garantir que o elemento capturado tem cores explícitas
+        // Forçar posição estática (evitar position:absolute/fixed no clone)
+        clonedEl.style.position = 'static';
+        clonedEl.style.left = 'auto';
+        clonedEl.style.top = 'auto';
         clonedEl.style.backgroundColor = '#ffffff';
         clonedEl.style.color = '#1F2328';
+        clonedEl.style.width = `${A4_WIDTH_PX}px`;
       },
     },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },

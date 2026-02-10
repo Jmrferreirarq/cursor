@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -946,9 +947,7 @@ export default function CalculatorPage() {
   const [propostaFechada, setPropostaFechada] = useState(false);
   const [gerandoLink, setGerandoLink] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const captureRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const [capturingPDF, setCapturingPDF] = useState(false);
 
   // CERTO: Novas opções para melhorar propostas
   const [mostrarResumo, setMostrarResumo] = useState(true);
@@ -1636,32 +1635,45 @@ export default function CalculatorPage() {
       vatRate: 23,
     });
     
-    // Mostrar overlay e renderizar documento para captura
-    setCapturingPDF(true);
+    // Abordagem direta: criar container temporário fora do React tree
+    // Evita problemas de position:fixed + createPortal + html2canvas
+    toast.loading('A preparar PDF...', { id: 'pdf-progress' });
     
-    // Aguardar que o portal de captura renderize completamente
-    await new Promise((r) => setTimeout(r, 600));
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await new Promise((r) => setTimeout(r, 200));
+    const container = document.createElement('div');
+    container.className = 'light';
+    container.style.cssText = [
+      'position:absolute',
+      'left:-9999px',
+      'top:0',
+      'width:794px',
+      'min-width:794px',
+      'background:#ffffff',
+      'color:#1F2328',
+      'font-family:DM Sans,Segoe UI,system-ui,sans-serif',
+      'overflow:visible',
+      'z-index:-1',
+    ].join(';');
+    document.body.appendChild(container);
     
-    // Tentar encontrar o elemento renderizado (verificar que tem conteúdo real)
-    let el: HTMLElement | null = null;
-    for (let i = 0; i < 30; i++) {
-      el = captureRef.current;
-      // Verificar offsetHeight > minHeight (1123) para garantir que o conteúdo renderizou
-      if (el && el.scrollHeight > 100) break;
-      await new Promise((r) => setTimeout(r, 150));
-    }
-    
-    if (!el) {
-      toast.error('Erro ao preparar exportação');
-      setCapturingPDF(false);
-      return;
-    }
-    
+    // Renderizar ProposalDocument num React root isolado (sem portal)
+    let pdfRoot: ReturnType<typeof createRoot> | null = null;
     try {
+      pdfRoot = createRoot(container);
+      flushSync(() => {
+        pdfRoot!.render(<ProposalDocument payload={previewPayload} lang={lang} />);
+      });
+      
+      // Aguardar paint + layout
+      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      
+      // Verificar que o conteúdo renderizou (pelo menos >200px de conteúdo real)
+      if (container.scrollHeight < 200 || container.innerHTML.length < 100) {
+        throw new Error('ProposalDocument não renderizou conteúdo');
+      }
+      
       const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-      await generateProposalPdf(el, {
+      await generateProposalPdf(container, {
         filename: `${baseName}.pdf`,
         reference: referenciaExibida,
         branding: previewPayload.branding,
@@ -1673,9 +1685,11 @@ export default function CalculatorPage() {
     } catch (e) {
       console.error('Erro ao gerar PDF:', e);
       toast.dismiss('pdf-progress');
-      toast.error('Erro ao gerar PDF');
+      toast.error(`Erro ao gerar PDF: ${e instanceof Error ? e.message : 'desconhecido'}`);
     } finally {
-      setCapturingPDF(false);
+      // Limpar: desmontar React root e remover container do DOM
+      try { pdfRoot?.unmount(); } catch { /* ignore */ }
+      try { document.body.removeChild(container); } catch { /* ignore */ }
     }
   };
 
@@ -2160,44 +2174,7 @@ export default function CalculatorPage() {
     mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
   ]);
 
-  useEffect(() => {
-    if (!capturingPDF || !previewPayload) return;
-    let cancelled = false;
-    const run = async () => {
-      // Aguardar renderização inicial
-      await new Promise((r) => setTimeout(r, 800));
-      // Aguardar que o elemento esteja pronto com conteúdo real
-      for (let i = 0; i < 30; i++) {
-        if (cancelled) return;
-        await new Promise((r) => setTimeout(r, 150));
-        const el = captureRef.current;
-        if (el && el.scrollHeight > 100) {
-          try {
-            const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-            await generateProposalPdf(el, {
-              filename: `${baseName}.pdf`,
-              reference: referenciaExibida,
-              branding: previewPayload.branding,
-              lang,
-              onProgress: (msg) => toast.loading(msg, { id: 'pdf-progress' }),
-            });
-            toast.dismiss('pdf-progress');
-            toast.success('PDF guardado com sucesso!');
-          } catch (e) {
-            console.error('Erro ao gerar PDF:', e);
-            toast.dismiss('pdf-progress');
-            toast.error('Erro ao gerar PDF');
-          }
-          setCapturingPDF(false);
-          return;
-        }
-      }
-      toast.error('Erro ao preparar exportação');
-      setCapturingPDF(false);
-    };
-    run();
-    return () => { cancelled = true; };
-  }, [capturingPDF, previewPayload, referenciaExibida, lang]);
+  // O useEffect de auto-export já não é necessário — o export direto via DOM cobre ambos os casos
 
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
@@ -2530,44 +2507,11 @@ export default function CalculatorPage() {
     toast.success(`Proposta ${proposal.reference} carregada!`);
   };
 
-  const pdfCapturePortal = capturingPDF && previewPayload && createPortal(
-    <>
-      {/* Overlay de carregamento — z-index ABAIXO do documento para não interferir com html2canvas */}
-      <div
-        style={{ position: 'fixed', inset: 0, zIndex: 99997, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)' }}
-        aria-hidden
-      >
-        <span style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>{t('proposalSaving', lang)}</span>
-      </div>
-      {/* Documento de captura — isolado do dark mode do body */}
-      <div
-        ref={(r) => { captureRef.current = r; }}
-        className="light"
-        style={{
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          width: 794,
-          minWidth: 794,
-          minHeight: 1123,
-          backgroundColor: '#ffffff',
-          color: '#1F2328',
-          zIndex: 99998,
-          overflow: 'visible',
-          isolation: 'isolate',
-          colorScheme: 'light',
-          WebkitTextFillColor: 'initial',
-        }}
-      >
-        <ProposalDocument payload={previewPayload} lang={lang} />
-      </div>
-    </>,
-    document.body
-  );
+  // Portal de captura eliminado — PDF agora usa createRoot direto (ver exportHonorariosPDF)
 
   return (
     <>
-      {pdfCapturePortal}
+      {/* Portal de captura eliminado — PDF usa createRoot direto */}
       <div className="space-y-6 min-h-[50vh]">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
