@@ -3048,6 +3048,40 @@ export default function CalculatorPage() {
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="6" />
                     </div>
                   </div>
+                  {/* Validações de terreno */}
+                  {(() => {
+                    const frente = parseFloat(lotFrenteTerreno) || 0;
+                    const areaEst = parseFloat(lotAreaEstudo) || 0;
+                    const profund = parseFloat(lotProfundidade) || 0;
+                    const nLotes = parseInt(lotNumLotes, 10) || 0;
+                    const avisos: { msg: string; tipo: 'erro' | 'aviso' }[] = [];
+                    if (frente > 0 && areaEst > 0 && profund <= 0 && frente > 0) {
+                      const profImplicita = areaEst / frente;
+                      if (profImplicita > 200) avisos.push({ msg: `Profundidade implicita muito elevada (${profImplicita.toFixed(0)}m) — verificar area ou frente`, tipo: 'aviso' });
+                    }
+                    if (frente > 0 && nLotes > 0) {
+                      const largura = frente / nLotes;
+                      if (largura < 5) avisos.push({ msg: `Largura media por lote (${largura.toFixed(1)}m) inferior ao minimo viavel (~5.5m para banda)`, tipo: 'erro' });
+                      else if (largura < 5.5) avisos.push({ msg: `Largura por lote (${largura.toFixed(1)}m) no limite para habitacao em banda`, tipo: 'aviso' });
+                    }
+                    if (areaEst > 0 && nLotes > 0) {
+                      const areaPorLote = areaEst / nLotes;
+                      if (areaPorLote < 100) avisos.push({ msg: `Area media por lote (${areaPorLote.toFixed(0)} m2) abaixo dos 100 m2 — verificar viabilidade`, tipo: 'erro' });
+                      else if (areaPorLote < 200) avisos.push({ msg: `Area media por lote (${areaPorLote.toFixed(0)} m2) abaixo do recomendado (200-300 m2)`, tipo: 'aviso' });
+                    }
+                    if (frente > 0 && frente < 10) avisos.push({ msg: `Frente do terreno (${frente}m) muito reduzida para loteamento`, tipo: 'aviso' });
+                    if (nLotes > 20) avisos.push({ msg: `Numero elevado de lotes (${nLotes}) — considerar faseamento ou via interna`, tipo: 'aviso' });
+                    if (avisos.length === 0) return null;
+                    return (
+                      <div className="space-y-1">
+                        {avisos.map((a, i) => (
+                          <p key={i} className={`text-[11px] px-3 py-1.5 rounded-lg ${a.tipo === 'erro' ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                            {a.tipo === 'erro' ? '⚠' : '△'} {a.msg}
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   {/* Sugestão automática de lotes por tipologia */}
                   {(() => {
                     const frente = parseFloat(lotFrenteTerreno) || 0;
@@ -3385,6 +3419,29 @@ export default function CalculatorPage() {
                           </div>
                           <input type="text" value={state.nota} onChange={(e) => setter({ ...state, nota: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Nota / risco (1 linha)" />
+                          {/* Validações do cenário */}
+                          {(() => {
+                            const alertas: string[] = [];
+                            const areaMinPDM = parseFloat(lotAreaMinimaLote) || 0;
+                            const areaLoteEfetiva = parseFloat(state.areaMedia) || areaMediaAuto;
+                            if (areaMinPDM > 0 && areaLoteEfetiva > 0 && areaLoteEfetiva < areaMinPDM) {
+                              alertas.push(`Area/lote (${areaLoteEfetiva} m2) inferior ao minimo PDM (${areaMinPDM} m2)`);
+                            }
+                            if (nLotes > 0 && largura > 0 && largura < 5) {
+                              alertas.push(`Largura/lote (${largura.toFixed(1)}m) inviavel — minimo ~5.5m`);
+                            }
+                            if (nLotes > 15 && state.accessModel === 'direto_frente') {
+                              alertas.push(`${nLotes} lotes com acesso directo a frente — considerar via interna`);
+                            }
+                            if (alertas.length === 0) return null;
+                            return (
+                              <div className="space-y-1 mt-1">
+                                {alertas.map((a, i) => (
+                                  <p key={i} className="text-[10px] px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20">{a}</p>
+                                ))}
+                              </div>
+                            );
+                          })()}
                         </div>);
                       })}
                     </div>
