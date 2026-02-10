@@ -152,16 +152,20 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     <tr style={{ background: '#fef3c7' }}>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Cenario</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Lotes</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Frente/lote</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Tipologia</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Acesso</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Area media</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Cedencias</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {p.lotCenarios.map((c, i) => (
+                    {p.lotCenarios.map((c: any, i: number) => (
                       <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                         <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>Cenario {c.label}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontSize: fs(7) }}>{c.larguraEstimada || '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>{c.tipoHabitacaoLabel || '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', fontSize: fs(7) }}>{c.accessModelLabel || '—'}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias || '—'}</td>

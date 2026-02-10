@@ -92,9 +92,9 @@ export interface CalculatorState {
   lotTemTopografia?: boolean;
   lotTemCaderneta?: boolean;
   lotTemExtratoPDM?: boolean;
-  lotCenarioA?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
-  lotCenarioB?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
-  lotCenarioC?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
+  lotCenarioA?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string; tipoHabitacao: string };
+  lotCenarioB?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string; tipoHabitacao: string };
+  lotCenarioC?: { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string; tipoHabitacao: string };
   lotCondicionantes?: string[];
   lotEntregaveis?: string[];
   lotAssuncoesManuais?: string;

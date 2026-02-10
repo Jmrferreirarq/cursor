@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
+import { FileText, FileDown, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
 import { decodeProposalPayload } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
@@ -184,7 +184,7 @@ function PropostaPublicPage() {
             </div>
           </div>
           
-{/* Botão PDF removido - utilizador pode usar Ctrl+P ou botão na proposta completa */}
+{/* Botão PDF disponível na secção CTA abaixo */}
         </div>
       </motion.header>
 
@@ -306,6 +306,20 @@ function PropostaPublicPage() {
               >
                 <FileText className="w-5 h-5" />
                 <span>{showDocument ? 'Ocultar Proposta' : 'Ver Proposta Completa'}</span>
+              </button>
+
+              <button
+                onClick={exportPDF}
+                disabled={exporting}
+                className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-xl transition-all border"
+                style={{ borderColor: C.accent, color: C.accent, opacity: exporting ? 0.6 : 1 }}
+              >
+                {exporting ? (
+                  <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <FileDown className="w-5 h-5" />
+                )}
+                <span>{exporting ? (lang === 'en' ? 'Generating PDF...' : 'A gerar PDF...') : 'Download PDF'}</span>
               </button>
 
               {p.linkGoogleMaps && (

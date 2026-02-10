@@ -739,6 +739,33 @@ const HOUSING_TYPE_LABELS: Record<string, string> = {
   misto: 'Misto (isoladas + geminadas)',
 };
 
+// ── Inferência automática de tipologia habitacional por largura de lote ──
+// Regras baseadas em afastamentos regulamentares típicos (PDM genérico):
+//   Isoladas:  2×3m (laterais) + ≥8m edifício → ≥14m de frente
+//   Geminadas: 1×3m (1 lateral) + parede meeira + ≥5m → ≥8m
+//   Em banda:  paredes meieiras ambos lados → ≥5.5m
+const HOUSING_WIDTH_RULES: { tipo: string; minWidth: number; label: string; cor: string }[] = [
+  { tipo: 'isoladas',  minWidth: 14,  label: 'Isoladas',           cor: 'emerald' },
+  { tipo: 'geminadas', minWidth: 8,   label: 'Geminadas',          cor: 'amber' },
+  { tipo: 'em_banda',  minWidth: 5.5, label: 'Em banda',           cor: 'rose' },
+];
+
+function inferirTipoHabitacao(larguraLote: number): { tipo: string; label: string; cor: string; todas: string[] } {
+  const compativeis = HOUSING_WIDTH_RULES.filter(r => larguraLote >= r.minWidth);
+  if (compativeis.length === 0) {
+    return { tipo: 'inviavel', label: 'Lote muito estreito', cor: 'red', todas: [] };
+  }
+  // O primeiro compatível é o "melhor" (isoladas > geminadas > banda)
+  return { ...compativeis[0], todas: compativeis.map(c => c.tipo) };
+}
+
+function calcularLarguraLote(frenteTerreno: number, numLotes: number, accessModel: string): number {
+  if (numLotes <= 0 || frenteTerreno <= 0) return 0;
+  // Se via interna, a frente útil não é directamente divisível — usamos 85% como factor de correcção
+  const factor = accessModel === 'via_interna' ? 0.85 : accessModel === 'misto' ? 0.90 : 1.0;
+  return (frenteTerreno * factor) / numLotes;
+}
+
 // Labels para objetivo principal
 const OBJETIVO_LABELS: Record<string, string> = {
   max_lotes: 'Maximizar nº de lotes',
@@ -911,8 +938,8 @@ export default function CalculatorPage() {
   const [lotTemExtratoPDM, setLotTemExtratoPDM] = useState(false);
 
   // Cenários A/B/C (enriquecidos com access_model)
-  type LotCenario = { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string };
-  const cenarioDefault: LotCenario = { lotes: '', areaMedia: '', cedencias: '', nota: '', accessModel: 'direto_frente', viaInternaComprimento: '' };
+  type LotCenario = { lotes: string; areaMedia: string; cedencias: string; nota: string; accessModel: string; viaInternaComprimento: string; tipoHabitacao: string };
+  const cenarioDefault: LotCenario = { lotes: '', areaMedia: '', cedencias: '', nota: '', accessModel: 'direto_frente', viaInternaComprimento: '', tipoHabitacao: 'auto' };
   const [lotCenarioA, setLotCenarioA] = useState<LotCenario>({ ...cenarioDefault });
   const [lotCenarioB, setLotCenarioB] = useState<LotCenario>({ ...cenarioDefault });
   const [lotCenarioC, setLotCenarioC] = useState<LotCenario>({ ...cenarioDefault });
@@ -1564,12 +1591,22 @@ export default function CalculatorPage() {
         // Programa
         lotTipoHabitacao: HOUSING_TYPE_LABELS[lotTipoHabitacao] ?? lotTipoHabitacao,
         lotObjetivo: OBJETIVO_LABELS[lotObjetivoPrincipal] ?? lotObjetivoPrincipal,
-        // Cenarios com access_model
-        lotCenarios: [
-          lotCenarioA.lotes ? { ...lotCenarioA, label: 'A', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioA.accessModel] ?? lotCenarioA.accessModel } : null,
-          lotCenarioB.lotes ? { ...lotCenarioB, label: 'B', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioB.accessModel] ?? lotCenarioB.accessModel } : null,
-          lotNumAlternativas === '3' && lotCenarioC.lotes ? { ...lotCenarioC, label: 'C', accessModelLabel: ACCESS_MODEL_LABELS[lotCenarioC.accessModel] ?? lotCenarioC.accessModel } : null,
-        ].filter((x): x is NonNullable<typeof x> => x !== null),
+        // Cenarios com access_model + largura estimada + tipo habitação
+        lotCenarios: [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])].map((cen, i) => {
+          if (!cen.lotes) return null;
+          const frente = parseFloat(lotFrenteTerreno) || 0;
+          const nLotes = parseInt(cen.lotes, 10) || 0;
+          const largura = calcularLarguraLote(frente, nLotes, cen.accessModel);
+          const inferido = largura > 0 ? inferirTipoHabitacao(largura) : null;
+          const tipoEfetivo = cen.tipoHabitacao === 'auto' && inferido ? inferido.tipo : cen.tipoHabitacao;
+          return {
+            ...cen,
+            label: String.fromCharCode(65 + i), // A, B, C
+            accessModelLabel: ACCESS_MODEL_LABELS[cen.accessModel] ?? cen.accessModel,
+            larguraEstimada: largura > 0 ? `${largura.toFixed(1)}m` : undefined,
+            tipoHabitacaoLabel: HOUSING_TYPE_LABELS[tipoEfetivo] ?? inferido?.label ?? '—',
+          };
+        }).filter((x): x is NonNullable<typeof x> => x !== null),
         lotCondicionantes: Array.from(lotCondicionantes).map(id => {
           const c = CONDICIONANTES_LOTEAMENTO.find(x => x.id === id);
           return c ? c.label : id;
@@ -2211,9 +2248,9 @@ export default function CalculatorPage() {
       setLotTemTopografia(state.lotTemTopografia || false);
       setLotTemCaderneta(state.lotTemCaderneta || false);
       setLotTemExtratoPDM(state.lotTemExtratoPDM || false);
-      if (state.lotCenarioA) setLotCenarioA(state.lotCenarioA);
-      if (state.lotCenarioB) setLotCenarioB(state.lotCenarioB);
-      if (state.lotCenarioC) setLotCenarioC(state.lotCenarioC);
+      if (state.lotCenarioA) setLotCenarioA({ ...cenarioDefault, ...state.lotCenarioA, tipoHabitacao: state.lotCenarioA.tipoHabitacao || 'auto' });
+      if (state.lotCenarioB) setLotCenarioB({ ...cenarioDefault, ...state.lotCenarioB, tipoHabitacao: state.lotCenarioB.tipoHabitacao || 'auto' });
+      if (state.lotCenarioC) setLotCenarioC({ ...cenarioDefault, ...state.lotCenarioC, tipoHabitacao: state.lotCenarioC.tipoHabitacao || 'auto' });
       setLotCondicionantes(new Set(state.lotCondicionantes || []));
       setLotEntregaveis(new Set(state.lotEntregaveis || ['viability_report', 'alternatives', 'synthesis_plan', 'descriptive_report', 'licensing_submission']));
       setLotAssuncoesManuais(state.lotAssuncoesManuais || '');
@@ -2963,11 +3000,12 @@ export default function CalculatorPage() {
                   {/* 3. Programa */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Tipo de habitacao</label>
+                      <label className="block text-sm font-medium mb-1">Tipo de habitacao (geral)</label>
                       <select value={lotTipoHabitacao} onChange={(e) => setLotTipoHabitacao(e.target.value)}
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none">
                         {Object.entries(HOUSING_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
+                      <p className="text-[10px] text-muted-foreground mt-1">Cada cenario pode ter tipologia propria (calculada pela largura do lote).</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Objetivo principal</label>
@@ -3018,8 +3056,15 @@ export default function CalculatorPage() {
                         { label: 'Cenario A', state: lotCenarioA, setter: setLotCenarioA },
                         { label: 'Cenario B', state: lotCenarioB, setter: setLotCenarioB },
                         ...(lotNumAlternativas === '3' ? [{ label: 'Cenario C', state: lotCenarioC, setter: setLotCenarioC }] : []),
-                      ].map(({ label, state, setter }) => (
-                        <div key={label} className="p-3 bg-muted/50 border border-border rounded-lg space-y-2">
+                      ].map(({ label, state, setter }) => {
+                        const frente = parseFloat(lotFrenteTerreno) || 0;
+                        const nLotes = parseInt(state.lotes, 10) || 0;
+                        const largura = calcularLarguraLote(frente, nLotes, state.accessModel);
+                        const inferido = largura > 0 ? inferirTipoHabitacao(largura) : null;
+                        const tipoEfetivo = state.tipoHabitacao === 'auto' && inferido ? inferido.tipo : state.tipoHabitacao;
+                        const conflito = state.tipoHabitacao !== 'auto' && inferido && !inferido.todas.includes(state.tipoHabitacao);
+                        return (
+                        <div key={label} className={`p-3 bg-muted/50 border rounded-lg space-y-2 ${conflito ? 'border-red-500/60' : 'border-border'}`}>
                           <p className="text-sm font-semibold">{label}</p>
                           <input type="number" min="1" value={state.lotes} onChange={(e) => setter({ ...state, lotes: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="N. lotes" />
@@ -3033,14 +3078,45 @@ export default function CalculatorPage() {
                               className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
                               placeholder="Comprimento via interna (m)" />
                           )}
+                          {/* Largura estimada + tipo habitação sugerido */}
+                          {largura > 0 && inferido && (
+                            <div className={`px-3 py-2 rounded-lg text-xs space-y-1 ${conflito ? 'bg-red-500/10 border border-red-500/30' : 'bg-blue-500/10 border border-blue-500/20'}`}>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Largura estimada/lote:</span>
+                                <span className="font-semibold">{largura.toFixed(1)} m</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-muted-foreground">Tipologia compativel:</span>
+                                <span className={`font-semibold ${inferido.tipo === 'inviavel' ? 'text-red-400' : inferido.tipo === 'isoladas' ? 'text-emerald-400' : inferido.tipo === 'geminadas' ? 'text-amber-400' : 'text-rose-400'}`}>
+                                  {inferido.label}
+                                </span>
+                              </div>
+                              {inferido.todas.length > 1 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  Tambem viavel: {inferido.todas.slice(1).map(t => HOUSING_TYPE_LABELS[t]).join(', ')}
+                                </p>
+                              )}
+                              {conflito && (
+                                <p className="text-[10px] text-red-400 font-medium mt-1">
+                                  Atencao: "{HOUSING_TYPE_LABELS[state.tipoHabitacao]}" nao e viavel com {largura.toFixed(1)}m de frente. Necessita min. {HOUSING_WIDTH_RULES.find(r => r.tipo === state.tipoHabitacao)?.minWidth ?? '?'}m.
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          {/* Tipo de habitação por cenário */}
+                          <select value={state.tipoHabitacao} onChange={(e) => setter({ ...state, tipoHabitacao: e.target.value })}
+                            className={`w-full px-3 py-2 bg-muted border rounded-lg text-sm focus:border-primary focus:outline-none ${conflito ? 'border-red-500/50 text-red-400' : 'border-border'}`}>
+                            <option value="auto">Automatico ({inferido ? inferido.label : '—'})</option>
+                            {Object.entries(HOUSING_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                          </select>
                           <input type="number" min="0" value={state.areaMedia} onChange={(e) => setter({ ...state, areaMedia: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Area media/lote (m2)" />
                           <input type="text" value={state.cedencias} onChange={(e) => setter({ ...state, cedencias: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Cedencias estimadas (m2)" />
                           <input type="text" value={state.nota} onChange={(e) => setter({ ...state, nota: e.target.value })}
                             className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Nota / risco (1 linha)" />
-                        </div>
-                      ))}
+                        </div>);
+                      })}
                     </div>
                   </div>
 

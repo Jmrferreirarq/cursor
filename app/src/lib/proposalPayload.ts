@@ -151,7 +151,7 @@ export const proposalPayloadSchema = z.object({
   // Programa
   lotTipoHabitacao: z.string().optional(),
   lotObjetivo: z.string().optional(),
-  // Cenarios com access_model
+  // Cenarios com access_model + largura estimada + tipo habitação
   lotCenarios: z.array(z.object({
     label: z.string(),
     lotes: z.string(),
@@ -161,6 +161,9 @@ export const proposalPayloadSchema = z.object({
     accessModel: z.string().optional(),
     accessModelLabel: z.string().optional(),
     viaInternaComprimento: z.string().optional(),
+    larguraEstimada: z.string().optional(),
+    tipoHabitacao: z.string().optional(),
+    tipoHabitacaoLabel: z.string().optional(),
   })).optional(),
   lotCondicionantes: z.array(z.string()).optional(),
   lotComplexidadeSugerida: z.string().optional(),
