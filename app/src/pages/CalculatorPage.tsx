@@ -1646,20 +1646,23 @@ export default function CalculatorPage() {
       return;
     }
     
-    // Criar div LIMPO e copiar o innerHTML do preview
-    // Não clonar o wrapper (perde contexto flex e colapsa para height:0)
+    // Criar div limpo com o conteúdo do preview (innerHTML preserva inline styles)
     const captureDiv = document.createElement('div');
-    captureDiv.className = 'light';
-    captureDiv.style.cssText = 'width:794px;min-width:794px;background:#fff;color:#1F2328;overflow:visible;';
+    captureDiv.style.cssText = [
+      'width:794px',
+      'min-width:794px',
+      'background:#ffffff',
+      'color:#1F2328',
+      'overflow:visible',
+      "font-family:'DM Sans','Segoe UI',system-ui,sans-serif",
+    ].join(';');
     captureDiv.innerHTML = previewEl.innerHTML;
     document.body.appendChild(captureDiv);
     
-    // Forçar reflow e aguardar layout
+    // Forçar reflow e aguardar layout completo
     void captureDiv.offsetHeight;
     await new Promise((r) => setTimeout(r, 400));
     await new Promise((r) => requestAnimationFrame(r));
-    
-    console.log('[PDF Export] captureDiv:', captureDiv.offsetWidth, 'x', captureDiv.offsetHeight, '| HTML:', captureDiv.innerHTML.length);
     
     try {
       // Verificar que o div tem conteúdo com altura real

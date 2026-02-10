@@ -1,6 +1,6 @@
 /**
  * Utilitário partilhado para geração de PDF de propostas.
- * Usa html2pdf.js para converter o ProposalDocument em PDF A4.
+ * Usa html2pdf.js (já instalado) para converter o ProposalDocument em PDF A4.
  * Adiciona rodapé com número de página e contactos em todas as páginas.
  */
 
@@ -36,14 +36,7 @@ export async function generateProposalPdf(
   }
 
   // Pequeno delay para garantir render completo
-  await new Promise((r) => setTimeout(r, 200));
-
-  // Diagnóstico
-  console.log('[PDF] Element dimensions:', element.offsetWidth, 'x', element.offsetHeight, '| innerHTML:', element.innerHTML.length);
-  
-  if (element.offsetHeight < 10) {
-    throw new Error(`Elemento sem altura (height=${element.offsetHeight}). O preview precisa de estar visível.`);
-  }
+  await new Promise((r) => setTimeout(r, 150));
 
   onProgress?.('A gerar PDF...');
 
@@ -54,26 +47,12 @@ export async function generateProposalPdf(
     html2canvas: {
       scale: 2,
       useCORS: true,
-      logging: true,
+      logging: false,
+      width: A4_WIDTH_PX,
+      windowWidth: A4_WIDTH_PX,
+      scrollY: 0,
+      scrollX: 0,
       backgroundColor: '#ffffff',
-      onclone: (clonedDoc: Document, clonedEl: HTMLElement) => {
-        // Override dark mode no documento clonado
-        clonedDoc.body.style.cssText = 'background:#fff!important;color:#1F2328!important;margin:0;padding:0;';
-        clonedDoc.documentElement.style.cssText = 'background:#fff!important;color:#1F2328!important;color-scheme:light!important;';
-        clonedDoc.documentElement.classList.remove('dark');
-        clonedDoc.documentElement.classList.add('light');
-        clonedDoc.body.classList.remove('dark');
-        clonedDoc.body.classList.add('light');
-        // Posição estática no clone
-        clonedEl.style.position = 'static';
-        clonedEl.style.left = 'auto';
-        clonedEl.style.top = 'auto';
-        clonedEl.style.opacity = '1';
-        clonedEl.style.backgroundColor = '#ffffff';
-        clonedEl.style.color = '#1F2328';
-        clonedEl.style.width = `${A4_WIDTH_PX}px`;
-        console.log('[PDF] onclone: clonedEl dimensions:', clonedEl.offsetWidth, 'x', clonedEl.offsetHeight);
-      },
     },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
     pagebreak: { mode: ['css'] as string[], avoid: ['.pdf-no-break'] },
@@ -81,68 +60,61 @@ export async function generateProposalPdf(
 
   const html2pdf = (await import('html2pdf.js')).default;
 
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdf: any = await html2pdf().set(opt).from(element).toPdf().get('pdf');
-    const totalPages: number = pdf.internal.getNumberOfPages();
-    const w: number = pdf.internal.pageSize.getWidth();
-    const h: number = pdf.internal.pageSize.getHeight();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pdf: any = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+  const totalPages: number = pdf.internal.getNumberOfPages();
+  const w: number = pdf.internal.pageSize.getWidth();
+  const h: number = pdf.internal.pageSize.getHeight();
 
-    console.log('[PDF] Total pages:', totalPages);
+  onProgress?.('A adicionar rodapé...');
 
-    onProgress?.('A adicionar rodapé...');
+  // Textos do rodapé
+  const footerLeft = branding?.appName || 'FA-360';
+  const contactParts = [branding?.email, branding?.telefone, branding?.website].filter(Boolean);
+  const footerRight = contactParts.join(' · ');
+  const pageLabel = lang === 'en' ? 'Page' : 'Página';
 
-    // Textos do rodapé
-    const footerLeft = branding?.appName || 'FA-360';
-    const contactParts = [branding?.email, branding?.telefone, branding?.website].filter(Boolean);
-    const footerRight = contactParts.join(' · ');
-    const pageLabel = lang === 'en' ? 'Page' : 'Página';
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
 
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
+    // Linha separadora
+    pdf.setDrawColor(200);
+    pdf.setLineWidth(0.3);
+    pdf.line(12, h - 16, w - 12, h - 16);
 
-      // Linha separadora
-      pdf.setDrawColor(200);
-      pdf.setLineWidth(0.3);
-      pdf.line(12, h - 16, w - 12, h - 16);
+    // Rodapé esquerdo (nome da empresa)
+    pdf.setFontSize(7);
+    pdf.setTextColor(120, 120, 120);
+    pdf.text(footerLeft, 12, h - 12, { align: 'left' });
 
-      // Rodapé esquerdo (nome da empresa)
+    // Rodapé centro (referência)
+    if (reference) {
       pdf.setFontSize(7);
-      pdf.setTextColor(120, 120, 120);
-      pdf.text(footerLeft, 12, h - 12, { align: 'left' });
-
-      // Rodapé centro (referência)
-      if (reference) {
-        pdf.setFontSize(7);
-        pdf.setTextColor(150, 150, 150);
-        pdf.text(reference, w / 2, h - 12, { align: 'center' });
-      }
-
-      // Rodapé direito (contactos)
-      if (footerRight) {
-        pdf.setFontSize(6.5);
-        pdf.setTextColor(140, 140, 140);
-        pdf.text(footerRight, w - 12, h - 12, { align: 'right' });
-      }
-
-      // Número da página (centrado, mais abaixo)
-      pdf.setFontSize(7.5);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 7, { align: 'center' });
-
-      // Cabeçalho discreto nas páginas 2+ (nome + referência)
-      if (i > 1) {
-        pdf.setFontSize(6.5);
-        pdf.setTextColor(180, 180, 180);
-        const headerText = reference ? `${footerLeft} — ${reference}` : footerLeft;
-        pdf.text(headerText, w - 12, 7, { align: 'right' });
-      }
+      pdf.setTextColor(150, 150, 150);
+      pdf.text(reference, w / 2, h - 12, { align: 'center' });
     }
 
-    onProgress?.('A guardar ficheiro...');
-    pdf.save(filename);
-  } catch (err) {
-    console.error('[PDF] Error during generation:', err);
-    throw err;
+    // Rodapé direito (contactos)
+    if (footerRight) {
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(140, 140, 140);
+      pdf.text(footerRight, w - 12, h - 12, { align: 'right' });
+    }
+
+    // Número da página (centrado, mais abaixo)
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 7, { align: 'center' });
+
+    // Cabeçalho discreto nas páginas 2+ (nome + referência)
+    if (i > 1) {
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(180, 180, 180);
+      const headerText = reference ? `${footerLeft} — ${reference}` : footerLeft;
+      pdf.text(headerText, w - 12, 7, { align: 'right' });
+    }
   }
+
+  onProgress?.('A guardar ficheiro...');
+  pdf.save(filename);
 }
