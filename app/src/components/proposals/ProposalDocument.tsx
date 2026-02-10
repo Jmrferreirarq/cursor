@@ -130,11 +130,19 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                   <tbody>
                     {p.lotInstrumento && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Instrumento</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotInstrumento}</td></tr>}
                     {p.lotClassificacaoSolo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Classificacao do solo</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotClassificacaoSolo}</td></tr>}
+                    {p.lotMunicipio && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Municipio</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotMunicipio}</td></tr>}
+                    {p.lotProfundidade && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Profundidade estimada</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotProfundidade} m</td></tr>}
                     {p.lotParametros?.alturaMaxima && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Altura maxima</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.alturaMaxima}</td></tr>}
-                    {p.lotParametros?.afastamentos && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Afastamentos</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.afastamentos}</td></tr>}
-                    {p.lotParametros?.areaMinimaLote && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area minima de lote</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.areaMinimaLote}</td></tr>}
+                    {(p.lotParametros?.afastamentoFrontal || p.lotParametros?.afastamentoLateral || p.lotParametros?.afastamentoPosterior) && (
+                      <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Afastamentos</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>
+                        {[p.lotParametros?.afastamentoFrontal && `Frontal: ${p.lotParametros.afastamentoFrontal}`, p.lotParametros?.afastamentoLateral && `Lat.: ${p.lotParametros.afastamentoLateral}m`, p.lotParametros?.afastamentoPosterior && `Post.: ${p.lotParametros.afastamentoPosterior}m`].filter(Boolean).join(' | ')}
+                      </td></tr>
+                    )}
+                    {p.lotParametros?.areaMinimaLote && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area minima de lote</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.areaMinimaLote} m2</td></tr>}
                     {p.lotParametros?.indiceConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de construcao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceConstrucao}</td></tr>}
                     {p.lotParametros?.indiceImplantacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de implantacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceImplantacao}</td></tr>}
+                    {p.lotParametros?.profundidadeMaxConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Prof. max. construcao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.profundidadeMaxConstrucao} m</td></tr>}
+                    {p.lotParametros?.percentagemCedencias && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Cedencias (%)</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.percentagemCedencias}%</td></tr>}
                   </tbody>
                 </table>
               </div>
