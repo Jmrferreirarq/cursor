@@ -1649,28 +1649,33 @@ export default function CalculatorPage() {
     // Deep clone do DOM que já renderizou corretamente
     const clone = previewEl.cloneNode(true) as HTMLElement;
     
-    // Preparar o clone para captura: posição offscreen, sem sombras, fundo branco
-    clone.className = 'light';
-    clone.style.cssText = [
-      'position:absolute',
-      'left:-9999px',
-      'top:0',
-      'width:794px',
-      'min-width:794px',
-      'max-width:794px',
-      'background:#ffffff',
-      'color:#1F2328',
-      'overflow:visible',
-      'box-shadow:none',
-      'border-radius:0',
-      'background-image:none',
-      'font-family:DM Sans,Segoe UI,system-ui,sans-serif',
-    ].join(';');
+    // Preparar o clone para captura
+    // IMPORTANTE: NÃO mover offscreen (html2canvas precisa do elemento no viewport)
+    // Usar opacity quase 0 para esconder visualmente mas manter renderizável
+    clone.classList.add('light');
+    clone.style.position = 'absolute';
+    clone.style.left = '0';
+    clone.style.top = '0';
+    clone.style.width = '794px';
+    clone.style.minWidth = '794px';
+    clone.style.background = '#ffffff';
+    clone.style.color = '#1F2328';
+    clone.style.overflow = 'visible';
+    clone.style.boxShadow = 'none';
+    clone.style.borderRadius = '0';
+    clone.style.backgroundImage = 'none';
+    clone.style.zIndex = '-1';
+    clone.style.opacity = '0.01';
     
     document.body.appendChild(clone);
     
-    // Aguardar layout do clone
+    // Forçar reflow e aguardar layout
+    void clone.offsetHeight;
     await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => requestAnimationFrame(r));
+    
+    // Diagnóstico
+    console.log('[PDF Export] Clone dimensions:', clone.offsetWidth, 'x', clone.offsetHeight, '| innerHTML:', clone.innerHTML.length);
     
     try {
       // Verificar que o clone tem conteúdo

@@ -1,6 +1,6 @@
 /**
  * Utilitário partilhado para geração de PDF de propostas.
- * Usa html2pdf.js (já instalado) para converter o ProposalDocument em PDF A4.
+ * Usa html2pdf.js para converter o ProposalDocument em PDF A4.
  * Adiciona rodapé com número de página e contactos em todas as páginas.
  */
 
@@ -36,9 +36,38 @@ export async function generateProposalPdf(
   }
 
   // Pequeno delay para garantir render completo
-  await new Promise((r) => setTimeout(r, 150));
+  await new Promise((r) => setTimeout(r, 200));
+
+  // Diagnóstico: verificar que o elemento tem conteúdo
+  const rect = element.getBoundingClientRect();
+  const htmlLen = element.innerHTML.length;
+  console.log('[PDF] Element rect:', rect.width, 'x', rect.height, '| innerHTML length:', htmlLen);
+
+  if (htmlLen < 50) {
+    throw new Error(`Elemento sem conteúdo HTML (length=${htmlLen})`);
+  }
 
   onProgress?.('A gerar PDF...');
+
+  // Mover o elemento para posição visível temporariamente
+  // html2canvas precisa que o elemento esteja no fluxo normal do documento
+  const originalStyle = element.style.cssText;
+  element.style.cssText = [
+    'position:absolute',
+    'left:0',
+    'top:0',
+    `width:${A4_WIDTH_PX}px`,
+    `min-width:${A4_WIDTH_PX}px`,
+    'background:#ffffff',
+    'color:#1F2328',
+    'overflow:visible',
+    'z-index:-1',
+    'opacity:0.01',
+  ].join(';');
+
+  // Forçar reflow
+  void element.offsetHeight;
+  await new Promise((r) => requestAnimationFrame(r));
 
   const opt = {
     margin: [10, 12, 18, 12] as [number, number, number, number],
@@ -47,13 +76,8 @@ export async function generateProposalPdf(
     html2canvas: {
       scale: 2,
       useCORS: true,
-      logging: false,
-      width: A4_WIDTH_PX,
-      windowWidth: A4_WIDTH_PX,
-      scrollY: 0,
-      scrollX: 0,
+      logging: true,
       backgroundColor: '#ffffff',
-      // Forçar cores claras e posição estática no clone
       onclone: (clonedDoc: Document, clonedEl: HTMLElement) => {
         // Override dark mode no documento clonado
         clonedDoc.body.style.cssText = 'background:#fff!important;color:#1F2328!important;margin:0;padding:0;';
@@ -62,13 +86,15 @@ export async function generateProposalPdf(
         clonedDoc.documentElement.classList.add('light');
         clonedDoc.body.classList.remove('dark');
         clonedDoc.body.classList.add('light');
-        // Forçar posição estática (evitar position:absolute/fixed no clone)
+        // Posição estática no clone
         clonedEl.style.position = 'static';
         clonedEl.style.left = 'auto';
         clonedEl.style.top = 'auto';
+        clonedEl.style.opacity = '1';
         clonedEl.style.backgroundColor = '#ffffff';
         clonedEl.style.color = '#1F2328';
         clonedEl.style.width = `${A4_WIDTH_PX}px`;
+        console.log('[PDF] onclone: clonedEl dimensions:', clonedEl.offsetWidth, 'x', clonedEl.offsetHeight);
       },
     },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
@@ -77,61 +103,116 @@ export async function generateProposalPdf(
 
   const html2pdf = (await import('html2pdf.js')).default;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdf: any = await html2pdf().set(opt).from(element).toPdf().get('pdf');
-  const totalPages: number = pdf.internal.getNumberOfPages();
-  const w: number = pdf.internal.pageSize.getWidth();
-  const h: number = pdf.internal.pageSize.getHeight();
+  try {
+    // Primeiro obter o canvas para diagnóstico
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const worker = html2pdf().set(opt).from(element);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const canvas: HTMLCanvasElement = await (worker as any).toCanvas().get('canvas');
+    
+    console.log('[PDF] Canvas dimensions:', canvas.width, 'x', canvas.height);
+    
+    // Verificar se o canvas tem conteúdo (não é apenas branco)
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      const sampleSize = Math.min(canvas.width, 200);
+      const sampleHeight = Math.min(canvas.height, 200);
+      const imageData = ctx.getImageData(0, 0, sampleSize, sampleHeight);
+      let nonWhitePixels = 0;
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        if (imageData.data[i] !== 255 || imageData.data[i + 1] !== 255 || imageData.data[i + 2] !== 255) {
+          nonWhitePixels++;
+        }
+      }
+      console.log('[PDF] Non-white pixels in sample:', nonWhitePixels, '/', (sampleSize * sampleHeight));
+      
+      if (nonWhitePixels === 0) {
+        console.error('[PDF] CANVAS IS COMPLETELY BLANK! html2canvas failed to capture content.');
+        // Tentar captura alternativa: usar toCanvas sem opções personalizadas
+        console.log('[PDF] Retrying with minimal options...');
+        const minWorker = html2pdf().set({
+          margin: [10, 12, 18, 12],
+          filename,
+          html2canvas: { logging: true, backgroundColor: '#ffffff' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        }).from(element);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const canvas2: HTMLCanvasElement = await (minWorker as any).toCanvas().get('canvas');
+        console.log('[PDF] Retry canvas:', canvas2.width, 'x', canvas2.height);
+        const ctx2 = canvas2.getContext('2d');
+        if (ctx2) {
+          const d2 = ctx2.getImageData(0, 0, Math.min(canvas2.width, 200), Math.min(canvas2.height, 200));
+          let np2 = 0;
+          for (let i = 0; i < d2.data.length; i += 4) {
+            if (d2.data[i] !== 255 || d2.data[i + 1] !== 255 || d2.data[i + 2] !== 255) np2++;
+          }
+          console.log('[PDF] Retry non-white pixels:', np2);
+        }
+      }
+    }
 
-  onProgress?.('A adicionar rodapé...');
+    // Continuar para gerar o PDF completo
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf: any = await html2pdf().set(opt).from(element).toPdf().get('pdf');
+    const totalPages: number = pdf.internal.getNumberOfPages();
+    const w: number = pdf.internal.pageSize.getWidth();
+    const h: number = pdf.internal.pageSize.getHeight();
 
-  // Textos do rodapé
-  const footerLeft = branding?.appName || 'FA-360';
-  const contactParts = [branding?.email, branding?.telefone, branding?.website].filter(Boolean);
-  const footerRight = contactParts.join(' · ');
-  const pageLabel = lang === 'en' ? 'Page' : 'Página';
+    console.log('[PDF] Total pages:', totalPages);
 
-  for (let i = 1; i <= totalPages; i++) {
-    pdf.setPage(i);
+    onProgress?.('A adicionar rodapé...');
 
-    // Linha separadora
-    pdf.setDrawColor(200);
-    pdf.setLineWidth(0.3);
-    pdf.line(12, h - 16, w - 12, h - 16);
+    // Textos do rodapé
+    const footerLeft = branding?.appName || 'FA-360';
+    const contactParts = [branding?.email, branding?.telefone, branding?.website].filter(Boolean);
+    const footerRight = contactParts.join(' · ');
+    const pageLabel = lang === 'en' ? 'Page' : 'Página';
 
-    // Rodapé esquerdo (nome da empresa)
-    pdf.setFontSize(7);
-    pdf.setTextColor(120, 120, 120);
-    pdf.text(footerLeft, 12, h - 12, { align: 'left' });
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
 
-    // Rodapé centro (referência)
-    if (reference) {
+      // Linha separadora
+      pdf.setDrawColor(200);
+      pdf.setLineWidth(0.3);
+      pdf.line(12, h - 16, w - 12, h - 16);
+
+      // Rodapé esquerdo (nome da empresa)
       pdf.setFontSize(7);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(reference, w / 2, h - 12, { align: 'center' });
+      pdf.setTextColor(120, 120, 120);
+      pdf.text(footerLeft, 12, h - 12, { align: 'left' });
+
+      // Rodapé centro (referência)
+      if (reference) {
+        pdf.setFontSize(7);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(reference, w / 2, h - 12, { align: 'center' });
+      }
+
+      // Rodapé direito (contactos)
+      if (footerRight) {
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(140, 140, 140);
+        pdf.text(footerRight, w - 12, h - 12, { align: 'right' });
+      }
+
+      // Número da página (centrado, mais abaixo)
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 7, { align: 'center' });
+
+      // Cabeçalho discreto nas páginas 2+ (nome + referência)
+      if (i > 1) {
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(180, 180, 180);
+        const headerText = reference ? `${footerLeft} — ${reference}` : footerLeft;
+        pdf.text(headerText, w - 12, 7, { align: 'right' });
+      }
     }
 
-    // Rodapé direito (contactos)
-    if (footerRight) {
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(140, 140, 140);
-      pdf.text(footerRight, w - 12, h - 12, { align: 'right' });
-    }
-
-    // Número da página (centrado, mais abaixo)
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(100, 100, 100);
-    pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 7, { align: 'center' });
-
-    // Cabeçalho discreto nas páginas 2+ (nome + referência)
-    if (i > 1) {
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(180, 180, 180);
-      const headerText = reference ? `${footerLeft} — ${reference}` : footerLeft;
-      pdf.text(headerText, w - 12, 7, { align: 'right' });
-    }
+    onProgress?.('A guardar ficheiro...');
+    pdf.save(filename);
+  } finally {
+    // Restaurar estilo original do elemento
+    element.style.cssText = originalStyle;
   }
-
-  onProgress?.('A guardar ficheiro...');
-  pdf.save(filename);
 }
