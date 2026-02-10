@@ -39,6 +39,7 @@ import MaterialLibraryPage from './pages/MaterialLibraryPage';
 import StudioInboxPage from './pages/StudioInboxPage';
 import BrandIdentityPage from './pages/BrandIdentityPage';
 import CalculatorPage from './pages/CalculatorPage';
+import LegislacaoPage from './pages/LegislacaoPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
 import PropostaShortPage from './pages/PropostaShortPage';
 import PortfolioPublicPage from './pages/PortfolioPublicPage';
@@ -126,6 +127,7 @@ function App() {
                 } />
                 <Route path="/technical" element={<TechnicalHubPage />} />
                 <Route path="/technical/details" element={<ConstructionDetailsPage />} />
+                <Route path="/legislacao" element={<LegislacaoPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
                 <Route path="/media" element={<MediaHubPage />} />
                 <Route path="/library" element={<MaterialLibraryPage />} />

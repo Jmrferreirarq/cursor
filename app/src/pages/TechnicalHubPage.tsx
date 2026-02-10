@@ -1,6 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wrench, BookOpen, FileText, Calculator, Ruler, Building2, ExternalLink } from 'lucide-react';
+import { Wrench, BookOpen, FileText, Calculator, Ruler, Building2, ExternalLink, Scale, ArrowRight } from 'lucide-react';
+import { legislacao, CATEGORIAS } from '../data/legislacao';
 
 const tools = [
   {
@@ -9,6 +11,7 @@ const tools = [
     description: 'Acesso a regulamentos de construção e normas técnicas',
     icon: BookOpen,
     items: ['REH', 'RSIEI', 'RSECE', 'RCCTE', 'RGEU'],
+    link: '/legislacao',
   },
   {
     id: 'calculators',
@@ -41,6 +44,10 @@ const externalLinks = [
 ];
 
 export default function TechnicalHubPage() {
+  const navigate = useNavigate();
+  const totalDiplomas = legislacao.length;
+  const totalCategorias = CATEGORIAS.length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -58,6 +65,28 @@ export default function TechnicalHubPage() {
         </div>
       </motion.div>
 
+      {/* Legislation Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        onClick={() => navigate('/legislacao')}
+        className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-xl p-5 cursor-pointer hover:border-primary/40 transition-colors group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+            <Scale className="w-7 h-7 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold group-hover:text-primary transition-colors">Biblioteca de Legislacao</h3>
+            <p className="text-sm text-muted-foreground">
+              {totalDiplomas} diplomas em {totalCategorias} categorias — RJUE, RGEU, acessibilidades, incendios, acustica, energia e mais.
+            </p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </div>
+      </motion.div>
+
       {/* Tools Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {tools.map((tool, index) => (
@@ -66,7 +95,8 @@ export default function TechnicalHubPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-card border border-border rounded-xl p-5 hover:border-muted-foreground/30 transition-colors"
+            onClick={tool.link ? () => navigate(tool.link!) : undefined}
+            className={`bg-card border border-border rounded-xl p-5 hover:border-muted-foreground/30 transition-colors ${tool.link ? 'cursor-pointer' : ''}`}
           >
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
@@ -77,12 +107,12 @@ export default function TechnicalHubPage() {
                 <p className="text-sm text-muted-foreground mb-3">{tool.description}</p>
                 <div className="flex flex-wrap gap-2">
                   {tool.items.map((item) => (
-                    <button
+                    <span
                       key={item}
-                      className="px-3 py-1.5 bg-muted rounded-lg text-sm hover:bg-muted/80 transition-colors"
+                      className="px-3 py-1.5 bg-muted rounded-lg text-sm"
                     >
                       {item}
-                    </button>
+                    </span>
                   ))}
                 </div>
               </div>
