@@ -1083,8 +1083,30 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         </div>
 
         {/* ESTIMATIVA DE INVESTIMENTO — Versao Loteamento (Promotor) vs Edificacao */}
-        {p.isLoteamento && p.lotInvestimentoPromotor && (() => {
-          const inv = p.lotInvestimentoPromotor;
+        {p.isLoteamento && p.lotCustoObraTotal && p.lotCenarios && p.lotCenarios.length > 0 && (() => {
+          // Calcular investimento do promotor a partir dos dados já no payload
+          const nLotes = parseInt(p.lotCenarios[0]?.lotes || '0', 10) || parseInt(p.lotNumLotes || '0', 10) || 0;
+          if (nLotes <= 0) return null;
+          const areaMediaStr = p.lotCenarios[0]?.areaMedia;
+          const areaMediaLote = parseInt(areaMediaStr || '0', 10) || 0;
+          if (areaMediaLote <= 0) return null;
+          const abcEstimada = Math.round(areaMediaLote * 0.7);
+          const custosMoradia = { min: 1000, med: 1400, max: 2000 };
+          const inv = {
+            infraTotal: p.lotCustoObraTotal ?? 0,
+            honorariosTotal: p.totalSemIVA ?? 0,
+            construcaoAreaMediaLote: abcEstimada,
+            construcaoNLotes: nLotes,
+            construcaoMin: abcEstimada * custosMoradia.min,
+            construcaoMed: abcEstimada * custosMoradia.med,
+            construcaoMax: abcEstimada * custosMoradia.max,
+            construcaoTotalMin: abcEstimada * custosMoradia.min * nLotes,
+            construcaoTotalMed: abcEstimada * custosMoradia.med * nLotes,
+            construcaoTotalMax: abcEstimada * custosMoradia.max * nLotes,
+            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.min * nLotes,
+            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.med * nLotes,
+            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.max * nLotes,
+          };
           const fmtN = (n: number) => n.toLocaleString('pt-PT');
           return (
           <div className="pdf-no-break" style={{ marginTop: '6mm', marginBottom: '6mm', padding: '4mm 5mm', background: C.offWhite, borderRadius: 3, border: `2px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
@@ -1166,15 +1188,13 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             </div>
 
             {/* Duracao */}
-            {inv.invDuracao && (
-              <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
-                Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>{inv.invDuracao}</strong> (licenciamento + construcao)
-              </p>
-            )}
+            <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
+              Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>18-36 meses</strong> (licenciamento + construcao)
+            </p>
 
             {/* Disclaimer */}
             <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: 0, fontStyle: 'italic', lineHeight: 1.4 }}>
-              * {inv.invNota || 'Valores indicativos para planeamento financeiro. Nao inclui terreno, licencas camararias ou financiamento.'}
+              * Valores indicativos para planeamento financeiro do promotor. Custos de construcao baseados em valores de referencia chave na mao (habitacao unifamiliar). Nao inclui terreno, licencas camararias ou financiamento.
             </p>
           </div>
           );
