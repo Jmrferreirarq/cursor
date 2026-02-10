@@ -1913,8 +1913,8 @@ export default function CalculatorPage() {
               investimentoTotalMin: ci.totalComContingencia + totalSemIVA + construcaoMin * nLotes,
               investimentoTotalMed: ci.totalComContingencia + totalSemIVA + construcaoMed * nLotes,
               investimentoTotalMax: ci.totalComContingencia + totalSemIVA + construcaoMax * nLotes,
-              duracaoEstimada: '18-36 meses',
-              nota: 'Valores indicativos para planeamento financeiro do promotor. Custos de construcao baseados em valores de referencia chave na mao (habitacao unifamiliar). Nao inclui terreno, licencas camararias ou financiamento.',
+              invDuracao: '18-36 meses',
+              invNota: 'Valores indicativos para planeamento financeiro do promotor. Custos de construcao baseados em valores de referencia chave na mao (habitacao unifamiliar). Nao inclui terreno, licencas camararias ou financiamento.',
             },
           };
         })(),

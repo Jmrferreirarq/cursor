@@ -232,8 +232,8 @@ export const proposalPayloadSchema = z.object({
     investimentoTotalMin: z.number(),
     investimentoTotalMed: z.number(),
     investimentoTotalMax: z.number(),
-    duracaoEstimada: z.string().optional(),
-    nota: z.string().optional(),
+    invDuracao: z.string().optional(),
+    invNota: z.string().optional(),
   }).optional(),
 });
 
@@ -286,7 +286,7 @@ const MINIFY_KEYS: Record<string, string> = {
   construcaoMin: 'cmi', construcaoMed: 'cme', construcaoMax: 'cma',
   construcaoTotalMin: 'ctmi', construcaoTotalMed: 'ctme', construcaoTotalMax: 'ctma',
   investimentoTotalMin: 'itmi', investimentoTotalMed: 'itme', investimentoTotalMax: 'itma',
-  duracaoEstimada: 'dee', nota: 'nta',
+  invDuracao: 'idr', invNota: 'inr',
 };
 
 const EXPAND_KEYS: Record<string, string> = Object.fromEntries(

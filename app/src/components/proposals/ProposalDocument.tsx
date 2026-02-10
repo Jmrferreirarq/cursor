@@ -1166,15 +1166,15 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             </div>
 
             {/* Duracao */}
-            {inv.duracaoEstimada && (
+            {inv.invDuracao && (
               <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
-                Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>{inv.duracaoEstimada}</strong> (licenciamento + construcao)
+                Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>{inv.invDuracao}</strong> (licenciamento + construcao)
               </p>
             )}
 
             {/* Disclaimer */}
             <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: 0, fontStyle: 'italic', lineHeight: 1.4 }}>
-              * {inv.nota || 'Valores indicativos para planeamento financeiro. Nao inclui terreno, licencas camararias ou financiamento.'}
+              * {inv.invNota || 'Valores indicativos para planeamento financeiro. Nao inclui terreno, licencas camararias ou financiamento.'}
             </p>
           </div>
           );
