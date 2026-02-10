@@ -1646,45 +1646,29 @@ export default function CalculatorPage() {
       return;
     }
     
-    // Deep clone do DOM que já renderizou corretamente
-    const clone = previewEl.cloneNode(true) as HTMLElement;
-    
-    // Preparar o clone para captura
-    // IMPORTANTE: NÃO mover offscreen (html2canvas precisa do elemento no viewport)
-    // Usar opacity quase 0 para esconder visualmente mas manter renderizável
-    clone.classList.add('light');
-    clone.style.position = 'absolute';
-    clone.style.left = '0';
-    clone.style.top = '0';
-    clone.style.width = '794px';
-    clone.style.minWidth = '794px';
-    clone.style.background = '#ffffff';
-    clone.style.color = '#1F2328';
-    clone.style.overflow = 'visible';
-    clone.style.boxShadow = 'none';
-    clone.style.borderRadius = '0';
-    clone.style.backgroundImage = 'none';
-    clone.style.zIndex = '-1';
-    clone.style.opacity = '0.01';
-    
-    document.body.appendChild(clone);
+    // Criar div LIMPO e copiar o innerHTML do preview
+    // Não clonar o wrapper (perde contexto flex e colapsa para height:0)
+    const captureDiv = document.createElement('div');
+    captureDiv.className = 'light';
+    captureDiv.style.cssText = 'width:794px;min-width:794px;background:#fff;color:#1F2328;overflow:visible;';
+    captureDiv.innerHTML = previewEl.innerHTML;
+    document.body.appendChild(captureDiv);
     
     // Forçar reflow e aguardar layout
-    void clone.offsetHeight;
-    await new Promise((r) => setTimeout(r, 300));
+    void captureDiv.offsetHeight;
+    await new Promise((r) => setTimeout(r, 400));
     await new Promise((r) => requestAnimationFrame(r));
     
-    // Diagnóstico
-    console.log('[PDF Export] Clone dimensions:', clone.offsetWidth, 'x', clone.offsetHeight, '| innerHTML:', clone.innerHTML.length);
+    console.log('[PDF Export] captureDiv:', captureDiv.offsetWidth, 'x', captureDiv.offsetHeight, '| HTML:', captureDiv.innerHTML.length);
     
     try {
-      // Verificar que o clone tem conteúdo
-      if (clone.scrollHeight < 200) {
-        throw new Error(`Clone sem conteúdo (height=${clone.scrollHeight})`);
+      // Verificar que o div tem conteúdo com altura real
+      if (captureDiv.offsetHeight < 100) {
+        throw new Error(`Div de captura sem altura (height=${captureDiv.offsetHeight})`);
       }
       
       const baseName = `${(referenciaExibida || 'Proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-      await generateProposalPdf(clone, {
+      await generateProposalPdf(captureDiv, {
         filename: `${baseName}.pdf`,
         reference: referenciaExibida,
         branding: previewPayload.branding,
@@ -1698,8 +1682,8 @@ export default function CalculatorPage() {
       toast.dismiss('pdf-progress');
       toast.error(`Erro ao gerar PDF: ${e instanceof Error ? e.message : 'desconhecido'}`);
     } finally {
-      // Remover clone do DOM
-      try { document.body.removeChild(clone); } catch { /* ignore */ }
+      // Remover div de captura do DOM
+      try { document.body.removeChild(captureDiv); } catch { /* ignore */ }
     }
   };
 

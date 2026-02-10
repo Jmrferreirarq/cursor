@@ -38,36 +38,14 @@ export async function generateProposalPdf(
   // Pequeno delay para garantir render completo
   await new Promise((r) => setTimeout(r, 200));
 
-  // Diagnóstico: verificar que o elemento tem conteúdo
-  const rect = element.getBoundingClientRect();
-  const htmlLen = element.innerHTML.length;
-  console.log('[PDF] Element rect:', rect.width, 'x', rect.height, '| innerHTML length:', htmlLen);
-
-  if (htmlLen < 50) {
-    throw new Error(`Elemento sem conteúdo HTML (length=${htmlLen})`);
+  // Diagnóstico
+  console.log('[PDF] Element dimensions:', element.offsetWidth, 'x', element.offsetHeight, '| innerHTML:', element.innerHTML.length);
+  
+  if (element.offsetHeight < 10) {
+    throw new Error(`Elemento sem altura (height=${element.offsetHeight}). O preview precisa de estar visível.`);
   }
 
   onProgress?.('A gerar PDF...');
-
-  // Mover o elemento para posição visível temporariamente
-  // html2canvas precisa que o elemento esteja no fluxo normal do documento
-  const originalStyle = element.style.cssText;
-  element.style.cssText = [
-    'position:absolute',
-    'left:0',
-    'top:0',
-    `width:${A4_WIDTH_PX}px`,
-    `min-width:${A4_WIDTH_PX}px`,
-    'background:#ffffff',
-    'color:#1F2328',
-    'overflow:visible',
-    'z-index:-1',
-    'opacity:0.01',
-  ].join(';');
-
-  // Forçar reflow
-  void element.offsetHeight;
-  await new Promise((r) => requestAnimationFrame(r));
 
   const opt = {
     margin: [10, 12, 18, 12] as [number, number, number, number],
@@ -104,54 +82,6 @@ export async function generateProposalPdf(
   const html2pdf = (await import('html2pdf.js')).default;
 
   try {
-    // Primeiro obter o canvas para diagnóstico
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const worker = html2pdf().set(opt).from(element);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const canvas: HTMLCanvasElement = await (worker as any).toCanvas().get('canvas');
-    
-    console.log('[PDF] Canvas dimensions:', canvas.width, 'x', canvas.height);
-    
-    // Verificar se o canvas tem conteúdo (não é apenas branco)
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      const sampleSize = Math.min(canvas.width, 200);
-      const sampleHeight = Math.min(canvas.height, 200);
-      const imageData = ctx.getImageData(0, 0, sampleSize, sampleHeight);
-      let nonWhitePixels = 0;
-      for (let i = 0; i < imageData.data.length; i += 4) {
-        if (imageData.data[i] !== 255 || imageData.data[i + 1] !== 255 || imageData.data[i + 2] !== 255) {
-          nonWhitePixels++;
-        }
-      }
-      console.log('[PDF] Non-white pixels in sample:', nonWhitePixels, '/', (sampleSize * sampleHeight));
-      
-      if (nonWhitePixels === 0) {
-        console.error('[PDF] CANVAS IS COMPLETELY BLANK! html2canvas failed to capture content.');
-        // Tentar captura alternativa: usar toCanvas sem opções personalizadas
-        console.log('[PDF] Retrying with minimal options...');
-        const minWorker = html2pdf().set({
-          margin: [10, 12, 18, 12],
-          filename,
-          html2canvas: { logging: true, backgroundColor: '#ffffff' },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        }).from(element);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const canvas2: HTMLCanvasElement = await (minWorker as any).toCanvas().get('canvas');
-        console.log('[PDF] Retry canvas:', canvas2.width, 'x', canvas2.height);
-        const ctx2 = canvas2.getContext('2d');
-        if (ctx2) {
-          const d2 = ctx2.getImageData(0, 0, Math.min(canvas2.width, 200), Math.min(canvas2.height, 200));
-          let np2 = 0;
-          for (let i = 0; i < d2.data.length; i += 4) {
-            if (d2.data[i] !== 255 || d2.data[i + 1] !== 255 || d2.data[i + 2] !== 255) np2++;
-          }
-          console.log('[PDF] Retry non-white pixels:', np2);
-        }
-      }
-    }
-
-    // Continuar para gerar o PDF completo
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdf: any = await html2pdf().set(opt).from(element).toPdf().get('pdf');
     const totalPages: number = pdf.internal.getNumberOfPages();
@@ -211,8 +141,8 @@ export async function generateProposalPdf(
 
     onProgress?.('A guardar ficheiro...');
     pdf.save(filename);
-  } finally {
-    // Restaurar estilo original do elemento
-    element.style.cssText = originalStyle;
+  } catch (err) {
+    console.error('[PDF] Error during generation:', err);
+    throw err;
   }
 }
