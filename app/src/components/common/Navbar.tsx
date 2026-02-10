@@ -146,31 +146,33 @@ export default function Navbar() {
             </div>
           </NavLink>
 
-          {/* Desktop Navigation */}
-          <div className="hidden xl:flex items-center gap-1 overflow-x-auto">
-            {navEntries.map((entry, idx) => {
+          {/* Desktop Navigation — icon-only with tooltips */}
+          <div className="hidden xl:flex items-center gap-0.5 overflow-x-auto">
+            {navEntries.map((entry) => {
               if (isGroup(entry)) {
                 const isOpen = openDropdown === entry.labelKey;
-                // Check if any child is active
                 const currentPath = window.location.pathname;
                 const isChildActive = entry.children.some(c => currentPath === c.path);
 
                 return (
-                  <div key={entry.labelKey} className="relative" ref={isOpen ? dropdownRef : undefined}>
+                  <div key={entry.labelKey} className="relative group" ref={isOpen ? dropdownRef : undefined}>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenDropdown(isOpen ? null : entry.labelKey);
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      className={`relative flex items-center gap-0.5 p-2.5 rounded-lg transition-all duration-200 ${
                         isChildActive
                           ? 'bg-primary/10 text-primary'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                       }`}
                     >
-                      <entry.icon className="w-4 h-4 shrink-0" />
-                      <span>{getLabel(entry.labelKey)}</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                      <entry.icon className="w-[18px] h-[18px]" />
+                      <ChevronDown className={`w-2.5 h-2.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                      {/* Tooltip */}
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                        Legal
+                      </span>
                     </button>
 
                     <AnimatePresence>
@@ -180,7 +182,7 @@ export default function Navbar() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 6 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute left-0 top-full mt-1 w-52 bg-popover border border-border rounded-xl shadow-lg py-1.5 z-50"
+                          className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-48 bg-popover border border-border rounded-xl shadow-lg py-1.5 z-50"
                         >
                           {entry.children.map((child) => (
                             <NavLink
@@ -189,7 +191,7 @@ export default function Navbar() {
                               end={child.exact}
                               onClick={() => setOpenDropdown(null)}
                               className={({ isActive }) =>
-                                `flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors ${
+                                `flex items-center gap-2.5 px-3.5 py-2 text-sm font-medium transition-colors ${
                                   isActive
                                     ? 'bg-primary/10 text-primary'
                                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -207,7 +209,7 @@ export default function Navbar() {
                 );
               }
 
-              // Regular nav item
+              // Regular nav item — icon only with tooltip
               const item = entry;
               return (
                 <NavLink
@@ -215,15 +217,18 @@ export default function Navbar() {
                   to={item.path}
                   end={item.exact}
                   className={({ isActive }) =>
-                    `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                    `relative group p-2.5 rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`
                   }
                 >
-                  <item.icon className="w-4 h-4 shrink-0" />
-                  <span>{getLabel(item.labelKey)}</span>
+                  <item.icon className="w-[18px] h-[18px]" />
+                  {/* Tooltip */}
+                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+                    {getLabel(item.labelKey)}
+                  </span>
                 </NavLink>
               );
             })}
