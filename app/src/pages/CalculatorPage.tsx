@@ -2694,7 +2694,7 @@ export default function CalculatorPage() {
       // Codificar payload com lz-string (compressão) e colocar no hash fragment (#)
       // O hash NUNCA é enviado ao servidor → sem risco de HTTP 431 / ERR_CONNECTION_CLOSED
       const encoded = encodeProposalPayload(payload);
-      finalUrl = `${publicOrigin}${base}/proposta?lang=${lang}#d=${encoded}`;
+      finalUrl = `${publicOrigin}${base}/cotacao?lang=${lang}#d=${encoded}`;
       
       // Também guardar em localStorage para auto-sync (actualizar sem mudar o URL)
       const localId = savePayloadLocally(payload, linkLocalId);
