@@ -85,13 +85,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const body = req.body || {};
-    const payload = body.payload;
-    const reference = body.reference || '';
-    const clientName = body.clientName || '';
-    const projectName = body.projectName || '';
-    const hashUrl = body.hashUrl;
-    const origin = body.origin || '';
+    // Parsear body — pode vir como string ou como objeto (depende do runtime)
+    let body: Record<string, unknown> = {};
+    if (typeof req.body === 'string') {
+      try { body = JSON.parse(req.body); } catch { body = {}; }
+    } else if (req.body && typeof req.body === 'object') {
+      body = req.body as Record<string, unknown>;
+    }
+    const payload = body.payload as Record<string, unknown> | undefined;
+    const reference = String(body.reference || '');
+    const clientName = String(body.clientName || '');
+    const projectName = String(body.projectName || '');
+    const hashUrl = body.hashUrl as string | undefined;
+    const origin = String(body.origin || '');
 
     if (!hashUrl && !payload) {
       return res.status(400).json({ error: 'hashUrl or payload required' });
