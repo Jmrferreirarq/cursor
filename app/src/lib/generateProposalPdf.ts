@@ -2,9 +2,29 @@
  * Utilitário partilhado para geração de PDF de propostas.
  * Usa html2pdf.js (já instalado) para converter o ProposalDocument em PDF A4.
  * Adiciona rodapé com número de página e contactos em todas as páginas.
+ *
+ * IMPORTANTE: Page breaks são calculados MANUALMENTE antes de chamar html2pdf.js
+ * porque o mecanismo pagebreak.avoid do html2pdf.js não funciona de forma fiável.
  */
 
 const A4_WIDTH_PX = 794;
+
+// A4 dimensions in mm
+const A4_HEIGHT_MM = 297;
+const A4_WIDTH_MM = 210;
+const MARGIN_TOP_MM = 10;
+const MARGIN_BOTTOM_MM = 18;
+const MARGIN_LEFT_MM = 12;
+const MARGIN_RIGHT_MM = 12;
+
+// Usable content area on each page (mm)
+const CONTENT_WIDTH_MM = A4_WIDTH_MM - MARGIN_LEFT_MM - MARGIN_RIGHT_MM; // 186mm
+const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM; // 269mm
+
+// Convert page content height to element pixels
+// Our element is 794px wide, which maps to CONTENT_WIDTH_MM on the PDF page
+const PX_PER_MM = A4_WIDTH_PX / CONTENT_WIDTH_MM; // ~4.269 px/mm
+const PAGE_CONTENT_HEIGHT_PX = CONTENT_HEIGHT_MM * PX_PER_MM; // ~1148px per page
 
 export interface PdfBranding {
   appName?: string;
@@ -19,6 +39,80 @@ export interface GeneratePdfOptions {
   branding?: PdfBranding;
   lang?: 'pt' | 'en';
   onProgress?: (msg: string) => void;
+}
+
+/**
+ * Calcula e insere spacers antes de elementos que seriam cortados por page breaks.
+ * Isto substitui o mecanismo pagebreak.avoid do html2pdf.js que não funciona.
+ */
+function insertManualPageBreaks(container: HTMLElement): void {
+  // Selectors for elements that should NOT be split across pages
+  const avoidSelectors = '.pdf-no-break, tr, thead, h1, h2, h3, li';
+  const elements = container.querySelectorAll(avoidSelectors);
+
+  // Get container's top offset to calculate relative positions
+  const containerRect = container.getBoundingClientRect();
+  const containerTop = containerRect.top;
+
+  // Track inserted spacers' total height (as we insert spacers, positions shift)
+  let totalSpacerHeight = 0;
+
+  // Collect elements and their positions, sorted by top position
+  const measured: { el: Element; top: number; bottom: number; height: number }[] = [];
+  elements.forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    const top = rect.top - containerTop;
+    const height = rect.height;
+    // Skip tiny elements (borders, separators) and elements taller than a page
+    if (height < 8 || height > PAGE_CONTENT_HEIGHT_PX * 0.95) return;
+    measured.push({ el, top, bottom: top + height, height });
+  });
+
+  // Sort by top position
+  measured.sort((a, b) => a.top - b.top);
+
+  // Process each element
+  for (const item of measured) {
+    const adjustedTop = item.top + totalSpacerHeight;
+    const adjustedBottom = adjustedTop + item.height;
+
+    // Which page does this element start on?
+    const startPage = Math.floor(adjustedTop / PAGE_CONTENT_HEIGHT_PX);
+    // Which page does this element end on?
+    const endPage = Math.floor((adjustedBottom - 1) / PAGE_CONTENT_HEIGHT_PX);
+
+    // If the element spans two pages, push it to the next page
+    if (startPage !== endPage && item.height < PAGE_CONTENT_HEIGHT_PX * 0.95) {
+      const nextPageTop = (startPage + 1) * PAGE_CONTENT_HEIGHT_PX;
+      const spacerHeight = nextPageTop - adjustedTop + 2; // +2px safety margin
+
+      // Insert spacer div before the element
+      const spacer = document.createElement('div');
+      spacer.style.cssText = `height:${spacerHeight}px;width:100%;flex-shrink:0;`;
+      spacer.className = 'pdf-page-spacer';
+
+      // For <tr> elements, we need to insert before the row's parent table if possible
+      const target = item.el;
+      if (target.tagName === 'TR') {
+        // Check if this is the first row being cut — insert spacer before the table
+        const table = target.closest('table');
+        if (table && table.parentElement) {
+          // Only add spacer if we haven't already added one right before this table
+          const prev = table.previousElementSibling;
+          if (!prev || !prev.classList.contains('pdf-page-spacer')) {
+            table.parentElement.insertBefore(spacer, table);
+            totalSpacerHeight += spacerHeight;
+          }
+        }
+      } else {
+        const parent = target.parentElement;
+        if (parent) {
+          parent.insertBefore(spacer, target as Node);
+          totalSpacerHeight += spacerHeight;
+        }
+      }
+    }
+  }
 }
 
 export async function generateProposalPdf(
@@ -38,10 +132,20 @@ export async function generateProposalPdf(
   // Pequeno delay para garantir render completo
   await new Promise((r) => setTimeout(r, 150));
 
+  onProgress?.('A calcular quebras de página...');
+
+  // MANUAL PAGE BREAK CALCULATION
+  // O html2pdf.js pagebreak.avoid não funciona — fazemos nós próprios
+  insertManualPageBreaks(element);
+
+  // Reflow after inserting spacers
+  void element.offsetHeight;
+  await new Promise((r) => setTimeout(r, 100));
+
   onProgress?.('A gerar PDF...');
 
   const opt = {
-    margin: [10, 12, 18, 12] as [number, number, number, number],
+    margin: [MARGIN_TOP_MM, MARGIN_RIGHT_MM, MARGIN_BOTTOM_MM, MARGIN_LEFT_MM] as [number, number, number, number],
     filename,
     image: { type: 'jpeg' as const, quality: 0.95 },
     html2canvas: {
@@ -55,10 +159,8 @@ export async function generateProposalPdf(
       backgroundColor: '#ffffff',
     },
     jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
-    pagebreak: {
-      mode: ['css', 'legacy'] as string[],
-      avoid: ['.pdf-no-break', 'tr', 'thead', 'h1', 'h2', 'h3', 'li'],
-    },
+    // pagebreak desactivado — usamos cálculo manual acima
+    pagebreak: { mode: [] as string[], avoid: [] as string[] },
   };
 
   const html2pdf = (await import('html2pdf.js')).default;
