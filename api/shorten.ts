@@ -85,12 +85,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    // Parsear body — pode vir como string ou como objeto (depende do runtime)
+    // Parsear body — o Vercel pode lançar "Invalid JSON" ao aceder req.body
     let body: Record<string, unknown> = {};
-    if (typeof req.body === 'string') {
-      try { body = JSON.parse(req.body); } catch { body = {}; }
-    } else if (req.body && typeof req.body === 'object') {
-      body = req.body as Record<string, unknown>;
+    try {
+      const rawBody = req.body;
+      if (typeof rawBody === 'string') {
+        body = JSON.parse(rawBody);
+      } else if (rawBody && typeof rawBody === 'object') {
+        body = rawBody as Record<string, unknown>;
+      }
+    } catch (parseErr) {
+      // Se o body vier como stream/buffer, ler manualmente
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+        body = JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+      } catch {
+        return res.status(400).json({ error: 'Could not parse request body', detail: String(parseErr) });
+      }
     }
     const payload = body.payload as Record<string, unknown> | undefined;
     const reference = String(body.reference || '');
