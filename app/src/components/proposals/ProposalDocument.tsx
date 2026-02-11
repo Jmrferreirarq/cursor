@@ -181,15 +181,16 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
                   Inclui {p.lotCenarios.length} opcoes de implantacao. Driver critico: acesso direto vs via interna.
                 </p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(7.5) }}>
                   <thead>
                     <tr style={{ background: '#fef3c7' }}>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Cenario</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Lotes</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Frente/lote</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Frente</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Tipologia</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#92400e', fontWeight: 700 }}>Acesso</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Area media</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Area lote</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Implantacao</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>ABC est.</th>
                       <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#92400e', fontWeight: 700 }}>Cedencias</th>
                     </tr>
                   </thead>
@@ -199,13 +200,25 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       return (
                       <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: isRecommended ? '#eff6ff' : undefined }}>
                         <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>
-                          Cenario {c.label}{isRecommended ? <span style={{ fontSize: fs(6), color: '#1e40af', fontWeight: 700, marginLeft: '2mm' }}>RECOMENDADO</span> : ''}
+                          {c.label}{isRecommended ? <span style={{ fontSize: fs(6), color: '#1e40af', fontWeight: 700, marginLeft: '1mm' }}>REC.</span> : ''}
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontSize: fs(7) }}>{c.larguraEstimada || '—'}</td>
-                        <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>{c.tipoHabitacaoLabel || '—'}</td>
-                        <td style={{ padding: '1.5mm 2mm', fontSize: fs(7) }}>{c.accessModelLabel || '—'}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</td>
+                        <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>
+                          {c.tipoHabitacaoLabel || '—'}
+                          <span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca, fontWeight: 400 }}>{c.accessModelLabel || ''}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</span>
+                        </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>
+                          {c.areaImplantacao ? (
+                            <>{c.areaImplantacao} m2<span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca }}>({c.indiceImplantacao}%)</span></>
+                          ) : '—'}
+                        </td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600, color: '#059669' }}>
+                          {c.abcEstimada ? (
+                            <>{c.abcEstimada} m2<span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca, fontWeight: 400 }}>({c.numPisos}p)</span></>
+                          ) : '—'}
+                        </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias ? `${c.cedencias} m2` : '—'}</td>
                       </tr>
                       );
@@ -243,6 +256,51 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Enquadramento Legal */}
+            {p.lotLegislacao && p.lotLegislacao.length > 0 && (
+              <div className="pdf-no-break" style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#eff6ff', borderRadius: 2, border: '1px solid #bfdbfe', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Enquadramento Legal e Regulamentar</p>
+                <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
+                  Legislacao principal aplicavel ao licenciamento desta operacao de loteamento.
+                </p>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(7.5) }}>
+                  <thead>
+                    <tr style={{ background: '#dbeafe' }}>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#1e40af', fontWeight: 700 }}>Diploma</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', color: '#1e40af', fontWeight: 700 }}>Descricao</th>
+                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', color: '#1e40af', fontWeight: 700, whiteSpace: 'nowrap' }}>Relevancia</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.lotLegislacao.map((d: any, i: number) => (
+                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600, whiteSpace: 'nowrap', color: '#1e40af' }}>{d.sigla}</td>
+                        <td style={{ padding: '1.5mm 2mm', color: C.grafite }}>
+                          {d.titulo}
+                          {d.nota && <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, fontStyle: 'italic' }}>{d.nota}</span>}
+                        </td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>
+                          <span style={{
+                            fontSize: fs(6.5),
+                            fontWeight: 600,
+                            padding: '0.5mm 2mm',
+                            borderRadius: 2,
+                            background: d.relevancia === 'obrigatorio' ? '#dc2626' : d.relevancia === 'frequente' ? '#f59e0b' : '#94a3b8',
+                            color: '#fff',
+                          }}>
+                            {d.relevancia === 'obrigatorio' ? 'Obrigatorio' : d.relevancia === 'frequente' ? 'Frequente' : 'Condicional'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: '2mm 0 0 0', fontStyle: 'italic' }}>
+                  Nota: lista nao exaustiva. Aplicabilidade final sujeita a analise do PDM/PP em vigor e parecer das entidades competentes.
+                </p>
               </div>
             )}
 

@@ -33,6 +33,8 @@ import { t, formatDate, formatCurrency as formatCurrencyLocale } from '../locale
 import { toast } from 'sonner';
 import type { Client } from '../types';
 import { municipios, type ParametrosUrbanisticos } from '../data/municipios';
+import { legislacao as LEGISLACAO_DB } from '../data/legislacao';
+import { TIPOLOGIA_DIPLOMAS } from '../data/tipologias';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME ?? 'FA-360';
 const APP_SLOGAN = import.meta.env.VITE_APP_SLOGAN ?? '';
@@ -847,6 +849,51 @@ function sugerirLotesPorFrente(frenteTerreno: number): { tipo: string; label: st
     const largura = lotes > 0 ? frenteUtil / lotes : 0;
     return { tipo: r.tipo, label: r.label, lotes, largura, cor: r.cor };
   }).filter(s => s.lotes > 0);
+}
+
+// ── Cálculo de implantação e ABC por cenário (usando afastamentos PDM) ──
+interface ImplantacaoCalc {
+  profundidade: number;      // profundidade estimada do lote (m)
+  afFrontal: number;         // afastamento frontal usado (m)
+  afLateral: number;         // afastamento lateral usado (m)  ← total (2× se isolada, 1× se geminada, 0 se banda)
+  afPosterior: number;       // afastamento posterior usado (m)
+  larguraUtil: number;       // largura construível (m)
+  profundidadeUtil: number;  // profundidade construível (m)
+  areaImplantacao: number;   // área de implantação (m²)
+  indiceImplantacao: number; // índice de implantação (%)
+  abcEstimada: number;       // ABC estimada (m²) — implantação × nº pisos
+  numPisos: number;          // nº pisos usado no cálculo
+}
+
+function calcularImplantacaoLote(
+  areaMedia: number,
+  larguraLote: number,
+  tipoHabitacao: string,
+  afFrontalInput: string,
+  afLateralInput: string,
+  afPosteriorInput: string,
+  alturaMaxInput: string,
+): ImplantacaoCalc | null {
+  if (areaMedia <= 0 || larguraLote <= 0) return null;
+  const profundidade = areaMedia / larguraLote;
+  if (profundidade <= 0) return null;
+  // Afastamentos — usar inputs do PDM ou defaults regulamentares
+  const afFrontal = parseFloat(afFrontalInput) || 5;
+  const afLateralUnit = parseFloat(afLateralInput) || 3;
+  const afPosterior = parseFloat(afPosteriorInput) || 6;
+  // Laterais dependem da tipologia
+  const afLateralTotal = tipoHabitacao === 'isoladas' ? afLateralUnit * 2
+    : tipoHabitacao === 'geminadas' ? afLateralUnit
+    : 0; // em_banda: 0 laterais
+  const larguraUtil = Math.max(0, larguraLote - afLateralTotal);
+  const profundidadeUtil = Math.max(0, profundidade - afFrontal - afPosterior);
+  const areaImplantacao = Math.round(larguraUtil * profundidadeUtil);
+  const indiceImplantacao = areaMedia > 0 ? Math.round((areaImplantacao / areaMedia) * 100) : 0;
+  // Nº pisos: deduzir da altura máxima (3m/piso) ou default 2
+  const alturaMax = parseFloat(alturaMaxInput) || 0;
+  const numPisos = alturaMax > 0 ? Math.max(1, Math.floor(alturaMax / 3)) : 2;
+  const abcEstimada = Math.round(areaImplantacao * numPisos);
+  return { profundidade: Math.round(profundidade * 10) / 10, afFrontal, afLateral: afLateralTotal, afPosterior, larguraUtil: Math.round(larguraUtil * 10) / 10, profundidadeUtil: Math.round(profundidadeUtil * 10) / 10, areaImplantacao, indiceImplantacao, abcEstimada, numPisos };
 }
 
 // Labels para objetivo principal
@@ -1935,6 +1982,13 @@ export default function CalculatorPage() {
           const pctCed = parseFloat(lotPercentagemCedencias) || 15;
           const cedenciasAuto = areaEst > 0 ? Math.round(areaEst * pctCed / 100) : 0;
           const areaMediaAuto = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - cedenciasAuto) / nLotes) : 0;
+          // Implantação e ABC
+          const areaMediaEfetiva = parseFloat(cen.areaMedia) || areaMediaAuto;
+          const imp = areaMediaEfetiva > 0 && largura > 0 ? calcularImplantacaoLote(
+            areaMediaEfetiva, largura,
+            tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
+            lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+          ) : null;
           return {
             ...cen,
             // Usar valor manual se preenchido, senão o auto-calculado
@@ -1944,12 +1998,31 @@ export default function CalculatorPage() {
             accessModelLabel: ACCESS_MODEL_LABELS[cen.accessModel] ?? cen.accessModel,
             larguraEstimada: largura > 0 ? `${largura.toFixed(1)}m` : undefined,
             tipoHabitacaoLabel: HOUSING_TYPE_LABELS[tipoEfetivo] ?? inferido?.label ?? '—',
+            // Implantação e ABC
+            ...(imp ? { areaImplantacao: imp.areaImplantacao, indiceImplantacao: imp.indiceImplantacao, abcEstimada: imp.abcEstimada, numPisos: imp.numPisos } : {}),
           };
         }).filter((x): x is NonNullable<typeof x> => x !== null),
         lotCondicionantes: Array.from(lotCondicionantes).map(id => {
           const c = CONDICIONANTES_LOTEAMENTO.find(x => x.id === id);
           return c ? c.label : id;
         }),
+        // Legislação aplicável (obrigatórios + frequentes para loteamento)
+        lotLegislacao: (() => {
+          const diplomas = TIPOLOGIA_DIPLOMAS['loteamento'] ?? [];
+          return diplomas
+            .filter(d => d.relevancia === 'obrigatorio' || d.relevancia === 'frequente')
+            .map(d => {
+              const info = LEGISLACAO_DB.find(l => l.id === d.diplomaId);
+              return {
+                diplomaId: d.diplomaId,
+                sigla: info?.sigla ?? d.diplomaId.toUpperCase(),
+                titulo: info?.titulo ?? '',
+                relevancia: d.relevancia,
+                nota: d.nota,
+              };
+            })
+            .filter(d => d.titulo); // só incluir se encontrou o diploma na DB
+        })(),
         lotComplexidadeSugerida: calcularComplexidadeLoteamento(lotCondicionantes),
         // Entregaveis
         lotEntregaveis: ENTREGAVEIS_LOTEAMENTO.filter(e => lotEntregaveis.has(e.id)).map(e => e.label),
@@ -3743,6 +3816,31 @@ export default function CalculatorPage() {
                               )}
                             </div>
                           )}
+                          {/* Implantação + ABC estimada */}
+                          {(() => {
+                            const areaLote = parseFloat(state.areaMedia) || areaMediaAuto;
+                            const imp = areaLote > 0 && largura > 0 ? calcularImplantacaoLote(
+                              areaLote, largura,
+                              tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
+                              lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+                            ) : null;
+                            if (!imp) return null;
+                            return (
+                              <div className="px-3 py-2 rounded-lg text-xs space-y-1 bg-emerald-500/10 border border-emerald-500/20">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-muted-foreground">Implantacao estimada:</span>
+                                  <span className="font-semibold">{imp.areaImplantacao} m2 <span className="text-muted-foreground/60 font-normal">({imp.indiceImplantacao}%)</span></span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-muted-foreground">ABC estimada ({imp.numPisos} pisos):</span>
+                                  <span className="font-semibold text-emerald-400">{imp.abcEstimada} m2</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground/50">
+                                  Af: {imp.afFrontal}m frontal · {imp.afLateral}m lateral · {imp.afPosterior}m posterior | {imp.larguraUtil}×{imp.profundidadeUtil}m util
+                                </p>
+                              </div>
+                            );
+                          })()}
                           {/* Tipo de habitação por cenário */}
                           <select value={state.tipoHabitacao} onChange={(e) => setter({ ...state, tipoHabitacao: e.target.value })}
                             className={`w-full px-3 py-2 bg-muted border rounded-lg text-sm focus:border-primary focus:outline-none ${conflito ? 'border-red-500/50 text-red-400' : 'border-border'}`}>

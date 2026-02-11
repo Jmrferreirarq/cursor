@@ -170,8 +170,21 @@ export const proposalPayloadSchema = z.object({
     larguraEstimada: z.string().optional(),
     tipoHabitacao: z.string().optional(),
     tipoHabitacaoLabel: z.string().optional(),
+    // Implantação e ABC
+    areaImplantacao: z.number().optional(),
+    indiceImplantacao: z.number().optional(),
+    abcEstimada: z.number().optional(),
+    numPisos: z.number().optional(),
   })).optional(),
   lotCondicionantes: z.array(z.string()).optional(),
+  // Legislação aplicável ao projeto
+  lotLegislacao: z.array(z.object({
+    diplomaId: z.string(),
+    sigla: z.string(),
+    titulo: z.string(),
+    relevancia: z.enum(['obrigatorio', 'frequente', 'condicional']),
+    nota: z.string().optional(),
+  })).optional(),
   lotComplexidadeSugerida: z.string().optional(),
   lotEntregaveis: z.array(z.string()).optional(),
   lotAssuncoes: z.array(z.string()).optional(),
@@ -307,6 +320,9 @@ const MINIFY_KEYS: Record<string, string> = {
   lotEntregaveis: 'len', lotAssuncoes: 'las', lotDependencias: 'ldp',
   label: 'lb', lotes: 'lt', areaMedia: 'am', cedencias: 'ced', nota: 'no',
   accessModel: 'acm', accessModelLabel: 'aml2', viaInternaComprimento: 'vic',
+  areaImplantacao: 'aim', abcEstimada: 'abc', numPisos: 'nps',
+  // Legislacao aplicavel
+  lotLegislacao: 'llg', diplomaId: 'did', sigla: 'sig', titulo: 'tit', relevancia: 'rel',
   // Fase 2: Custos infra
   lotCustosInfra: 'lci', lotContingenciaPct: 'lcpct', lotCustoObraSubtotal: 'lcos',
   lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
