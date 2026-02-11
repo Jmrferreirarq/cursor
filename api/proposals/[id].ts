@@ -7,11 +7,13 @@ const UPSTASH_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS
 async function redisGet(key: string): Promise<string | null> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
     const response = await fetch(`${UPSTASH_URL}/get/${key}`, {
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!response.ok) return null;
     const data = await response.json();
     return data.result || null;

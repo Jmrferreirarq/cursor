@@ -30,6 +30,8 @@ export async function saveProposal(
   projectName: string
 ): Promise<{ shortId: string; error: string | null }> {
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000); // 8s client timeout
     const response = await fetch('/api/proposals/save', {
       method: 'POST',
       headers: {
@@ -41,7 +43,9 @@ export async function saveProposal(
         clientName,
         projectName,
       }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
@@ -52,7 +56,7 @@ export async function saveProposal(
     return { shortId: data.shortId, error: null };
   } catch (e) {
     console.error('Erro ao guardar proposta:', e);
-    return { shortId: '', error: 'Erro de conexão' };
+    return { shortId: '', error: 'Erro de conexão ou timeout' };
   }
 }
 
@@ -63,7 +67,10 @@ export async function getProposalByShortId(
   shortId: string
 ): Promise<{ proposal: StoredProposal | null; error: string | null }> {
   try {
-    const response = await fetch(`/api/proposals/${shortId}`);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000); // 8s client timeout
+    const response = await fetch(`/api/proposals/${shortId}`, { signal: ctrl.signal });
+    clearTimeout(timer);
 
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
@@ -84,6 +91,6 @@ export async function getProposalByShortId(
     };
   } catch (e) {
     console.error('Erro ao obter proposta:', e);
-    return { proposal: null, error: 'Erro de conexão' };
+    return { proposal: null, error: 'Erro de conexão ou timeout' };
   }
 }

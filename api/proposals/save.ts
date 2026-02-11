@@ -17,7 +17,8 @@ function generateShortId(): string {
 async function redisSet(key: string, value: string, exSeconds: number): Promise<boolean> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
   try {
-    // Upstash REST API espera o valor diretamente (não double-stringified)
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000); // 5s timeout
     const response = await fetch(`${UPSTASH_URL}/set/${key}?EX=${exSeconds}`, {
       method: 'POST',
       headers: {
@@ -25,7 +26,9 @@ async function redisSet(key: string, value: string, exSeconds: number): Promise<
         'Content-Type': 'text/plain',
       },
       body: value,
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     return response.ok;
   } catch {
     return false;
@@ -35,11 +38,13 @@ async function redisSet(key: string, value: string, exSeconds: number): Promise<
 async function redisGet(key: string): Promise<string | null> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
     const response = await fetch(`${UPSTASH_URL}/get/${key}`, {
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!response.ok) return null;
     const data = await response.json();
     return data.result || null;
@@ -51,11 +56,13 @@ async function redisGet(key: string): Promise<string | null> {
 async function redisExists(key: string): Promise<boolean> {
   if (!UPSTASH_URL || !UPSTASH_TOKEN) return false;
   try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
     const response = await fetch(`${UPSTASH_URL}/exists/${key}`, {
-      headers: {
-        Authorization: `Bearer ${UPSTASH_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!response.ok) return false;
     const data = await response.json();
     return data.result === 1;
