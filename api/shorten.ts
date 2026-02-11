@@ -85,7 +85,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { payload, reference, clientName, projectName, hashUrl, origin } = req.body;
+    const body = req.body || {};
+    const payload = body.payload;
+    const reference = body.reference || '';
+    const clientName = body.clientName || '';
+    const projectName = body.projectName || '';
+    const hashUrl = body.hashUrl;
+    const origin = body.origin || '';
 
     if (!hashUrl && !payload) {
       return res.status(400).json({ error: 'hashUrl or payload required' });
@@ -93,24 +99,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Estratégia 1: Redis → link curto interno (/p/:shortId)
     if (payload) {
-      const shortId = await trySaveToRedis(payload, { reference, clientName, projectName });
-      if (shortId) {
-        const base = (origin || '').replace(/\/$/, '');
-        return res.status(200).json({ shortUrl: `${base}/p/${shortId}`, method: 'redis' });
+      try {
+        const shortId = await trySaveToRedis(payload, { reference, clientName, projectName });
+        if (shortId) {
+          const base = origin.replace(/\/$/, '');
+          return res.status(200).json({ shortUrl: `${base}/p/${shortId}`, method: 'redis' });
+        }
+      } catch (e) {
+        console.warn('[shorten] Redis failed:', e);
       }
     }
 
     // Estratégia 2: URL shortener externo para o hash URL
     if (hashUrl) {
-      const shortUrl = await tryShorten(hashUrl);
-      if (shortUrl) {
-        return res.status(200).json({ shortUrl, method: 'external' });
+      try {
+        const shortUrl = await tryShorten(hashUrl);
+        if (shortUrl) {
+          return res.status(200).json({ shortUrl, method: 'external' });
+        }
+      } catch (e) {
+        console.warn('[shorten] External shortener failed:', e);
       }
     }
 
-    return res.status(500).json({ error: 'Todos os métodos de encurtamento falharam' });
+    return res.status(422).json({ error: 'Todos os métodos de encurtamento falharam', hasRedis: !!(UPSTASH_URL && UPSTASH_TOKEN) });
   } catch (error) {
-    console.error('Error in shorten:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('[shorten] Unexpected error:', error);
+    return res.status(500).json({ error: 'Internal server error', message: String(error) });
   }
 }
