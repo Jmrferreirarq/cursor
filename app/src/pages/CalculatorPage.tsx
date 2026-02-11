@@ -865,10 +865,10 @@ interface ImplantacaoCalc {
 }
 
 // Índices default por tipologia (conservadores, baseados em PDMs tipo)
-const INDICES_DEFAULT: Record<string, { implantacao: number; construcao: number }> = {
-  isoladas:  { implantacao: 0.35, construcao: 0.60 },
-  geminadas: { implantacao: 0.40, construcao: 0.70 },
-  em_banda:  { implantacao: 0.50, construcao: 0.80 },
+const INDICES_DEFAULT: Record<string, { implantacao: number }> = {
+  isoladas:  { implantacao: 0.35 },
+  geminadas: { implantacao: 0.40 },
+  em_banda:  { implantacao: 0.50 },
 };
 
 function calcularImplantacaoLote(
@@ -878,6 +878,7 @@ function calcularImplantacaoLote(
   afFrontalInput: string,
   afLateralInput: string,
   afPosteriorInput: string,
+  numPisosInput: string,
   alturaMaxInput: string,
   indiceImplantacaoPDM: string,
   indiceConstrucaoPDM: string,
@@ -888,7 +889,9 @@ function calcularImplantacaoLote(
 
   // 1. Envelope máximo (afastamentos regulamentares)
   const afFrontal = parseFloat(afFrontalInput) || 5;
-  const afLateralUnit = parseFloat(afLateralInput) || 3;
+  const alturaMax = parseFloat(alturaMaxInput) || 0;
+  // Lateral default: h/2 com mínimo 3m (regra típica PDM)
+  const afLateralUnit = parseFloat(afLateralInput) || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
   const afPosterior = parseFloat(afPosteriorInput) || 6;
   const afLateralTotal = tipoHabitacao === 'isoladas' ? afLateralUnit * 2
     : tipoHabitacao === 'geminadas' ? afLateralUnit : 0;
@@ -896,9 +899,8 @@ function calcularImplantacaoLote(
   const profUtil = Math.max(0, profundidade - afFrontal - afPosterior);
   const envelopeMax = Math.round(larguraUtil * profUtil);
 
-  // 2. Nº pisos: da altura máxima (3m/piso) ou default 2
-  const alturaMax = parseFloat(alturaMaxInput) || 0;
-  const numPisos = alturaMax > 0 ? Math.max(1, Math.floor(alturaMax / 3)) : 2;
+  // 2. Nº pisos: do input do utilizador (default 2)
+  const numPisos = Math.max(1, parseInt(numPisosInput) || 2);
 
   // 3. Implantação e ABC — preferir índices PDM, senão defaults conservadores
   const iiPDM = parseFloat(indiceImplantacaoPDM) || 0;
@@ -912,14 +914,13 @@ function calcularImplantacaoLote(
   if (iiPDM > 0 || icPDM > 0) {
     // Usar índices PDM
     const ii = iiPDM > 0 ? iiPDM : defaults.implantacao;
-    const ic = icPDM > 0 ? icPDM : (ii * numPisos);
     areaImplantacao = Math.round(areaMedia * ii);
-    abcEstimada = Math.round(areaMedia * ic);
+    abcEstimada = icPDM > 0 ? Math.round(areaMedia * icPDM) : areaImplantacao * numPisos;
     fonte = 'pdm';
   } else {
-    // Estimativa conservadora — capada pelo envelope máximo
+    // Estimativa conservadora — implantação capada pelo envelope, ABC = implantação × pisos
     areaImplantacao = Math.min(Math.round(areaMedia * defaults.implantacao), envelopeMax);
-    abcEstimada = Math.round(areaMedia * defaults.construcao);
+    abcEstimada = areaImplantacao * numPisos;
     fonte = 'estimativa';
   }
 
@@ -1107,6 +1108,7 @@ export default function CalculatorPage() {
   const [lotInstrumento, setLotInstrumento] = useState<string>('PDM'); // PDM/PU/PP/outro
   const [lotClassificacaoSolo, setLotClassificacaoSolo] = useState(''); // ex: "Solo Urbano — Espaços Residenciais"
   const [lotAlturaMaxima, setLotAlturaMaxima] = useState('');
+  const [lotNumPisos, setLotNumPisos] = useState('2'); // default 2 pisos
   const [lotAfastamentoFrontal, setLotAfastamentoFrontal] = useState('');
   const [lotAfastamentoLateral, setLotAfastamentoLateral] = useState('');
   const [lotAfastamentoPosterior, setLotAfastamentoPosterior] = useState('');
@@ -2022,7 +2024,7 @@ export default function CalculatorPage() {
           const imp = areaMediaEfetiva > 0 && largura > 0 ? calcularImplantacaoLote(
             areaMediaEfetiva, largura,
             tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
-            lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+            lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
             lotIndiceImplantacao, lotIndiceConstrucao,
           ) : null;
           return {
@@ -2513,7 +2515,7 @@ export default function CalculatorPage() {
           lotIdentificacao, lotAreaTerreno, lotFonteArea, lotAreaEstudo, lotNumLotes, lotFrenteTerreno,
           lotProfundidade, lotMunicipioId,
           lotNumAlternativas, lotInstrumento, lotClassificacaoSolo,
-          lotAlturaMaxima, lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior,
+          lotAlturaMaxima, lotNumPisos, lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior,
           lotAreaMinimaLote, lotIndiceConstrucao, lotIndiceImplantacao,
           lotProfundidadeMaxConstrucao, lotPercentagemCedencias,
           lotTipoHabitacao, lotObjetivoPrincipal,
@@ -2725,6 +2727,7 @@ export default function CalculatorPage() {
       setLotInstrumento(state.lotInstrumento || 'PDM');
       setLotClassificacaoSolo(state.lotClassificacaoSolo || '');
       setLotAlturaMaxima(state.lotAlturaMaxima || '');
+      setLotNumPisos(state.lotNumPisos || '2');
       setLotAfastamentoFrontal(state.lotAfastamentoFrontal || '');
       setLotAfastamentoLateral(state.lotAfastamentoLateral || '');
       setLotAfastamentoPosterior(state.lotAfastamentoPosterior || '');
@@ -3607,16 +3610,26 @@ export default function CalculatorPage() {
                       </div>
                     )}
                     {/* Parâmetros urbanísticos — 2 linhas */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div>
                         <label className="block text-xs font-medium mb-1">Altura max.</label>
                         <input type="text" value={lotAlturaMaxima} onChange={(e) => setLotAlturaMaxima(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="7m / 2 pisos" />
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="ex: 7" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">N.º pisos</label>
+                        <select value={lotNumPisos} onChange={(e) => setLotNumPisos(e.target.value)}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none">
+                          <option value="1">1 piso</option>
+                          <option value="2">2 pisos</option>
+                          <option value="3">3 pisos</option>
+                          <option value="4">4 pisos</option>
+                        </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1">Afast. frontal</label>
                         <input type="text" value={lotAfastamentoFrontal} onChange={(e) => setLotAfastamentoFrontal(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="Alinham. dominante" />
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="5" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1">Afast. lateral (m)</label>
@@ -3858,7 +3871,7 @@ export default function CalculatorPage() {
                             const imp = areaLote > 0 && largura > 0 ? calcularImplantacaoLote(
                               areaLote, largura,
                               tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
-                              lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+                              lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
                               lotIndiceImplantacao, lotIndiceConstrucao,
                             ) : null;
                             if (!imp) return null;

@@ -85,6 +85,7 @@ export interface CalculatorState {
   lotInstrumento?: string;
   lotClassificacaoSolo?: string;
   lotAlturaMaxima?: string;
+  lotNumPisos?: string;
   lotAfastamentoFrontal?: string;
   lotAfastamentoLateral?: string;
   lotAfastamentoPosterior?: string;
