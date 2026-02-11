@@ -8,7 +8,7 @@ import { t, type Lang } from '../../locales';
 import type { ProposalPayload } from '../../lib/proposalPayload';
 import { getPhasesByCategory, getCostsByTypology, calculateConstructionEstimate } from '../../data/constructionGuide';
 import { CompanySnapshot } from '../branding/CompanySnapshot';
-import { municipios } from '../../data/municipios';
+import { municipios, EQUIPAMENTOS_DEFAULTS } from '../../data/municipios';
 import type { ParametrosUrbanisticos } from '../../data/municipios';
 
 const C = PROPOSAL_PALETTE;
@@ -130,7 +130,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         const pp = munMatch.parametros;
                         const uso = (p.lotUsoParametros || 'habitacao') as 'habitacao' | 'equipamentos';
                         munP = ('habitacao' in pp)
-                          ? (uso === 'equipamentos' ? pp.equipamentos : pp.habitacao)
+                          ? (uso === 'equipamentos' ? (pp.equipamentos ?? EQUIPAMENTOS_DEFAULTS) : pp.habitacao)
                           : pp as unknown as ParametrosUrbanisticos;
                       }
 
@@ -1558,26 +1558,38 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const frente = parseFloat(p.lotFrenteTerreno || '0');
           const areaEstudo = parseFloat(p.lotAreaEstudo || '0');
           if (nLotes <= 0 || frente <= 0 || areaEstudo <= 0) return null;
-          // Replicar cálculo dos "Dados do Terreno" — mesma lógica para consistência
-          const pctCed = parseFloat(p.lotParametros?.percentagemCedencias || '15');
+          // Replicar cálculo dos "Dados do Terreno" — mesma lógica com fallback ao município
+          const munMatchInv = p.lotMunicipio ? municipios.find(m => m.nome === p.lotMunicipio) : null;
+          let munPInv: ParametrosUrbanisticos | undefined;
+          if (munMatchInv?.parametros) {
+            const pp = munMatchInv.parametros;
+            const uso = (p.lotUsoParametros || 'habitacao') as 'habitacao' | 'equipamentos';
+            munPInv = ('habitacao' in pp)
+              ? (uso === 'equipamentos' ? (pp.equipamentos ?? EQUIPAMENTOS_DEFAULTS) : pp.habitacao)
+              : pp as unknown as ParametrosUrbanisticos;
+          }
+          const paramInv = (key: keyof ParametrosUrbanisticos): string =>
+            (p.lotParametros as any)?.[key] || munPInv?.[key] || '';
+
+          const pctCed = parseFloat(paramInv('percentagemCedencias') || '15');
           const largura = frente / nLotes;
           const cedencias = Math.round(areaEstudo * pctCed / 100);
           const areaMediaLote = Math.round((areaEstudo - cedencias) / nLotes);
           if (areaMediaLote <= 0) return null;
           const profundidade = areaMediaLote / largura;
           const tipo = (p.lotTipoHabitacao || '').toLowerCase();
-          const alturaMax = parseFloat(p.lotParametros?.alturaMaxima || '0');
-          const afFrontal = parseFloat(p.lotParametros?.afastamentoFrontal || '') || 5;
-          const afLat = parseFloat(p.lotParametros?.afastamentoLateral || '') || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
-          const afPosterior = parseFloat(p.lotParametros?.afastamentoPosterior || '') || 6;
+          const alturaMax = parseFloat(paramInv('alturaMaxima') || '0');
+          const afFrontal = parseFloat(paramInv('afastamentoFrontal')) || 5;
+          const afLat = parseFloat(paramInv('afastamentoLateral')) || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
+          const afPosterior = parseFloat(paramInv('afastamentoPosterior')) || 6;
           const afLateralTotal = tipo.includes('isolada') ? afLat * 2 : tipo.includes('geminada') ? afLat : 0;
           const larguraUtil = Math.max(0, largura - afLateralTotal);
-          const profMaxConst = parseFloat(p.lotParametros?.profundidadeMaxConstrucao || '') || 0;
+          const profMaxConst = parseFloat(paramInv('profundidadeMaxConstrucao')) || 0;
           const profUtilAf = Math.max(0, profundidade - afFrontal - afPosterior);
           const profUtil = profMaxConst > 0 ? Math.min(profUtilAf, profMaxConst) : profUtilAf;
           const envelopeMax = Math.round(larguraUtil * profUtil);
-          const io = parseFloat(p.lotParametros?.indiceImplantacao || '0');
-          const iu = parseFloat(p.lotParametros?.indiceConstrucao || '0');
+          const io = parseFloat(paramInv('indiceImplantacao') || '0');
+          const iu = parseFloat(paramInv('indiceConstrucao') || '0');
           const numPisos = Math.max(1, parseInt(p.lotParametros?.numPisos || '2', 10));
           const DEFAULTS_IO: Record<string, number> = { isolada: 0.35, geminada: 0.40, banda: 0.50 };
           const ioEfetivo = io > 0 ? io : (Object.entries(DEFAULTS_IO).find(([k]) => tipo.includes(k))?.[1] ?? 0.35);
