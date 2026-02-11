@@ -851,19 +851,25 @@ function sugerirLotesPorFrente(frenteTerreno: number): { tipo: string; label: st
   }).filter(s => s.lotes > 0);
 }
 
-// ── Cálculo de implantação e ABC por cenário (usando afastamentos PDM) ──
+// ── Cálculo de implantação e ABC por cenário ──
+// Duas abordagens: PDM (índices) ou afastamentos regulamentares (envelope máximo)
 interface ImplantacaoCalc {
-  profundidade: number;      // profundidade estimada do lote (m)
-  afFrontal: number;         // afastamento frontal usado (m)
-  afLateral: number;         // afastamento lateral usado (m)  ← total (2× se isolada, 1× se geminada, 0 se banda)
-  afPosterior: number;       // afastamento posterior usado (m)
-  larguraUtil: number;       // largura construível (m)
-  profundidadeUtil: number;  // profundidade construível (m)
-  areaImplantacao: number;   // área de implantação (m²)
-  indiceImplantacao: number; // índice de implantação (%)
-  abcEstimada: number;       // ABC estimada (m²) — implantação × nº pisos
-  numPisos: number;          // nº pisos usado no cálculo
+  profundidade: number;           // profundidade estimada do lote (m)
+  envelopeMax: number;            // envelope máximo construtivo (afastamentos) — m²
+  areaImplantacao: number;        // implantação estimada real — m²
+  indiceImplantacao: number;      // índice de implantação (%)
+  abcEstimada: number;            // ABC estimada — m²
+  indiceConstrucao: number;       // índice de construção (ABC/areaLote)
+  numPisos: number;               // nº pisos
+  fonte: 'pdm' | 'estimativa';   // fonte dos valores
 }
+
+// Índices default por tipologia (conservadores, baseados em PDMs tipo)
+const INDICES_DEFAULT: Record<string, { implantacao: number; construcao: number }> = {
+  isoladas:  { implantacao: 0.35, construcao: 0.60 },
+  geminadas: { implantacao: 0.40, construcao: 0.70 },
+  em_banda:  { implantacao: 0.50, construcao: 0.80 },
+};
 
 function calcularImplantacaoLote(
   areaMedia: number,
@@ -873,27 +879,56 @@ function calcularImplantacaoLote(
   afLateralInput: string,
   afPosteriorInput: string,
   alturaMaxInput: string,
+  indiceImplantacaoPDM: string,
+  indiceConstrucaoPDM: string,
 ): ImplantacaoCalc | null {
   if (areaMedia <= 0 || larguraLote <= 0) return null;
-  const profundidade = areaMedia / larguraLote;
+  const profundidade = Math.round((areaMedia / larguraLote) * 10) / 10;
   if (profundidade <= 0) return null;
-  // Afastamentos — usar inputs do PDM ou defaults regulamentares
+
+  // 1. Envelope máximo (afastamentos regulamentares)
   const afFrontal = parseFloat(afFrontalInput) || 5;
   const afLateralUnit = parseFloat(afLateralInput) || 3;
   const afPosterior = parseFloat(afPosteriorInput) || 6;
-  // Laterais dependem da tipologia
   const afLateralTotal = tipoHabitacao === 'isoladas' ? afLateralUnit * 2
-    : tipoHabitacao === 'geminadas' ? afLateralUnit
-    : 0; // em_banda: 0 laterais
+    : tipoHabitacao === 'geminadas' ? afLateralUnit : 0;
   const larguraUtil = Math.max(0, larguraLote - afLateralTotal);
-  const profundidadeUtil = Math.max(0, profundidade - afFrontal - afPosterior);
-  const areaImplantacao = Math.round(larguraUtil * profundidadeUtil);
-  const indiceImplantacao = areaMedia > 0 ? Math.round((areaImplantacao / areaMedia) * 100) : 0;
-  // Nº pisos: deduzir da altura máxima (3m/piso) ou default 2
+  const profUtil = Math.max(0, profundidade - afFrontal - afPosterior);
+  const envelopeMax = Math.round(larguraUtil * profUtil);
+
+  // 2. Nº pisos: da altura máxima (3m/piso) ou default 2
   const alturaMax = parseFloat(alturaMaxInput) || 0;
   const numPisos = alturaMax > 0 ? Math.max(1, Math.floor(alturaMax / 3)) : 2;
-  const abcEstimada = Math.round(areaImplantacao * numPisos);
-  return { profundidade: Math.round(profundidade * 10) / 10, afFrontal, afLateral: afLateralTotal, afPosterior, larguraUtil: Math.round(larguraUtil * 10) / 10, profundidadeUtil: Math.round(profundidadeUtil * 10) / 10, areaImplantacao, indiceImplantacao, abcEstimada, numPisos };
+
+  // 3. Implantação e ABC — preferir índices PDM, senão defaults conservadores
+  const iiPDM = parseFloat(indiceImplantacaoPDM) || 0;
+  const icPDM = parseFloat(indiceConstrucaoPDM) || 0;
+  const defaults = INDICES_DEFAULT[tipoHabitacao] ?? INDICES_DEFAULT.isoladas;
+
+  let areaImplantacao: number;
+  let abcEstimada: number;
+  let fonte: 'pdm' | 'estimativa';
+
+  if (iiPDM > 0 || icPDM > 0) {
+    // Usar índices PDM
+    const ii = iiPDM > 0 ? iiPDM : defaults.implantacao;
+    const ic = icPDM > 0 ? icPDM : (ii * numPisos);
+    areaImplantacao = Math.round(areaMedia * ii);
+    abcEstimada = Math.round(areaMedia * ic);
+    fonte = 'pdm';
+  } else {
+    // Estimativa conservadora — capada pelo envelope máximo
+    areaImplantacao = Math.min(Math.round(areaMedia * defaults.implantacao), envelopeMax);
+    abcEstimada = Math.round(areaMedia * defaults.construcao);
+    fonte = 'estimativa';
+  }
+
+  // Nunca exceder envelope × pisos
+  abcEstimada = Math.min(abcEstimada, envelopeMax * numPisos);
+  const indiceImplantacao = Math.round((areaImplantacao / areaMedia) * 100);
+  const indiceConstrucao = Math.round((abcEstimada / areaMedia) * 100) / 100;
+
+  return { profundidade, envelopeMax, areaImplantacao, indiceImplantacao, abcEstimada, indiceConstrucao, numPisos, fonte };
 }
 
 // Labels para objetivo principal
@@ -1988,6 +2023,7 @@ export default function CalculatorPage() {
             areaMediaEfetiva, largura,
             tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
             lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+            lotIndiceImplantacao, lotIndiceConstrucao,
           ) : null;
           return {
             ...cen,
@@ -3823,20 +3859,21 @@ export default function CalculatorPage() {
                               areaLote, largura,
                               tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
                               lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotAlturaMaxima,
+                              lotIndiceImplantacao, lotIndiceConstrucao,
                             ) : null;
                             if (!imp) return null;
                             return (
                               <div className="px-3 py-2 rounded-lg text-xs space-y-1 bg-emerald-500/10 border border-emerald-500/20">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-muted-foreground">Implantacao estimada:</span>
-                                  <span className="font-semibold">{imp.areaImplantacao} m2 <span className="text-muted-foreground/60 font-normal">({imp.indiceImplantacao}%)</span></span>
+                                  <span className="text-muted-foreground">Implantacao ({imp.indiceImplantacao}%):</span>
+                                  <span className="font-semibold">{imp.areaImplantacao} m2</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-muted-foreground">ABC estimada ({imp.numPisos} pisos):</span>
+                                  <span className="text-muted-foreground">ABC estimada ({imp.numPisos}p, IC {imp.indiceConstrucao}):</span>
                                   <span className="font-semibold text-emerald-400">{imp.abcEstimada} m2</span>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground/50">
-                                  Af: {imp.afFrontal}m frontal · {imp.afLateral}m lateral · {imp.afPosterior}m posterior | {imp.larguraUtil}×{imp.profundidadeUtil}m util
+                                  Envelope max: {imp.envelopeMax} m2 | Prof: {imp.profundidade}m | {imp.fonte === 'pdm' ? 'Indices PDM' : 'Estimativa conservadora'}
                                 </p>
                               </div>
                             );
