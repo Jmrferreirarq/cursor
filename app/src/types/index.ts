@@ -110,6 +110,11 @@ export interface CalculatorState {
   lotCenarioRecomendado?: 'A' | 'B' | 'C' | '';
   lotCustosInfraOverrides?: Record<string, string>;
   lotContingenciaOverride?: string;
+  // Desconto comercial (transversal a todas as tipologias)
+  descontoAtivo?: boolean;
+  descontoTipo?: 'recorrencia' | 'pagamento_antecipado' | 'pipeline' | 'personalizado' | '';
+  descontoPct?: string;
+  descontoJustificacao?: string;
 }
 
 export interface Proposal {

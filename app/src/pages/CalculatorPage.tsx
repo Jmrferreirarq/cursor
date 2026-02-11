@@ -447,6 +447,14 @@ const TIPOLOGIA_ESPECIALIDADES: Record<string, string[]> = {
   praia_ec: ['estruturas', 'aguas_esgotos', 'eletrico', 'scie', 'coord_especialidades'],
 };
 
+// ── Desconto comercial: tipos, defaults, ranges, textos ──
+const DESCONTO_TIPOS = {
+  recorrencia: { label: 'Cliente recorrente', defaultPct: 10, min: 5, max: 15, texto: 'Desconto por histórico de colaboração e recorrência de projetos.' },
+  pagamento_antecipado: { label: 'Pagamento antecipado', defaultPct: 5, min: 3, max: 8, texto: 'Desconto por condições de pagamento antecipado (fase 1 + fase 2 no arranque).' },
+  pipeline: { label: 'Pipeline / Volume', defaultPct: 12, min: 8, max: 18, texto: 'Desconto por compromisso de volume (2+ projetos em 12 meses).' },
+  personalizado: { label: 'Personalizado', defaultPct: 0, min: 0, max: 25, texto: '' },
+} as const;
+
 // Tipologias: minValor = base mínima do projeto; rate = €/m² (acrescenta aos m²)
 const TIPOLOGIAS_HONORARIOS: { id: string; name: string; minValor: number; rate: number; categoria: string }[] = [
   // Habitação (mín. 1.500–2.000€)
@@ -967,6 +975,12 @@ export default function CalculatorPage() {
   const [mostrarMapa, setMostrarMapa] = useState(true);
   const [mostrarEquipa, setMostrarEquipa] = useState(true);
   const [notasAdicionais, setNotasAdicionais] = useState('');
+
+  // Desconto comercial (transversal a todas as tipologias)
+  const [descontoAtivo, setDescontoAtivo] = useState(false);
+  const [descontoTipo, setDescontoTipo] = useState<'recorrencia' | 'pagamento_antecipado' | 'pipeline' | 'personalizado' | ''>('');
+  const [descontoPct, setDescontoPct] = useState('');
+  const [descontoJustificacao, setDescontoJustificacao] = useState('');
   const [notasExtras, setNotasExtras] = useState('');
   const [areaUnit, setAreaUnit] = useState('m2');
 
@@ -1553,8 +1567,11 @@ export default function CalculatorPage() {
   const areaRef = honorMode === 'area' ? parseFloat(area) || 0 : Math.round((parseFloat(valorObra) || 0) / 1000);
   const valorExtras = EXTRAS_PROPOSTA.reduce((s, e) => s + (parseFloat(extrasValores[e.id] || '0') || 0), 0);
   const totalServicosSemIVA = valorArqBase + valorEsp;
-  const totalSemIVA = totalServicosSemIVA + despesasReemb;
-  const valorIVA = totalServicosSemIVA * 0.23;
+  // Desconto comercial: aplica-se sobre serviços (arq + esp), NÃO sobre despesas reembolsáveis
+  const descontoValorCalc = descontoAtivo && descontoTipo ? Math.round(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100) : 0;
+  const totalServicosSemIVAComDesconto = totalServicosSemIVA - descontoValorCalc;
+  const totalSemIVA = totalServicosSemIVAComDesconto + despesasReemb;
+  const valorIVA = totalServicosSemIVAComDesconto * 0.23;
   const totalComIVA = totalSemIVA + valorIVA;
 
   const gerarReferenciaAuto = (): string => {
@@ -1778,6 +1795,14 @@ export default function CalculatorPage() {
       total: totalComIVA,
       totalSemIVA,
       valorIVA,
+      // Desconto comercial
+      ...(descontoAtivo && descontoValorCalc > 0 ? {
+        descontoTipo: descontoTipo || undefined,
+        descontoPct: parseFloat(descontoPct) || undefined,
+        descontoValor: descontoValorCalc,
+        descontoJustificacao: descontoJustificacao.trim() || undefined,
+        totalSemDescontoSemIVA: totalServicosSemIVA + despesasReemb,
+      } : {}),
       fasesPagamento,
       descricaoFases,
       notaBim: isLoteamento
@@ -2189,6 +2214,7 @@ export default function CalculatorPage() {
     despesasReembolsaveis, valorArq, especialidadesValores, valorEsp, extrasValores, valorExtras,
     totalComIVA, totalSemIVA, valorIVA, exclusoesSelecionadas, areaRef,
     mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
+    descontoAtivo, descontoTipo, descontoPct, descontoJustificacao, descontoValorCalc,
   ]);
 
   // O useEffect de auto-export já não é necessário — o export direto via DOM cobre ambos os casos
@@ -2307,6 +2333,8 @@ export default function CalculatorPage() {
           lotAssuncoesManuais, lotDependenciasManuais,
           // Fase 2: Custos paramétricos
           lotCenarioRef, lotCenarioRecomendado, lotCustosInfraOverrides, lotContingenciaOverride,
+          // Desconto comercial
+          descontoAtivo, descontoTipo, descontoPct, descontoJustificacao,
         },
       });
       
@@ -2425,6 +2453,11 @@ export default function CalculatorPage() {
     setLotCenarioRecomendado('');
     setLotCustosInfraOverrides({});
     setLotContingenciaOverride('');
+    // Desconto comercial
+    setDescontoAtivo(false);
+    setDescontoTipo('');
+    setDescontoPct('');
+    setDescontoJustificacao('');
   };
 
   // Carregar proposta guardada na calculadora
@@ -2515,6 +2548,12 @@ export default function CalculatorPage() {
       setLotCustosInfraOverrides(state.lotCustosInfraOverrides || {});
       setLotContingenciaOverride(state.lotContingenciaOverride || '');
     }
+
+    // Restaurar desconto comercial
+    setDescontoAtivo(state.descontoAtivo || false);
+    setDescontoTipo(state.descontoTipo || '');
+    setDescontoPct(state.descontoPct || '');
+    setDescontoJustificacao(state.descontoJustificacao || '');
 
     // Limpar estados de link
     setLinkPropostaExibido(null);
@@ -3860,6 +3899,89 @@ export default function CalculatorPage() {
               </div>
             )}
 
+            {/* ── Desconto Comercial ── */}
+            <div className="p-5 bg-muted/40 border border-border rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold">Desconto Comercial</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" className="sr-only peer" checked={descontoAtivo} onChange={(e) => {
+                    setDescontoAtivo(e.target.checked);
+                    if (!e.target.checked) { setDescontoTipo(''); setDescontoPct(''); setDescontoJustificacao(''); }
+                  }} />
+                  <div className="w-9 h-5 bg-border rounded-full peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+                </label>
+              </div>
+              {descontoAtivo && (
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Tipo de desconto</label>
+                    <select
+                      value={descontoTipo}
+                      onChange={(e) => {
+                        const tipo = e.target.value as typeof descontoTipo;
+                        setDescontoTipo(tipo);
+                        if (tipo && tipo !== 'personalizado') {
+                          const cfg = DESCONTO_TIPOS[tipo];
+                          setDescontoPct(String(cfg.defaultPct));
+                          setDescontoJustificacao(cfg.texto);
+                        } else if (tipo === 'personalizado') {
+                          setDescontoPct('');
+                          setDescontoJustificacao('');
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                    >
+                      <option value="">Selecionar...</option>
+                      {Object.entries(DESCONTO_TIPOS).map(([key, cfg]) => (
+                        <option key={key} value={key}>{cfg.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {descontoTipo && (
+                    <>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Percentagem (%)
+                          {descontoTipo !== 'personalizado' && (
+                            <span className="ml-1 text-muted-foreground/60">
+                              — sugerido: {DESCONTO_TIPOS[descontoTipo as keyof typeof DESCONTO_TIPOS].min}–{DESCONTO_TIPOS[descontoTipo as keyof typeof DESCONTO_TIPOS].max}%
+                            </span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="25"
+                          step="0.5"
+                          value={descontoPct}
+                          onChange={(e) => setDescontoPct(e.target.value)}
+                          placeholder={descontoTipo !== 'personalizado' ? String(DESCONTO_TIPOS[descontoTipo as keyof typeof DESCONTO_TIPOS].defaultPct) : '0'}
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Justificação (aparece na proposta)</label>
+                        <textarea
+                          value={descontoJustificacao}
+                          onChange={(e) => setDescontoJustificacao(e.target.value)}
+                          rows={2}
+                          placeholder="Motivo do desconto..."
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none resize-none"
+                        />
+                      </div>
+                      {(parseFloat(descontoPct) || 0) > 0 && totalServicosSemIVA > 0 && (
+                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-sm">
+                          <span className="text-green-400 font-medium">
+                            Desconto de {descontoPct}% = −{formatCurrency(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100)} sobre {formatCurrency(totalServicosSemIVA)}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
               {referenciaExibida && (
                 <div className="flex justify-between items-center pb-2 border-b border-primary/20">
@@ -3876,6 +3998,18 @@ export default function CalculatorPage() {
                   <span className="text-muted-foreground">Especialidades</span>
                   <span className="font-semibold">{formatCurrency(valorEsp)}</span>
                 </div>
+                {descontoAtivo && descontoValorCalc > 0 && (
+                  <>
+                    <div className="flex justify-between items-center pt-2 border-t border-primary/20">
+                      <span className="text-muted-foreground">Subtotal serviços</span>
+                      <span className="font-semibold">{formatCurrency(totalServicosSemIVA)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-green-400">
+                      <span className="text-sm">Desconto ({descontoPct}%)</span>
+                      <span className="font-semibold">−{formatCurrency(descontoValorCalc)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between items-center pt-2 border-t border-primary/20">
                   <span className="font-medium">Total (sem IVA)</span>
                   <span className="font-semibold">{formatCurrency(totalSemIVA)}</span>

@@ -204,6 +204,12 @@ export const proposalPayloadSchema = z.object({
   })).optional(),
   // Cenário recomendado para licenciamento (P2)
   lotCenarioRecomendado: z.string().optional(),
+  // Desconto comercial (transversal a todas as tipologias)
+  descontoTipo: z.string().optional(),
+  descontoPct: z.number().optional(),
+  descontoValor: z.number().optional(),
+  descontoJustificacao: z.string().optional(),
+  totalSemDescontoSemIVA: z.number().optional(),
   // Equipamentos (cave, piscina, exteriores)
   lotBasement: z.string().optional(),
   lotBasementArea: z.string().optional(),
@@ -287,6 +293,8 @@ const MINIFY_KEYS: Record<string, string> = {
   lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
   lotBandaPrecisao: 'lbp', lotBandaDescricao: 'lbd',
   lotCustosInfraPorCenario: 'lcipc', lotCenarioRecomendado: 'lcr',
+  // Desconto comercial
+  descontoTipo: 'dtp', descontoPct: 'dpc', descontoValor: 'dvl', descontoJustificacao: 'djt', totalSemDescontoSemIVA: 'tsdi',
   quantidade: 'qt', custoUnitario: 'cu', custoRamal: 'cr', subtotal: 'st', honorario: 'hon', unidade: 'un',
   // Equipamentos
   lotBasement: 'lbs', lotBasementArea: 'lba', lotPool: 'lpl', lotPoolUnits: 'lpu',

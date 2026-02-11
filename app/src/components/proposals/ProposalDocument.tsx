@@ -693,6 +693,43 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </tr>
               {p.totalSemIVA != null && p.valorIVA != null ? (
                 <>
+                  {/* Se há desconto, mostrar subtotal original + linha de desconto */}
+                  {p.descontoValor != null && p.descontoValor > 0 && p.totalSemDescontoSemIVA != null && (
+                    <>
+                      <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite, background: C.offWhite }}>
+                        <td style={{ padding: '3mm', fontWeight: 600 }}>
+                          {lang === 'en' ? 'Services subtotal' : 'Subtotal serviços'}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '3mm', fontWeight: 600, fontSize: fs(10) }}>
+                          {formatCurrency(p.totalSemDescontoSemIVA, lang)}
+                        </td>
+                      </tr>
+                      <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: '#fef2f2' }}>
+                        <td style={{ padding: '3mm', color: '#dc2626', fontWeight: 600 }}>
+                          {(() => {
+                            const labels: Record<string, string> = {
+                              recorrencia: lang === 'en' ? 'Recurring client discount' : 'Desconto cliente recorrente',
+                              pagamento_antecipado: lang === 'en' ? 'Early payment discount' : 'Desconto pagamento antecipado',
+                              pipeline: lang === 'en' ? 'Volume / pipeline discount' : 'Desconto pipeline / volume',
+                              personalizado: lang === 'en' ? 'Commercial discount' : 'Desconto comercial',
+                            };
+                            const tipoLabel = labels[p.descontoTipo || ''] || (lang === 'en' ? 'Discount' : 'Desconto');
+                            return `${tipoLabel} (${p.descontoPct ?? 0}%)`;
+                          })()}
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '3mm', color: '#dc2626', fontWeight: 700, fontSize: fs(10) }}>
+                          &minus; {formatCurrency(p.descontoValor, lang)}
+                        </td>
+                      </tr>
+                      {p.descontoJustificacao && (
+                        <tr>
+                          <td colSpan={2} style={{ padding: '1.5mm 3mm', fontSize: fs(7), fontStyle: 'italic', color: C.cinzaMarca }}>
+                            {p.descontoJustificacao}
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )}
                   <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, color: C.grafite, background: C.offWhite }}>
                     <td style={{ padding: '3mm', fontWeight: 600 }}>{t('proposal.totalExclVat', lang)}</td>
                     <td style={{ textAlign: 'right', padding: '3mm', fontWeight: 700, fontSize: fs(11) }}>{formatCurrency(p.totalSemIVA, lang)}</td>
