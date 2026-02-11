@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useState } from 'react';
@@ -195,6 +195,15 @@ export default function ProposalsManagementPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-1">
+                    {p.calculatorState && (
+                      <button
+                        onClick={() => navigate('/calculator', { state: { loadProposalId: p.id } })}
+                        className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
+                        title="Abrir na calculadora para editar e gerar link"
+                      >
+                        Resumo
+                      </button>
+                    )}
                     {p.proposalUrl && (
                       <>
                         <button
@@ -211,11 +220,20 @@ export default function ProposalsManagementPage() {
                         <button
                           onClick={() => handleOpenLink(p.proposalUrl!)}
                           className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                          title="Abrir proposta"
+                          title="Abrir proposta HTML"
                         >
                           <ExternalLink className="w-4 h-4 text-muted-foreground" />
                         </button>
                       </>
+                    )}
+                    {!p.proposalUrl && p.calculatorState && (
+                      <button
+                        onClick={() => navigate('/calculator', { state: { loadProposalId: p.id } })}
+                        className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+                        title="Gerar link na calculadora"
+                      >
+                        <PenLine className="w-4 h-4 text-muted-foreground" />
+                      </button>
                     )}
                     <button
                       onClick={() => handleDelete(p.id, p.clientName)}

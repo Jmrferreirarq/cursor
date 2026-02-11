@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 // react-dom: apenas usado para ProposalDocument (importação mantida para compatibilidade)
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -1026,6 +1027,7 @@ const AREA_TO_M2: Record<string, number> = {
 export default function CalculatorPage() {
   const { language } = useLanguage();
   const lang = language;
+  const location = useLocation();
   const { saveCalculatorProposal, deleteProposal, proposals } = useData();
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
   const [showProposalsList, setShowProposalsList] = useState(false);
@@ -3017,6 +3019,23 @@ export default function CalculatorPage() {
     setShowProposalsList(false);
     toast.success(`Proposta ${proposal.reference} carregada!`);
   };
+
+  // Auto-carregar proposta se vier da página de propostas (via navigate state)
+  const loadedFromNavRef = useRef(false);
+  useEffect(() => {
+    const navState = location.state as { loadProposalId?: string } | null;
+    if (navState?.loadProposalId && !loadedFromNavRef.current) {
+      loadedFromNavRef.current = true;
+      const proposal = proposals.find(p => p.id === navState.loadProposalId);
+      if (proposal) {
+        // Pequeno delay para garantir que o state da calculadora está inicializado
+        setTimeout(() => loadProposal(proposal), 100);
+      }
+      // Limpar state do navigation para não recarregar ao voltar
+      window.history.replaceState({}, '');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, proposals]);
 
   // Portal de captura eliminado — PDF agora usa createRoot direto (ver exportHonorariosPDF)
 
