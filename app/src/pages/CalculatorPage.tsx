@@ -921,9 +921,9 @@ function calcularImplantacaoLote(
   let fonte: 'pdm' | 'estimativa';
 
   if (iiPDM > 0 || icPDM > 0) {
-    // Usar índices PDM
+    // Usar índices PDM — capar pelo envelope físico (largura útil × profundidade útil)
     const ii = iiPDM > 0 ? iiPDM : defaults.implantacao;
-    areaImplantacao = Math.round(areaMedia * ii);
+    areaImplantacao = envelopeMax > 0 ? Math.min(Math.round(areaMedia * ii), envelopeMax) : Math.round(areaMedia * ii);
     abcEstimada = icPDM > 0 ? Math.round(areaMedia * icPDM) : areaImplantacao * numPisos;
     fonte = 'pdm';
   } else {
@@ -1941,8 +1941,9 @@ export default function CalculatorPage() {
   const valorEsp = calculateHonorariosEspecialidades();
   const areaRef = honorMode === 'area' ? parseFloat(area) || 0 : Math.round((parseFloat(valorObra) || 0) / 1000);
   const valorExtras = EXTRAS_PROPOSTA.reduce((s, e) => s + (parseFloat(extrasValores[e.id] || '0') || 0), 0);
-  const totalServicosSemIVA = valorArqBase + valorEsp;
-  // Desconto comercial: aplica-se sobre serviços (arq + esp), NÃO sobre despesas reembolsáveis
+  const moradiaAddonTotal = moradiaAddonCalc?.totalAddon ?? 0;
+  const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal;
+  // Desconto comercial: aplica-se sobre serviços (arq + esp + moradia addon), NÃO sobre despesas reembolsáveis
   const descontoValorCalc = descontoAtivo && descontoTipo ? Math.round(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100) : 0;
   const totalServicosSemIVAComDesconto = totalServicosSemIVA - descontoValorCalc;
   const totalSemIVA = totalServicosSemIVAComDesconto + despesasReemb;

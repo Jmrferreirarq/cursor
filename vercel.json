@@ -20,6 +20,7 @@
   "rewrites": [
     { "source": "/p/:shortId", "destination": "/index.html" },
     { "source": "/cotacao", "destination": "/index.html" },
+    { "source": "/proposta", "destination": "/index.html" },
     { "source": "/portfolio/(.*)", "destination": "/index.html" },
     { "source": "/:path((?!api|assets|_next).*)", "destination": "/index.html" }
   ]

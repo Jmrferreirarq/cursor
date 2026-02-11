@@ -50,7 +50,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const isPublic = location.pathname.startsWith('/cotacao') || location.pathname.startsWith('/portfolio') || location.pathname.startsWith('/p/');
+  const isPublic = location.pathname.startsWith('/cotacao') || location.pathname.startsWith('/proposta') || location.pathname.startsWith('/portfolio') || location.pathname.startsWith('/p/');
   const isPortal = location.pathname.startsWith('/portal');
   useRemoveOverlays();
 
@@ -151,6 +151,7 @@ function App() {
                   </ErrorBoundary>
                 } />
                 <Route path="/cotacao" element={<PropostaPublicPage />} />
+                <Route path="/proposta" element={<PropostaPublicPage />} />
                 <Route path="/p/:shortId" element={<PropostaShortPage />} />
                 <Route path="/portfolio" element={<PortfolioPublicPage />} />
               </Routes>

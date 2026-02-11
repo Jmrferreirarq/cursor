@@ -217,40 +217,50 @@ function PropostaPublicPage() {
                 {/* Breakdown para loteamentos */}
                 {p.isLoteamento && (
                   <div className="mt-3 pt-3 border-t text-left space-y-1" style={{ borderColor: '#e5e7eb' }}>
+                    {/* Sub-total: Urbanismo */}
+                    <div className="flex justify-between text-xs" style={{ opacity: 0.7 }}>
+                      <span style={{ color: C.cinzaMarca, fontWeight: 600, textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>Urbanismo</span>
+                      <span style={{ color: C.cinzaMarca, fontWeight: 600, fontSize: '0.6rem' }}>{formatCurrency((p.valorArq || 0) + (p.valorEsp || 0))}</span>
+                    </div>
                     {p.valorArq > 0 && (
-                      <div className="flex justify-between text-xs">
-                        <span style={{ color: C.cinzaMarca }}>Urbanismo{p.lotCenarios && p.lotCenarios.length > 0 ? ` + ${p.lotCenarios.length} cenarios` : ''}</span>
+                      <div className="flex justify-between text-xs pl-2">
+                        <span style={{ color: C.cinzaMarca }}>Projeto{p.lotCenarios && p.lotCenarios.length > 0 ? ` + ${p.lotCenarios.length} cenarios` : ''}</span>
                         <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.valorArq)}</span>
                       </div>
                     )}
                     {p.valorEsp > 0 && (
-                      <div className="flex justify-between text-xs">
+                      <div className="flex justify-between text-xs pl-2">
                         <span style={{ color: C.cinzaMarca }}>Especialidades</span>
                         <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.valorEsp)}</span>
                       </div>
                     )}
+                    {/* Sub-total: Arquitetura Moradias */}
                     {p.moradiaAddon && (
                       <>
+                        <div className="flex justify-between text-xs pt-1" style={{ opacity: 0.7 }}>
+                          <span style={{ color: C.cinzaMarca, fontWeight: 600, textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.05em' }}>Arq. Moradias</span>
+                          <span style={{ color: C.cinzaMarca, fontWeight: 600, fontSize: '0.6rem' }}>{formatCurrency(p.moradiaAddon.totalAddon)}</span>
+                        </div>
                         {p.moradiaAddon.totalOriginal > 0 && (
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-xs pl-2">
                             <span style={{ color: C.cinzaMarca }}>Moradia original{p.moradiaAddon.modo === 'previo' ? ' (previo)' : ''}</span>
                             <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalOriginal)}</span>
                           </div>
                         )}
                         {p.moradiaAddon.totalRepeticoesIguais > 0 && (
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-xs pl-2">
                             <span style={{ color: C.cinzaMarca }}>Repetição (-{p.moradiaAddon.descontoIgual}%)</span>
                             <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesIguais)}</span>
                           </div>
                         )}
                         {p.moradiaAddon.totalRepeticoesAdaptadas > 0 && (
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-xs pl-2">
                             <span style={{ color: C.cinzaMarca }}>Adaptação (-{p.moradiaAddon.descontoAdaptada}%)</span>
                             <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesAdaptadas)}</span>
                           </div>
                         )}
                         {p.moradiaAddon.totalFixoLotes > 0 && (
-                          <div className="flex justify-between text-xs">
+                          <div className="flex justify-between text-xs pl-2">
                             <span style={{ color: C.cinzaMarca }}>Parcela fixa ({p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas} lotes)</span>
                             <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalFixoLotes)}</span>
                           </div>

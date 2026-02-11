@@ -1603,7 +1603,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const custosMoradia = { min: 1000, med: 1400, max: 2000 };
           const inv = {
             infraTotal: p.lotCustoObraTotal ?? 0,
-            honorariosTotal: p.totalSemIVA ?? 0,
+            honorariosTotal: (p.totalSemIVA ?? 0) - (p.moradiaAddon?.totalAddon ?? 0),
             construcaoAreaMediaLote: abcEstimada,
             construcaoNLotes: nLotes,
             construcaoMin: abcEstimada * custosMoradia.min,
@@ -1612,9 +1612,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             construcaoTotalMin: abcEstimada * custosMoradia.min * nLotes,
             construcaoTotalMed: abcEstimada * custosMoradia.med * nLotes,
             construcaoTotalMax: abcEstimada * custosMoradia.max * nLotes,
-            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.min * nLotes,
-            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.med * nLotes,
-            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.max * nLotes,
+            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.min * nLotes,
+            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.med * nLotes,
+            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.max * nLotes,
           };
           const fmtN = (n: number) => n.toLocaleString('pt-PT');
           return (
