@@ -60,7 +60,7 @@ function PropostaShortPage() {
         // Guardar no localStorage do domínio atual e redirecionar com lid
         const localId = savePayloadLocally(validated.data);
         const targetLang = validated.data.lang || lang;
-        navigate(`/public/proposta?lid=${localId}&lang=${targetLang}`, { replace: true });
+        navigate(`/proposta?lid=${localId}&lang=${targetLang}`, { replace: true });
       } catch (e) {
         console.error('Erro ao processar proposta:', e);
         setError('Erro ao processar proposta');
