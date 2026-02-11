@@ -1,0 +1,57 @@
+---
+description: Regras de cálculo de implantação/construção para propostas de loteamento. Envelope físico, fallback ao município, e auto-sync do hash.
+globs: app/src/components/proposals/ProposalDocument.tsx, app/src/pages/CalculatorPage.tsx
+alwaysApply: false
+---
+
+# Cálculos de Implantação e Construção — Loteamento
+
+## 1. Envelope físico é SEMPRE o limite superior
+
+A área de implantação e ABC estimada devem **sempre** ser limitadas pelo envelope físico:
+
+```
+envelopeMax = larguraImplantacao × profUtil
+implantacao = min(implantacaoByIO, envelopeMax)
+abc = min(abcByPisos, abcMax)
+```
+
+Onde:
+- `larguraImplantacao = larguraLote − afastamentos laterais`
+- `profUtil = min(profundidade − afFrontal − afPosterior, profundidadeMaxConstrucao)`
+- `profundidadeMaxConstrucao` vem do PDM (ex: 18m para Aveiro)
+
+**NUNCA** apresentar uma implantação que exceda `larguraImplantacao × profUtil`.
+
+## 2. Fallback obrigatório aos dados do município
+
+Quando os parâmetros PDM (`p.lotParametros`) estão vazios no payload, fazer **sempre** fallback aos dados do município (`municipios.ts`):
+
+```typescript
+// Buscar município pelo nome no payload
+const munMatch = p.lotMunicipio ? municipios.find(m => m.nome === p.lotMunicipio) : null;
+// Resolver parâmetros por uso (habitacao/equipamentos)
+const munP = resolveParametrosPorUso(munMatch, p.lotUsoParametros);
+// Usar helper que faz fallback
+const param = (key) => p.lotParametros?.[key] || munP?.[key] || '';
+```
+
+Isto aplica-se a TODOS os parâmetros: afastamentos, IO, IU, profundidadeMaxConstrucao, etc.
+
+## 3. Hash de proposta deve cobrir TODOS os campos
+
+O `computeProposalHash` em `CalculatorPage.tsx` deve incluir **todos** os campos que afectam a proposta:
+- Campos gerais (honorMode, area, etc.)
+- Campos de loteamento (lotNumLotes, lotFrenteTerreno, lotParametros, etc.)
+- Campos de moradia addon (moradiaAddonFixoLote, moradiaAddonRepeticoesIguais, etc.)
+- Cenários (lotCenarioA/B/C)
+- Opções (lotBasement, lotPool, etc.)
+
+Se um campo novo for adicionado ao formulário, **adicioná-lo também ao hash**.
+
+## 4. Auto-sync do localStorage
+
+Quando existe um `linkLocalId` e o hash muda, o localStorage é actualizado automaticamente. O utilizador só precisa de recarregar (F5) a página HTML.
+
+- Usar `savePayloadLocally(payload, linkLocalId)` para reutilizar o mesmo ID
+- O URL não muda — os dados no localStorage é que são actualizados
