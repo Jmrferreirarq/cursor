@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { encodeProposalPayload, savePayloadLocally, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { generateProposalPdf } from '../lib/generateProposalPdf';
-import { saveProposal } from '../lib/supabase';
 import { addToProposalHistory } from '../lib/proposalHistory';
 // ProposalDocument é usado via ProposalPreviewPaginated (não precisa de import direto aqui)
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
@@ -2696,27 +2695,43 @@ export default function CalculatorPage() {
       const localId = savePayloadLocally(payload, linkLocalId);
       setLinkLocalId(localId);
       
-      // 1) Tentar link curto via API (Upstash Redis) — URL limpo e partilhável
+      // Gerar URL com hash (auto-contido, sempre funciona como fallback)
+      const encoded = encodeProposalPayload(payload);
+      const hashUrl = `${publicOrigin}${base}/cotacao?lang=${lang}#d=${encoded}`;
+      
+      // Tentar encurtar via API (Redis → link curto interno OU URL shortener externo)
       try {
-        const { shortId, error: apiError } = await saveProposal(
-          payload as unknown as Record<string, unknown>,
-          referenciaExibida,
-          clienteNome.trim(),
-          projetoNome.trim()
-        );
-        if (shortId && !apiError) {
-          finalUrl = `${publicOrigin}${base}/p/${shortId}?lang=${lang}`;
-          console.log('[Link] Link curto criado:', finalUrl);
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 10000); // 10s client timeout
+        const resp = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload: payload as unknown as Record<string, unknown>,
+            reference: referenciaExibida,
+            clientName: clienteNome.trim(),
+            projectName: projetoNome.trim(),
+            hashUrl,
+            origin: `${publicOrigin}${base}`,
+          }),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.shortUrl) {
+            finalUrl = data.shortUrl;
+            console.log(`[Link] Link curto criado (${data.method}):`, finalUrl);
+          }
         }
       } catch (e) {
-        console.warn('[Link] API de links curtos indisponível, usando fallback hash:', e);
+        console.warn('[Link] API de encurtamento indisponível, usando hash URL:', e);
       }
       
-      // 2) Fallback: hash fragment (auto-contido, sem dependência de servidor)
+      // Fallback: usar hash URL completo
       if (!finalUrl) {
-        const encoded = encodeProposalPayload(payload);
-        finalUrl = `${publicOrigin}${base}/cotacao?lang=${lang}#d=${encoded}`;
-        console.log('[Link] Link com hash (fallback):', finalUrl.substring(0, 100) + '...');
+        finalUrl = hashUrl;
+        console.log('[Link] Usando hash URL (fallback):', finalUrl.substring(0, 100) + '...');
       }
       
       // Guardar proposta localmente
