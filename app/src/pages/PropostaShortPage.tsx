@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { getProposalByShortId } from '../lib/supabase';
-import { proposalPayloadSchema, encodeProposalPayload } from '../lib/proposalPayload';
+import { proposalPayloadSchema, savePayloadLocally } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
 
@@ -57,10 +57,10 @@ function PropostaShortPage() {
           return;
         }
         
-        // Redirecionar para a página pública com o payload codificado
-        const encoded = encodeProposalPayload(validated.data);
+        // Guardar no localStorage do domínio atual e redirecionar com lid
+        const localId = savePayloadLocally(validated.data);
         const targetLang = validated.data.lang || lang;
-        navigate(`/public/proposta?d=${encoded}&lang=${targetLang}`, { replace: true });
+        navigate(`/public/proposta?lid=${localId}&lang=${targetLang}`, { replace: true });
       } catch (e) {
         console.error('Erro ao processar proposta:', e);
         setError('Erro ao processar proposta');
