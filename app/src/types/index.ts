@@ -115,6 +115,15 @@ export interface CalculatorState {
   descontoTipo?: 'recorrencia' | 'pagamento_antecipado' | 'pipeline' | 'personalizado' | '';
   descontoPct?: string;
   descontoJustificacao?: string;
+  // Add-on Moradia Tipo (opcional, só para loteamento)
+  moradiaAddonAtivo?: boolean;
+  moradiaAddonModo?: 'previo' | 'licenciamento' | '';
+  moradiaAddonAreaOverride?: string;
+  moradiaAddonValorOverride?: string;
+  moradiaAddonNumTipos?: string;
+  moradiaAddonRepeticoesIguais?: string;
+  moradiaAddonRepeticoesAdaptadas?: string;
+  moradiaAddonFixoLote?: string;
 }
 
 export interface Proposal {

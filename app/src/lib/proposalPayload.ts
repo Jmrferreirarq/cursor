@@ -234,6 +234,25 @@ export const proposalPayloadSchema = z.object({
     totalComIVA: z.number(),
     deltaBase: z.number().optional(),
   })).optional(),
+  // Add-on Moradia Tipo
+  moradiaAddon: z.object({
+    modo: z.enum(['previo', 'licenciamento']),
+    areaMoradia: z.number(),
+    feeOriginal: z.number(),
+    feePrevio: z.number().optional(),
+    numTipos: z.number(),
+    repeticoesIguais: z.number(),
+    repeticoesAdaptadas: z.number(),
+    descontoIgual: z.number(),
+    descontoAdaptada: z.number(),
+    fixoLote: z.number(),
+    totalOriginal: z.number(),
+    totalRepeticoesIguais: z.number(),
+    totalRepeticoesAdaptadas: z.number(),
+    totalFixoLotes: z.number(),
+    totalAddon: z.number(),
+    clausulas: z.array(z.string()).default([]),
+  }).optional(),
   // Investimento global do promotor
   lotInvestimentoPromotor: z.object({
     infraTotal: z.number(),
@@ -301,6 +320,12 @@ const MINIFY_KEYS: Record<string, string> = {
   lotPoolSize: 'lps', lotPoolPerUnit: 'lppu', lotExternalWorks: 'lew', lotWaterproofing: 'lwp',
   lotAddonsPool: 'lap', lotAddonsPoolTotal: 'lapt', lotOpcoesCotacao: 'loc2',
   unidades: 'uns', valorUnit: 'vu', deltaBase: 'db',
+  // Moradia Tipo Add-on
+  moradiaAddon: 'mta', areaMoradia: 'arm', feeOriginal: 'fog', feePrevio: 'fpv',
+  numTipos: 'ntp', repeticoesIguais: 'rpi', repeticoesAdaptadas: 'rpa',
+  descontoIgual: 'dsi', descontoAdaptada: 'dsa', fixoLote: 'fxl',
+  totalOriginal: 'tor', totalRepeticoesIguais: 'tri', totalRepeticoesAdaptadas: 'tra',
+  totalFixoLotes: 'tfl', totalAddon: 'tad', clausulas: 'cls',
   lotInvestimentoPromotor: 'lip', infraTotal: 'itr', honorariosTotal: 'htr',
   construcaoAreaMediaLote: 'caml', construcaoNLotes: 'cnl',
   construcaoMin: 'cmi', construcaoMed: 'cme', construcaoMax: 'cma',

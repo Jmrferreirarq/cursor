@@ -577,6 +577,87 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           </div>
         )}
 
+        {/* Add-on Moradia Tipo */}
+        {p.moradiaAddon && (
+          <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: '#fef3c7', borderRadius: 3, border: '2px solid #f59e0b', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+            <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Add-on: Moradia Tipo {p.moradiaAddon.modo === 'previo' ? '(Estudo Prévio)' : '(Licenciamento)'}
+            </p>
+            <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 3mm 0' }}>
+              {p.moradiaAddon.modo === 'previo'
+                ? 'Estudo prévio da moradia-tipo para validação da solução urbanística: volumetria, implantação base e imagens 3D.'
+                : 'Projeto de licenciamento da moradia-tipo original + pacote de repetições por lote.'}
+            </p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+              <thead>
+                <tr style={{ background: '#fde68a' }}>
+                  <th style={{ padding: '2mm', textAlign: 'left', fontWeight: 700, color: '#92400e' }}>Componente</th>
+                  <th style={{ padding: '2mm', textAlign: 'center', fontWeight: 700, color: '#92400e' }}>Qtd.</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>Unit.</th>
+                  <th style={{ padding: '2mm', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                  <td style={{ padding: '2mm' }}>
+                    {p.moradiaAddon.modo === 'previo' ? 'Estudo prévio moradia-tipo' : 'Moradia original (100%)'}
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>({p.moradiaAddon.areaMoradia} m²)</span>
+                  </td>
+                  <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.numTipos}</td>
+                  <td style={{ padding: '2mm', textAlign: 'right' }}>
+                    {formatCurrency(p.moradiaAddon.modo === 'previo' ? (p.moradiaAddon.feePrevio ?? 0) : p.moradiaAddon.feeOriginal, lang)}
+                  </td>
+                  <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalOriginal, lang)}</td>
+                </tr>
+                {p.moradiaAddon.repeticoesIguais > 0 && (
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                    <td style={{ padding: '2mm' }}>
+                      Repetição idêntica
+                      <span style={{ fontSize: fs(7), color: '#16a34a', marginLeft: '2mm' }}>({`−${p.moradiaAddon.descontoIgual}% no base`})</span>
+                    </td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesIguais}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(p.moradiaAddon.feeOriginal * (1 - p.moradiaAddon.descontoIgual / 100)), lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesIguais, lang)}</td>
+                  </tr>
+                )}
+                {p.moradiaAddon.repeticoesAdaptadas > 0 && (
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                    <td style={{ padding: '2mm' }}>
+                      Repetição com adaptação
+                      <span style={{ fontSize: fs(7), color: '#ea580c', marginLeft: '2mm' }}>({`−${p.moradiaAddon.descontoAdaptada}% no base`})</span>
+                    </td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesAdaptadas}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(p.moradiaAddon.feeOriginal * (1 - p.moradiaAddon.descontoAdaptada / 100)), lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesAdaptadas, lang)}</td>
+                  </tr>
+                )}
+                {(p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas) > 0 && (
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                    <td style={{ padding: '2mm' }}>
+                      Parcela fixa por lote
+                      <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(implantação + submissão)</span>
+                    </td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(p.moradiaAddon.fixoLote, lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalFixoLotes, lang)}</td>
+                  </tr>
+                )}
+                <tr style={{ background: '#f59e0b', fontWeight: 700 }}>
+                  <td colSpan={3} style={{ padding: '2.5mm', color: '#fff' }}>Total Add-on Moradia Tipo</td>
+                  <td style={{ padding: '2.5mm', textAlign: 'right', color: '#fff', fontSize: fs(10) }}>{formatCurrency(p.moradiaAddon.totalAddon, lang)}</td>
+                </tr>
+              </tbody>
+            </table>
+            {p.moradiaAddon.clausulas.length > 0 && (
+              <div style={{ marginTop: '2mm', fontSize: fs(7), color: C.cinzaMarca, fontStyle: 'italic' }}>
+                {p.moradiaAddon.clausulas.map((c, i) => (
+                  <p key={i} style={{ margin: '0.5mm 0' }}>{c}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Tabela de valores - começa em página nova */}
         <div className="page-break-before" style={{ marginBottom: '5mm', paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('proposal.section1', lang)}</p>
@@ -1194,9 +1275,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             construcaoTotalMin: abcEstimada * custosMoradia.min * nLotes,
             construcaoTotalMed: abcEstimada * custosMoradia.med * nLotes,
             construcaoTotalMax: abcEstimada * custosMoradia.max * nLotes,
-            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.min * nLotes,
-            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.med * nLotes,
-            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.max * nLotes,
+            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.min * nLotes,
+            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.med * nLotes,
+            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + (p.moradiaAddon?.totalAddon ?? 0) + abcEstimada * custosMoradia.max * nLotes,
           };
           const fmtN = (n: number) => n.toLocaleString('pt-PT');
           return (
@@ -1240,6 +1321,20 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(conforme proposta)</span>
                   </td>
                 </tr>
+                {p.moradiaAddon && (
+                  <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: '#fef9c3' }}>
+                    <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>
+                      Honorarios moradias
+                      <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, fontWeight: 400 }}>
+                        {p.moradiaAddon.modo === 'previo' ? 'Estudo previo' : 'Licenciamento'} + {p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas} repeticoes
+                      </span>
+                    </td>
+                    <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
+                      <strong>{fmtN(p.moradiaAddon.totalAddon)} &euro;</strong>
+                      <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(add-on moradia tipo)</span>
+                    </td>
+                  </tr>
+                )}
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: '#f8fafc' }}>
                   <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>
                     Construcao moradias
@@ -1281,7 +1376,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 <span>{fmtN(inv.investimentoTotalMax)}&euro;</span>
               </div>
               <p style={{ fontSize: fs(6), color: C.cinzaMarca, margin: '1mm 0 0 0', textAlign: 'center' }}>
-                Intervalo de investimento total estimado (infraestruturas + honorarios + construcao)
+                Intervalo de investimento total estimado (infraestruturas + honorarios{p.moradiaAddon ? ' + moradias' : ''} + construcao)
               </p>
             </div>
 
