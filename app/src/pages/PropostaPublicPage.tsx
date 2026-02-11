@@ -27,11 +27,21 @@ function getInitials(name: string): string {
 function PropostaPublicPage() {
   const [searchParams] = useSearchParams();
   const { data: pathData } = useParams<{ data: string }>();
-  const encoded = searchParams.get('d') || pathData || null;
-  const localId = searchParams.get('lid') || null;
   const urlLang = searchParams.get('lang') as Lang | null;
-  // Tentar: 1) lid (localStorage) → 2) d (URL encoded) → 3) path data
-  const p = localId ? loadPayloadLocally(localId) : (encoded ? decodeProposalPayload(encoded) : null);
+  
+  // Prioridade de leitura: 1) hash fragment (#d=...) → 2) lid (localStorage) → 3) d (query param) → 4) path data
+  const hashPayload = (() => {
+    try {
+      const hash = window.location.hash;
+      if (!hash) return null;
+      const match = hash.match(/^#d=(.+)$/);
+      if (!match) return null;
+      return decodeProposalPayload(match[1]);
+    } catch { return null; }
+  })();
+  const localId = searchParams.get('lid') || null;
+  const encoded = searchParams.get('d') || pathData || null;
+  const p = hashPayload || (localId ? loadPayloadLocally(localId) : null) || (encoded ? decodeProposalPayload(encoded) : null);
   const lang: Lang = urlLang === 'en' ? 'en' : (p?.lang ?? 'pt');
   const pdfRef = useRef<HTMLDivElement>(null);
   const [showDocument, setShowDocument] = useState(false);

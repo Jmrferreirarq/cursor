@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { encodeProposalPayload, savePayloadLocally, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { generateProposalPdf } from '../lib/generateProposalPdf';
-import { saveProposal } from '../lib/supabase';
+// saveProposal removido — links agora usam hash fragment (auto-contido)
 import { addToProposalHistory } from '../lib/proposalHistory';
 // ProposalDocument é usado via ProposalPreviewPaginated (não precisa de import direto aqui)
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
@@ -2678,49 +2678,21 @@ export default function CalculatorPage() {
       const payload = buildProposalPayload();
       const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
       
-      let isShortLink = false;
       let finalUrl = '';
       
       // Gerar URL — usar domínio fixo se configurado
       const publicOrigin = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
-      // 1) Tentar link curto via API (produção)
-      if (!isLocalhost) {
-        try {
-          const response = await fetch('/api/proposals/save', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              payload,
-              reference: referenciaExibida,
-              clientName: clienteNome.trim(),
-              projectName: projetoNome.trim(),
-            }),
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.shortId) {
-              finalUrl = `${publicOrigin}${base}/p/${data.shortId}`;
-              isShortLink = true;
-              console.log('[Link] Link curto criado:', finalUrl);
-            }
-          }
-        } catch (e) {
-          console.warn('[Link] API falhou, tentando localStorage:', e);
-        }
-      }
+      // Codificar payload com lz-string (compressão) e colocar no hash fragment (#)
+      // O hash NUNCA é enviado ao servidor → sem risco de HTTP 431 / ERR_CONNECTION_CLOSED
+      const encoded = encodeProposalPayload(payload);
+      finalUrl = `${publicOrigin}${base}/public/proposta?lang=${lang}#d=${encoded}`;
       
-      // 2) Fallback: guardar em localStorage + usar URL com ID local
-      //    Reutiliza o ID anterior se existir (para que o mesmo URL reflicta actualizações)
-      if (!isShortLink) {
-        const localId = savePayloadLocally(payload, linkLocalId);
-        setLinkLocalId(localId);
-        finalUrl = `${publicOrigin}${base}/public/proposta?lid=${localId}&lang=${lang}`;
-        isShortLink = true; // URL curto via localStorage
-        console.log('[Link] Link local criado/atualizado:', finalUrl);
-      }
+      // Também guardar em localStorage para auto-sync (actualizar sem mudar o URL)
+      const localId = savePayloadLocally(payload, linkLocalId);
+      setLinkLocalId(localId);
+      
+      console.log('[Link] Link com hash criado:', finalUrl.substring(0, 100) + '...');
       
       // Guardar proposta localmente
       saveCalculatorProposal({
@@ -2800,7 +2772,7 @@ export default function CalculatorPage() {
         location: localProposta.trim() || undefined,
         totalValue: totalSemIVA,
         totalWithVat: totalComIVA,
-        shortLink: isShortLink ? finalUrl : undefined,
+        shortLink: finalUrl,
         longLink: finalUrl,
       });
       
@@ -2810,10 +2782,10 @@ export default function CalculatorPage() {
       // Copiar link (pode falhar em alguns contextos)
       try {
         await navigator.clipboard.writeText(finalUrl);
-        toast.success(isShortLink ? 'Link curto copiado!' : 'Link da proposta copiado!');
+        toast.success('Link da proposta copiado!');
       } catch {
         // Clipboard bloqueado - mostrar link para copiar manualmente
-        toast.success(isShortLink ? 'Link curto gerado!' : 'Link gerado! Clica para copiar.');
+        toast.success('Link gerado! Clica para copiar.');
       }
       
     } catch (err) {
@@ -4804,7 +4776,7 @@ export default function CalculatorPage() {
                       {linkDesatualizado ? (
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-amber-600 dark:text-amber-400">⚠️</span>
-                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Link atualizado — recarregue a página HTML para ver as alterações</p>
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Proposta alterada — gera um novo link para incluir as alterações</p>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-2">
