@@ -193,6 +193,17 @@ export const proposalPayloadSchema = z.object({
   lotCustoObraMax: z.number().optional(),
   lotBandaPrecisao: z.string().optional(),
   lotBandaDescricao: z.string().optional(),
+  // Per-scenario infrastructure costs (P1: infraestruturas por cenário A/B/C)
+  lotCustosInfraPorCenario: z.array(z.object({
+    label: z.string(),
+    subtotal: z.number(),
+    total: z.number(),
+    min: z.number(),
+    max: z.number(),
+    contingenciaPct: z.number(),
+  })).optional(),
+  // Cenário recomendado para licenciamento (P2)
+  lotCenarioRecomendado: z.string().optional(),
   // Equipamentos (cave, piscina, exteriores)
   lotBasement: z.string().optional(),
   lotBasementArea: z.string().optional(),
@@ -275,6 +286,7 @@ const MINIFY_KEYS: Record<string, string> = {
   lotCustosInfra: 'lci', lotContingenciaPct: 'lcpct', lotCustoObraSubtotal: 'lcos',
   lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
   lotBandaPrecisao: 'lbp', lotBandaDescricao: 'lbd',
+  lotCustosInfraPorCenario: 'lcipc', lotCenarioRecomendado: 'lcr',
   quantidade: 'qt', custoUnitario: 'cu', custoRamal: 'cr', subtotal: 'st', honorario: 'hon', unidade: 'un',
   // Equipamentos
   lotBasement: 'lbs', lotBasementArea: 'lba', lotPool: 'lpl', lotPoolUnits: 'lpu',

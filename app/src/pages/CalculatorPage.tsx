@@ -710,6 +710,12 @@ function gerarAssuncoesLoteamento(condicionantes: Set<string>, temTopografia: bo
     assuncoes.push('Inexistência de condicionantes não identificadas à data da proposta.');
   }
   assuncoes.push('Acessos existentes ao prédio em condições de utilização.');
+  // P5: Cláusula de reorçamentação para condicionantes novas
+  assuncoes.push('Se surgirem condicionantes não identificadas à data (REN, RAN, servidões, áreas protegidas), será apresentada adenda com impacto no prazo e orçamento, sujeita a aprovação do cliente.');
+  // P6: Especialidades (licenciamento) vs Execução (obra)
+  assuncoes.push('Os projetos de especialidades incluídos destinam-se ao licenciamento urbanístico. Projetos de execução para obra (detalhe construtivo, mapas de quantidades, cadernos de encargos) constituem fase posterior, não incluída salvo indicação expressa.');
+  // P7: Alterações pedidas pela Câmara
+  assuncoes.push('Estão incluídas até 2 rondas de resposta a notificações da CM. Alterações substanciais ao projeto motivadas por exigências da CM fora do briefing inicial serão orçamentadas separadamente, mediante proposta de trabalhos adicionais.');
   return assuncoes;
 }
 
@@ -842,10 +848,10 @@ const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   termico: 'Estudo térmico e eficiência energética do edifício, conformidade com RCCTE/SCE e certificação energética.',
   scie: 'Ficha ou projeto de segurança contra incêndios em edifícios (SCIE), cumprimento das normas de evacuação e proteção.',
   domotica: 'Projeto de sistemas de automação e gestão técnica centralizada (GTC) do edifício.',
-  paisagismo: 'Projeto de arranjos exteriores, espaços exteriores, vegetação, pavimentos e elementos de jardim.',
+  paisagismo: 'Projeto de arranjos exteriores ao nível de licenciamento: conceito geral, planta de implantação, definição de áreas permeáveis/impermeáveis e enquadramento paisagístico. Não inclui caderno de encargos, medições detalhadas ou projeto de execução de paisagismo.',
   interiores: 'Projeto de arquitetura de interiores, layout, acabamentos e equipamentos dos espaços.',
   geotecnia: 'Estudo geotécnico, caracterização do terreno e definição de soluções de fundações e contenções.',
-  coord_especialidades: 'Coordenação e compatibilização dos projetos de especialidades com o projeto de arquitetura.',
+  coord_especialidades: 'Coordenação e compatibilização dos projetos de especialidades com o projeto de arquitetura/urbanismo. Inclui reuniões de coordenação (quinzenais), compatibilização de peças desenhadas (BIM quando aplicável), compilação de peças finais para entrega à CM, e resposta técnica a notificações de entidades consultadas (SMAS, ANEPC, etc.).',
   conservacao: 'Projeto de conservação e restauro, intervenção em património edificado com critérios de preservação.',
   acustica: 'Estudo acústico, controlo de ruído e melhoria da qualidade sonora nos espaços.',
   iluminacao: 'Projeto de iluminação, natural e artificial, e integração com a arquitetura.',
@@ -1058,6 +1064,7 @@ export default function CalculatorPage() {
 
   // Fase 2: Modelo paramétrico de custos de infraestruturas
   const [lotCenarioRef, setLotCenarioRef] = useState<'A' | 'B' | 'C'>('A');
+  const [lotCenarioRecomendado, setLotCenarioRecomendado] = useState<'A' | 'B' | 'C' | ''>('');
   const [lotCustosInfraOverrides, setLotCustosInfraOverrides] = useState<Record<string, string>>({});
   const [lotContingenciaOverride, setLotContingenciaOverride] = useState('');
 
@@ -1072,11 +1079,14 @@ export default function CalculatorPage() {
   }, [isLoteamento, lotAreaEstudo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Função: calcular custos paramétricos de infraestruturas (Fase 2)
+  // Aceita cenário opcional — se omitido, usa lotCenarioRef
   type InfraCustoItem = { infraId: string; nome: string; unidade: string; quantidade: number; custoUnitario: number; custoRamal: number; subtotal: number; honorarioProjeto: number };
-  const calcularCustosInfra = (): { items: InfraCustoItem[]; contingenciaPct: number; subtotalObra: number; totalComContingencia: number; bandaClasse: string; margemPct: number; custoMin: number; custoMax: number } => {
-    const emptyResult = { items: [] as InfraCustoItem[], contingenciaPct: 0, subtotalObra: 0, totalComContingencia: 0, bandaClasse: 'classe_5' as string, margemPct: 45, custoMin: 0, custoMax: 0 };
-    // Cenário de referência
-    const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
+  type InfraResult = { items: InfraCustoItem[]; contingenciaPct: number; subtotalObra: number; totalComContingencia: number; bandaClasse: string; margemPct: number; custoMin: number; custoMax: number };
+  const calcularCustosInfra = (cenarioOverride?: 'A' | 'B' | 'C'): InfraResult => {
+    const emptyResult: InfraResult = { items: [], contingenciaPct: 0, subtotalObra: 0, totalComContingencia: 0, bandaClasse: 'classe_5', margemPct: 45, custoMin: 0, custoMax: 0 };
+    // Cenário de referência (ou override)
+    const refKey = cenarioOverride ?? lotCenarioRef;
+    const cenRef = refKey === 'C' ? lotCenarioC : refKey === 'B' ? lotCenarioB : lotCenarioA;
     const numLotes = Math.max(0, parseInt(cenRef.lotes, 10) || parseInt(lotNumLotes, 10) || 0);
     if (numLotes <= 0) return emptyResult;
     const temViaInterna = cenRef.accessModel === 'via_interna' || cenRef.accessModel === 'misto';
@@ -1849,10 +1859,16 @@ export default function CalculatorPage() {
           ...gerarDependenciasLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia', [lotCenarioA, lotCenarioB, ...(lotNumAlternativas === '3' ? [lotCenarioC] : [])]),
           ...(lotDependenciasManuais.trim() ? lotDependenciasManuais.trim().split('\n').filter(Boolean) : []),
         ],
-        // Fase 2: Custos paramétricos de infraestruturas
+        // Fase 2: Custos paramétricos de infraestruturas (por cenário)
         ...(() => {
           const ci = calcularCustosInfra();
           const banda = BANDAS_PRECISAO[ci.bandaClasse];
+          // Calcular para CADA cenário (P1: infraestruturas por cenário A/B/C)
+          const labels: ('A' | 'B' | 'C')[] = lotNumAlternativas === '3' ? ['A', 'B', 'C'] : ['A', 'B'];
+          const perCenario = labels.map(lbl => {
+            const r = calcularCustosInfra(lbl);
+            return { label: lbl, subtotal: r.subtotalObra, total: r.totalComContingencia, min: r.custoMin, max: r.custoMax, contingenciaPct: r.contingenciaPct };
+          });
           return {
             lotCustosInfra: ci.items.map(i => ({
               nome: i.nome, unidade: i.unidade, quantidade: i.quantidade,
@@ -1866,6 +1882,10 @@ export default function CalculatorPage() {
             lotCustoObraMax: ci.custoMax,
             lotBandaPrecisao: banda?.label ?? '',
             lotBandaDescricao: banda?.descricao ?? '',
+            // Per-scenario breakdown (P1)
+            lotCustosInfraPorCenario: perCenario,
+            // Cenário recomendado (P2)
+            lotCenarioRecomendado: lotCenarioRecomendado || undefined,
           };
         })(),
         // Equipamentos (cave, piscina, exteriores)
@@ -2286,7 +2306,7 @@ export default function CalculatorPage() {
           lotEntregaveis: Array.from(lotEntregaveis),
           lotAssuncoesManuais, lotDependenciasManuais,
           // Fase 2: Custos paramétricos
-          lotCenarioRef, lotCustosInfraOverrides, lotContingenciaOverride,
+          lotCenarioRef, lotCenarioRecomendado, lotCustosInfraOverrides, lotContingenciaOverride,
         },
       });
       
@@ -2402,6 +2422,7 @@ export default function CalculatorPage() {
     setLotDependenciasManuais('');
     // Fase 2: Custos paramétricos
     setLotCenarioRef('A');
+    setLotCenarioRecomendado('');
     setLotCustosInfraOverrides({});
     setLotContingenciaOverride('');
   };
@@ -2490,6 +2511,7 @@ export default function CalculatorPage() {
       setLotDependenciasManuais(state.lotDependenciasManuais || '');
       // Fase 2: Custos paramétricos
       setLotCenarioRef(state.lotCenarioRef || 'A');
+      setLotCenarioRecomendado(state.lotCenarioRecomendado || '');
       setLotCustosInfraOverrides(state.lotCustosInfraOverrides || {});
       setLotContingenciaOverride(state.lotContingenciaOverride || '');
     }
@@ -3663,14 +3685,29 @@ export default function CalculatorPage() {
                       <div>
                         <label className="block text-sm font-medium mb-2">Estimativa de Custo de Infraestruturas</label>
                         <p className="text-xs text-muted-foreground mb-3">Modelo paramétrico — valores de referência para planeamento do investimento.</p>
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="text-xs text-muted-foreground">Cenário de referência:</span>
-                          {(['A', 'B', 'C'] as const).filter(c => c !== 'C' || lotNumAlternativas === '3').map(c => (
-                            <button key={c} onClick={() => setLotCenarioRef(c)}
-                              className={`px-3 py-1 text-xs rounded-lg border transition-colors ${lotCenarioRef === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted border-border hover:border-primary/50'}`}>
-                              Cenário {c}
-                            </button>
-                          ))}
+                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Cenário de referência:</span>
+                            {(['A', 'B', 'C'] as const).filter(c => c !== 'C' || lotNumAlternativas === '3').map(c => (
+                              <button key={c} onClick={() => setLotCenarioRef(c)}
+                                className={`px-3 py-1 text-xs rounded-lg border transition-colors ${lotCenarioRef === c ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted border-border hover:border-primary/50'}`}>
+                                Cenário {c}
+                              </button>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Recomendado p/ licenciar:</span>
+                            <select
+                              value={lotCenarioRecomendado}
+                              onChange={e => setLotCenarioRecomendado(e.target.value as 'A' | 'B' | 'C' | '')}
+                              className="text-xs px-2 py-1 rounded-lg border border-border bg-background"
+                            >
+                              <option value="">Não definido</option>
+                              {(['A', 'B', 'C'] as const).filter(c => c !== 'C' || lotNumAlternativas === '3').map(c => (
+                                <option key={c} value={c}>Cenário {c}</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs border-collapse">

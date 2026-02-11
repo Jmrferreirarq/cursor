@@ -194,9 +194,13 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     </tr>
                   </thead>
                   <tbody>
-                    {p.lotCenarios.map((c: any, i: number) => (
-                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>Cenario {c.label}</td>
+                    {p.lotCenarios.map((c: any, i: number) => {
+                      const isRecommended = p.lotCenarioRecomendado && c.label === p.lotCenarioRecomendado;
+                      return (
+                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: isRecommended ? '#eff6ff' : undefined }}>
+                        <td style={{ padding: '1.5mm 2mm', fontWeight: 600 }}>
+                          Cenario {c.label}{isRecommended ? <span style={{ fontSize: fs(6), color: '#1e40af', fontWeight: 700, marginLeft: '2mm' }}>RECOMENDADO</span> : ''}
+                        </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontSize: fs(7) }}>{c.larguraEstimada || '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>{c.tipoHabitacaoLabel || '—'}</td>
@@ -204,7 +208,8 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias ? `${c.cedencias} m2` : '—'}</td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
                 {p.lotCenarios.some(c => c.nota) && (
@@ -213,6 +218,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       <p key={i} style={{ margin: '0 0 0.5mm 0' }}><strong>Cenario {c.label}:</strong> {c.nota}</p>
                     ))}
                   </div>
+                )}
+                {/* P2: Nota sobre decisão de cenário */}
+                {p.lotCenarioRecomendado && (
+                  <p style={{ marginTop: '2mm', fontSize: fs(7), color: '#1e40af', fontStyle: 'italic', margin: '2mm 0 0 0' }}>
+                    Cenario {p.lotCenarioRecomendado} recomendado para licenciamento. A decisao final e tomada apos o estudo de viabilidade, com validacao do cliente antes da submissao.
+                  </p>
                 )}
               </div>
             )}
@@ -308,6 +319,40 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     Intervalo estimado: {(p.lotCustoObraMin ?? 0).toLocaleString('pt-PT')} &euro; &ndash; {(p.lotCustoObraMax ?? 0).toLocaleString('pt-PT')} &euro;
                   </span>
                 </div>
+                {/* P1: Comparação de infraestruturas por cenário A/B/C */}
+                {p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 && (
+                  <div style={{ marginTop: '3mm', padding: '2mm 0' }}>
+                    <p style={{ fontSize: fs(7), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 1.5mm 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                      Infraestrutura por cenario
+                    </p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
+                      <thead>
+                        <tr style={{ background: C.offWhite }}>
+                          <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 600, color: C.cinzaMarca }}>Cenario</th>
+                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Subtotal</th>
+                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Contingencia</th>
+                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Total</th>
+                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Intervalo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {p.lotCustosInfraPorCenario.map(c => (
+                          <tr key={c.label} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: c.label === p.lotCenarioRecomendado ? '#eff6ff' : undefined }}>
+                            <td style={{ padding: '1.5mm 2mm', fontWeight: c.label === p.lotCenarioRecomendado ? 700 : 400 }}>
+                              {c.label}{c.label === p.lotCenarioRecomendado ? ' (recomendado)' : ''}
+                            </td>
+                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{c.subtotal.toLocaleString('pt-PT')} &euro;</td>
+                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: C.cinzaMarca }}>{c.contingenciaPct}%</td>
+                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{c.total.toLocaleString('pt-PT')} &euro;</td>
+                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontSize: fs(7), color: C.cinzaMarca }}>
+                              {c.min.toLocaleString('pt-PT')} &ndash; {c.max.toLocaleString('pt-PT')} &euro;
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
@@ -979,6 +1024,13 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             )}
             <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.durationNote', lang)}</p>
             
+            {/* P3: Nota sobre PIP opcional */}
+            {p.isLoteamento && (p.duracaoEstimada ?? []).some(d => d.nome.includes('PIP')) && (
+              <p className="pdf-no-break" style={{ fontSize: fs(7.5), color: '#1e40af', margin: '2mm 0 0 0', padding: '1.5mm 3mm', background: '#eff6ff', borderRadius: 2, borderLeft: '2px solid #3b82f6', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                <strong>Nota PIP:</strong> O Pedido de Informacao Previa e uma fase opcional. Sem PIP, o prazo global reduz-se em 2-4 meses e a percentagem de honorarios e redistribuida pelas restantes fases, sem alteracao do valor total.
+              </p>
+            )}
+            
             {/* Cenários de Prazo - logo após a tabela de duração */}
             {p.mostrarCenarios && p.cenariosPrazo && (
               <div className="pdf-no-break" style={{ marginTop: '4mm', padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
@@ -1132,10 +1184,17 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               <tbody>
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                   <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Infraestruturas de urbanizacao</td>
-                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
-                    <strong>{fmtN(inv.infraTotal)} &euro;</strong>
-                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(igual em todos os cenarios)</span>
-                  </td>
+                  {p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 ? (
+                    <>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>{fmtN(Math.min(...p.lotCustosInfraPorCenario.map(c => c.total)))} &euro;</td>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600 }}>{fmtN(inv.infraTotal)} &euro;</td>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>{fmtN(Math.max(...p.lotCustosInfraPorCenario.map(c => c.total)))} &euro;</td>
+                    </>
+                  ) : (
+                    <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
+                      <strong>{fmtN(inv.infraTotal)} &euro;</strong>
+                    </td>
+                  )}
                 </tr>
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                   <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Honorarios (loteamento)</td>
