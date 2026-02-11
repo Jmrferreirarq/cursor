@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { encodeProposalPayload, savePayloadLocally, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { generateProposalPdf } from '../lib/generateProposalPdf';
-// saveProposal removido — links agora usam hash fragment (auto-contido)
+import { saveProposal } from '../lib/supabase';
 import { addToProposalHistory } from '../lib/proposalHistory';
 // ProposalDocument é usado via ProposalPreviewPaginated (não precisa de import direto aqui)
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
@@ -2692,16 +2692,32 @@ export default function CalculatorPage() {
       // Gerar URL — usar domínio fixo se configurado
       const publicOrigin = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
       
-      // Codificar payload com lz-string (compressão) e colocar no hash fragment (#)
-      // O hash NUNCA é enviado ao servidor → sem risco de HTTP 431 / ERR_CONNECTION_CLOSED
-      const encoded = encodeProposalPayload(payload);
-      finalUrl = `${publicOrigin}${base}/cotacao?lang=${lang}#d=${encoded}`;
-      
       // Também guardar em localStorage para auto-sync (actualizar sem mudar o URL)
       const localId = savePayloadLocally(payload, linkLocalId);
       setLinkLocalId(localId);
       
-      console.log('[Link] Link com hash criado:', finalUrl.substring(0, 100) + '...');
+      // 1) Tentar link curto via API (Upstash Redis) — URL limpo e partilhável
+      try {
+        const { shortId, error: apiError } = await saveProposal(
+          payload as unknown as Record<string, unknown>,
+          referenciaExibida,
+          clienteNome.trim(),
+          projetoNome.trim()
+        );
+        if (shortId && !apiError) {
+          finalUrl = `${publicOrigin}${base}/p/${shortId}?lang=${lang}`;
+          console.log('[Link] Link curto criado:', finalUrl);
+        }
+      } catch (e) {
+        console.warn('[Link] API de links curtos indisponível, usando fallback hash:', e);
+      }
+      
+      // 2) Fallback: hash fragment (auto-contido, sem dependência de servidor)
+      if (!finalUrl) {
+        const encoded = encodeProposalPayload(payload);
+        finalUrl = `${publicOrigin}${base}/cotacao?lang=${lang}#d=${encoded}`;
+        console.log('[Link] Link com hash (fallback):', finalUrl.substring(0, 100) + '...');
+      }
       
       // Guardar proposta localmente
       saveCalculatorProposal({
