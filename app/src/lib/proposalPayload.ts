@@ -81,6 +81,8 @@ export const proposalPayloadSchema = z.object({
   modo: z.string(),
   area: z.string().optional(),
   valorObra: z.string().optional(),
+  honorPct: z.string().optional(),
+  honorCap: z.string().optional(),
   tipologia: z.string(),
   complexidade: z.string().optional().default(''),
   pisos: z.number().optional(),
@@ -152,8 +154,10 @@ export const proposalPayloadSchema = z.object({
     indiceConstrucao: z.string().optional(),
     indiceImplantacao: z.string().optional(),
     profundidadeMaxConstrucao: z.string().optional(),
+    numPisos: z.string().optional(),
     percentagemCedencias: z.string().optional(),
   }).optional(),
+  lotUsoParametros: z.string().optional(), // 'habitacao' | 'equipamentos'
   // Programa
   lotTipoHabitacao: z.string().optional(),
   lotObjetivo: z.string().optional(),
@@ -171,6 +175,9 @@ export const proposalPayloadSchema = z.object({
     tipoHabitacao: z.string().optional(),
     tipoHabitacaoLabel: z.string().optional(),
     // Implantação e ABC
+    larguraUtil: z.number().optional(),
+    profUtil: z.number().optional(),
+    envelopeMax: z.number().optional(),
     areaImplantacao: z.number().optional(),
     indiceImplantacao: z.number().optional(),
     abcEstimada: z.number().optional(),
@@ -251,6 +258,12 @@ export const proposalPayloadSchema = z.object({
   moradiaAddon: z.object({
     modo: z.enum(['previo', 'licenciamento']),
     areaMoradia: z.number(),
+    abcBase: z.number().optional(),        // ABC base (sem cave/varanda)
+    areaCave: z.number().optional(),       // Área cave/garagem bruta
+    areaVaranda: z.number().optional(),    // Área varandas/terraços bruta
+    abcCavePond: z.number().optional(),    // Cave ponderada (70%)
+    abcVarandaPond: z.number().optional(), // Varanda ponderada (30%)
+    euroPorM2: z.number().optional(),      // €/m² do fee original
     feeOriginal: z.number(),
     feePrevio: z.number().optional(),
     numTipos: z.number(),
@@ -291,7 +304,7 @@ export type ProposalPayload = z.infer<typeof proposalPayloadSchema>;
 /** Chaves minificadas para reduzir tamanho do JSON antes da compressão */
 const MINIFY_KEYS: Record<string, string> = {
   lang: 'l', ref: 'r', data: 'da', cliente: 'c', projeto: 'p', local: 'lo', linkGoogleMaps: 'lm',
-  modo: 'm', area: 'a', valorObra: 'vo', tipologia: 't', complexidade: 'co', pisos: 'pi', fasesPct: 'fp',
+  modo: 'm', area: 'a', valorObra: 'vo', honorPct: 'hp', honorCap: 'hc', tipologia: 't', complexidade: 'co', pisos: 'pi', fasesPct: 'fp',
   localizacao: 'loc', iva: 'i', despesasReemb: 'dr', valorArq: 'va', especialidades: 'e', valorEsp: 've',
   extras: 'ex', valorExtras: 'vex', total: 'to', totalSemIVA: 'ts', valorIVA: 'vi', fasesPagamento: 'fap',
   descricaoFases: 'df', notaBim: 'nb', notaReunioes: 'nr', apresentacao: 'ap', especialidadesDescricoes: 'ed',
@@ -315,12 +328,12 @@ const MINIFY_KEYS: Record<string, string> = {
   alturaMaxima: 'alm', afastamentoFrontal: 'aff', afastamentoLateral: 'afl', afastamentoPosterior: 'afp',
   areaMinimaLote: 'aml', indiceConstrucao: 'icn', indiceImplantacao: 'iim',
   profundidadeMaxConstrucao: 'pmc', percentagemCedencias: 'pcd',
-  lotTipoHabitacao: 'lth', lotObjetivo: 'lob',
+  lotUsoParametros: 'lup', lotTipoHabitacao: 'lth', lotObjetivo: 'lob',
   lotCenarios: 'lce', lotCondicionantes: 'lco', lotComplexidadeSugerida: 'lcs',
   lotEntregaveis: 'len', lotAssuncoes: 'las', lotDependencias: 'ldp',
   label: 'lb', lotes: 'lt', areaMedia: 'am', cedencias: 'ced', nota: 'no',
   accessModel: 'acm', accessModelLabel: 'aml2', viaInternaComprimento: 'vic',
-  areaImplantacao: 'aim', abcEstimada: 'abc', numPisos: 'nps',
+  larguraUtil: 'lgu', profUtil: 'pru', envelopeMax: 'evm', areaImplantacao: 'aim', abcEstimada: 'abc', numPisos: 'nps',
   // Legislacao aplicavel
   lotLegislacao: 'llg', diplomaId: 'did', sigla: 'sig', titulo: 'tit', relevancia: 'rel',
   // Fase 2: Custos infra
@@ -337,7 +350,9 @@ const MINIFY_KEYS: Record<string, string> = {
   lotAddonsPool: 'lap', lotAddonsPoolTotal: 'lapt', lotOpcoesCotacao: 'loc2',
   unidades: 'uns', valorUnit: 'vu', deltaBase: 'db',
   // Moradia Tipo Add-on
-  moradiaAddon: 'mta', areaMoradia: 'arm', feeOriginal: 'fog', feePrevio: 'fpv',
+  moradiaAddon: 'mta', areaMoradia: 'arm', abcBase: 'abb', areaCave: 'acv', areaVaranda: 'avr',
+  abcCavePond: 'acp', abcVarandaPond: 'avp', euroPorM2: 'epm',
+  feeOriginal: 'fog', feePrevio: 'fpv',
   numTipos: 'ntp', repeticoesIguais: 'rpi', repeticoesAdaptadas: 'rpa',
   descontoIgual: 'dsi', descontoAdaptada: 'dsa', fixoLote: 'fxl',
   totalOriginal: 'tor', totalRepeticoesIguais: 'tri', totalRepeticoesAdaptadas: 'tra',
@@ -450,4 +465,50 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
 export function formatCurrency(v: number, lang: Lang = 'pt'): string {
   const locale = lang === 'en' ? 'en-GB' : 'pt-PT';
   return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(v);
+}
+
+// ── Local storage para payloads (evita URLs demasiado longos) ──
+const LOCAL_PAYLOAD_PREFIX = 'kimi_proposal_';
+
+/** Gera um ID curto aleatório */
+function generateShortId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let id = '';
+  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+/** Guarda payload em localStorage e devolve o ID curto. Se existingId fornecido, reutiliza (update). */
+export function savePayloadLocally(p: ProposalPayload, existingId?: string | null): string {
+  const id = existingId || generateShortId();
+  const minified = minifyPayload(p);
+  try {
+    localStorage.setItem(`${LOCAL_PAYLOAD_PREFIX}${id}`, JSON.stringify(minified));
+  } catch (e) {
+    console.warn('[LocalPayload] Erro ao guardar:', e);
+    // Limpar payloads antigos e tentar de novo
+    cleanOldLocalPayloads();
+    localStorage.setItem(`${LOCAL_PAYLOAD_PREFIX}${id}`, JSON.stringify(minified));
+  }
+  return id;
+}
+
+/** Lê payload de localStorage pelo ID */
+export function loadPayloadLocally(id: string): ProposalPayload | null {
+  const raw = localStorage.getItem(`${LOCAL_PAYLOAD_PREFIX}${id}`);
+  if (!raw) return null;
+  const parsed = tryParseJson(raw);
+  if (!parsed || typeof parsed !== 'object') return null;
+  const expanded = expandValue(parsed);
+  const result = proposalPayloadSchema.safeParse(expanded);
+  return result.success ? result.data : null;
+}
+
+/** Limpa payloads locais com mais de 30 dias */
+function cleanOldLocalPayloads() {
+  const keys = Object.keys(localStorage).filter(k => k.startsWith(LOCAL_PAYLOAD_PREFIX));
+  // Manter apenas os 50 mais recentes (FIFO)
+  if (keys.length > 50) {
+    keys.slice(0, keys.length - 50).forEach(k => localStorage.removeItem(k));
+  }
 }

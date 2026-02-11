@@ -16,8 +16,9 @@ import {
   Lock,
   History,
   X,
+  Trash2,
 } from 'lucide-react';
-import { encodeProposalPayload, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
+import { encodeProposalPayload, savePayloadLocally, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { generateProposalPdf } from '../lib/generateProposalPdf';
 import { saveProposal } from '../lib/supabase';
 import { addToProposalHistory } from '../lib/proposalHistory';
@@ -32,7 +33,7 @@ import { ClientAutocomplete } from '../components/clients/ClientAutocomplete';
 import { t, formatDate, formatCurrency as formatCurrencyLocale } from '../locales';
 import { toast } from 'sonner';
 import type { Client } from '../types';
-import { municipios, type ParametrosUrbanisticos } from '../data/municipios';
+import { municipios, EQUIPAMENTOS_DEFAULTS, type ParametrosUrbanisticos, type ParametrosPorUso } from '../data/municipios';
 import { legislacao as LEGISLACAO_DB } from '../data/legislacao';
 import { TIPOLOGIA_DIPLOMAS } from '../data/tipologias';
 
@@ -116,8 +117,9 @@ const CATALOGO_CUSTOS_INFRA: CatalogoItem[] = [
   { id: 'ited', nome: 'ITED / Telecomunicações', unidade: 'lote', custoUnitario: 550, pctHonorario: 0.06 },
   { id: 'gas', nome: 'Rede de gás', unidade: 'ml', custoUnitario: 40, custoRamal: 280, pctHonorario: 0.065 },
   { id: 'paisagismo', nome: 'Arranjos exteriores', unidade: 'm2', custoUnitario: 35, pctHonorario: 0.08 },
-  { id: 'topografia', nome: 'Levantamento topográfico', unidade: 'm2', custoUnitario: 0.8, pctHonorario: 1.0 },
+  { id: 'topografia', nome: 'Levantamento topográfico', unidade: 'm2', custoUnitario: 0.5, pctHonorario: 1.0 },
   { id: 'geotecnia', nome: 'Estudo geotécnico', unidade: 'vg', custoUnitario: 1200, pctHonorario: 1.0 },
+  { id: 'acustica', nome: 'Estudo acústico (impacto)', unidade: 'lote', custoUnitario: 250, pctHonorario: 1.0 },
 ];
 
 const BANDAS_PRECISAO: Record<string, { label: string; margem: number; descricao: string }> = {
@@ -855,6 +857,8 @@ function sugerirLotesPorFrente(frenteTerreno: number): { tipo: string; label: st
 // Duas abordagens: PDM (índices) ou afastamentos regulamentares (envelope máximo)
 interface ImplantacaoCalc {
   profundidade: number;           // profundidade estimada do lote (m)
+  larguraUtil: number;            // largura útil para implantação (após afastamentos laterais) — m
+  profUtil: number;               // profundidade útil para implantação (após afastamentos frontal+posterior) — m
   envelopeMax: number;            // envelope máximo construtivo (afastamentos) — m²
   areaImplantacao: number;        // implantação estimada real — m²
   indiceImplantacao: number;      // índice de implantação (%)
@@ -882,12 +886,13 @@ function calcularImplantacaoLote(
   alturaMaxInput: string,
   indiceImplantacaoPDM: string,
   indiceConstrucaoPDM: string,
+  profundidadeMaxConstrucaoInput?: string,
 ): ImplantacaoCalc | null {
   if (areaMedia <= 0 || larguraLote <= 0) return null;
   const profundidade = Math.round((areaMedia / larguraLote) * 10) / 10;
   if (profundidade <= 0) return null;
 
-  // 1. Envelope máximo (afastamentos regulamentares)
+  // 1. Envelope máximo (afastamentos regulamentares + prof. max construção PDM)
   const afFrontal = parseFloat(afFrontalInput) || 5;
   const alturaMax = parseFloat(alturaMaxInput) || 0;
   // Lateral default: h/2 com mínimo 3m (regra típica PDM)
@@ -896,7 +901,10 @@ function calcularImplantacaoLote(
   const afLateralTotal = tipoHabitacao === 'isoladas' ? afLateralUnit * 2
     : tipoHabitacao === 'geminadas' ? afLateralUnit : 0;
   const larguraUtil = Math.max(0, larguraLote - afLateralTotal);
-  const profUtil = Math.max(0, profundidade - afFrontal - afPosterior);
+  // Profundidade útil: limitada pelo min(prof. lote − afastamentos, prof. max. construção PDM)
+  const profUtilAfastamentos = Math.max(0, profundidade - afFrontal - afPosterior);
+  const profMaxConstrucao = parseFloat(profundidadeMaxConstrucaoInput || '') || 0;
+  const profUtil = profMaxConstrucao > 0 ? Math.min(profUtilAfastamentos, profMaxConstrucao) : profUtilAfastamentos;
   const envelopeMax = Math.round(larguraUtil * profUtil);
 
   // 2. Nº pisos: do input do utilizador (default 2)
@@ -929,7 +937,7 @@ function calcularImplantacaoLote(
   const indiceImplantacao = Math.round((areaImplantacao / areaMedia) * 100);
   const indiceConstrucao = Math.round((abcEstimada / areaMedia) * 100) / 100;
 
-  return { profundidade, envelopeMax, areaImplantacao, indiceImplantacao, abcEstimada, indiceConstrucao, numPisos, fonte };
+  return { profundidade, larguraUtil: Math.round(larguraUtil * 10) / 10, profUtil: Math.round(profUtil * 10) / 10, envelopeMax, areaImplantacao, indiceImplantacao, abcEstimada, indiceConstrucao, numPisos, fonte };
 }
 
 // Labels para objetivo principal
@@ -1018,7 +1026,7 @@ const AREA_TO_M2: Record<string, number> = {
 export default function CalculatorPage() {
   const { language } = useLanguage();
   const lang = language;
-  const { saveCalculatorProposal, proposals } = useData();
+  const { saveCalculatorProposal, deleteProposal, proposals } = useData();
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
   const [showProposalsList, setShowProposalsList] = useState(false);
 
@@ -1029,6 +1037,7 @@ export default function CalculatorPage() {
   const [complexity, setComplexity] = useState('');
   const [valorObra, setValorObra] = useState('');
   const [pctHonor, setPctHonor] = useState('8');
+  const [honorCap, setHonorCap] = useState('');
   const [curvaDecrescimento, setCurvaDecrescimento] = useState(false);
   const [fasesIncluidas, setFasesIncluidas] = useState<Set<string>>(
     new Set(['estudo', 'ante', 'licenciamento_entrega', 'licenciamento_notificacao', 'aprovacao_final'])
@@ -1052,6 +1061,7 @@ export default function CalculatorPage() {
   const [linkPropostaExibido, setLinkPropostaExibido] = useState<string | null>(null);
   const [linkPropostaCurto, setLinkPropostaCurto] = useState<string | null>(null);
   const [linkPropostaHash, setLinkPropostaHash] = useState<string | null>(null);
+  const [linkLocalId, setLinkLocalId] = useState<string | null>(null); // ID localStorage reutilizável
   const [propostaFechada, setPropostaFechada] = useState(false);
   const [gerandoLink, setGerandoLink] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -1082,6 +1092,8 @@ export default function CalculatorPage() {
   const [moradiaAddonModo, setMoradiaAddonModo] = useState<'previo' | 'licenciamento' | ''>('');
   const [moradiaAddonAreaOverride, setMoradiaAddonAreaOverride] = useState('');
   const [moradiaAddonValorOverride, setMoradiaAddonValorOverride] = useState('');
+  const [moradiaAddonAreaCave, setMoradiaAddonAreaCave] = useState('');
+  const [moradiaAddonAreaVaranda, setMoradiaAddonAreaVaranda] = useState('');
   const [moradiaAddonNumTipos, setMoradiaAddonNumTipos] = useState('1');
   const [moradiaAddonRepeticoesIguais, setMoradiaAddonRepeticoesIguais] = useState('');
   const [moradiaAddonRepeticoesAdaptadas, setMoradiaAddonRepeticoesAdaptadas] = useState('');
@@ -1117,6 +1129,7 @@ export default function CalculatorPage() {
   const [lotIndiceImplantacao, setLotIndiceImplantacao] = useState('');
   const [lotProfundidadeMaxConstrucao, setLotProfundidadeMaxConstrucao] = useState('');
   const [lotPercentagemCedencias, setLotPercentagemCedencias] = useState('15'); // default 15%
+  const [lotUsoParametros, setLotUsoParametros] = useState<'habitacao' | 'equipamentos'>('habitacao'); // uso activo para parâmetros PDM
 
   // Município seleccionado (computed)
   const lotMunicipioSel = useMemo(() => {
@@ -1131,18 +1144,35 @@ export default function CalculatorPage() {
     return { freq, outros };
   }, []);
 
-  // Preencher parâmetros ao mudar município
-  const preencherParametrosMunicipio = (params: ParametrosUrbanisticos | undefined) => {
+  // Preencher parâmetros ao mudar município — aceita ParametrosPorUso (novo) ou ParametrosUrbanisticos (legado)
+  const preencherParametrosMunicipio = (params: ParametrosPorUso | ParametrosUrbanisticos | undefined, uso?: 'habitacao' | 'equipamentos') => {
     if (!params) return;
-    if (params.alturaMaxima) setLotAlturaMaxima(params.alturaMaxima);
-    if (params.afastamentoFrontal) setLotAfastamentoFrontal(params.afastamentoFrontal);
-    if (params.afastamentoLateral) setLotAfastamentoLateral(params.afastamentoLateral);
-    if (params.afastamentoPosterior) setLotAfastamentoPosterior(params.afastamentoPosterior);
-    if (params.areaMinimaLote) setLotAreaMinimaLote(params.areaMinimaLote);
-    if (params.indiceConstrucao) setLotIndiceConstrucao(params.indiceConstrucao);
-    if (params.indiceImplantacao) setLotIndiceImplantacao(params.indiceImplantacao);
-    if (params.profundidadeMaxConstrucao) setLotProfundidadeMaxConstrucao(params.profundidadeMaxConstrucao);
-    if (params.percentagemCedencias) setLotPercentagemCedencias(params.percentagemCedencias);
+    // Determinar qual sub-objecto usar
+    let p: ParametrosUrbanisticos;
+    const usoActivo = uso ?? lotUsoParametros;
+    if ('habitacao' in params) {
+      // ParametrosPorUso — seleccionar por uso
+      if (usoActivo === 'equipamentos') {
+        p = params.equipamentos ?? EQUIPAMENTOS_DEFAULTS;
+        if (!params.equipamentos) {
+          toast.info('Parametros de equipamentos nao disponiveis para este municipio — valores genericos aplicados');
+        }
+      } else {
+        p = params.habitacao;
+      }
+    } else {
+      // Legado — ParametrosUrbanisticos directos (compatibilidade)
+      p = params;
+    }
+    if (p.alturaMaxima) setLotAlturaMaxima(p.alturaMaxima);
+    if (p.afastamentoFrontal) setLotAfastamentoFrontal(p.afastamentoFrontal);
+    if (p.afastamentoLateral) setLotAfastamentoLateral(p.afastamentoLateral);
+    if (p.afastamentoPosterior) setLotAfastamentoPosterior(p.afastamentoPosterior);
+    if (p.areaMinimaLote) setLotAreaMinimaLote(p.areaMinimaLote);
+    if (p.indiceConstrucao) setLotIndiceConstrucao(p.indiceConstrucao);
+    if (p.indiceImplantacao) setLotIndiceImplantacao(p.indiceImplantacao);
+    if (p.profundidadeMaxConstrucao) setLotProfundidadeMaxConstrucao(p.profundidadeMaxConstrucao);
+    if (p.percentagemCedencias) setLotPercentagemCedencias(p.percentagemCedencias);
   };
 
   // Programa
@@ -1243,6 +1273,10 @@ export default function CalculatorPage() {
         } else if (cat.unidade === 'm2') {
           quantidade = cat.id === 'topografia' ? areaEstudo : areaVerde;
           subtotal = quantidade * custoUnit;
+          // Topografia: tecto regressivo para terrenos grandes (max ~2500€)
+          if (cat.id === 'topografia') {
+            subtotal = Math.min(subtotal, 1200 + areaEstudo * 0.3);
+          }
         } else { // vg
           quantidade = 1;
           subtotal = custoUnit;
@@ -1387,22 +1421,69 @@ export default function CalculatorPage() {
     formatCurrencyLocale(value, l ?? lang);
 
   // Hash para detetar alterações na proposta após gerar link
+  // Inclui TODOS os campos que afectam a proposta (geral + loteamento + moradia addon)
   const computeProposalHash = useMemo(() => {
     const data = {
-      honorMode, area, projectType, complexity, valorObra, pctHonor,
+      // Geral
+      honorMode, area, projectType, complexity, valorObra, pctHonor, honorCap,
       curvaDecrescimento, fasesIncluidas: Array.from(fasesIncluidas).sort().join(','),
       honorLocalizacao, numPisos, clienteNome, projetoNome, referenciaProposta,
       localProposta, linkGoogleMaps, extrasValores, despesasReembolsaveis,
       especialidadesValores, exclusoesSelecionadas: Array.from(exclusoesSelecionadas).sort().join(','),
       mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
+      // Loteamento - terreno
+      lotIdentificacao, lotAreaTerreno, lotFonteArea, lotAreaEstudo,
+      lotNumLotes, lotFrenteTerreno, lotNumAlternativas, lotProfundidade,
+      lotMunicipioId, lotInstrumento, lotClassificacaoSolo,
+      // Loteamento - parametros PDM
+      lotAlturaMaxima, lotNumPisos, lotAfastamentoFrontal, lotAfastamentoLateral,
+      lotAfastamentoPosterior, lotAreaMinimaLote, lotIndiceConstrucao,
+      lotIndiceImplantacao, lotProfundidadeMaxConstrucao, lotPercentagemCedencias,
+      lotUsoParametros,
+      // Loteamento - programa
+      lotTipoHabitacao, lotObjetivoPrincipal,
+      lotBasement, lotBasementArea, lotPool, lotPoolPerUnit, lotPoolUnits,
+      lotPoolSize, lotWaterproofing, lotExternalWorks,
+      // Moradia addon
+      moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride,
+      moradiaAddonValorOverride, moradiaAddonAreaCave, moradiaAddonAreaVaranda,
+      moradiaAddonNumTipos, moradiaAddonRepeticoesIguais,
+      moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
+      // Cenários
+      lotCenarioA: JSON.stringify(lotCenarioA), lotCenarioB: JSON.stringify(lotCenarioB),
+      lotCenarioC: JSON.stringify(lotCenarioC),
+      lotCondicionantes: Array.from(lotCondicionantes).sort().join(','),
+      lotEntregaveis: Array.from(lotEntregaveis).sort().join(','),
+      lotAssuncoesManuais, lotDependenciasManuais,
+      lotCenarioRef, lotCenarioRecomendado,
+      lotCustosInfraOverrides, lotContingenciaOverride,
     };
     return JSON.stringify(data);
   }, [
-    honorMode, area, projectType, complexity, valorObra, pctHonor,
+    honorMode, area, projectType, complexity, valorObra, pctHonor, honorCap,
     curvaDecrescimento, fasesIncluidas, honorLocalizacao, numPisos,
     clienteNome, projetoNome, referenciaProposta, localProposta, linkGoogleMaps,
     extrasValores, despesasReembolsaveis, especialidadesValores, exclusoesSelecionadas,
     mostrarResumo, mostrarPacotes, mostrarCenarios, mostrarGuiaObra,
+    lotIdentificacao, lotAreaTerreno, lotFonteArea, lotAreaEstudo,
+    lotNumLotes, lotFrenteTerreno, lotNumAlternativas, lotProfundidade,
+    lotMunicipioId, lotInstrumento, lotClassificacaoSolo,
+    lotAlturaMaxima, lotNumPisos, lotAfastamentoFrontal, lotAfastamentoLateral,
+    lotAfastamentoPosterior, lotAreaMinimaLote, lotIndiceConstrucao,
+    lotIndiceImplantacao, lotProfundidadeMaxConstrucao, lotPercentagemCedencias,
+    lotUsoParametros,
+    lotTipoHabitacao, lotObjetivoPrincipal,
+    lotBasement, lotBasementArea, lotPool, lotPoolPerUnit, lotPoolUnits,
+    lotPoolSize, lotWaterproofing, lotExternalWorks,
+    moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride,
+    moradiaAddonValorOverride, moradiaAddonAreaCave, moradiaAddonAreaVaranda,
+    moradiaAddonNumTipos, moradiaAddonRepeticoesIguais,
+    moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
+    lotCenarioA, lotCenarioB, lotCenarioC,
+    lotCondicionantes, lotEntregaveis,
+    lotAssuncoesManuais, lotDependenciasManuais,
+    lotCenarioRef, lotCenarioRecomendado,
+    lotCustosInfraOverrides, lotContingenciaOverride,
   ]);
 
   // Verificar se o link está desatualizado
@@ -1443,6 +1524,13 @@ export default function CalculatorPage() {
     const obra = parseFloat(valorObra) || 0;
     const pct = parseFloat(pctHonor) || 8;
     let val = (obra * pct) / 100;
+    // Piso mínimo (floor) — garantir que mesmo no modo % o minValor da tipologia se aplica
+    const tipologia = TIPOLOGIAS_HONORARIOS.find((t) => t.id === projectType);
+    const minValor = tipologia?.minValor ?? 1500;
+    if (val < minValor) val = minValor;
+    // Teto máximo (cap) — evita "efeito jackpot" em obras com valor elevado
+    const capVal = parseFloat(honorCap) || 0;
+    if (capVal > 0 && val > capVal) val = capVal;
     const fasesList = isLoteamento ? FASES_LOTEAMENTO : ICHPOP_PHASES;
     const pctFases = Array.from(fasesIncluidas).reduce(
       (s, id) => s + (fasesList.find((p) => p.id === id)?.pct ?? 0),
@@ -1484,6 +1572,31 @@ export default function CalculatorPage() {
   };
 
   const preencherSugestoesEspecialidades = () => {
+    // Loteamento: usar SEMPRE o modelo paramétrico (custos de infraestrutura × %)
+    // Evita usar a área do terreno (5000m²) com rates de edifício que inflacionam valores
+    if (isLoteamento) {
+      const ci = calcularCustosInfra();
+      if (ci.items.length === 0) {
+        toast.error('Preenche os dados do loteamento (frente, lotes, área) para obter sugestões.');
+        return;
+      }
+      const next: Record<string, string> = {};
+      for (const item of ci.items) {
+        const espId = item.infraId === 'aguas_esgotos_dom' ? 'aguas_esgotos' : item.infraId;
+        const prev = parseFloat(next[espId] || '0');
+        const val = Math.round((prev + item.honorarioProjeto) / 50) * 50;
+        next[espId] = String(val);
+      }
+      const espIds = TIPOLOGIA_ESPECIALIDADES[projectType] ?? [];
+      if (espIds.includes('coord_especialidades')) {
+        const coordVal = Math.round((ci.totalComContingencia * 0.02) / 50) * 50;
+        next['coord_especialidades'] = String(Math.max(400, coordVal));
+      }
+      setEspecialidadesValores((prev) => ({ ...prev, ...next }));
+      toast.success('Sugestões preenchidas (modelo paramétrico). Ajusta os valores conforme necessário.');
+      return;
+    }
+    // Edifícios: modelo original minValor + rate × área
     let areaRef = 0;
     if (honorMode === 'area') {
       areaRef = parseFloat(area) || 0;
@@ -1612,6 +1725,15 @@ export default function CalculatorPage() {
     setEspecialidadesValores((prev) => ({ ...prev, ...next }));
   }, [projectType, activeCalculator, area, valorObra, honorMode, isLoteamento, lotFrenteTerreno, lotNumLotes, lotAreaEstudo, lotCenarioRef, lotCenarioA, lotCenarioB, lotCenarioC, lotCustosInfraOverrides, lotContingenciaOverride, lotTemTopografia, complexity, lotCondicionantes]);
 
+  // Auto-preencher Valor da Obra com custo de infraestruturas (para loteamento)
+  useEffect(() => {
+    if (!isLoteamento || activeCalculator !== 'honorarios') return;
+    const ci = calcularCustosInfra();
+    if (ci.totalComContingencia > 0) {
+      setValorObra(String(ci.totalComContingencia));
+    }
+  }, [isLoteamento, activeCalculator, lotCenarioRef, lotCenarioA, lotCenarioB, lotCenarioC, lotCustosInfraOverrides, lotContingenciaOverride, lotFrenteTerreno, lotNumLotes, lotAreaEstudo, lotTemTopografia, lotCondicionantes]);
+
   // Atualiza extras com fórmula (tetoMinimo + taxaPorM2) quando a área muda
   useEffect(() => {
     if (activeCalculator !== 'honorarios') return;
@@ -1667,14 +1789,95 @@ export default function CalculatorPage() {
     });
   };
 
+  // ABC estimada do cenário de referência (via calcularImplantacaoLote)
+  // Dados de implantação do cenário de referência (para ABC moradia automática)
+  const implCenarioRef = useMemo(() => {
+    const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
+    const frente = parseFloat(lotFrenteTerreno) || 0;
+    const nLotes = parseInt(cenRef.lotes, 10) || 0;
+    const largura = calcularLarguraLote(frente, nLotes, cenRef.accessModel);
+    const areaEst = parseFloat(lotAreaEstudo) || 0;
+    const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+    const cedenciasAuto = areaEst > 0 ? Math.round(areaEst * pctCed / 100) : 0;
+    const areaMediaAuto = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - cedenciasAuto) / nLotes) : 0;
+    const areaMedia = parseFloat(cenRef.areaMedia) || areaMediaAuto;
+    const tipoEfetivo = cenRef.tipoHabitacao === 'auto'
+      ? (largura > 0 ? (inferirTipoHabitacao(largura)?.tipo ?? 'isoladas') : 'isoladas')
+      : cenRef.tipoHabitacao;
+    if (areaMedia <= 0 || largura <= 0) return null;
+    return calcularImplantacaoLote(
+      areaMedia, largura,
+      tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
+      lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
+      lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao,
+    );
+  }, [lotCenarioRef, lotCenarioA, lotCenarioB, lotCenarioC, lotFrenteTerreno, lotAreaEstudo, lotPercentagemCedencias,
+      lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
+      lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao]);
+
+  // Retrocompat: manter abcCenarioRef para uso no payload
+  const abcCenarioRef = implCenarioRef?.abcEstimada ?? 0;
+
+  // ABC auto para moradia: baseado na SOLUÇÃO ESCOLHIDA (N. lotes pretendidos), NÃO no cenário de referência
+  // Usa a mesma lógica da secção "Dados do Terreno" no PDF para consistência
+  // 1p → ×1.00 | 2p → ×1.85 | 3p → ×2.65
+  const PISO_FACTOR: Record<number, number> = { 1: 1.00, 2: 1.85, 3: 2.65 };
+  const implSolucaoEscolhida = useMemo(() => {
+    const nLotes = parseInt(lotNumLotes, 10) || 0;
+    const frente = parseFloat(lotFrenteTerreno) || 0;
+    const areaEst = parseFloat(lotAreaEstudo) || 0;
+    if (nLotes <= 0 || frente <= 0 || areaEst <= 0) return null;
+    const largura = Math.round((frente / nLotes) * 10) / 10;
+    const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+    const cedencias = Math.round(areaEst * pctCed / 100);
+    const areaMedia = Math.round((areaEst - cedencias) / nLotes);
+    const tipo = (lotTipoHabitacao || 'isoladas').toLowerCase();
+    const tipoParam = tipo.includes('geminada') ? 'geminadas' : tipo.includes('banda') ? 'em_banda' : 'isoladas';
+    if (areaMedia <= 0 || largura <= 0) return null;
+    return calcularImplantacaoLote(
+      areaMedia, largura, tipoParam,
+      lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior,
+      lotNumPisos, lotAlturaMaxima,
+      lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao,
+    );
+  }, [lotNumLotes, lotFrenteTerreno, lotAreaEstudo, lotPercentagemCedencias, lotTipoHabitacao,
+      lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
+      lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao]);
+
+  const abcAutoMoradia = useMemo(() => {
+    // Prioridade: solução escolhida (N. lotes pretendidos)
+    if (implSolucaoEscolhida) {
+      const { areaImplantacao, abcEstimada, numPisos } = implSolucaoEscolhida;
+      const fator = PISO_FACTOR[numPisos] ?? (1 + (numPisos - 1) * 0.85);
+      const abcFromImpl = Math.round(areaImplantacao * fator);
+      return Math.min(abcFromImpl, abcEstimada);
+    }
+    // Fallback: cenário de referência
+    if (implCenarioRef) {
+      const { areaImplantacao, abcEstimada, numPisos } = implCenarioRef;
+      const fator = PISO_FACTOR[numPisos] ?? (1 + (numPisos - 1) * 0.85);
+      const abcFromImpl = Math.round(areaImplantacao * fator);
+      return Math.min(abcFromImpl, abcEstimada);
+    }
+    // Fallback final: dados básicos
+    const areaEst = parseFloat(lotAreaEstudo) || 0;
+    const pctCed = parseFloat(lotPercentagemCedencias) || 15;
+    const nLotes = parseInt(lotNumLotes, 10) || 0;
+    const areaMediaFb = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - areaEst * pctCed / 100) / nLotes) : 0;
+    return areaMediaFb > 0 ? Math.round(areaMediaFb * (parseFloat(lotIndiceConstrucao) || 0.7)) : 0;
+  }, [implSolucaoEscolhida, implCenarioRef, lotAreaEstudo, lotPercentagemCedencias, lotNumLotes, lotIndiceConstrucao]);
+
   // ── Cálculo do Add-on Moradia Tipo ──
   const calcularMoradiaAddon = () => {
     if (!moradiaAddonAtivo || !moradiaAddonModo) return null;
-    // Área: override manual ou areaMedia do cenário de referência
-    const cenRef = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
-    const areaMediaLote = parseFloat(moradiaAddonAreaOverride) || parseFloat(cenRef.areaMedia) || 0;
-    if (areaMediaLote <= 0) return null;
-    const abc = Math.round(areaMediaLote * MORADIA_ADDON_DEFAULTS.abcFactor);
+    // ABC base: override manual → auto (abcEstimada do cenário ou fallback)
+    const abcBase = parseFloat(moradiaAddonAreaOverride) || abcAutoMoradia || 0;
+    if (abcBase <= 0) return null;
+    const areaCave = parseFloat(moradiaAddonAreaCave) || 0;
+    const areaVaranda = parseFloat(moradiaAddonAreaVaranda) || 0;
+    const abcCavePonderada = Math.round(areaCave * 0.70);
+    const abcVarandaPonderada = Math.round(areaVaranda * 0.30);
+    const abc = abcBase + abcCavePonderada + abcVarandaPonderada;
     // Fee base: motor simplificado (habitação unifamiliar)
     const multComp = complexity === 'alta' ? 1.3 : complexity === 'baixa' ? 0.8 : 1;
     const feeBase = parseFloat(moradiaAddonValorOverride) || Math.round(MORADIA_ADDON_DEFAULTS.minValor + abc * MORADIA_ADDON_DEFAULTS.rate * multComp);
@@ -1687,8 +1890,12 @@ export default function CalculatorPage() {
     const descontoIgual = MORADIA_ADDON_DEFAULTS.descontoIgual;
     const descontoAdaptada = MORADIA_ADDON_DEFAULTS.descontoAdaptada;
     const totalOriginal = numTipos * feeEfetivo;
-    const totalRepIguais = repIguais * Math.round(feeBase * (1 - descontoIgual / 100));
-    const totalRepAdapt = repAdapt * Math.round(feeBase * (1 - descontoAdaptada / 100));
+    // Repetição: fee one-time por tipo de variante (1× idêntica, 1× adaptada), não por lote
+    // O trabalho por lote (implantação + submissão) está coberto pela parcela fixa
+    const feeRepIgual = Math.round(feeBase * (1 - descontoIgual / 100));
+    const feeRepAdapt = Math.round(feeBase * (1 - descontoAdaptada / 100));
+    const totalRepIguais = repIguais > 0 ? feeRepIgual : 0;
+    const totalRepAdapt = repAdapt > 0 ? feeRepAdapt : 0;
     const totalFixo = (repIguais + repAdapt) * fixoLote;
     const totalAddon = totalOriginal + totalRepIguais + totalRepAdapt + totalFixo;
     // Cláusulas
@@ -1702,6 +1909,12 @@ export default function CalculatorPage() {
     return {
       modo: moradiaAddonModo as 'previo' | 'licenciamento',
       areaMoradia: abc,
+      abcBase: abcBase,
+      areaCave: areaCave > 0 ? areaCave : undefined,
+      areaVaranda: areaVaranda > 0 ? areaVaranda : undefined,
+      abcCavePond: abcCavePonderada > 0 ? abcCavePonderada : undefined,
+      abcVarandaPond: abcVarandaPonderada > 0 ? abcVarandaPonderada : undefined,
+      euroPorM2: abc > 0 ? Math.round((feeBase / abc) * 100) / 100 : undefined,
       feeOriginal: feeBase,
       feePrevio: moradiaAddonModo === 'previo' ? feePrevio : undefined,
       numTipos,
@@ -1938,7 +2151,9 @@ export default function CalculatorPage() {
       linkGoogleMaps: linkGoogleMaps.trim() || undefined,
       modo: honorMode === 'area' ? `${t('calc.modeByArea', lang)} (${area} m²)` : `${t('calc.modeByPct', lang)} (${valorObra}€)`,
       area: honorMode === 'area' ? area : undefined,
-      valorObra: honorMode === 'pct' ? valorObra : undefined,
+      valorObra: (honorMode === 'pct' || isLoteamento) ? valorObra : undefined,
+      honorPct: (honorMode === 'pct' || isLoteamento) ? pctHonor : undefined,
+      honorCap: (honorMode === 'pct' || isLoteamento) && honorCap ? honorCap : undefined,
       tipologia: TIPOLOGIAS_HONORARIOS.find((tp) => tp.id === projectType)?.name ?? '',
       complexidade: complexity ? t(`complexity.${complexity}`, lang) : '',
       ...(TIPOLOGIAS_COM_PISOS.includes(projectType) && numPisos.trim() ? { pisos: parseInt(numPisos, 10) || undefined } : {}),
@@ -1991,17 +2206,30 @@ export default function CalculatorPage() {
         lotClassificacaoSolo: lotClassificacaoSolo.trim() || undefined,
         lotMunicipio: lotMunicipioSel?.nome || undefined,
         lotProfundidade: lotProfundidade.trim() || undefined,
-        lotParametros: {
-          alturaMaxima: lotAlturaMaxima.trim() || undefined,
-          afastamentoFrontal: lotAfastamentoFrontal.trim() || undefined,
-          afastamentoLateral: lotAfastamentoLateral.trim() || undefined,
-          afastamentoPosterior: lotAfastamentoPosterior.trim() || undefined,
-          areaMinimaLote: lotAreaMinimaLote.trim() || undefined,
-          indiceConstrucao: lotIndiceConstrucao.trim() || undefined,
-          indiceImplantacao: lotIndiceImplantacao.trim() || undefined,
-          profundidadeMaxConstrucao: lotProfundidadeMaxConstrucao.trim() || undefined,
-          percentagemCedencias: lotPercentagemCedencias.trim() || undefined,
-        },
+        lotParametros: (() => {
+          // Fallback: parâmetros do município seleccionado (se os campos estão vazios)
+          const usoActivo = lotUsoParametros || 'habitacao';
+          let munP: ParametrosUrbanisticos | undefined;
+          if (lotMunicipioSel?.parametros) {
+            const pp = lotMunicipioSel.parametros;
+            munP = ('habitacao' in pp)
+              ? (usoActivo === 'equipamentos' ? pp.equipamentos ?? EQUIPAMENTOS_DEFAULTS : pp.habitacao)
+              : pp as unknown as ParametrosUrbanisticos;
+          }
+          return {
+            alturaMaxima: lotAlturaMaxima.trim() || munP?.alturaMaxima || undefined,
+            afastamentoFrontal: lotAfastamentoFrontal.trim() || munP?.afastamentoFrontal || undefined,
+            afastamentoLateral: lotAfastamentoLateral.trim() || munP?.afastamentoLateral || undefined,
+            afastamentoPosterior: lotAfastamentoPosterior.trim() || munP?.afastamentoPosterior || undefined,
+            areaMinimaLote: lotAreaMinimaLote.trim() || munP?.areaMinimaLote || undefined,
+            indiceConstrucao: lotIndiceConstrucao.trim() || munP?.indiceConstrucao || undefined,
+            indiceImplantacao: lotIndiceImplantacao.trim() || munP?.indiceImplantacao || undefined,
+            profundidadeMaxConstrucao: lotProfundidadeMaxConstrucao.trim() || munP?.profundidadeMaxConstrucao || undefined,
+            numPisos: lotNumPisos.trim() || undefined,
+            percentagemCedencias: lotPercentagemCedencias.trim() || munP?.percentagemCedencias || undefined,
+          };
+        })(),
+        lotUsoParametros: lotUsoParametros || undefined,
         // Programa
         lotTipoHabitacao: HOUSING_TYPE_LABELS[lotTipoHabitacao] ?? lotTipoHabitacao,
         lotObjetivo: OBJETIVO_LABELS[lotObjetivoPrincipal] ?? lotObjetivoPrincipal,
@@ -2025,7 +2253,7 @@ export default function CalculatorPage() {
             areaMediaEfetiva, largura,
             tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
             lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
-            lotIndiceImplantacao, lotIndiceConstrucao,
+            lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao,
           ) : null;
           return {
             ...cen,
@@ -2036,8 +2264,8 @@ export default function CalculatorPage() {
             accessModelLabel: ACCESS_MODEL_LABELS[cen.accessModel] ?? cen.accessModel,
             larguraEstimada: largura > 0 ? `${largura.toFixed(1)}m` : undefined,
             tipoHabitacaoLabel: HOUSING_TYPE_LABELS[tipoEfetivo] ?? inferido?.label ?? '—',
-            // Implantação e ABC
-            ...(imp ? { areaImplantacao: imp.areaImplantacao, indiceImplantacao: imp.indiceImplantacao, abcEstimada: imp.abcEstimada, numPisos: imp.numPisos } : {}),
+            // Implantação, envelope e ABC
+            ...(imp ? { larguraUtil: imp.larguraUtil, profUtil: imp.profUtil, envelopeMax: imp.envelopeMax, areaImplantacao: imp.areaImplantacao, indiceImplantacao: imp.indiceImplantacao, abcEstimada: imp.abcEstimada, numPisos: imp.numPisos } : {}),
           };
         }).filter((x): x is NonNullable<typeof x> => x !== null),
         lotCondicionantes: Array.from(lotCondicionantes).map(id => {
@@ -2068,6 +2296,14 @@ export default function CalculatorPage() {
         lotAssuncoes: [
           ...gerarAssuncoesLoteamento(lotCondicionantes, lotTemTopografia || lotFonteArea === 'topografia'),
           ...(moradiaAddonCalc ? moradiaAddonCalc.clausulas : []),
+          // Cláusulas de gatilhos e revisão (automáticas)
+          ...(isLoteamento && honorMode === 'pct' ? [
+            `Os honorários de urbanismo são calculados sobre o valor estimado de obra de urbanização (${pctHonor}%), excluindo a edificação das moradias.`,
+            honorCap ? `O valor dos honorários de urbanismo está limitado a um teto máximo de ${parseFloat(honorCap).toLocaleString('pt-PT')} €.` : '',
+            `Em caso de aumento do número de lotes, extensão de redes ou alterações significativas ao traçado após aprovação do cenário, os honorários serão revistos proporcionalmente.`,
+            `Reuniões adicionais fora do âmbito contratado serão faturadas a 75 €/hora.`,
+            `A base de cálculo dos honorários de urbanismo inclui: arruamentos, pavimentações, drenagens, redes de água, saneamento, eletricidade, ITED, gás, iluminação pública e arranjos exteriores do loteamento. Não inclui edificação, muros privativos, piscinas, anexos ou arranjos interiores dos lotes.`,
+          ].filter(Boolean) : []),
           ...(lotAssuncoesManuais.trim() ? lotAssuncoesManuais.trim().split('\n').filter(Boolean) : []),
         ],
         lotDependencias: [
@@ -2412,6 +2648,23 @@ export default function CalculatorPage() {
 
   // O useEffect de auto-export já não é necessário — o export direto via DOM cobre ambos os casos
 
+  // Auto-actualizar localStorage quando os dados mudam e existe um link local activo
+  // Isto permite que o mesmo URL reflicta as alterações ao recarregar a página HTML
+  const prevHashRef = useRef(computeProposalHash);
+  useEffect(() => {
+    if (linkLocalId && prevHashRef.current !== computeProposalHash) {
+      prevHashRef.current = computeProposalHash;
+      try {
+        const payload = buildProposalPayload();
+        savePayloadLocally(payload, linkLocalId);
+        console.log('[Link] localStorage auto-atualizado para lid:', linkLocalId);
+      } catch {
+        // Ignorar erros silenciosamente
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeProposalHash, linkLocalId]);
+
   const obterLinkProposta = async () => {
     if (!validarProposta()) return;
     
@@ -2426,17 +2679,13 @@ export default function CalculatorPage() {
       const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || '';
       
       let isShortLink = false;
-      let finalUrl: string;
+      let finalUrl = '';
       
-      // Gerar URL longa como base — usar domínio fixo se configurado
+      // Gerar URL — usar domínio fixo se configurado
       const publicOrigin = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
-      const encoded = encodeProposalPayload(payload);
-      const longUrl = `${publicOrigin}${base}/public/proposta?d=${encoded}&lang=${lang}`;
-      finalUrl = longUrl;
-      
-      // Tentar gerar link curto via API (só em produção)
       const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
+      // 1) Tentar link curto via API (produção)
       if (!isLocalhost) {
         try {
           const response = await fetch('/api/proposals/save', {
@@ -2459,12 +2708,18 @@ export default function CalculatorPage() {
             }
           }
         } catch (e) {
-          console.warn('[Link] API falhou, usando link longo:', e);
+          console.warn('[Link] API falhou, tentando localStorage:', e);
         }
       }
       
+      // 2) Fallback: guardar em localStorage + usar URL com ID local
+      //    Reutiliza o ID anterior se existir (para que o mesmo URL reflicta actualizações)
       if (!isShortLink) {
-        console.log('[Link] Link longo usado');
+        const localId = savePayloadLocally(payload, linkLocalId);
+        setLinkLocalId(localId);
+        finalUrl = `${publicOrigin}${base}/public/proposta?lid=${localId}&lang=${lang}`;
+        isShortLink = true; // URL curto via localStorage
+        console.log('[Link] Link local criado/atualizado:', finalUrl);
       }
       
       // Guardar proposta localmente
@@ -2489,6 +2744,7 @@ export default function CalculatorPage() {
           complexity,
           valorObra,
           pctHonor,
+          honorCap,
           curvaDecrescimento,
           fasesIncluidas: Array.from(fasesIncluidas),
           honorLocalizacao,
@@ -2517,7 +2773,7 @@ export default function CalculatorPage() {
           lotNumAlternativas, lotInstrumento, lotClassificacaoSolo,
           lotAlturaMaxima, lotNumPisos, lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior,
           lotAreaMinimaLote, lotIndiceConstrucao, lotIndiceImplantacao,
-          lotProfundidadeMaxConstrucao, lotPercentagemCedencias,
+          lotProfundidadeMaxConstrucao, lotPercentagemCedencias, lotUsoParametros,
           lotTipoHabitacao, lotObjetivoPrincipal,
           lotTemTopografia, lotTemCaderneta, lotTemExtratoPDM,
           lotCenarioA, lotCenarioB, lotCenarioC,
@@ -2530,6 +2786,7 @@ export default function CalculatorPage() {
           descontoAtivo, descontoTipo, descontoPct, descontoJustificacao,
           // Add-on Moradia Tipo
           moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride, moradiaAddonValorOverride,
+          moradiaAddonAreaCave, moradiaAddonAreaVaranda,
           moradiaAddonNumTipos, moradiaAddonRepeticoesIguais, moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
         },
       });
@@ -2544,7 +2801,7 @@ export default function CalculatorPage() {
         totalValue: totalSemIVA,
         totalWithVat: totalComIVA,
         shortLink: isShortLink ? finalUrl : undefined,
-        longLink: longUrl,
+        longLink: finalUrl,
       });
       
       setLinkPropostaExibido(finalUrl);
@@ -2585,6 +2842,7 @@ export default function CalculatorPage() {
     setComplexity('');
     setValorObra('');
     setPctHonor('8');
+    setHonorCap('');
     setCurvaDecrescimento(false);
     setFasesIncluidas(new Set(['estudo', 'ante', 'licenciamento_entrega', 'licenciamento_notificacao', 'aprovacao_final']));
     setHonorLocalizacao('litoral');
@@ -2632,6 +2890,7 @@ export default function CalculatorPage() {
     setLotIndiceImplantacao('');
     setLotProfundidadeMaxConstrucao('');
     setLotPercentagemCedencias('15');
+    setLotUsoParametros('habitacao');
     setLotTipoHabitacao('isoladas');
     setLotObjetivoPrincipal('max_lotes');
     setLotTemTopografia(false);
@@ -2659,6 +2918,8 @@ export default function CalculatorPage() {
     setMoradiaAddonModo('');
     setMoradiaAddonAreaOverride('');
     setMoradiaAddonValorOverride('');
+    setMoradiaAddonAreaCave('');
+    setMoradiaAddonAreaVaranda('');
     setMoradiaAddonNumTipos('1');
     setMoradiaAddonRepeticoesIguais('');
     setMoradiaAddonRepeticoesAdaptadas('');
@@ -2682,6 +2943,7 @@ export default function CalculatorPage() {
     setComplexity(state.complexity);
     setValorObra(state.valorObra);
     setPctHonor(state.pctHonor);
+    setHonorCap(state.honorCap || '');
     setCurvaDecrescimento(state.curvaDecrescimento);
     setFasesIncluidas(new Set(state.fasesIncluidas));
     setHonorLocalizacao(state.honorLocalizacao);
@@ -2736,6 +2998,7 @@ export default function CalculatorPage() {
       setLotIndiceImplantacao(state.lotIndiceImplantacao || '');
       setLotProfundidadeMaxConstrucao(state.lotProfundidadeMaxConstrucao || '');
       setLotPercentagemCedencias(state.lotPercentagemCedencias || '15');
+      setLotUsoParametros((state.lotUsoParametros as 'habitacao' | 'equipamentos') || 'habitacao');
       setLotTipoHabitacao(state.lotTipoHabitacao || 'isoladas');
       setLotObjetivoPrincipal(state.lotObjetivoPrincipal || 'max_lotes');
       setLotTemTopografia(state.lotTemTopografia || false);
@@ -2766,6 +3029,8 @@ export default function CalculatorPage() {
     setMoradiaAddonModo(state.moradiaAddonModo || '');
     setMoradiaAddonAreaOverride(state.moradiaAddonAreaOverride || '');
     setMoradiaAddonValorOverride(state.moradiaAddonValorOverride || '');
+    setMoradiaAddonAreaCave(state.moradiaAddonAreaCave || '');
+    setMoradiaAddonAreaVaranda(state.moradiaAddonAreaVaranda || '');
     setMoradiaAddonNumTipos(state.moradiaAddonNumTipos || '1');
     setMoradiaAddonRepeticoesIguais(state.moradiaAddonRepeticoesIguais || '');
     setMoradiaAddonRepeticoesAdaptadas(state.moradiaAddonRepeticoesAdaptadas || '');
@@ -3592,9 +3857,9 @@ export default function CalculatorPage() {
                           placeholder="Ex: Solo Urbano - Espacos Residenciais" />
                       </div>
                     </div>
-                    {/* Badge do município + Repor */}
+                    {/* Badge do município + Repor + Selector de uso */}
                     {lotMunicipioSel?.parametros && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md text-[10px] font-medium">
                           {lotMunicipioSel.nome} ({lotInstrumento})
                         </span>
@@ -3609,6 +3874,51 @@ export default function CalculatorPage() {
                         </button>
                       </div>
                     )}
+                    {/* Selector de uso: Habitação vs Equipamentos */}
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-medium text-muted-foreground">Uso:</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            setLotUsoParametros('habitacao');
+                            if (lotMunicipioSel?.parametros) {
+                              preencherParametrosMunicipio(lotMunicipioSel.parametros, 'habitacao');
+                              toast.success('Parametros de habitacao aplicados');
+                            }
+                          }}
+                          className={`px-3 py-1 text-[11px] font-medium rounded-md border transition-colors ${
+                            lotUsoParametros === 'habitacao'
+                              ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                              : 'bg-muted text-muted-foreground border-border hover:text-foreground hover:bg-muted/80'
+                          }`}
+                        >
+                          Habitacao
+                        </button>
+                        <button
+                          onClick={() => {
+                            setLotUsoParametros('equipamentos');
+                            if (lotMunicipioSel?.parametros) {
+                              preencherParametrosMunicipio(lotMunicipioSel.parametros, 'equipamentos');
+                              toast.success('Parametros de equipamentos aplicados');
+                            } else {
+                              // Sem município — preencher com defaults genéricos
+                              preencherParametrosMunicipio(EQUIPAMENTOS_DEFAULTS);
+                              toast.info('Valores genericos de equipamentos aplicados');
+                            }
+                          }}
+                          className={`px-3 py-1 text-[11px] font-medium rounded-md border transition-colors ${
+                            lotUsoParametros === 'equipamentos'
+                              ? 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                              : 'bg-muted text-muted-foreground border-border hover:text-foreground hover:bg-muted/80'
+                          }`}
+                        >
+                          Equipamentos
+                        </button>
+                      </div>
+                      {lotUsoParametros === 'equipamentos' && (
+                        <span className="text-[10px] text-amber-400/80 italic">Afastamentos e indices mais conservadores</span>
+                      )}
+                    </div>
                     {/* Parâmetros urbanísticos — 2 linhas */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                       <div>
@@ -3632,9 +3942,11 @@ export default function CalculatorPage() {
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="5" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Afast. lateral (m)</label>
+                        <label className="block text-xs font-medium mb-1">Afast. lateral (m)
+                          <span className="text-[9px] text-muted-foreground font-normal ml-0.5">h/2 se isolada</span>
+                        </label>
                         <input type="text" value={lotAfastamentoLateral} onChange={(e) => setLotAfastamentoLateral(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="3" />
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder={lotAlturaMaxima ? String(Math.max(3, Math.round(parseFloat(lotAlturaMaxima) / 2 * 10) / 10)) : '3'} />
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1">Afast. posterior (m)</label>
@@ -3649,19 +3961,21 @@ export default function CalculatorPage() {
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="300" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Indice constr.</label>
+                        <label className="block text-xs font-medium mb-1">IU (Í. Utilização)</label>
                         <input type="text" value={lotIndiceConstrucao} onChange={(e) => setLotIndiceConstrucao(e.target.value)}
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="0.6" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Indice implant.</label>
+                        <label className="block text-xs font-medium mb-1">IO (Í. Ocupação)</label>
                         <input type="text" value={lotIndiceImplantacao} onChange={(e) => setLotIndiceImplantacao(e.target.value)}
                           className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="0.4" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">Prof. max. constr. (m)</label>
+                        <label className="block text-xs font-medium mb-1">Prof. max. constr. (m)
+                          <span className="text-[9px] text-muted-foreground font-normal ml-0.5">PDM</span>
+                        </label>
                         <input type="text" value={lotProfundidadeMaxConstrucao} onChange={(e) => setLotProfundidadeMaxConstrucao(e.target.value)}
-                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="17" />
+                          className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" placeholder="ex: 18" />
                       </div>
                       <div>
                         <label className="block text-xs font-medium mb-1">Cedencias (%)</label>
@@ -3872,7 +4186,7 @@ export default function CalculatorPage() {
                               areaLote, largura,
                               tipoEfetivo === 'auto' || tipoEfetivo === 'inviavel' ? 'isoladas' : tipoEfetivo,
                               lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
-                              lotIndiceImplantacao, lotIndiceConstrucao,
+                              lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao,
                             ) : null;
                             if (!imp) return null;
                             return (
@@ -3882,7 +4196,7 @@ export default function CalculatorPage() {
                                   <span className="font-semibold">{imp.areaImplantacao} m2</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-muted-foreground">ABC estimada ({imp.numPisos}p, IC {imp.indiceConstrucao}):</span>
+                                  <span className="text-muted-foreground">ABC estimada ({imp.numPisos}p, IU {imp.indiceConstrucao}):</span>
                                   <span className="font-semibold text-emerald-400">{imp.abcEstimada} m2</span>
                                 </div>
                                 <p className="text-[10px] text-muted-foreground/50">
@@ -4125,15 +4439,22 @@ export default function CalculatorPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Valor da Obra (€) *</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Valor da Obra (€) *
+                    {isLoteamento && <span className="text-[10px] text-blue-400 font-normal ml-1">(auto)</span>}
+                  </label>
                   <input
                     type="number"
                     min="0"
                     value={valorObra}
                     onChange={(e) => setValorObra(e.target.value)}
-                    className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                    readOnly={isLoteamento}
+                    className={`w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none ${isLoteamento ? 'opacity-70 cursor-not-allowed' : ''}`}
                     placeholder="Ex: 200000"
                   />
+                  {isLoteamento && (
+                    <p className="text-[10px] text-blue-400 mt-0.5">Calculado a partir da estimativa de infraestruturas (cenário {lotCenarioRef})</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">% Honorários</label>
@@ -4148,6 +4469,22 @@ export default function CalculatorPage() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Típico: 5–12%</p>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Teto máximo (€)
+                    <span className="text-[10px] text-muted-foreground font-normal ml-1">(opcional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="500"
+                    value={honorCap}
+                    onChange={(e) => setHonorCap(e.target.value)}
+                    className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                    placeholder="Sem limite"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Cap sobre o valor base (antes de fases)</p>
+                </div>
               </div>
             )}
 
@@ -4159,7 +4496,7 @@ export default function CalculatorPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" checked={moradiaAddonAtivo} onChange={(e) => {
                       setMoradiaAddonAtivo(e.target.checked);
-                      if (!e.target.checked) { setMoradiaAddonModo(''); setMoradiaAddonAreaOverride(''); setMoradiaAddonValorOverride(''); setMoradiaAddonNumTipos('1'); setMoradiaAddonRepeticoesIguais(''); setMoradiaAddonRepeticoesAdaptadas(''); setMoradiaAddonFixoLote(''); }
+                      if (!e.target.checked) { setMoradiaAddonModo(''); setMoradiaAddonAreaOverride(''); setMoradiaAddonValorOverride(''); setMoradiaAddonAreaCave(''); setMoradiaAddonAreaVaranda(''); setMoradiaAddonNumTipos('1'); setMoradiaAddonRepeticoesIguais(''); setMoradiaAddonRepeticoesAdaptadas(''); setMoradiaAddonFixoLote(''); }
                       else if (!moradiaAddonModo) setMoradiaAddonModo('licenciamento');
                     }} />
                     <div className="w-9 h-5 bg-border rounded-full peer-checked:bg-amber-500 transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
@@ -4181,13 +4518,33 @@ export default function CalculatorPage() {
                         <input type="number" min="1" max="5" value={moradiaAddonNumTipos} onChange={(e) => setMoradiaAddonNumTipos(e.target.value)} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
-                          Área moradia (m²)
-                          <span className="ml-1 text-muted-foreground/50">— auto: {Math.round((parseFloat((lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA).areaMedia) || 0) * 0.7)} m² (70% de {(lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA).areaMedia || '?'} m²)</span>
+                          ABC moradia (m²)
+                          <span className="ml-1 text-muted-foreground/50">— {abcAutoMoradia > 0 ? (
+                            implSolucaoEscolhida
+                              ? `${lotNumLotes} lotes: ${abcAutoMoradia} m² (impl. ${implSolucaoEscolhida.areaImplantacao}×${(PISO_FACTOR[implSolucaoEscolhida.numPisos] ?? (1 + (implSolucaoEscolhida.numPisos - 1) * 0.85)).toFixed(2)})`
+                              : implCenarioRef
+                                ? `cen. ${lotCenarioRef}: ${abcAutoMoradia} m² (impl. ${implCenarioRef.areaImplantacao}×${(PISO_FACTOR[implCenarioRef.numPisos] ?? (1 + (implCenarioRef.numPisos - 1) * 0.85)).toFixed(2)})`
+                                : `${abcAutoMoradia} m²`
+                          ) : '(preencher dados do loteamento)'}</span>
                         </label>
-                        <input type="number" min="50" max="1000" value={moradiaAddonAreaOverride} onChange={(e) => setMoradiaAddonAreaOverride(e.target.value)} placeholder="Auto" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
+                        <input type="number" min="50" max="1000" value={moradiaAddonAreaOverride} onChange={(e) => setMoradiaAddonAreaOverride(e.target.value)} placeholder={abcAutoMoradia > 0 ? `Auto (${abcAutoMoradia})` : 'Auto'} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Cave/garagem (m²)
+                          <span className="ml-1 text-muted-foreground/50">— 70%</span>
+                        </label>
+                        <input type="number" min="0" max="500" value={moradiaAddonAreaCave} onChange={(e) => setMoradiaAddonAreaCave(e.target.value)} placeholder="0" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Varandas/terraços (m²)
+                          <span className="ml-1 text-muted-foreground/50">— 30%</span>
+                        </label>
+                        <input type="number" min="0" max="200" value={moradiaAddonAreaVaranda} onChange={(e) => setMoradiaAddonAreaVaranda(e.target.value)} placeholder="0" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
                       </div>
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">
@@ -4197,6 +4554,13 @@ export default function CalculatorPage() {
                         <input type="number" min="0" value={moradiaAddonValorOverride} onChange={(e) => setMoradiaAddonValorOverride(e.target.value)} placeholder="Auto" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
                       </div>
                     </div>
+                    {(moradiaAddonAreaCave || moradiaAddonAreaVaranda) && moradiaAddonCalc && (
+                      <p className="text-[10px] text-amber-600/70">
+                        ABC ponderada: {moradiaAddonCalc.areaMoradia} m² (base {parseFloat(moradiaAddonAreaOverride) || abcAutoMoradia || 0}
+                        {moradiaAddonAreaCave ? ` + cave ${moradiaAddonAreaCave}×70% = ${Math.round(parseFloat(moradiaAddonAreaCave) * 0.7)}` : ''}
+                        {moradiaAddonAreaVaranda ? ` + varandas ${moradiaAddonAreaVaranda}×30% = ${Math.round(parseFloat(moradiaAddonAreaVaranda) * 0.3)}` : ''})
+                      </p>
+                    )}
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Repetições idênticas</label>
@@ -4217,8 +4581,8 @@ export default function CalculatorPage() {
                     {moradiaAddonCalc && (
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-1 text-sm">
                         <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.numTipos}× {moradiaAddonModo === 'previo' ? 'Estudo prévio' : 'Moradia original'}</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalOriginal)}</span></div>
-                        {moradiaAddonCalc.repeticoesIguais > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesIguais}× Repetição idêntica (−{moradiaAddonCalc.descontoIgual}%)</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesIguais)}</span></div>}
-                        {moradiaAddonCalc.repeticoesAdaptadas > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesAdaptadas}× Repetição adaptada (−{moradiaAddonCalc.descontoAdaptada}%)</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesAdaptadas)}</span></div>}
+                        {moradiaAddonCalc.repeticoesIguais > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição idêntica (−{moradiaAddonCalc.descontoIgual}%) → {moradiaAddonCalc.repeticoesIguais} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesIguais)}</span></div>}
+                        {moradiaAddonCalc.repeticoesAdaptadas > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição adaptada (−{moradiaAddonCalc.descontoAdaptada}%) → {moradiaAddonCalc.repeticoesAdaptadas} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesAdaptadas)}</span></div>}
                         {(moradiaAddonCalc.repeticoesIguais + moradiaAddonCalc.repeticoesAdaptadas) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesIguais + moradiaAddonCalc.repeticoesAdaptadas}× Parcela fixa lote</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalFixoLotes)}</span></div>}
                         <div className="flex justify-between pt-1 border-t border-amber-500/30 font-semibold text-amber-400"><span>Total Add-on Moradia</span><span>{formatCurrency(moradiaAddonCalc.totalAddon)}</span></div>
                       </div>
@@ -4440,7 +4804,7 @@ export default function CalculatorPage() {
                       {linkDesatualizado ? (
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-amber-600 dark:text-amber-400">⚠️</span>
-                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Link desatualizado — os valores foram alterados</p>
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">Link atualizado — recarregue a página HTML para ver as alterações</p>
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 mb-2">
@@ -4764,42 +5128,56 @@ export default function CalculatorPage() {
                 </div>
               ) : (
                 proposals.map((proposal) => (
-                  <button
-                    key={proposal.id}
-                    onClick={() => loadProposal(proposal)}
-                    className="w-full p-4 bg-muted/50 hover:bg-muted border border-border rounded-xl text-left transition-all group"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-primary">{proposal.reference || 'Sem referência'}</span>
-                          {proposal.calculatorState ? (
-                            <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-500 rounded-full">Editável</span>
-                          ) : (
-                            <span className="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-500 rounded-full">Só visualização</span>
+                  <div key={proposal.id} className="relative group/card">
+                    <button
+                      onClick={() => loadProposal(proposal)}
+                      className="w-full p-4 bg-muted/50 hover:bg-muted border border-border rounded-xl text-left transition-all group"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-primary">{proposal.reference || 'Sem referência'}</span>
+                            {proposal.calculatorState ? (
+                              <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-500 rounded-full">Editável</span>
+                            ) : (
+                              <span className="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-500 rounded-full">Só visualização</span>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium truncate">{proposal.clientName}</p>
+                          {proposal.projectName && (
+                            <p className="text-sm text-muted-foreground truncate">{proposal.projectName}</p>
                           )}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            <span>{proposal.createdAt}</span>
+                            {proposal.location && <span>• {proposal.location}</span>}
+                          </div>
                         </div>
-                        <p className="text-sm font-medium truncate">{proposal.clientName}</p>
-                        {proposal.projectName && (
-                          <p className="text-sm text-muted-foreground truncate">{proposal.projectName}</p>
-                        )}
-                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                          <span>{proposal.createdAt}</span>
-                          {proposal.location && <span>• {proposal.location}</span>}
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-primary">{formatCurrency(proposal.totalWithVat)}</p>
+                          <p className="text-xs text-muted-foreground">c/ IVA</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-primary">{formatCurrency(proposal.totalWithVat)}</p>
-                        <p className="text-xs text-muted-foreground">c/ IVA</p>
-                      </div>
-                    </div>
-                    {proposal.proposalUrl && (
-                      <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground truncate max-w-[200px]">{proposal.proposalUrl}</span>
-                        <span className="text-xs text-primary group-hover:underline">Abrir na calculadora →</span>
-                      </div>
-                    )}
-                  </button>
+                      {proposal.proposalUrl && (
+                        <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground truncate max-w-[200px]">{proposal.proposalUrl}</span>
+                          <span className="text-xs text-primary group-hover:underline">Abrir na calculadora →</span>
+                        </div>
+                      )}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Eliminar proposta "${proposal.reference || proposal.clientName}"?`)) {
+                          deleteProposal(proposal.id);
+                          toast.success('Proposta eliminada');
+                        }
+                      }}
+                      className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/0 hover:bg-red-500/20 text-muted-foreground hover:text-red-500 opacity-0 group-hover/card:opacity-100 transition-all"
+                      title="Eliminar proposta"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))
               )}
             </div>

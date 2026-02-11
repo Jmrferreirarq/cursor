@@ -1,15 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { useSearchParams, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, FileDown, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
-import { decodeProposalPayload } from '../lib/proposalPayload';
+import { FileText, MapPin, Euro, ChevronDown, ExternalLink, Check, Building2 } from 'lucide-react';
+import { decodeProposalPayload, loadPayloadLocally } from '../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../lib/proposalPalette';
 import { t, type Lang } from '../locales';
 import { ProposalDocument } from '../components/proposals/ProposalDocument';
-import { generateProposalPdf } from '../lib/generateProposalPdf';
-
 const C = PROPOSAL_PALETTE;
 const A4_WIDTH_PX = 794;
 const A4_WIDTH_MM = 210;
@@ -32,13 +28,12 @@ function PropostaPublicPage() {
   const [searchParams] = useSearchParams();
   const { data: pathData } = useParams<{ data: string }>();
   const encoded = searchParams.get('d') || pathData || null;
+  const localId = searchParams.get('lid') || null;
   const urlLang = searchParams.get('lang') as Lang | null;
-  const p = encoded ? decodeProposalPayload(encoded) : null;
+  // Tentar: 1) lid (localStorage) → 2) d (URL encoded) → 3) path data
+  const p = localId ? loadPayloadLocally(localId) : (encoded ? decodeProposalPayload(encoded) : null);
   const lang: Lang = urlLang === 'en' ? 'en' : (p?.lang ?? 'pt');
   const pdfRef = useRef<HTMLDivElement>(null);
-  const captureRef = useRef<HTMLDivElement | null>(null);
-  const [exporting, setExporting] = useState(false);
-  const [capturing, setCapturing] = useState(false);
   const [showDocument, setShowDocument] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [documentScale, setDocumentScale] = useState(1);
@@ -72,37 +67,6 @@ function PropostaPublicPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const exportPDF = async () => {
-    if (!p) return;
-    setExporting(true);
-    setCapturing(true);
-    await new Promise((r) => setTimeout(r, 150));
-    const el = captureRef.current || pdfRef.current;
-    if (!el) {
-      setCapturing(false);
-      setExporting(false);
-      return;
-    }
-    const baseName = `orcamento-${(p.ref || 'proposta').replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}`;
-    try {
-      await generateProposalPdf(el, {
-        filename: `${baseName}.pdf`,
-        reference: p.ref,
-        branding: p.branding,
-        lang,
-        onProgress: (msg) => toast.loading(msg, { id: 'pdf-progress' }),
-      });
-      toast.dismiss('pdf-progress');
-      toast.success('PDF guardado com sucesso');
-    } catch {
-      toast.dismiss('pdf-progress');
-      toast.error('Erro ao gerar PDF');
-    } finally {
-      setCapturing(false);
-      setExporting(false);
-    }
-  };
-
   // Error state
   if (!p) {
     return (
@@ -124,25 +88,6 @@ function PropostaPublicPage() {
     );
   }
 
-  const captureEl = capturing && p && createPortal(
-    <div
-      ref={(r) => { captureRef.current = r; }}
-      style={{
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        width: A4_WIDTH_PX,
-        minWidth: A4_WIDTH_PX,
-        overflow: 'hidden',
-        backgroundColor: '#fff',
-        zIndex: -1,
-      }}
-    >
-      <ProposalDocument payload={p} lang={lang} />
-    </div>,
-    document.body
-  );
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat(lang === 'en' ? 'en-GB' : 'pt-PT', {
       style: 'currency',
@@ -152,8 +97,6 @@ function PropostaPublicPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.offWhite }}>
-      {captureEl}
-
       {/* Floating Header */}
       <motion.header
         initial={{ y: -100 }}
@@ -261,6 +204,51 @@ function PropostaPublicPage() {
                     <p className="text-xs" style={{ color: C.cinzaMarca }}>{t('proposal.totalInclVat', lang)}</p>
                   </>
                 )}
+                {/* Breakdown para loteamentos */}
+                {p.isLoteamento && (
+                  <div className="mt-3 pt-3 border-t text-left space-y-1" style={{ borderColor: '#e5e7eb' }}>
+                    {p.valorArq > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Urbanismo{p.lotCenarios && p.lotCenarios.length > 0 ? ` + ${p.lotCenarios.length} cenarios` : ''}</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.valorArq)}</span>
+                      </div>
+                    )}
+                    {p.valorEsp > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Especialidades</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.valorEsp)}</span>
+                      </div>
+                    )}
+                    {p.moradiaAddon && (
+                      <>
+                        {p.moradiaAddon.totalOriginal > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span style={{ color: C.cinzaMarca }}>Moradia original{p.moradiaAddon.modo === 'previo' ? ' (previo)' : ''}</span>
+                            <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalOriginal)}</span>
+                          </div>
+                        )}
+                        {p.moradiaAddon.totalRepeticoesIguais > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span style={{ color: C.cinzaMarca }}>Repetição (-{p.moradiaAddon.descontoIgual}%)</span>
+                            <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesIguais)}</span>
+                          </div>
+                        )}
+                        {p.moradiaAddon.totalRepeticoesAdaptadas > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span style={{ color: C.cinzaMarca }}>Adaptação (-{p.moradiaAddon.descontoAdaptada}%)</span>
+                            <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesAdaptadas)}</span>
+                          </div>
+                        )}
+                        {p.moradiaAddon.totalFixoLotes > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span style={{ color: C.cinzaMarca }}>Parcela fixa ({p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas} lotes)</span>
+                            <span style={{ color: C.grafite, fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalFixoLotes)}</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </motion.div>
 
               {/* Location */}
@@ -278,7 +266,7 @@ function PropostaPublicPage() {
                 </motion.div>
               )}
 
-              {/* Project Type */}
+              {/* Project Type / Loteamento summary */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -289,6 +277,34 @@ function PropostaPublicPage() {
                 <Building2 className="w-5 h-5 mx-auto mb-2" style={{ color: C.accent }} />
                 <p className="text-lg font-semibold" style={{ color: C.grafite }}>{p.modo}</p>
                 <p className="text-xs" style={{ color: C.cinzaMarca }}>{p.tipologia || t('proposal.typology', lang)}</p>
+                {p.isLoteamento && (
+                  <div className="mt-3 pt-3 border-t text-left space-y-1" style={{ borderColor: '#e5e7eb' }}>
+                    {p.lotNumLotes && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Lotes</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{p.lotNumLotes}</span>
+                      </div>
+                    )}
+                    {p.lotAreaEstudo && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Terreno</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{parseFloat(p.lotAreaEstudo).toLocaleString('pt-PT')} m²</span>
+                      </div>
+                    )}
+                    {p.lotFrenteTerreno && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Frente</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{p.lotFrenteTerreno} m</span>
+                      </div>
+                    )}
+                    {p.lotTipoHabitacao && (
+                      <div className="flex justify-between text-xs">
+                        <span style={{ color: C.cinzaMarca }}>Tipologia</span>
+                        <span style={{ color: C.grafite, fontWeight: 600 }}>{p.lotTipoHabitacao}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </motion.div>
             </div>
 
@@ -306,20 +322,6 @@ function PropostaPublicPage() {
               >
                 <FileText className="w-5 h-5" />
                 <span>{showDocument ? 'Ocultar Proposta' : 'Ver Proposta Completa'}</span>
-              </button>
-
-              <button
-                onClick={exportPDF}
-                disabled={exporting}
-                className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium rounded-xl transition-all border"
-                style={{ borderColor: C.accent, color: C.accent, opacity: exporting ? 0.6 : 1 }}
-              >
-                {exporting ? (
-                  <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <FileDown className="w-5 h-5" />
-                )}
-                <span>{exporting ? (lang === 'en' ? 'Generating PDF...' : 'A gerar PDF...') : 'Download PDF'}</span>
               </button>
 
               {p.linkGoogleMaps && (

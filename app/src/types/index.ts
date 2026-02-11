@@ -50,6 +50,7 @@ export interface CalculatorState {
   complexity: string;
   valorObra: string;
   pctHonor: string;
+  honorCap?: string;
   curvaDecrescimento: boolean;
   fasesIncluidas: string[];
   honorLocalizacao: string;
@@ -94,6 +95,7 @@ export interface CalculatorState {
   lotIndiceImplantacao?: string;
   lotProfundidadeMaxConstrucao?: string;
   lotPercentagemCedencias?: string;
+  lotUsoParametros?: string; // 'habitacao' | 'equipamentos'
   lotTipoHabitacao?: string;
   lotObjetivoPrincipal?: string;
   lotTemTopografia?: boolean;
@@ -121,6 +123,8 @@ export interface CalculatorState {
   moradiaAddonModo?: 'previo' | 'licenciamento' | '';
   moradiaAddonAreaOverride?: string;
   moradiaAddonValorOverride?: string;
+  moradiaAddonAreaCave?: string;
+  moradiaAddonAreaVaranda?: string;
   moradiaAddonNumTipos?: string;
   moradiaAddonRepeticoesIguais?: string;
   moradiaAddonRepeticoesAdaptadas?: string;

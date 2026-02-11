@@ -8,6 +8,8 @@ import { t, type Lang } from '../../locales';
 import type { ProposalPayload } from '../../lib/proposalPayload';
 import { getPhasesByCategory, getCostsByTypology, calculateConstructionEstimate } from '../../data/constructionGuide';
 import { CompanySnapshot } from '../branding/CompanySnapshot';
+import { municipios } from '../../data/municipios';
+import type { ParametrosUrbanisticos } from '../../data/municipios';
 
 const C = PROPOSAL_PALETTE;
 
@@ -114,8 +116,102 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     {p.lotAreaTerreno && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area total do predio</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaTerreno).toLocaleString('pt-PT')} m2 {p.lotFonteArea ? `(${p.lotFonteArea})` : ''}</td></tr>}
                     {p.lotAreaEstudo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area em estudo</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{parseFloat(p.lotAreaEstudo).toLocaleString('pt-PT')} m2</td></tr>}
                     {p.lotFrenteTerreno && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 600 }}>Frente do terreno</td><td style={{ padding: '1mm 2mm', color: '#92400e', fontWeight: 700 }}>{p.lotFrenteTerreno} m (driver principal)</td></tr>}
-                    {p.lotNumLotes && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>N. lotes pretendidos</td><td style={{ padding: '1mm 2mm', color: C.grafite, fontWeight: 600 }}>{p.lotNumLotes}</td></tr>}
-                    {p.lotTipoHabitacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Tipo de habitacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotTipoHabitacao}</td></tr>}
+                    {p.lotNumLotes && <tr style={{ background: '#eff6ff' }}><td style={{ padding: '1.5mm 2mm', color: '#1e40af', fontWeight: 600 }}>N. lotes pretendidos</td><td style={{ padding: '1.5mm 2mm', color: '#1e40af', fontWeight: 700 }}>{p.lotNumLotes} lotes <span style={{ fontSize: fs(7), fontWeight: 500, color: '#1e40af', marginLeft: '2mm', padding: '0.3mm 1.5mm', background: '#dbeafe', borderRadius: 2 }}>solucao recomendada</span></td></tr>}
+                    {/* Metricas calculadas para o N. lotes pretendidos */}
+                    {p.lotNumLotes && p.lotFrenteTerreno && p.lotAreaEstudo && (() => {
+                      const nLotes = parseInt(p.lotNumLotes, 10);
+                      const frente = parseFloat(p.lotFrenteTerreno);
+                      const areaEstudo = parseFloat(p.lotAreaEstudo);
+
+                      // Fallback: buscar parâmetros do município se não estiverem no payload
+                      const munMatch = p.lotMunicipio ? municipios.find(m => m.nome === p.lotMunicipio) : null;
+                      let munP: ParametrosUrbanisticos | undefined;
+                      if (munMatch?.parametros) {
+                        const pp = munMatch.parametros;
+                        const uso = (p.lotUsoParametros || 'habitacao') as 'habitacao' | 'equipamentos';
+                        munP = ('habitacao' in pp)
+                          ? (uso === 'equipamentos' ? pp.equipamentos : pp.habitacao)
+                          : pp as unknown as ParametrosUrbanisticos;
+                      }
+
+                      const param = (key: keyof ParametrosUrbanisticos): string =>
+                        (p.lotParametros as any)?.[key] || munP?.[key] || '';
+
+                      const pctCed = parseFloat(param('percentagemCedencias') || '15');
+                      if (nLotes <= 0 || frente <= 0 || areaEstudo <= 0) return null;
+                      const largura = Math.round((frente / nLotes) * 10) / 10;
+                      const cedencias = Math.round(areaEstudo * pctCed / 100);
+                      const areaMedia = Math.round((areaEstudo - cedencias) / nLotes);
+                      const profundidade = Math.round((areaMedia / largura) * 10) / 10;
+
+                      // Afastamentos (com fallback ao município)
+                      const tipo = (p.lotTipoHabitacao || '').toLowerCase();
+                      const alturaMax = parseFloat(param('alturaMaxima') || '0');
+                      const afFrontal = parseFloat(param('afastamentoFrontal')) || 5;
+                      const afLat = parseFloat(param('afastamentoLateral')) || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
+                      const afPosterior = parseFloat(param('afastamentoPosterior')) || 6;
+                      const afLateralTotal = tipo.includes('isolada') ? afLat * 2 : tipo.includes('geminada') ? afLat : 0;
+                      const larguraImplantacao = Math.max(0, Math.round((largura - afLateralTotal) * 10) / 10);
+
+                      // Profundidade útil (limitada pela prof. max. construção PDM — com fallback ao município)
+                      const profMaxConst = parseFloat(param('profundidadeMaxConstrucao')) || 0;
+                      const profUtilAfastamentos = Math.max(0, profundidade - afFrontal - afPosterior);
+                      const profUtil = profMaxConst > 0 ? Math.min(profUtilAfastamentos, profMaxConst) : profUtilAfastamentos;
+                      const profLimitada = profMaxConst > 0 && profMaxConst < profUtilAfastamentos;
+
+                      // Envelope e índices (com fallback ao município)
+                      const envelopeMax = Math.round(larguraImplantacao * profUtil);
+                      const io = parseFloat(param('indiceImplantacao') || '0');
+                      const iu = parseFloat(param('indiceConstrucao') || '0');
+                      const numPisos = Math.max(1, parseInt(p.lotParametros?.numPisos || '2', 10));
+                      const DEFAULTS_IO: Record<string, number> = { isolada: 0.35, geminada: 0.40, banda: 0.50 };
+                      const ioEfetivo = io > 0 ? io : (Object.entries(DEFAULTS_IO).find(([k]) => tipo.includes(k))?.[1] ?? 0.35);
+                      const implantacaoByIO = Math.round(areaMedia * ioEfetivo);
+                      const implantacao = Math.min(implantacaoByIO, envelopeMax > 0 ? envelopeMax : implantacaoByIO);
+                      const implFonte = io > 0 ? `IO ${Math.round(io * 100)}%` : `IO est. ${Math.round(ioEfetivo * 100)}%`;
+                      // ABC: implantação × pisos, limitada por IU se definido
+                      const abcByPisos = implantacao * numPisos;
+                      const abcByIU = iu > 0 ? Math.round(areaMedia * iu) : 0;
+                      const abc = abcByIU > 0 ? Math.min(abcByPisos, abcByIU) : abcByPisos;
+                      const abcMax = envelopeMax > 0 ? envelopeMax * numPisos : abcByPisos;
+                      const abcFinal = Math.min(abc, abcMax);
+                      const abcFonte = iu > 0 ? `IU ${iu}` : `${numPisos}p`;
+
+                      const tdL = { padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 } as const;
+                      const tdV = { padding: '1mm 2mm', color: C.grafite } as const;
+                      return (
+                        <>
+                          <tr><td style={tdL}>Largura estimada/lote</td><td style={{ ...tdV, fontWeight: 600 }}>{largura} m</td></tr>
+                          {larguraImplantacao > 0 && <tr><td style={tdL}>Largura implantacao</td><td style={{ ...tdV, fontWeight: 600 }}>{larguraImplantacao} m <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>(afast. lateral: {afLateralTotal}m)</span></td></tr>}
+                          <tr><td style={tdL}>Area media/lote</td><td style={{ ...tdV, fontWeight: 600 }}>{areaMedia.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({pctCed}% cedencias)</span></td></tr>
+                          <tr><td style={tdL}>Implantacao estimada</td><td style={{ ...tdV, fontWeight: 600 }}>{implantacao.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({implFonte}{profLimitada ? `, prof. max ${profMaxConst}m` : ''})</span></td></tr>
+                          <tr><td style={tdL}>ABC estimada</td><td style={{ ...tdV, fontWeight: 700, color: '#059669' }}>{abcFinal.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({abcFonte})</span></td></tr>
+                        </>
+                      );
+                    })()}
+                    {p.lotTipoHabitacao && (() => {
+                      // Verificar se a preferência é viável em algum cenário
+                      const tiposReais = (p.lotCenarios || []).map((c: any) => c.tipoHabitacaoLabel).filter(Boolean);
+                      const prefLabel = p.lotTipoHabitacao;
+                      const prefViavel = tiposReais.length === 0 || tiposReais.some((t: string) => t === prefLabel);
+                      const todosIguais = tiposReais.length > 0 && tiposReais.every((t: string) => t === tiposReais[0]);
+                      return (
+                        <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Tipo de habitacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>
+                          {prefLabel} <span style={{ fontSize: fs(7), color: C.cinzaMarca, fontWeight: 400 }}>(preferencia)</span>
+                          {!prefViavel && tiposReais.length > 0 && (
+                            <span style={{ display: 'block', fontSize: fs(6.5), color: '#dc2626', fontWeight: 500, marginTop: '0.5mm' }}>
+                              Nota: a largura de lote disponivel nao permite {prefLabel.toLowerCase()} nos cenarios apresentados.
+                              {todosIguais ? ` Tipologia real: ${tiposReais[0]}.` : ` Tipologia varia por cenario.`}
+                            </span>
+                          )}
+                          {prefViavel && !todosIguais && tiposReais.length > 1 && (
+                            <span style={{ display: 'block', fontSize: fs(6.5), color: '#92400e', fontWeight: 400, marginTop: '0.5mm' }}>
+                              Tipologia final determinada por cenario, conforme largura de lote disponivel.
+                            </span>
+                          )}
+                        </td></tr>
+                      );
+                    })()}
                     {p.lotObjetivo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Objetivo principal</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotObjetivo}</td></tr>}
                   </tbody>
                 </table>
@@ -131,6 +227,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     {p.lotInstrumento && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500, width: '40%' }}>Instrumento</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotInstrumento}</td></tr>}
                     {p.lotClassificacaoSolo && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Classificacao do solo</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotClassificacaoSolo}</td></tr>}
                     {p.lotMunicipio && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Municipio</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotMunicipio}</td></tr>}
+                    {p.lotUsoParametros && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Uso (parametros)</td><td style={{ padding: '1mm 2mm', color: p.lotUsoParametros === 'equipamentos' ? '#92400e' : C.grafite, fontWeight: p.lotUsoParametros === 'equipamentos' ? 600 : 400 }}>{p.lotUsoParametros === 'equipamentos' ? 'Equipamentos' : 'Habitacao'}</td></tr>}
                     {p.lotProfundidade && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Profundidade estimada</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotProfundidade} m</td></tr>}
                     {p.lotParametros?.alturaMaxima && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Altura maxima</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.alturaMaxima}</td></tr>}
                     {(p.lotParametros?.afastamentoFrontal || p.lotParametros?.afastamentoLateral || p.lotParametros?.afastamentoPosterior) && (
@@ -139,9 +236,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       </td></tr>
                     )}
                     {p.lotParametros?.areaMinimaLote && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Area minima de lote</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.areaMinimaLote} m2</td></tr>}
-                    {p.lotParametros?.indiceConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de construcao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceConstrucao}</td></tr>}
-                    {p.lotParametros?.indiceImplantacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de implantacao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceImplantacao}</td></tr>}
-                    {p.lotParametros?.profundidadeMaxConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Prof. max. construcao</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.profundidadeMaxConstrucao} m</td></tr>}
+                    {p.lotParametros?.indiceConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de utilizacao (IU)</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceConstrucao}</td></tr>}
+                    {p.lotParametros?.indiceImplantacao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Indice de ocupacao do solo (IO)</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.indiceImplantacao}</td></tr>}
+                    {p.lotParametros?.profundidadeMaxConstrucao && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Prof. max. construcao <span style={{ fontSize: fs(6), fontWeight: 400, color: C.cinzaMarca }}>(estimado)</span></td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.profundidadeMaxConstrucao} m</td></tr>}
                     {p.lotParametros?.percentagemCedencias && <tr><td style={{ padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 }}>Cedencias (%)</td><td style={{ padding: '1mm 2mm', color: C.grafite }}>{p.lotParametros.percentagemCedencias}%</td></tr>}
                   </tbody>
                 </table>
@@ -203,20 +300,36 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                           {c.label}{isRecommended ? <span style={{ fontSize: fs(6), color: '#1e40af', fontWeight: 700, marginLeft: '1mm' }}>REC.</span> : ''}
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600 }}>{c.lotes}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontSize: fs(7) }}>{c.larguraEstimada || '—'}</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontSize: fs(7) }}>
+                          {c.larguraEstimada || '—'}
+                          {c.larguraUtil != null && <span style={{ display: 'block', fontSize: fs(5.5), color: '#6b7280', fontStyle: 'italic' }}>impl: {c.larguraUtil}m</span>}
+                        </td>
                         <td style={{ padding: '1.5mm 2mm', fontSize: fs(7), fontWeight: 500 }}>
-                          {c.tipoHabitacaoLabel || '—'}
+                          <span style={{ color: (c.tipoHabitacaoLabel && p.lotTipoHabitacao && c.tipoHabitacaoLabel !== p.lotTipoHabitacao) ? '#dc2626' : undefined }}>
+                            {c.tipoHabitacaoLabel || '—'}
+                          </span>
+                          {c.tipoHabitacaoLabel && p.lotTipoHabitacao && c.tipoHabitacaoLabel !== p.lotTipoHabitacao && (
+                            <span style={{ fontSize: fs(5.5), color: '#dc2626', fontWeight: 400 }}> ≠ pref.</span>
+                          )}
                           <span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca, fontWeight: 400 }}>{c.accessModelLabel || ''}{c.viaInternaComprimento ? ` (${c.viaInternaComprimento}m)` : ''}</span>
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.areaMedia ? `${c.areaMedia} m2` : '—'}</td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>
                           {c.areaImplantacao ? (
-                            <>{c.areaImplantacao} m2<span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca }}>({c.indiceImplantacao}%)</span></>
+                            <>
+                              {c.areaImplantacao} m2
+                              <span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca }}>(IO {c.indiceImplantacao}%)</span>
+                              {c.envelopeMax && <span style={{ display: 'block', fontSize: fs(5.5), color: '#6b7280', fontStyle: 'italic' }}>Env: {c.envelopeMax} m2</span>}
+                            </>
                           ) : '—'}
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 600, color: '#059669' }}>
                           {c.abcEstimada ? (
-                            <>{c.abcEstimada} m2<span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca, fontWeight: 400 }}>({c.numPisos}p)</span></>
+                            <>
+                              {c.abcEstimada} m2
+                              <span style={{ display: 'block', fontSize: fs(6), color: C.cinzaMarca, fontWeight: 400 }}>({c.numPisos}p)</span>
+                              {c.envelopeMax && <span style={{ display: 'block', fontSize: fs(5.5), color: '#6b7280', fontWeight: 400, fontStyle: 'italic' }}>Max: {c.envelopeMax * (c.numPisos || 2)} m2</span>}
+                            </>
                           ) : '—'}
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>{c.cedencias ? `${c.cedencias} m2` : '—'}</td>
@@ -231,6 +344,12 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       <p key={i} style={{ margin: '0 0 0.5mm 0' }}><strong>Cenario {c.label}:</strong> {c.nota}</p>
                     ))}
                   </div>
+                )}
+                {/* Nota sobre envelope, implantação e ABC */}
+                {p.lotCenarios.some((c: any) => c.envelopeMax) && (
+                  <p style={{ marginTop: '2mm', fontSize: fs(6.5), color: '#6b7280', fontStyle: 'italic', margin: '2mm 0 0 0', lineHeight: 1.4 }}>
+                    impl = largura util para implantacao (largura lote − afastamentos laterais). Env = envelope maximo construtivo (area util apos afastamentos regulamentares). Implantacao = min(IO × area lote, envelope). ABC = min(IU × area lote, envelope × pisos). Max = envelope × pisos (limite fisico absoluto).
+                  </p>
                 )}
                 {/* P2: Nota sobre decisão de cenário */}
                 {p.lotCenarioRecomendado && (
@@ -298,6 +417,40 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                     ))}
                   </tbody>
                 </table>
+                {/* Parâmetros mínimos do PDM */}
+                {p.lotParametros && (
+                  <div style={{ marginTop: '3mm', padding: '2mm 3mm', background: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
+                    <p style={{ fontSize: fs(8), fontWeight: 700, margin: '0 0 1.5mm 0', color: '#0369a1' }}>
+                      Parametros Urbanisticos (PDM)
+                      {p.lotUsoParametros && (
+                        <span style={{ fontSize: fs(7), fontWeight: 500, color: p.lotUsoParametros === 'equipamentos' ? '#92400e' : '#1e40af', marginLeft: '2mm' }}>
+                          — {p.lotUsoParametros === 'equipamentos' ? 'Equipamentos' : 'Habitacao'}
+                        </span>
+                      )}
+                    </p>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(7.5) }}>
+                      <tbody>
+                        {[
+                          p.lotParametros.alturaMaxima && ['Altura maxima', p.lotParametros.alturaMaxima],
+                          p.lotParametros.areaMinimaLote && ['Area minima de lote', `${p.lotParametros.areaMinimaLote} m2`],
+                          p.lotParametros.indiceConstrucao && ['Indice de utilizacao (IU)', p.lotParametros.indiceConstrucao],
+                          p.lotParametros.indiceImplantacao && ['Indice de ocupacao do solo (IO)', p.lotParametros.indiceImplantacao],
+                          p.lotParametros.profundidadeMaxConstrucao && ['Profundidade max. construcao (estimado)', `${p.lotParametros.profundidadeMaxConstrucao} m`],
+                          (p.lotParametros.afastamentoFrontal || p.lotParametros.afastamentoLateral || p.lotParametros.afastamentoPosterior) && [
+                            'Afastamentos',
+                            [p.lotParametros.afastamentoFrontal && `Frontal: ${p.lotParametros.afastamentoFrontal}m`, p.lotParametros.afastamentoLateral && `Lateral: ${p.lotParametros.afastamentoLateral}m`, p.lotParametros.afastamentoPosterior && `Posterior: ${p.lotParametros.afastamentoPosterior}m`].filter(Boolean).join(' | '),
+                          ],
+                          p.lotParametros.percentagemCedencias && ['Cedencias', `${p.lotParametros.percentagemCedencias}%`],
+                        ].filter(Boolean).map((row: any, i) => (
+                          <tr key={i} style={{ borderBottom: `1px solid #e0f2fe` }}>
+                            <td style={{ padding: '1mm 2mm', color: '#0369a1', fontWeight: 500, width: '40%' }}>{row[0]}</td>
+                            <td style={{ padding: '1mm 2mm', color: C.grafite }}>{row[1]}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
                 <p style={{ fontSize: fs(6.5), color: C.cinzaMarca, margin: '2mm 0 0 0', fontStyle: 'italic' }}>
                   Nota: lista nao exaustiva. Aplicabilidade final sujeita a analise do PDM/PP em vigor e parecer das entidades competentes.
                 </p>
@@ -636,16 +789,58 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         )}
 
         {/* Add-on Moradia Tipo */}
-        {p.moradiaAddon && (
+        {p.moradiaAddon && (() => {
+          const ma = p.moradiaAddon;
+          const totalLotes = ma.numTipos + ma.repeticoesIguais + ma.repeticoesAdaptadas;
+          const custoPorLote = totalLotes > 0 ? Math.round(ma.totalAddon / totalLotes) : 0;
+          const feeEfetivo = ma.modo === 'previo' ? (ma.feePrevio ?? 0) : ma.feeOriginal;
+          return (
           <div className="pdf-no-break" style={{ marginBottom: '5mm', padding: '4mm 5mm', background: '#fef3c7', borderRadius: 3, border: '2px solid #f59e0b', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
             <p style={{ fontSize: fs(10), fontWeight: 700, margin: '0 0 2mm 0', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Add-on: Moradia Tipo {p.moradiaAddon.modo === 'previo' ? '(Estudo Prévio)' : '(Licenciamento)'}
+              Add-on: Moradia Tipo {ma.modo === 'previo' ? '(Estudo Prévio)' : '(Licenciamento)'}
             </p>
-            <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 3mm 0' }}>
-              {p.moradiaAddon.modo === 'previo'
+            <p style={{ fontSize: fs(8), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
+              {ma.modo === 'previo'
                 ? 'Estudo prévio da moradia-tipo para validação da solução urbanística: volumetria, implantação base e imagens 3D.'
                 : 'Projeto de licenciamento da moradia-tipo original + pacote de repetições por lote.'}
             </p>
+
+            {/* ABC Breakdown */}
+            <div style={{ background: '#fde68a', borderRadius: 2, padding: '2mm 3mm', marginBottom: '3mm', fontSize: fs(7.5) }}>
+              <p style={{ margin: '0 0 1mm 0', fontWeight: 700, color: '#92400e' }}>Base de calculo — Area Bruta de Construcao (ABC)</p>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <tbody>
+                  {ma.abcBase != null && (
+                    <tr>
+                      <td style={{ padding: '0.5mm 0', color: C.grafite }}>ABC moradia (area principal)</td>
+                      <td style={{ padding: '0.5mm 0', textAlign: 'right', fontWeight: 600, color: C.grafite }}>{ma.abcBase} m²</td>
+                    </tr>
+                  )}
+                  {(ma.areaCave ?? 0) > 0 && (
+                    <tr>
+                      <td style={{ padding: '0.5mm 0', color: C.cinzaMarca }}>Cave/garagem ({ma.areaCave} m² × 70%)</td>
+                      <td style={{ padding: '0.5mm 0', textAlign: 'right', color: C.cinzaMarca }}>+ {ma.abcCavePond} m²</td>
+                    </tr>
+                  )}
+                  {(ma.areaVaranda ?? 0) > 0 && (
+                    <tr>
+                      <td style={{ padding: '0.5mm 0', color: C.cinzaMarca }}>Varandas/terracos ({ma.areaVaranda} m² × 30%)</td>
+                      <td style={{ padding: '0.5mm 0', textAlign: 'right', color: C.cinzaMarca }}>+ {ma.abcVarandaPond} m²</td>
+                    </tr>
+                  )}
+                  <tr style={{ borderTop: '1px solid #d97706' }}>
+                    <td style={{ padding: '1mm 0 0.5mm 0', fontWeight: 700, color: '#92400e' }}>ABC total ponderada</td>
+                    <td style={{ padding: '1mm 0 0.5mm 0', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>{ma.areaMoradia} m²</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style={{ margin: '1mm 0 0 0', fontSize: fs(6.5), color: '#92400e', fontStyle: 'italic' }}>
+                Exclui anexos, piscinas e arranjos exteriores privados (orcamentados separadamente).
+                {ma.euroPorM2 != null && <> Fee base: {ma.euroPorM2.toFixed(2)} €/m²{p.complexidade && p.complexidade !== 'media' ? ` (complexidade ${p.complexidade})` : ''}.</>}
+              </p>
+            </div>
+
+            {/* Tabela de componentes */}
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
               <thead>
                 <tr style={{ background: '#fde68a' }}>
@@ -656,65 +851,96 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 </tr>
               </thead>
               <tbody>
+                {/* Moradia original */}
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                   <td style={{ padding: '2mm' }}>
-                    {p.moradiaAddon.modo === 'previo' ? 'Estudo prévio moradia-tipo' : 'Moradia original (100%)'}
-                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>({p.moradiaAddon.areaMoradia} m²)</span>
+                    <span style={{ fontWeight: 600 }}>{ma.modo === 'previo' ? 'Estudo prévio moradia-tipo' : 'Moradia original'}</span>
+                    <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(ABC {ma.areaMoradia} m²)</span>
+                    <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, marginTop: '0.5mm' }}>
+                      Projeto completo: plantas, cortes, alcados, 3D, memorias descritivas e pecas escritas.
+                    </span>
                   </td>
-                  <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.numTipos}</td>
-                  <td style={{ padding: '2mm', textAlign: 'right' }}>
-                    {formatCurrency(p.moradiaAddon.modo === 'previo' ? (p.moradiaAddon.feePrevio ?? 0) : p.moradiaAddon.feeOriginal, lang)}
-                  </td>
-                  <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalOriginal, lang)}</td>
+                  <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.numTipos}</td>
+                  <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(feeEfetivo, lang)}</td>
+                  <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalOriginal, lang)}</td>
                 </tr>
-                {p.moradiaAddon.repeticoesIguais > 0 && (
+
+                {/* Repetição idêntica */}
+                {ma.repeticoesIguais > 0 && (
                   <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                     <td style={{ padding: '2mm' }}>
-                      Repetição idêntica
-                      <span style={{ fontSize: fs(7), color: '#16a34a', marginLeft: '2mm' }}>({`−${p.moradiaAddon.descontoIgual}% no base`})</span>
+                      <span style={{ fontWeight: 600 }}>Repetição idêntica</span>
+                      <span style={{ fontSize: fs(7), color: '#16a34a', marginLeft: '2mm', fontWeight: 600 }}>−{ma.descontoIgual}%</span>
+                      <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, marginTop: '0.5mm' }}>
+                        Desenho criado 1× (espelhamento/ajuste de implantacao). Aplica-se a {ma.repeticoesIguais} lote{ma.repeticoesIguais > 1 ? 's' : ''}.
+                        <br />Inclui: adaptacao de pecas desenhadas, compatibilizacao com lote, revisao de memorias.
+                      </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesIguais}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(p.moradiaAddon.feeOriginal * (1 - p.moradiaAddon.descontoIgual / 100)), lang)}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesIguais, lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>1</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(ma.feeOriginal * (1 - ma.descontoIgual / 100)), lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalRepeticoesIguais, lang)}</td>
                   </tr>
                 )}
-                {p.moradiaAddon.repeticoesAdaptadas > 0 && (
+
+                {/* Repetição com adaptação */}
+                {ma.repeticoesAdaptadas > 0 && (
                   <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                     <td style={{ padding: '2mm' }}>
-                      Repetição com adaptação
-                      <span style={{ fontSize: fs(7), color: '#ea580c', marginLeft: '2mm' }}>({`−${p.moradiaAddon.descontoAdaptada}% no base`})</span>
+                      <span style={{ fontWeight: 600 }}>Repetição com adaptação</span>
+                      <span style={{ fontSize: fs(7), color: '#ea580c', marginLeft: '2mm', fontWeight: 600 }}>−{ma.descontoAdaptada}%</span>
+                      <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, marginTop: '0.5mm' }}>
+                        Variante com alteracoes programaticas ou formais. Aplica-se a {ma.repeticoesAdaptadas} lote{ma.repeticoesAdaptadas > 1 ? 's' : ''}.
+                        <br />Inclui: redesenho parcial, novas pecas desenhadas, compatibilizacao e memorias actualizadas.
+                      </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesAdaptadas}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(p.moradiaAddon.feeOriginal * (1 - p.moradiaAddon.descontoAdaptada / 100)), lang)}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalRepeticoesAdaptadas, lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>1</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(ma.feeOriginal * (1 - ma.descontoAdaptada / 100)), lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalRepeticoesAdaptadas, lang)}</td>
                   </tr>
                 )}
-                {(p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas) > 0 && (
+
+                {/* Parcela fixa por lote */}
+                {(ma.repeticoesIguais + ma.repeticoesAdaptadas) > 0 && (
                   <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                     <td style={{ padding: '2mm' }}>
-                      Parcela fixa por lote
-                      <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(implantação + submissão)</span>
+                      <span style={{ fontWeight: 600 }}>Parcela fixa por lote</span>
+                      <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, marginTop: '0.5mm' }}>
+                        Trabalho individual por lote: implantacao no terreno, adaptacao de cotas e acessos, pecas do lote,
+                        <br />submissao na camara, resposta a notificacoes e acompanhamento até deferimento.
+                      </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>{p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(p.moradiaAddon.fixoLote, lang)}</td>
-                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(p.moradiaAddon.totalFixoLotes, lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.repeticoesIguais + ma.repeticoesAdaptadas}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(ma.fixoLote, lang)}</td>
+                    <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalFixoLotes, lang)}</td>
                   </tr>
                 )}
+
+                {/* Total */}
                 <tr style={{ background: '#f59e0b', fontWeight: 700 }}>
                   <td colSpan={3} style={{ padding: '2.5mm', color: '#fff' }}>Total Add-on Moradia Tipo</td>
-                  <td style={{ padding: '2.5mm', textAlign: 'right', color: '#fff', fontSize: fs(10) }}>{formatCurrency(p.moradiaAddon.totalAddon, lang)}</td>
+                  <td style={{ padding: '2.5mm', textAlign: 'right', color: '#fff', fontSize: fs(10) }}>{formatCurrency(ma.totalAddon, lang)}</td>
                 </tr>
               </tbody>
             </table>
-            {p.moradiaAddon.clausulas.length > 0 && (
+
+            {/* Resumo por lote */}
+            <div style={{ marginTop: '2mm', padding: '2mm 3mm', background: '#fff7ed', borderRadius: 2, fontSize: fs(7), display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '2mm' }}>
+              <span style={{ color: C.cinzaMarca }}>Total de lotes abrangidos: <strong style={{ color: C.grafite }}>{totalLotes}</strong></span>
+              <span style={{ color: C.cinzaMarca }}>Custo medio por lote: <strong style={{ color: C.grafite }}>{formatCurrency(custoPorLote, lang)}</strong></span>
+              {ma.euroPorM2 != null && <span style={{ color: C.cinzaMarca }}>Fee base: <strong style={{ color: C.grafite }}>{ma.euroPorM2.toFixed(2)} €/m²</strong></span>}
+            </div>
+
+            {/* Cláusulas */}
+            {ma.clausulas.length > 0 && (
               <div style={{ marginTop: '2mm', fontSize: fs(7), color: C.cinzaMarca, fontStyle: 'italic' }}>
-                {p.moradiaAddon.clausulas.map((c, i) => (
+                {ma.clausulas.map((c, i) => (
                   <p key={i} style={{ margin: '0.5mm 0' }}>{c}</p>
                 ))}
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* Tabela de valores - começa em página nova */}
         <div className="page-break-before" style={{ marginBottom: '5mm', paddingTop: '3mm', breakBefore: 'page', pageBreakBefore: 'always', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
@@ -779,7 +1005,20 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 </td>
               </tr>
               <tr style={{ background: C.offWhite, borderBottom: `1px solid ${C.cinzaLinha}`, fontWeight: 600 }}>
-                <td style={{ padding: '3mm', color: C.grafite }}>{p.isLoteamento ? 'Honorários Urbanismo' : t('proposal.archFees', lang)}</td>
+                <td style={{ padding: '3mm', color: C.grafite }}>
+                  {p.isLoteamento ? 'Honorários Urbanismo' : t('proposal.archFees', lang)}
+                  {p.isLoteamento && p.valorObra && (
+                    <span style={{ display: 'block', fontSize: fs(6.5), fontWeight: 400, color: C.cinzaMarca, fontStyle: 'italic' }}>
+                      {p.honorPct ? `${p.honorPct}%` : '8%'} sobre o valor estimado de obra ({formatCurrency(parseFloat(p.valorObra), lang)})
+                      {p.honorCap ? ` · Teto: ${formatCurrency(parseFloat(p.honorCap), lang)}` : ''}
+                    </span>
+                  )}
+                  {p.isLoteamento && (
+                    <span style={{ display: 'block', fontSize: fs(6), fontWeight: 400, color: C.cinzaMarca, marginTop: '0.5mm' }}>
+                      Base: obras de urbanizacao (arruamentos, pavimentacoes, drenagens, redes de agua, saneamento, eletricidade, ITED, gas, IP, arranjos exteriores). Exclui edificacao, moradias, muros/arranjos dentro dos lotes, piscinas e anexos privados.
+                    </span>
+                  )}
+                </td>
                 <td style={{ textAlign: 'right', padding: '3mm' }}>
                   <span style={{ fontWeight: 600 }}>{formatCurrency(p.valorArq, lang)}</span>
                   <span style={{ fontSize: fs(8), color: C.cinzaMarca, fontWeight: 400, marginLeft: '2mm' }}>
@@ -1314,13 +1553,41 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
 
         {/* ESTIMATIVA DE INVESTIMENTO — Versao Loteamento (Promotor) vs Edificacao */}
         {p.isLoteamento && p.lotCustoObraTotal && p.lotCenarios && p.lotCenarios.length > 0 && (() => {
-          // Calcular investimento do promotor a partir dos dados já no payload
-          const nLotes = parseInt(p.lotCenarios[0]?.lotes || '0', 10) || parseInt(p.lotNumLotes || '0', 10) || 0;
-          if (nLotes <= 0) return null;
-          const areaMediaStr = p.lotCenarios[0]?.areaMedia;
-          const areaMediaLote = parseInt(areaMediaStr || '0', 10) || 0;
+          // Calcular investimento do promotor — usar N. lotes pretendidos (alvo) como referência
+          const nLotes = parseInt(p.lotNumLotes || '0', 10) || 0;
+          const frente = parseFloat(p.lotFrenteTerreno || '0');
+          const areaEstudo = parseFloat(p.lotAreaEstudo || '0');
+          if (nLotes <= 0 || frente <= 0 || areaEstudo <= 0) return null;
+          // Replicar cálculo dos "Dados do Terreno" — mesma lógica para consistência
+          const pctCed = parseFloat(p.lotParametros?.percentagemCedencias || '15');
+          const largura = frente / nLotes;
+          const cedencias = Math.round(areaEstudo * pctCed / 100);
+          const areaMediaLote = Math.round((areaEstudo - cedencias) / nLotes);
           if (areaMediaLote <= 0) return null;
-          const abcEstimada = Math.round(areaMediaLote * 0.7);
+          const profundidade = areaMediaLote / largura;
+          const tipo = (p.lotTipoHabitacao || '').toLowerCase();
+          const alturaMax = parseFloat(p.lotParametros?.alturaMaxima || '0');
+          const afFrontal = parseFloat(p.lotParametros?.afastamentoFrontal || '') || 5;
+          const afLat = parseFloat(p.lotParametros?.afastamentoLateral || '') || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
+          const afPosterior = parseFloat(p.lotParametros?.afastamentoPosterior || '') || 6;
+          const afLateralTotal = tipo.includes('isolada') ? afLat * 2 : tipo.includes('geminada') ? afLat : 0;
+          const larguraUtil = Math.max(0, largura - afLateralTotal);
+          const profMaxConst = parseFloat(p.lotParametros?.profundidadeMaxConstrucao || '') || 0;
+          const profUtilAf = Math.max(0, profundidade - afFrontal - afPosterior);
+          const profUtil = profMaxConst > 0 ? Math.min(profUtilAf, profMaxConst) : profUtilAf;
+          const envelopeMax = Math.round(larguraUtil * profUtil);
+          const io = parseFloat(p.lotParametros?.indiceImplantacao || '0');
+          const iu = parseFloat(p.lotParametros?.indiceConstrucao || '0');
+          const numPisos = Math.max(1, parseInt(p.lotParametros?.numPisos || '2', 10));
+          const DEFAULTS_IO: Record<string, number> = { isolada: 0.35, geminada: 0.40, banda: 0.50 };
+          const ioEfetivo = io > 0 ? io : (Object.entries(DEFAULTS_IO).find(([k]) => tipo.includes(k))?.[1] ?? 0.35);
+          const implantacaoByIO = Math.round(areaMediaLote * ioEfetivo);
+          const implantacao = Math.min(implantacaoByIO, envelopeMax > 0 ? envelopeMax : implantacaoByIO);
+          const abcByPisos = implantacao * numPisos;
+          const abcByIU = iu > 0 ? Math.round(areaMediaLote * iu) : 0;
+          const abc = abcByIU > 0 ? Math.min(abcByPisos, abcByIU) : abcByPisos;
+          const abcMax = envelopeMax > 0 ? envelopeMax * numPisos : abcByPisos;
+          const abcEstimada = Math.min(abc, abcMax);
           const custosMoradia = { min: 1000, med: 1400, max: 2000 };
           const inv = {
             infraTotal: p.lotCustoObraTotal ?? 0,
