@@ -2085,7 +2085,13 @@ export default function CalculatorPage() {
     } catch (e) {
       console.error('Erro ao gerar PDF:', e);
       toast.dismiss('pdf-progress');
-      toast.error(`Erro ao gerar PDF: ${e instanceof Error ? e.message : 'desconhecido'}`);
+      const msg = e instanceof Error ? e.message : 'desconhecido';
+      if (msg.includes('dynamically imported module') || msg.includes('Failed to fetch')) {
+        toast.error('Versão desatualizada — a recarregar a página...');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        toast.error(`Erro ao gerar PDF: ${msg}`);
+      }
     } finally {
       // Remover div de captura do DOM
       try { document.body.removeChild(captureDiv); } catch { /* ignore */ }
