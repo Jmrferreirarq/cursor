@@ -226,13 +226,21 @@ export default function ProposalsManagementPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-1">
-                    {p.calculatorState && (
+                    {p.calculatorState ? (
                       <button
                         onClick={() => navigate('/calculator', { state: { loadProposalId: p.id } })}
                         className="px-3 py-1.5 text-xs font-medium bg-muted hover:bg-primary/10 rounded-lg transition-colors text-muted-foreground hover:text-primary"
                         title="Abrir na calculadora para editar e gerar link"
                       >
                         Resumo
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => navigate('/calculator', { state: { prefillProposalId: p.id } })}
+                        className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors"
+                        title="Recriar proposta na calculadora (dados básicos preenchidos)"
+                      >
+                        Recriar
                       </button>
                     )}
                     {p.proposalUrl && (

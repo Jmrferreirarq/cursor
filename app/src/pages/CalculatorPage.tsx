@@ -3071,18 +3071,38 @@ export default function CalculatorPage() {
     toast.success(`Proposta ${proposal.reference} carregada!`);
   };
 
+  // Preencher dados básicos quando a proposta não tem calculatorState (ex: importada)
+  const prefillFromProposal = (proposal: typeof proposals[0]) => {
+    setClienteNome(proposal.clientName);
+    setProjetoNome(proposal.projectName || '');
+    setReferenciaProposta(proposal.reference || '');
+    setLocalProposta(proposal.location || '');
+    if (proposal.projectType) setProjectType(proposal.projectType);
+    if (proposal.area) setArea(String(proposal.area));
+    setActiveCalculator('honorarios');
+    toast.success(`Dados de "${proposal.reference || proposal.clientName}" preenchidos. Completa e gera o link.`);
+  };
+
   // Auto-carregar proposta se vier da página de propostas (via navigate state)
   const loadedFromNavRef = useRef(false);
   useEffect(() => {
-    const navState = location.state as { loadProposalId?: string } | null;
-    if (navState?.loadProposalId && !loadedFromNavRef.current) {
+    const navState = location.state as { loadProposalId?: string; prefillProposalId?: string } | null;
+    if (!navState) return;
+    const loadId = navState.loadProposalId;
+    const prefillId = navState.prefillProposalId;
+    if (loadId && !loadedFromNavRef.current) {
       loadedFromNavRef.current = true;
-      const proposal = proposals.find(p => p.id === navState.loadProposalId);
+      const proposal = proposals.find(p => p.id === loadId);
       if (proposal) {
-        // Pequeno delay para garantir que o state da calculadora está inicializado
         setTimeout(() => loadProposal(proposal), 100);
       }
-      // Limpar state do navigation para não recarregar ao voltar
+      window.history.replaceState({}, '');
+    } else if (prefillId && !loadedFromNavRef.current) {
+      loadedFromNavRef.current = true;
+      const proposal = proposals.find(p => p.id === prefillId);
+      if (proposal) {
+        setTimeout(() => prefillFromProposal(proposal), 100);
+      }
       window.history.replaceState({}, '');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
