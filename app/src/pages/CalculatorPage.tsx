@@ -3738,7 +3738,7 @@ export default function CalculatorPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Area em estudo (m2)</label>
-                      <input type="number" min="0" value={lotAreaEstudo} onChange={(e) => setLotAreaEstudo(e.target.value)}
+                      <input type="number" min="0" value={lotAreaEstudo} onChange={(e) => { setLotAreaEstudo(e.target.value); setArea(e.target.value); }}
                         className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none" placeholder="4200" />
                     </div>
                     <div>
