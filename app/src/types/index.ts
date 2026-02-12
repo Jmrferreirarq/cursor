@@ -129,6 +129,7 @@ export interface CalculatorState {
   moradiaAddonRepeticoesIguais?: string;
   moradiaAddonRepeticoesAdaptadas?: string;
   moradiaAddonFixoLote?: string;
+  moradiaAddonFixoLoteQty?: string;
 }
 
 export interface Proposal {

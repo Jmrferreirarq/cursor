@@ -1101,6 +1101,7 @@ export default function CalculatorPage() {
   const [moradiaAddonRepeticoesIguais, setMoradiaAddonRepeticoesIguais] = useState('');
   const [moradiaAddonRepeticoesAdaptadas, setMoradiaAddonRepeticoesAdaptadas] = useState('');
   const [moradiaAddonFixoLote, setMoradiaAddonFixoLote] = useState('');
+  const [moradiaAddonFixoLoteQty, setMoradiaAddonFixoLoteQty] = useState('');
 
   const [notasExtras, setNotasExtras] = useState('');
   const [areaUnit, setAreaUnit] = useState('m2');
@@ -1225,9 +1226,9 @@ export default function CalculatorPage() {
   // Helper: é tipologia de loteamento?
   const isLoteamento = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(projectType);
 
-  // Sincronizar Área principal com Área em estudo para loteamento
+  // Sincronizar Área principal com Área em estudo para loteamento (sempre que muda)
   useEffect(() => {
-    if (isLoteamento && lotAreaEstudo && !area) {
+    if (isLoteamento && lotAreaEstudo) {
       setArea(lotAreaEstudo);
     }
   }, [isLoteamento, lotAreaEstudo]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1451,7 +1452,7 @@ export default function CalculatorPage() {
       moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride,
       moradiaAddonValorOverride, moradiaAddonAreaCave, moradiaAddonAreaVaranda,
       moradiaAddonNumTipos, moradiaAddonRepeticoesIguais,
-      moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
+      moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote, moradiaAddonFixoLoteQty,
       // Cenários
       lotCenarioA: JSON.stringify(lotCenarioA), lotCenarioB: JSON.stringify(lotCenarioB),
       lotCenarioC: JSON.stringify(lotCenarioC),
@@ -1481,7 +1482,7 @@ export default function CalculatorPage() {
     moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride,
     moradiaAddonValorOverride, moradiaAddonAreaCave, moradiaAddonAreaVaranda,
     moradiaAddonNumTipos, moradiaAddonRepeticoesIguais,
-    moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
+    moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote, moradiaAddonFixoLoteQty,
     lotCenarioA, lotCenarioB, lotCenarioC,
     lotCondicionantes, lotEntregaveis,
     lotAssuncoesManuais, lotDependenciasManuais,
@@ -1890,6 +1891,9 @@ export default function CalculatorPage() {
     const repIguais = Math.max(0, parseInt(moradiaAddonRepeticoesIguais) || 0);
     const repAdapt = Math.max(0, parseInt(moradiaAddonRepeticoesAdaptadas) || 0);
     const fixoLote = parseFloat(moradiaAddonFixoLote) || MORADIA_ADDON_DEFAULTS.fixoLote;
+    // N.º lotes para parcela fixa: override manual ou default (repetições)
+    const fixoLoteQtyDefault = repIguais + repAdapt;
+    const fixoLoteQty = parseInt(moradiaAddonFixoLoteQty) || fixoLoteQtyDefault;
     const descontoIgual = MORADIA_ADDON_DEFAULTS.descontoIgual;
     const descontoAdaptada = MORADIA_ADDON_DEFAULTS.descontoAdaptada;
     const totalOriginal = numTipos * feeEfetivo;
@@ -1899,7 +1903,7 @@ export default function CalculatorPage() {
     const feeRepAdapt = Math.round(feeBase * (1 - descontoAdaptada / 100));
     const totalRepIguais = repIguais > 0 ? feeRepIgual : 0;
     const totalRepAdapt = repAdapt > 0 ? feeRepAdapt : 0;
-    const totalFixo = (repIguais + repAdapt) * fixoLote;
+    const totalFixo = fixoLoteQty * fixoLote;
     const totalAddon = totalOriginal + totalRepIguais + totalRepAdapt + totalFixo;
     // Cláusulas
     const clausulas: string[] = [
@@ -1926,6 +1930,7 @@ export default function CalculatorPage() {
       descontoIgual,
       descontoAdaptada,
       fixoLote,
+      fixoLoteQty,
       totalOriginal,
       totalRepeticoesIguais: totalRepIguais,
       totalRepeticoesAdaptadas: totalRepAdapt,
@@ -2801,7 +2806,7 @@ export default function CalculatorPage() {
           // Add-on Moradia Tipo
           moradiaAddonAtivo, moradiaAddonModo, moradiaAddonAreaOverride, moradiaAddonValorOverride,
           moradiaAddonAreaCave, moradiaAddonAreaVaranda,
-          moradiaAddonNumTipos, moradiaAddonRepeticoesIguais, moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote,
+          moradiaAddonNumTipos, moradiaAddonRepeticoesIguais, moradiaAddonRepeticoesAdaptadas, moradiaAddonFixoLote, moradiaAddonFixoLoteQty,
         },
       });
       
@@ -3049,6 +3054,7 @@ export default function CalculatorPage() {
     setMoradiaAddonRepeticoesIguais(state.moradiaAddonRepeticoesIguais || '');
     setMoradiaAddonRepeticoesAdaptadas(state.moradiaAddonRepeticoesAdaptadas || '');
     setMoradiaAddonFixoLote(state.moradiaAddonFixoLote || '');
+    setMoradiaAddonFixoLoteQty(state.moradiaAddonFixoLoteQty || '');
 
     // Limpar estados de link
     setLinkPropostaExibido(null);
@@ -4592,7 +4598,7 @@ export default function CalculatorPage() {
                         {moradiaAddonAreaVaranda ? ` + varandas ${moradiaAddonAreaVaranda}×30% = ${Math.round(parseFloat(moradiaAddonAreaVaranda) * 0.3)}` : ''})
                       </p>
                     )}
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Repetições idênticas</label>
                         <input type="number" min="0" value={moradiaAddonRepeticoesIguais} onChange={(e) => setMoradiaAddonRepeticoesIguais(e.target.value)} placeholder="0" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
@@ -4608,13 +4614,18 @@ export default function CalculatorPage() {
                         <input type="number" min="0" value={moradiaAddonFixoLote} onChange={(e) => setMoradiaAddonFixoLote(e.target.value)} placeholder={String(MORADIA_ADDON_DEFAULTS.fixoLote)} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
                         <p className="text-xs text-muted-foreground/60 mt-0.5">Implantação + submissão</p>
                       </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">N.º lotes</label>
+                        <input type="number" min="0" value={moradiaAddonFixoLoteQty} onChange={(e) => setMoradiaAddonFixoLoteQty(e.target.value)} placeholder={String((parseInt(moradiaAddonRepeticoesIguais) || 0) + (parseInt(moradiaAddonRepeticoesAdaptadas) || 0))} className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm focus:border-primary focus:outline-none" />
+                        <p className="text-xs text-muted-foreground/60 mt-0.5">Parcela fixa</p>
+                      </div>
                     </div>
                     {moradiaAddonCalc && (
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-1 text-sm">
                         <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.numTipos}× {moradiaAddonModo === 'previo' ? 'Estudo prévio' : 'Moradia original'}</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalOriginal)}</span></div>
                         {moradiaAddonCalc.repeticoesIguais > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição idêntica (−{moradiaAddonCalc.descontoIgual}%) → {moradiaAddonCalc.repeticoesIguais} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesIguais)}</span></div>}
                         {moradiaAddonCalc.repeticoesAdaptadas > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição adaptada (−{moradiaAddonCalc.descontoAdaptada}%) → {moradiaAddonCalc.repeticoesAdaptadas} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesAdaptadas)}</span></div>}
-                        {(moradiaAddonCalc.repeticoesIguais + moradiaAddonCalc.repeticoesAdaptadas) > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesIguais + moradiaAddonCalc.repeticoesAdaptadas}× Parcela fixa lote</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalFixoLotes)}</span></div>}
+                        {moradiaAddonCalc.fixoLoteQty > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.fixoLoteQty}× Parcela fixa lote</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalFixoLotes)}</span></div>}
                         <div className="flex justify-between pt-1 border-t border-amber-500/30 font-semibold text-amber-400"><span>Total Add-on Moradia</span><span>{formatCurrency(moradiaAddonCalc.totalAddon)}</span></div>
                       </div>
                     )}
