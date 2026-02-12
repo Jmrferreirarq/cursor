@@ -1601,9 +1601,14 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const abcMax = envelopeMax > 0 ? envelopeMax * numPisos : abcByPisos;
           const abcEstimada = Math.min(abc, abcMax);
           const custosMoradia = { min: 1000, med: 1400, max: 2000 };
+          // Moradia addon pós-desconto: o desconto comercial aplica-se proporcionalmente a todos os serviços
+          const moradiaAddonRaw = p.moradiaAddon?.totalAddon ?? 0;
+          const moradiaAddonPostDiscount = p.descontoPct && p.descontoPct > 0
+            ? Math.round(moradiaAddonRaw * (1 - p.descontoPct / 100))
+            : moradiaAddonRaw;
           const inv = {
             infraTotal: p.lotCustoObraTotal ?? 0,
-            honorariosTotal: (p.totalSemIVA ?? 0) - (p.moradiaAddon?.totalAddon ?? 0),
+            honorariosTotal: (p.totalSemIVA ?? 0) - moradiaAddonPostDiscount,
             construcaoAreaMediaLote: abcEstimada,
             construcaoNLotes: nLotes,
             construcaoMin: abcEstimada * custosMoradia.min,

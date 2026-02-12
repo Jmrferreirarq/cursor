@@ -932,8 +932,10 @@ function calcularImplantacaoLote(
     fonte = 'estimativa';
   }
 
-  // Nunca exceder envelope × pisos
-  abcEstimada = Math.min(abcEstimada, envelopeMax * numPisos);
+  // Nunca exceder envelope × pisos (só capar se envelope válido, senão manter cálculo)
+  if (envelopeMax > 0) {
+    abcEstimada = Math.min(abcEstimada, envelopeMax * numPisos);
+  }
   const indiceImplantacao = Math.round((areaImplantacao / areaMedia) * 100);
   const indiceConstrucao = Math.round((abcEstimada / areaMedia) * 100) / 100;
 
