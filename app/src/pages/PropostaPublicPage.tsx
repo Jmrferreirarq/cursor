@@ -228,7 +228,7 @@ function PropostaPublicPage() {
                     </div>
                     {p.valorArq > 0 && (
                       <div className="flex justify-between text-xs pl-3 pr-2">
-                        <span style={{ color: C.cinzaMarca }}>Projeto{p.lotCenarios && p.lotCenarios.length > 0 ? ` + ${p.lotCenarios.length} cenarios` : ''}</span>
+                        <span style={{ color: C.cinzaMarca }}>Urbanismo{p.lotCenarios && p.lotCenarios.length > 0 ? ` + ${p.lotCenarios.length} cenários` : ''}</span>
                         <span style={{ color: C.grafite, fontWeight: 500 }}>{formatCurrency(p.valorArq)}</span>
                       </div>
                     )}
@@ -265,7 +265,7 @@ function PropostaPublicPage() {
                         )}
                         {p.moradiaAddon.totalFixoLotes > 0 && (
                           <div className="flex justify-between text-xs pl-3 pr-2">
-                            <span style={{ color: C.cinzaMarca }}>Parcela fixa ({p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas} lotes)</span>
+                            <span style={{ color: C.cinzaMarca }}>Parcela fixa ({(p.moradiaAddon.fixoLoteQty ?? (p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas))} lotes)</span>
                             <span style={{ color: C.grafite, fontWeight: 500 }}>{formatCurrency(p.moradiaAddon.totalFixoLotes)}</span>
                           </div>
                         )}

@@ -13,13 +13,13 @@ const A4_WIDTH_PX = 794;
 const A4_HEIGHT_MM = 297;
 const A4_WIDTH_MM = 210;
 const MARGIN_TOP_MM = 10;
-const MARGIN_BOTTOM_MM = 18;
+const MARGIN_BOTTOM_MM = 22; // Aumentado para evitar corte do rodapé na última página
 const MARGIN_LEFT_MM = 12;
 const MARGIN_RIGHT_MM = 12;
 
 // Usable content area on each page (mm)
 const CONTENT_WIDTH_MM = A4_WIDTH_MM - MARGIN_LEFT_MM - MARGIN_RIGHT_MM; // 186mm
-const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM; // 269mm
+const CONTENT_HEIGHT_MM = A4_HEIGHT_MM - MARGIN_TOP_MM - MARGIN_BOTTOM_MM; // 265mm (margem inferior maior para rodapé)
 
 // Convert page content height to element pixels
 // Our element is 794px wide, which maps to CONTENT_WIDTH_MM on the PDF page
@@ -182,34 +182,34 @@ export async function generateProposalPdf(
   for (let i = 1; i <= totalPages; i++) {
     pdf.setPage(i);
 
-    // Linha separadora
+    // Linha separadora (mais acima para evitar corte)
     pdf.setDrawColor(200);
     pdf.setLineWidth(0.3);
-    pdf.line(12, h - 16, w - 12, h - 16);
+    pdf.line(12, h - 18, w - 12, h - 18);
 
-    // Rodapé esquerdo (nome da empresa)
+    // Rodapé esquerdo (nome da empresa) — posição mais alta, contraste melhor
     pdf.setFontSize(7);
-    pdf.setTextColor(120, 120, 120);
-    pdf.text(footerLeft, 12, h - 12, { align: 'left' });
+    pdf.setTextColor(80, 80, 80);
+    pdf.text(footerLeft, 12, h - 14, { align: 'left' });
 
     // Rodapé centro (referência)
     if (reference) {
       pdf.setFontSize(7);
-      pdf.setTextColor(150, 150, 150);
-      pdf.text(reference, w / 2, h - 12, { align: 'center' });
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(reference, w / 2, h - 14, { align: 'center' });
     }
 
-    // Rodapé direito (contactos)
+    // Rodapé direito (contactos) — contraste melhor para legibilidade
     if (footerRight) {
-      pdf.setFontSize(6.5);
-      pdf.setTextColor(140, 140, 140);
-      pdf.text(footerRight, w - 12, h - 12, { align: 'right' });
+      pdf.setFontSize(7);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(footerRight, w - 12, h - 14, { align: 'right' });
     }
 
     // Número da página (centrado, mais abaixo)
     pdf.setFontSize(7.5);
     pdf.setTextColor(100, 100, 100);
-    pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 7, { align: 'center' });
+    pdf.text(`${pageLabel} ${i} / ${totalPages}`, w / 2, h - 9, { align: 'center' });
 
     // Cabeçalho discreto nas páginas 2+ (nome + referência)
     if (i > 1) {

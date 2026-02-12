@@ -1,7 +1,10 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send } from 'lucide-react';
 import { toast } from 'sonner';
+
+/** Status efetivo — propostas antigas podem não ter status */
+const getStatus = (p: { status?: string }) => (p.status || 'draft') as 'draft' | 'sent' | 'accepted' | 'rejected';
 import { useData } from '@/context/DataContext';
 import { useState } from 'react';
 
@@ -49,7 +52,7 @@ const projectTypes: Record<string, string> = {
 
 export default function ProposalsManagementPage() {
   const navigate = useNavigate();
-  const { proposals, deleteProposal } = useData();
+  const { proposals, deleteProposal, updateProposalStatus } = useData();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => {
@@ -177,21 +180,49 @@ export default function ProposalsManagementPage() {
                     </p>
                   </div>
 
-                  {/* Status */}
-                  <span className={`text-xs px-2.5 py-1 rounded-full ${
-                    p.status === 'draft' 
-                      ? 'bg-muted text-muted-foreground' 
-                      : p.status === 'sent'
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : p.status === 'accepted'
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {p.status === 'draft' ? 'Rascunho' : 
-                     p.status === 'sent' ? 'Enviada' :
-                     p.status === 'accepted' ? 'Aceite' : 
-                     p.status === 'rejected' ? 'Rejeitada' : p.status}
-                  </span>
+                  {/* Status + ação para marcar como enviada */}
+                  {(() => {
+                    const status = getStatus(p);
+                    const isDraft = status === 'draft';
+                    const handleMarkSent = (e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      updateProposalStatus(p.id, 'sent');
+                      toast.success('Proposta marcada como enviada');
+                    };
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-full ${
+                            status === 'sent'
+                              ? 'bg-blue-500/20 text-blue-400'
+                              : status === 'accepted'
+                              ? 'bg-emerald-500/20 text-emerald-400'
+                              : status === 'rejected'
+                              ? 'bg-red-500/20 text-red-400'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {status === 'draft' ? 'Rascunho' :
+                           status === 'sent' ? 'Enviada' :
+                           status === 'accepted' ? 'Aceite' :
+                           status === 'rejected' ? 'Rejeitada' : status}
+                        </span>
+                        {isDraft && (
+                          <button
+                            type="button"
+                            onMouseDown={handleMarkSent}
+                            onClick={handleMarkSent}
+                            className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
+                            title="Marcar proposta como enviada"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            Enviada
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Actions */}
                   <div className="flex items-center gap-1">

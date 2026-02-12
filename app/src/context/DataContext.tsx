@@ -44,6 +44,8 @@ interface DataContextType {
   addProposal: (proposal: Proposal) => void;
   /** Elimina uma proposta pelo ID */
   deleteProposal: (id: string) => void;
+  /** Atualiza o estado de uma proposta (ex: rascunho → enviada) */
+  updateProposalStatus: (id: string, status: Proposal['status']) => void;
   /** Encontra cliente existente (por nome ou NIF) ou cria novo. Retorna o ID do cliente. */
   findOrCreateClient: (input: ClientInput) => string;
   /** Guarda proposta da calculadora e liga ao cliente. Retorna o ID da proposta. */
@@ -68,7 +70,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const data = svc.load();
       if (data.clients.length) setClients(data.clients);
       if (data.projects.length) setProjects(data.projects);
-      if (data.proposals.length) setProposals(data.proposals);
+      if (data.proposals.length) {
+        // Garantir que propostas antigas tenham status
+        setProposals(data.proposals.map((p: Proposal) => ({
+          ...p,
+          status: p.status || 'draft',
+        })));
+      }
     } catch {
       /* ignore */
     }
@@ -98,6 +106,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProposal = useCallback((id: string) => {
     setProposals((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const updateProposalStatus = useCallback((id: string, status: Proposal['status']) => {
+    setProposals((prev) => prev.map((p) =>
+      p.id === id
+        ? { ...p, status, sentAt: status === 'sent' ? new Date().toISOString().slice(0, 10) : p.sentAt }
+        : p
+    ));
   }, []);
 
   /** Encontra cliente existente (por nome ou NIF) ou cria novo */
@@ -238,6 +254,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         addProject,
         addProposal,
         deleteProposal,
+        updateProposalStatus,
         findOrCreateClient,
         saveCalculatorProposal,
         resetAllData,

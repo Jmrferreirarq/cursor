@@ -453,9 +453,9 @@ const TIPOLOGIA_ESPECIALIDADES: Record<string, string[]> = {
 
 // ── Desconto comercial: tipos, defaults, ranges, textos ──
 const DESCONTO_TIPOS = {
-  recorrencia: { label: 'Cliente recorrente', defaultPct: 10, min: 5, max: 15, texto: 'Desconto por histórico de colaboração e recorrência de projetos.' },
+  recorrencia: { label: 'Cliente recorrente', defaultPct: 10, min: 8, max: 12, texto: 'Desconto por histórico de colaboração e recorrência de projetos.' },
   pagamento_antecipado: { label: 'Pagamento antecipado', defaultPct: 5, min: 3, max: 8, texto: 'Desconto por condições de pagamento antecipado (fase 1 + fase 2 no arranque).' },
-  pipeline: { label: 'Pipeline / Volume', defaultPct: 12, min: 8, max: 18, texto: 'Desconto por compromisso de volume (2+ projetos em 12 meses).' },
+  pipeline: { label: 'Pipeline / Volume', defaultPct: 12, min: 10, max: 15, texto: 'Desconto por compromisso de volume (2+ projetos em 12 meses).' },
   personalizado: { label: 'Personalizado', defaultPct: 0, min: 0, max: 25, texto: '' },
 } as const;
 
@@ -1461,6 +1461,8 @@ export default function CalculatorPage() {
       lotAssuncoesManuais, lotDependenciasManuais,
       lotCenarioRef, lotCenarioRecomendado,
       lotCustosInfraOverrides, lotContingenciaOverride,
+      // Desconto comercial
+      descontoAtivo, descontoTipo, descontoPct, descontoJustificacao,
     };
     return JSON.stringify(data);
   }, [
@@ -1488,6 +1490,7 @@ export default function CalculatorPage() {
     lotAssuncoesManuais, lotDependenciasManuais,
     lotCenarioRef, lotCenarioRecomendado,
     lotCustosInfraOverrides, lotContingenciaOverride,
+    descontoAtivo, descontoTipo, descontoPct, descontoJustificacao,
   ]);
 
   // Verificar se o link está desatualizado
@@ -2193,7 +2196,7 @@ export default function CalculatorPage() {
         descontoPct: parseFloat(descontoPct) || undefined,
         descontoValor: descontoValorCalc,
         descontoJustificacao: descontoJustificacao.trim() || undefined,
-        totalSemDescontoSemIVA: totalServicosSemIVA + despesasReemb,
+        totalSemDescontoSemIVA: totalServicosSemIVA,
       } : {}),
       fasesPagamento,
       descricaoFases,
@@ -2393,7 +2396,7 @@ export default function CalculatorPage() {
         'Inclui 2 ciclos de revisão por fase + 1 ciclo de resposta a notificações da Câmara Municipal.',
         t('notes.revisionLimit', lang),
         t('notes.notificationCycles', lang),
-        'O licenciamento é de loteamento — não inclui projetos de arquitetura das moradias/edifícios dos lotes individuais.',
+        ...(moradiaAddonAtivo ? [] : ['O licenciamento é de loteamento — não inclui projetos de arquitetura das moradias/edifícios dos lotes individuais.']),
         t('notes.clientResponseTime', lang),
         ...(lotFonteArea !== 'topografia' ? ['Áreas e limites de propriedade sujeitos a confirmação por levantamento topográfico (não incluído).'] : []),
       ] : [

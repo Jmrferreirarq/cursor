@@ -224,6 +224,11 @@ export const proposalPayloadSchema = z.object({
   })).optional(),
   // Cenário recomendado para licenciamento (P2)
   lotCenarioRecomendado: z.string().optional(),
+  // B1: PIP opcional — nota com/sem PIP
+  lotPipNotaOpcional: z.object({
+    valorPIP: z.number(),
+    valorSemPIP: z.number(),
+  }).optional(),
   // Desconto comercial (transversal a todas as tipologias)
   descontoTipo: z.string().optional(),
   descontoPct: z.number().optional(),
@@ -342,6 +347,7 @@ const MINIFY_KEYS: Record<string, string> = {
   lotCustoObraTotal: 'lcot', lotCustoObraMin: 'lcomn', lotCustoObraMax: 'lcomx',
   lotBandaPrecisao: 'lbp', lotBandaDescricao: 'lbd',
   lotCustosInfraPorCenario: 'lcipc', lotCenarioRecomendado: 'lcr',
+  lotPipNotaOpcional: 'lpno', valorPIP: 'vpip', valorSemPIP: 'vsp',
   // Desconto comercial
   descontoTipo: 'dtp', descontoPct: 'dpc', descontoValor: 'dvl', descontoJustificacao: 'djt', totalSemDescontoSemIVA: 'tsdi',
   quantidade: 'qt', custoUnitario: 'cu', custoRamal: 'cr', subtotal: 'st', honorario: 'hon', unidade: 'un',

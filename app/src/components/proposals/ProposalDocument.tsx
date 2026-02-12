@@ -122,70 +122,23 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       const nLotes = parseInt(p.lotNumLotes, 10);
                       const frente = parseFloat(p.lotFrenteTerreno);
                       const areaEstudo = parseFloat(p.lotAreaEstudo);
-
-                      // Fallback: buscar parâmetros do município se não estiverem no payload
-                      const munMatch = p.lotMunicipio ? municipios.find(m => m.nome === p.lotMunicipio) : null;
-                      let munP: ParametrosUrbanisticos | undefined;
-                      if (munMatch?.parametros) {
-                        const pp = munMatch.parametros;
-                        const uso = (p.lotUsoParametros || 'habitacao') as 'habitacao' | 'equipamentos';
-                        munP = ('habitacao' in pp)
-                          ? (uso === 'equipamentos' ? (pp.equipamentos ?? EQUIPAMENTOS_DEFAULTS) : pp.habitacao)
-                          : pp as unknown as ParametrosUrbanisticos;
-                      }
-
-                      const param = (key: keyof ParametrosUrbanisticos): string =>
-                        (p.lotParametros as any)?.[key] || munP?.[key] || '';
-
-                      const pctCed = parseFloat(param('percentagemCedencias') || '15');
+                      const pctCed = parseFloat(p.lotParametros?.percentagemCedencias || '15');
+                      const io = parseFloat(p.lotParametros?.indiceImplantacao || '0');
+                      const iu = parseFloat(p.lotParametros?.indiceConstrucao || '0');
                       if (nLotes <= 0 || frente <= 0 || areaEstudo <= 0) return null;
                       const largura = Math.round((frente / nLotes) * 10) / 10;
                       const cedencias = Math.round(areaEstudo * pctCed / 100);
                       const areaMedia = Math.round((areaEstudo - cedencias) / nLotes);
-                      const profundidade = Math.round((areaMedia / largura) * 10) / 10;
-
-                      // Afastamentos (com fallback ao município)
-                      const tipo = (p.lotTipoHabitacao || '').toLowerCase();
-                      const alturaMax = parseFloat(param('alturaMaxima') || '0');
-                      const afFrontal = parseFloat(param('afastamentoFrontal')) || 5;
-                      const afLat = parseFloat(param('afastamentoLateral')) || (alturaMax > 0 ? Math.max(3, alturaMax / 2) : 3);
-                      const afPosterior = parseFloat(param('afastamentoPosterior')) || 6;
-                      const afLateralTotal = tipo.includes('isolada') ? afLat * 2 : tipo.includes('geminada') ? afLat : 0;
-                      const larguraImplantacao = Math.max(0, Math.round((largura - afLateralTotal) * 10) / 10);
-
-                      // Profundidade útil (limitada pela prof. max. construção PDM — com fallback ao município)
-                      const profMaxConst = parseFloat(param('profundidadeMaxConstrucao')) || 0;
-                      const profUtilAfastamentos = Math.max(0, profundidade - afFrontal - afPosterior);
-                      const profUtil = profMaxConst > 0 ? Math.min(profUtilAfastamentos, profMaxConst) : profUtilAfastamentos;
-                      const profLimitada = profMaxConst > 0 && profMaxConst < profUtilAfastamentos;
-
-                      // Envelope e índices (com fallback ao município)
-                      const envelopeMax = Math.round(larguraImplantacao * profUtil);
-                      const io = parseFloat(param('indiceImplantacao') || '0');
-                      const iu = parseFloat(param('indiceConstrucao') || '0');
-                      const numPisos = Math.max(1, parseInt(p.lotParametros?.numPisos || '2', 10));
-                      const DEFAULTS_IO: Record<string, number> = { isolada: 0.35, geminada: 0.40, banda: 0.50 };
-                      const ioEfetivo = io > 0 ? io : (Object.entries(DEFAULTS_IO).find(([k]) => tipo.includes(k))?.[1] ?? 0.35);
-                      const implantacaoByIO = Math.round(areaMedia * ioEfetivo);
-                      const implantacao = Math.min(implantacaoByIO, envelopeMax > 0 ? envelopeMax : implantacaoByIO);
-                      const implFonte = io > 0 ? `IO ${Math.round(io * 100)}%` : `IO est. ${Math.round(ioEfetivo * 100)}%`;
-                      // ABC: implantação × pisos, limitada por IU se definido
-                      const abcByPisos = implantacao * numPisos;
-                      const abcByIU = iu > 0 ? Math.round(areaMedia * iu) : 0;
-                      const abc = abcByIU > 0 ? Math.min(abcByPisos, abcByIU) : abcByPisos;
-                      const abcMax = envelopeMax > 0 ? envelopeMax * numPisos : abcByPisos;
-                      const abcFinal = Math.min(abc, abcMax);
-                      const abcFonte = iu > 0 ? `IU ${iu}` : `${numPisos}p`;
-
+                      const implantacao = io > 0 ? Math.round(areaMedia * io) : null;
+                      const abc = iu > 0 ? Math.round(areaMedia * iu) : null;
                       const tdL = { padding: '1mm 2mm', color: C.cinzaMarca, fontWeight: 500 } as const;
                       const tdV = { padding: '1mm 2mm', color: C.grafite } as const;
                       return (
                         <>
                           <tr><td style={tdL}>Largura estimada/lote</td><td style={{ ...tdV, fontWeight: 600 }}>{largura} m</td></tr>
-                          {larguraImplantacao > 0 && <tr><td style={tdL}>Largura implantacao</td><td style={{ ...tdV, fontWeight: 600 }}>{larguraImplantacao} m <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>(afast. lateral: {afLateralTotal}m)</span></td></tr>}
-                          <tr><td style={tdL}>Area media/lote</td><td style={{ ...tdV, fontWeight: 600 }}>{areaMedia.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({pctCed}% cedencias)</span></td></tr>
-                          <tr><td style={tdL}>Implantacao estimada</td><td style={{ ...tdV, fontWeight: 600 }}>{implantacao.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({implFonte}{profLimitada ? `, prof. max ${profMaxConst}m` : ''})</span></td></tr>
-                          <tr><td style={tdL}>ABC estimada</td><td style={{ ...tdV, fontWeight: 700, color: '#059669' }}>{abcFinal.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>({abcFonte})</span></td></tr>
+                          <tr><td style={tdL}>Area media/lote</td><td style={{ ...tdV, fontWeight: 600 }}>{areaMedia.toLocaleString('pt-PT')} m2</td></tr>
+                          {implantacao !== null && <tr><td style={tdL}>Implantacao</td><td style={{ ...tdV, fontWeight: 600 }}>{implantacao.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>(IO {Math.round(io * 100)}%)</span></td></tr>}
+                          {abc !== null && <tr><td style={tdL}>ABC estimada</td><td style={{ ...tdV, fontWeight: 700, color: '#059669' }}>{abc.toLocaleString('pt-PT')} m2 <span style={{ fontSize: fs(7), fontWeight: 400, color: C.cinzaMarca }}>(IU {iu})</span></td></tr>}
                         </>
                       );
                     })()}
@@ -403,14 +356,16 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         </td>
                         <td style={{ padding: '1.5mm 2mm', textAlign: 'center' }}>
                           <span style={{
-                            fontSize: fs(6.5),
+                            fontSize: fs(7.5),
                             fontWeight: 600,
-                            padding: '0.5mm 2mm',
+                            padding: '1mm 2.5mm',
                             borderRadius: 2,
+                            lineHeight: 1.2,
+                            display: 'inline-block',
                             background: d.relevancia === 'obrigatorio' ? '#dc2626' : d.relevancia === 'frequente' ? '#f59e0b' : '#94a3b8',
                             color: '#fff',
                           }}>
-                            {d.relevancia === 'obrigatorio' ? 'Obrigatorio' : d.relevancia === 'frequente' ? 'Frequente' : 'Condicional'}
+                            {d.relevancia === 'obrigatorio' ? 'Obrigatório' : d.relevancia === 'frequente' ? 'Frequente' : 'Condicional'}
                           </span>
                         </td>
                       </tr>
@@ -900,7 +855,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 )}
 
                 {/* Parcela fixa por lote */}
-                {(ma.repeticoesIguais + ma.repeticoesAdaptadas) > 0 && (
+                {(ma.fixoLoteQty ?? (ma.repeticoesIguais + ma.repeticoesAdaptadas)) > 0 && (
                   <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                     <td style={{ padding: '2mm' }}>
                       <span style={{ fontWeight: 600 }}>Parcela fixa por lote</span>
@@ -909,7 +864,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         <br />submissao na camara, resposta a notificacoes e acompanhamento até deferimento.
                       </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.repeticoesIguais + ma.repeticoesAdaptadas}</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.fixoLoteQty ?? (ma.repeticoesIguais + ma.repeticoesAdaptadas)}</td>
                     <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(ma.fixoLote, lang)}</td>
                     <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalFixoLotes, lang)}</td>
                   </tr>
@@ -1171,6 +1126,14 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             </tbody>
           </table>
           <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.paymentPhasesNote', lang)}</p>
+          {/* B1: PIP opcional — nota com/sem PIP */}
+          {p.isLoteamento && p.lotPipNotaOpcional && (
+            <div className="pdf-no-break" style={{ marginTop: '3mm', padding: '2.5mm 3mm', background: '#fef3c7', borderRadius: 2, borderLeft: '3px solid #f59e0b', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              <p style={{ fontSize: fs(8), color: '#92400e', margin: 0, lineHeight: 1.4 }}>
+                <strong>Fase PIP incluida.</strong> Sem PIP, o investimento em honorarios reduz-se em {p.lotPipNotaOpcional.valorPIP.toLocaleString('pt-PT')} &euro; (total {p.lotPipNotaOpcional.valorSemPIP.toLocaleString('pt-PT')} &euro;) e o prazo encurta 2&ndash;4 meses.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Descrição das fases - começa em página nova (página 4) */}
@@ -1536,10 +1499,10 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             ))}
           </ul>
           
-          {/* Notas de proteção de âmbito (últimas notas) - destacadas */}
+          {/* Notas de proteção de âmbito (últimas notas) - destacadas — começar em página nova para título + conteúdo juntos */}
           {p.notas.length > 6 && (
-            <div style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}` }}>
-              <p style={{ fontSize: fs(9), fontWeight: 600, color: C.accent, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div className="pdf-no-break page-break-before" style={{ padding: '3mm 4mm', background: C.offWhite, borderRadius: 2, borderLeft: `3px solid ${C.accent}`, breakBefore: 'page', pageBreakBefore: 'always', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+              <p style={{ fontSize: fs(9), fontWeight: 600, color: C.accent, margin: '0 0 2mm 0', textTransform: 'uppercase', letterSpacing: '0.03em', breakAfter: 'avoid', pageBreakAfter: 'avoid' }}>
                 {lang === 'en' ? 'Scope Conditions' : 'Condições de Âmbito'}
               </p>
               <ul style={{ margin: 0, paddingLeft: '4mm', lineHeight: 1.5, listStyleType: 'none', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
@@ -2102,11 +2065,11 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
             <tr>
-              <td style={{ textAlign: 'left', padding: 0, color: '#9ca3af' }}>{p.ref} <span style={{ color: '#d1d5db' }}>•</span> {p.cliente}</td>
-              <td style={{ textAlign: 'right', padding: 0 }}>
+              <td style={{ textAlign: 'left', padding: 0, color: '#6b7280', fontSize: fs(8) }}>{p.ref} <span style={{ color: '#9ca3af' }}>•</span> {p.cliente}</td>
+              <td style={{ textAlign: 'right', padding: 0, fontSize: fs(8) }}>
                 <span style={{ fontWeight: 600, color: C.accent }}>{branding.appName.toUpperCase()}</span>
-                <span style={{ color: '#d1d5db' }}> • </span>
-                <span style={{ color: '#9ca3af' }}>{branding.website || 'ferreirarquitetos.pt'}</span>
+                <span style={{ color: '#9ca3af' }}> • </span>
+                <span style={{ color: '#6b7280' }}>{branding.website || 'www.ferreira-arquitetos.pt'}</span>
               </td>
             </tr>
           </tbody>
