@@ -2957,7 +2957,9 @@ export default function CalculatorPage() {
     // Restaurar estado da calculadora
     setActiveCalculator('honorarios');
     setHonorMode(state.honorMode);
-    setArea(state.area);
+    // Para loteamento, a área principal é sempre a área em estudo (não o valor guardado separadamente)
+    const isLot = ['loteamento_urbano', 'loteamento_industrial', 'destaque_parcela', 'reparcelamento'].includes(state.projectType);
+    setArea(isLot && state.lotAreaEstudo ? state.lotAreaEstudo : state.area);
     setProjectType(state.projectType);
     setComplexity(state.complexity);
     setValorObra(state.valorObra);
