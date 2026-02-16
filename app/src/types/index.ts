@@ -223,8 +223,10 @@ export interface PipelineData {
 
 // ─── Content Factory Types ──────────────────────────────────────────
 
-export type MediaType = 'obra' | 'render' | 'detalhe' | 'equipa' | 'before-after';
+export type MediaType = 'obra' | 'render' | 'detalhe' | 'equipa' | 'before-after' | 'fotografia' | 'processo' | 'pessoas' | 'outros';
 export type MediaObjective = 'atrair-clientes' | 'portfolio' | 'recrutamento' | 'autoridade-tecnica';
+/** Trabalho vs vida social — ambos crescem juntos */
+export type ContentFocus = 'trabalho' | 'vida-social' | 'ambos';
 export type MediaStatus = 'rascunho' | 'por-classificar' | 'analisado' | 'pronto' | 'publicado';
 export type MediaRestriction = 'sem-rostos' | 'sem-moradas' | 'sem-marcas' | 'sem-matriculas';
 export type ContentChannel = 'ig-feed' | 'ig-reels' | 'ig-stories' | 'ig-carrossel' | 'linkedin' | 'tiktok' | 'pinterest' | 'youtube' | 'threads';
@@ -249,6 +251,7 @@ export interface MediaAsset {
   // Layer B — Analysis (auto-generated)
   tags: string[];
   qualityScore?: number; // 0–100
+  contentFocus?: ContentFocus; // trabalho | vida-social | ambos
   risks: string[];
   keyMoments?: { time: number; description: string }[];
   story?: string; // 1-sentence summary
@@ -268,7 +271,10 @@ export interface ContentCopy {
 export interface ContentFormat {
   ratio: string; // '9:16', '1:1', '4:5', '16:9'
   label: string;
-  description?: string;
+  description?: string; // legacy: texto único
+  descriptionPt?: string;
+  descriptionEn?: string;
+  channel?: ContentChannel; // para ligar ao copy do pack
 }
 
 export interface ContentPack {
@@ -346,10 +352,25 @@ export interface EditorialFormat {
   exampleEn: string;
 }
 
+export interface CaptionTemplate {
+  id: string;
+  name: string;
+  text: string;
+  hashtags: string[];
+}
+
+export interface HashtagSet {
+  id: string;
+  name: string;
+  hashtags: string[];
+}
+
 export interface EditorialDNA {
   pillars: EditorialPillar[];
   voices: EditorialVoice[];
   formats: EditorialFormat[];
+  captionTemplates?: CaptionTemplate[];
+  hashtagSets?: HashtagSet[];
 }
 
 export interface PublicationSlot {
