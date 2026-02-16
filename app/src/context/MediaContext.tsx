@@ -15,6 +15,7 @@ interface MediaContextType {
   // Content Packs
   contentPacks: ContentPack[];
   addContentPack: (pack: ContentPack) => void;
+  updateContentPack: (id: string, patch: Partial<ContentPack>) => void;
   deleteContentPack: (id: string) => void;
 
   // Content Posts
@@ -22,6 +23,7 @@ interface MediaContextType {
   addPost: (post: ContentPost) => void;
   updatePost: (id: string, patch: Partial<ContentPost>) => void;
   deletePost: (id: string) => void;
+  reorderPosts: (orderedIds: string[]) => void;
 
   // Editorial DNA
   editorialDNA: EditorialDNA | null;
@@ -34,6 +36,8 @@ interface MediaContextType {
   // Performance
   performanceEntries: PerformanceEntry[];
   addPerformanceEntry: (entry: PerformanceEntry) => void;
+  /** Apaga todo o conteúdo da Content Factory (media, posts, packs, performance) */
+  resetMediaData: () => void;
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined);
@@ -137,6 +141,10 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     setContentPacks((prev) => [pack, ...prev]);
   }, []);
 
+  const updateContentPack = useCallback((id: string, patch: Partial<ContentPack>) => {
+    setContentPacks((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }, []);
+
   const deleteContentPack = useCallback((id: string) => {
     setContentPacks((prev) => prev.filter((p) => p.id !== id));
   }, []);
@@ -154,6 +162,15 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
+  const reorderPosts = useCallback((orderedIds: string[]) => {
+    setPosts((prev) => {
+      const byId = new Map(prev.map((p) => [p.id, p]));
+      const ordered = orderedIds.map((id) => byId.get(id)).filter(Boolean) as ContentPost[];
+      const rest = prev.filter((p) => !orderedIds.includes(p.id));
+      return [...ordered, ...rest];
+    });
+  }, []);
+
   // ── Editorial DNA ──
   const setEditorialDNA = useCallback((dna: EditorialDNA) => {
     _setEditorialDNA(dna);
@@ -169,15 +186,25 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     setPerformanceEntries((prev) => [entry, ...prev]);
   }, []);
 
+  const resetMediaData = useCallback(() => {
+    setAssets([]);
+    setContentPacks([]);
+    setPosts([]);
+    _setEditorialDNA(defaultEditorialDNA);
+    _setSlots(defaultSlots);
+    setPerformanceEntries([]);
+  }, []);
+
   return (
     <MediaContext.Provider
       value={{
         assets, addAsset, updateAsset, deleteAsset,
-        contentPacks, addContentPack, deleteContentPack,
-        posts, addPost, updatePost, deletePost,
+        contentPacks, addContentPack, updateContentPack, deleteContentPack,
+        posts, addPost, updatePost, deletePost, reorderPosts,
         editorialDNA, setEditorialDNA,
         slots, setSlots,
         performanceEntries, addPerformanceEntry,
+        resetMediaData,
       }}
     >
       {children}
