@@ -4,7 +4,7 @@
  * Sprint 2: heuristic-based. Future: plug in AI API (OpenAI, etc.).
  */
 
-import type { MediaAsset } from '@/types';
+import type { MediaAsset, MediaType } from '@/types';
 
 // ── Tag Suggestion ──
 
@@ -53,6 +53,9 @@ export function suggestTags(asset: MediaAsset): string[] {
   if (asset.mediaType === 'detalhe') suggestions.add('detalhe');
   if (asset.mediaType === 'before-after') { suggestions.add('antes-depois'); suggestions.add('transformação'); }
   if (asset.mediaType === 'equipa') { suggestions.add('equipa'); suggestions.add('bastidores'); }
+  if (asset.mediaType === 'fotografia') suggestions.add('fotografia');
+  if (asset.mediaType === 'processo') { suggestions.add('processo'); suggestions.add('bastidores'); }
+  if (asset.mediaType === 'pessoas') { suggestions.add('pessoas'); suggestions.add('equipa'); }
 
   // Objective tags
   if (asset.objective === 'portfolio') suggestions.add('portfólio');
@@ -126,7 +129,7 @@ export function detectRisks(asset: MediaAsset): string[] {
 
 // ── Story Generation ──
 
-const STORY_TEMPLATES = {
+const STORY_TEMPLATES: Record<MediaType, string[]> = {
   obra: [
     'Progresso em obra: cada fase revela a visão do projeto.',
     'A construção avança — betão, aço e a promessa de um espaço transformado.',
@@ -147,15 +150,35 @@ const STORY_TEMPLATES = {
     'Bastidores: onde nasce a criatividade e se resolve a complexidade.',
     'A equipa em ação — dedicação que se traduz em qualidade.',
   ],
+  pessoas: [
+    'As pessoas que fazem a diferença em cada projeto.',
+    'Contexto humano: a escala que dá vida à arquitetura.',
+    'Rostos e espaços — a arquitetura ao serviço das pessoas.',
+  ],
+  fotografia: [
+    'A fotografia capta o que as palavras não alcançam.',
+    'Espaço, luz e materialidade — registados em imagem.',
+    'O projeto concluído: quando a visão se torna realidade.',
+  ],
+  processo: [
+    'O processo importa tanto quanto o resultado.',
+    'Bastidores: cada etapa conta uma história.',
+    'Do esboço à obra — o caminho que nos define.',
+  ],
   'before-after': [
     'A transformação fala por si: antes e depois que inspira.',
     'De espaço esquecido a lugar que conta histórias.',
     'O poder da arquitetura: transformar o existente em extraordinário.',
   ],
+  outros: [
+    'Cada imagem conta uma história.',
+    'Arquitetura em múltiplas formas.',
+    'Conteúdo que inspira e conecta.',
+  ],
 };
 
 export function generateStory(asset: MediaAsset): string {
-  const templates = STORY_TEMPLATES[asset.mediaType] || STORY_TEMPLATES.obra;
+  const templates = STORY_TEMPLATES[asset.mediaType] ?? STORY_TEMPLATES.outros;
   const index = Math.abs(asset.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % templates.length;
   return templates[index];
 }
