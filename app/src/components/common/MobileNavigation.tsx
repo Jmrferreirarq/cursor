@@ -33,7 +33,7 @@ const mainNavItems: NavItem[] = [
 
 const moreNavItems: NavItem[] = [
   { path: '/media', label: 'Media', icon: Image },
-  { path: '/planner', label: 'Planner', icon: Calendar },
+  { path: '/planner', label: 'Conteúdo', icon: Calendar },
   { path: '/proposals', label: 'Propostas', icon: FileText },
   { path: '/calculator', label: 'Calculadora', icon: Calculator },
   { path: '/brand', label: 'Marca', icon: Palette },
@@ -213,7 +213,7 @@ export default function MobileNavigation() {
                 <div className="p-4 border-t border-border">
                   <button
                     onClick={() => {
-                      // Could navigate to settings page
+                      navigate('/settings');
                       setMoreMenuOpen(false);
                     }}
                     className="w-full flex items-center gap-4 px-4 py-3 rounded-xl hover:bg-muted transition-colors text-muted-foreground"

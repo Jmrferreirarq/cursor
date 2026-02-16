@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Megaphone, TrendingUp, Users, Eye, Share2, Plus } from 'lucide-react';
+import { Megaphone, TrendingUp, Users, Eye, Share2, Plus, Instagram, Linkedin, ExternalLink, Image, ListTodo, Calendar, BarChart3, Copy, Check, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   LineChart,
   Line,
@@ -22,6 +24,31 @@ const websiteData = [
   { month: 'Jun', visits: 2400, leads: 112 },
 ];
 
+const PRESENCA_DIGITAL = [
+  { id: 'ig', name: 'Instagram', url: 'https://instagram.com/ferreirarquitetos', icon: Instagram, color: 'bg-pink-500/20 text-pink-400' },
+  { id: 'pin', name: 'Pinterest', url: 'https://pinterest.com/ferreirarquitetos', icon: Share2, color: 'bg-red-500/20 text-red-400' },
+  { id: 'li', name: 'LinkedIn', url: 'https://linkedin.com/company/ferreirarquitetos', icon: Linkedin, color: 'bg-blue-500/20 text-blue-400' },
+  { id: 'be', name: 'Behance', url: 'https://behance.net/ferreirarquitetos', icon: Image, color: 'bg-cyan-500/20 text-cyan-400' },
+];
+
+const CONTENT_FACTORY_LINKS = [
+  { path: '/media', label: 'Media Inbox', icon: Image },
+  { path: '/planner', label: 'Conteúdo', icon: Calendar },
+  { path: '/performance', label: 'Performance', icon: BarChart3 },
+];
+
+const MOCK_METAS = [
+  { id: '1', label: 'Publicar 4 posts no Instagram', done: false },
+  { id: '2', label: '1 carrossel educativo no LinkedIn', done: false },
+  { id: '3', label: 'Atualizar Pinterest com 3 projetos', done: false },
+  { id: '4', label: 'Responder a todos os comentários', done: false },
+];
+
+const LINKS_PUBLICOS = [
+  { label: 'Portfólio Público', url: 'https://cursor-blond-two.vercel.app/portfolio' },
+  { label: 'Formulário de Cotação', url: 'https://cursor-blond-two.vercel.app/cotacao' },
+];
+
 const socialPosts = [
   { id: '1', platform: 'Instagram', type: 'Projeto', engagement: 245, date: '2024-01-10' },
   { id: '2', platform: 'LinkedIn', type: 'Artigo', engagement: 189, date: '2024-01-08' },
@@ -29,6 +56,21 @@ const socialPosts = [
 ];
 
 export default function MarketingPage() {
+  const navigate = useNavigate();
+  const [metas, setMetas] = useState(MOCK_METAS);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const toggleMeta = (id: string) => {
+    setMetas((prev) => prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m)));
+  };
+
+  const copyLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+    toast.success('Link copiado!');
+    setTimeout(() => setCopiedUrl(null), 2000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -49,6 +91,115 @@ export default function MarketingPage() {
           <span>Nova Campanha</span>
         </button>
       </motion.div>
+
+      {/* Presença Digital */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <h3 className="text-lg font-semibold mb-4">Presença Digital</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {PRESENCA_DIGITAL.map((p) => (
+            <a
+              key={p.id}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/40 transition-colors group"
+            >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${p.color}`}>
+                <p.icon className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium">{p.name}</p>
+                <p className="text-xs text-muted-foreground truncate">Ver perfil</p>
+              </div>
+              <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0" />
+            </a>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Content Factory — Links rápidos */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <h3 className="text-lg font-semibold mb-4">Content Factory</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {CONTENT_FACTORY_LINKS.map((l) => (
+            <button
+              key={l.path}
+              onClick={() => navigate(l.path)}
+              className="flex items-center gap-3 p-4 bg-card border border-border rounded-xl hover:border-primary/40 transition-colors text-left group"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                <l.icon className="w-5 h-5 text-primary" />
+              </div>
+              <span className="font-medium text-sm">{l.label}</span>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Metas do Mês & Links Públicos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-card border border-border rounded-xl p-5"
+        >
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" />
+            Metas do Mês
+          </h3>
+          <div className="space-y-2">
+            {metas.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => toggleMeta(m.id)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors ${
+                  m.done ? 'bg-success/10 line-through text-muted-foreground' : 'bg-muted/50 hover:bg-muted'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${m.done ? 'bg-success border-success' : 'border-muted-foreground'}`}>
+                  {m.done && <Check className="w-3 h-3 text-white" />}
+                </div>
+                <span className="text-sm">{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-card border border-border rounded-xl p-5"
+        >
+          <h3 className="text-lg font-semibold mb-4">Links Públicos</h3>
+          <p className="text-sm text-muted-foreground mb-4">Clica para copiar o link</p>
+          <div className="space-y-2">
+            {LINKS_PUBLICOS.map((l) => (
+              <button
+                key={l.url}
+                onClick={() => copyLink(l.url)}
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+              >
+                <span className="text-sm font-medium">{l.label}</span>
+                {copiedUrl === l.url ? (
+                  <Check className="w-4 h-4 text-success shrink-0" />
+                ) : (
+                  <Copy className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0" />
+                )}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -26,8 +26,6 @@ import {
   ChevronDown,
   Trash2,
   Bot,
-  LayoutGrid,
-  CalendarDays,
   ClipboardList,
   BookOpen,
 } from 'lucide-react';
@@ -76,9 +74,7 @@ const navEntries: NavEntry[] = [
     ],
   },
   { path: '/media', label: 'Media', icon: Image },
-  { path: '/queue', label: 'Fila', icon: LayoutGrid },
-  { path: '/content-calendar', label: 'Conteúdo', icon: CalendarDays },
-  { path: '/planner', label: 'Plano', icon: Calendar },
+  { path: '/planner', label: 'Conteúdo', icon: Calendar },
   { path: '/library', label: 'Arquivo', icon: Library },
   { path: '/inbox', label: 'Inbox', icon: Inbox },
   { path: '/brand', label: 'Marca', icon: Palette },
@@ -98,6 +94,7 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const { resetAllData } = useData();
@@ -281,7 +278,7 @@ export default function Navbar() {
                     <button className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors">
                       Perfil
                     </button>
-                    <button className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors">
+                    <button onClick={() => { navigate('/settings'); setUserMenuOpen(false); }} className="w-full px-4 py-2 text-left text-sm hover:bg-muted transition-colors">
                       Configurações
                     </button>
                     <div className="border-t border-border my-1" />

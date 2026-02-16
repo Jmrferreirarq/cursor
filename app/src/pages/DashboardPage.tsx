@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Plus } from 'lucide-react';
+import { Sparkles, Plus, Image, ListTodo, Calendar, BarChart3, FileText, ArrowRight } from 'lucide-react';
 import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
+import { useMedia } from '@/context/MediaContext';
 import DayPanel from '@/components/dashboard/DayPanel';
 import CashflowCard from '@/components/dashboard/CashflowCard';
 import PipelineCard from '@/components/dashboard/PipelineCard';
@@ -23,7 +24,24 @@ const mockTeam: TeamMember[] = [
 export default function DashboardPage() {
   const { greeting } = useTime();
   const navigate = useNavigate();
-  const { projects } = useData();
+  const { projects, proposals } = useData();
+  const { assets, posts } = useMedia();
+
+  const contentFactoryStats = useMemo(() => {
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    const mediaInbox = assets.length;
+    const naQueue = posts.filter((p) => ['inbox', 'generated', 'review', 'rejected', 'approved'].includes(p.status)).length;
+    const agendados = posts.filter((p) => p.status === 'scheduled').length;
+    const publicadosEsteMes = posts.filter((p) => {
+      if (p.status !== 'published' || !p.publishedDate) return false;
+      const d = new Date(p.publishedDate);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    }).length;
+    return { mediaInbox, naQueue, agendados, publicadosEsteMes };
+  }, [assets, posts]);
+
   const activeProjects = projects.filter((p) =>
     ['lead', 'negotiation', 'active'].includes(p.status)
   );
@@ -53,6 +71,98 @@ export default function DashboardPage() {
           <Plus className="w-4 h-4" />
           <span>Nova Proposta</span>
         </button>
+      </motion.div>
+
+      {/* Content Factory — Resumo */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="bg-card border border-border rounded-xl p-5"
+      >
+        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-primary" />
+          Content Factory — Resumo
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+          <button
+            onClick={() => navigate('/media')}
+            className="flex items-center justify-between gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Image className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Media Inbox</p>
+                <p className="text-2xl font-bold">{contentFactoryStats.mediaInbox}</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+          <button
+            onClick={() => navigate('/planner')}
+            className="flex items-center justify-between gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                <ListTodo className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Na Queue</p>
+                <p className="text-2xl font-bold">{contentFactoryStats.naQueue}</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+          <button
+            onClick={() => navigate('/planner')}
+            className="flex items-center justify-between gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Agendados</p>
+                <p className="text-2xl font-bold">{contentFactoryStats.agendados}</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+          <button
+            onClick={() => navigate('/performance')}
+            className="flex items-center justify-between gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-medium text-sm">Publicados este mês</p>
+                <p className="text-2xl font-bold">{contentFactoryStats.publicadosEsteMes}</p>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+          {proposals.filter((p) => p.status === 'sent').length > 0 && (
+            <button
+              onClick={() => navigate('/proposals')}
+              className="flex items-center justify-between gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Propostas Ativas</p>
+                  <p className="text-2xl font-bold">{proposals.filter((p) => p.status === 'sent').length}</p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+            </button>
+          )}
+        </div>
       </motion.div>
 
       {/* KPI Grid */}

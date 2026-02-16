@@ -2,13 +2,14 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calendar as CalendarIcon, LayoutGrid, Plus, ChevronLeft, ChevronRight,
-  GripVertical, Image, Video, Trash2, Edit3, Send, Eye, Sparkles,
+  GripVertical, Image, Video, Trash2, Edit3, Send, Eye, Sparkles, Loader2,
   Instagram, Linkedin, Youtube, MessageCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
 import { checkSimilarity, checkChannelBalance } from '@/services/antiRepetition';
 import { generateCalendarSuggestions, autoFillCalendar } from '@/services/autoSlots';
+import { hasApiKey, suggestFeedMix, feedMixToPosts } from '@/services/ai';
 import type { ContentPost, PostStatus, ContentChannel } from '@/types';
 
 const KANBAN_COLS: { status: PostStatus; label: string; color: string }[] = [
@@ -31,6 +32,7 @@ export default function PlannerPage() {
   const { posts, updatePost, deletePost, addPost, slots, assets, editorialDNA } = useMedia();
   const [view, setView] = useState<'kanban' | 'calendar'>('kanban');
   const [calMonth, setCalMonth] = useState(() => new Date());
+  const [aiMixLoading, setAiMixLoading] = useState(false);
 
   const handleAutoFill = () => {
     const suggestions = generateCalendarSuggestions(slots, assets, posts, editorialDNA, 4);
@@ -45,6 +47,30 @@ export default function PlannerPage() {
     toast.success(`${newPosts.length} posts-ideia criados automaticamente para as próximas 4 semanas`);
   };
 
+  const handleAiMix = async () => {
+    if (!hasApiKey()) {
+      toast.error('Configura a API key nas Definições para usar a AI.');
+      return;
+    }
+    setAiMixLoading(true);
+    try {
+      const suggestions = await suggestFeedMix(assets, slots, posts, 4);
+      const newPosts = feedMixToPosts(suggestions);
+      if (newPosts.length === 0) {
+        toast('Sem sugestões. Faz upload de mais conteúdo ou verifica os assets disponíveis.');
+        return;
+      }
+      newPosts.forEach((p) => {
+        addPost({ ...p, id: `post-ai-${Date.now()}-${Math.random().toString(36).slice(2, 6)}` });
+      });
+      toast.success(`${newPosts.length} sugestões da AI adicionadas ao Planner`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao obter sugestões da AI');
+    } finally {
+      setAiMixLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -54,12 +80,20 @@ export default function PlannerPage() {
             <CalendarIcon className="w-4 h-4" />
             <span className="text-sm font-medium tracking-wide uppercase">Content Factory</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Planner</h1>
-          <p className="text-muted-foreground mt-2">Kanban + Calendário de publicações</p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Conteúdo</h1>
+          <p className="text-muted-foreground mt-2">Kanban + Calendário — do inbox à publicação</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={handleAutoFill} className="inline-flex items-center gap-2 px-4 py-2 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors">
             <Sparkles className="w-4 h-4" />Auto-preencher
+          </button>
+          <button
+            onClick={handleAiMix}
+            disabled={aiMixLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
+            {aiMixLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            AI sugere mix
           </button>
           <div className="flex border border-border rounded-xl overflow-hidden">
             <button onClick={() => setView('kanban')} className={`px-4 py-2 text-sm font-medium transition-colors ${view === 'kanban' ? 'bg-primary text-primary-foreground' : 'bg-muted/30 text-muted-foreground hover:bg-muted'}`}>

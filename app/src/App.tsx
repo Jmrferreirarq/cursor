@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
@@ -30,8 +30,6 @@ import ProposalsManagementPage from './pages/ProposalsManagementPage';
 import MediaHubPage from './pages/MediaHubPage';
 import AssetDetailPage from './pages/AssetDetailPage';
 import PlannerPage from './pages/PlannerPage';
-import ContentQueuePage from './pages/ContentQueuePage';
-import ContentCalendarPage from './pages/ContentCalendarPage';
 import PerformancePage from './pages/PerformancePage';
 import EditorialDNAPage from './pages/EditorialDNAPage';
 import AgentPage from './pages/AgentPage';
@@ -46,6 +44,7 @@ import MunicipiosPage from './pages/MunicipiosPage';
 import PropostaPublicPage from './pages/PropostaPublicPage';
 import PropostaShortPage from './pages/PropostaShortPage';
 import PortfolioPublicPage from './pages/PortfolioPublicPage';
+import SettingsPage from './pages/SettingsPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -105,16 +104,8 @@ function App() {
                 <Route path="/marketing" element={<MarketingPage />} />
                 <Route path="/media/:id" element={<AssetDetailPage />} />
                 <Route path="/planner" element={<PlannerPage />} />
-                <Route path="/queue" element={
-                  <ErrorBoundary fallback={<div className="p-8 border border-destructive/50 bg-destructive/5 rounded-xl"><h2 className="text-lg font-semibold text-destructive mb-2">Erro na Queue</h2><p className="text-muted-foreground text-sm mb-4">Abre F12 → Console para detalhes.</p><button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">Recarregar</button></div>}>
-                    <ContentQueuePage />
-                  </ErrorBoundary>
-                } />
-                <Route path="/content-calendar" element={
-                  <ErrorBoundary fallback={<div className="p-8 border border-destructive/50 bg-destructive/5 rounded-xl"><h2 className="text-lg font-semibold text-destructive mb-2">Erro no Calendário</h2><p className="text-muted-foreground text-sm mb-4">Abre F12 → Console para detalhes.</p><button type="button" onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">Recarregar</button></div>}>
-                    <ContentCalendarPage />
-                  </ErrorBoundary>
-                } />
+                <Route path="/queue" element={<Navigate to="/planner" replace />} />
+                <Route path="/content-calendar" element={<Navigate to="/planner" replace />} />
                 <Route path="/performance" element={<PerformancePage />} />
                 <Route path="/editorial-dna" element={<EditorialDNAPage />} />
                 <Route path="/agent" element={
@@ -139,6 +130,7 @@ function App() {
                 <Route path="/library" element={<MaterialLibraryPage />} />
                 <Route path="/inbox" element={<StudioInboxPage />} />
                 <Route path="/brand" element={<BrandIdentityPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/calculator" element={
                   <ErrorBoundary fallback={
                     <div className="p-8 rounded-xl border border-destructive/50 bg-destructive/5">
