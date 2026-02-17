@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Dna, Plus, Trash2, Save, Mic, BookOpen, Columns3, Edit3 } from 'lucide-react';
+import { Dna, Plus, Trash2, Save, Mic, BookOpen, Columns3, Edit3, FileText, Hash, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
-import type { EditorialDNA, EditorialPillar, EditorialVoice, EditorialFormat } from '@/types';
+import type { EditorialDNA, EditorialPillar, EditorialVoice, EditorialFormat, CaptionTemplate, HashtagSet } from '@/types';
 
 export default function EditorialDNAPage() {
   const { editorialDNA, setEditorialDNA } = useMedia();
-  const [activeTab, setActiveTab] = useState<'pillars' | 'voices' | 'formats'>('pillars');
+  const [activeTab, setActiveTab] = useState<'pillars' | 'voices' | 'formats' | 'templates' | 'hashtags'>('pillars');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<EditorialDNA | null>(null);
 
@@ -80,6 +80,46 @@ export default function EditorialDNAPage() {
     setDraft({ ...draft, formats: draft.formats.filter((_, i) => i !== idx) });
   };
 
+  const templates = dna.captionTemplates ?? [];
+  const hashtagSets = dna.hashtagSets ?? [];
+
+  const addTemplate = () => {
+    if (!draft) return;
+    const t = [...(draft.captionTemplates ?? []), { id: `t-${Date.now()}`, name: '', text: '', hashtags: [] }];
+    setDraft({ ...draft, captionTemplates: t });
+  };
+  const updateTemplate = (idx: number, patch: Partial<CaptionTemplate>) => {
+    if (!draft) return;
+    const t = [...(draft.captionTemplates ?? [])];
+    t[idx] = { ...t[idx], ...patch };
+    setDraft({ ...draft, captionTemplates: t });
+  };
+  const removeTemplate = (idx: number) => {
+    if (!draft) return;
+    setDraft({ ...draft, captionTemplates: (draft.captionTemplates ?? []).filter((_, i) => i !== idx) });
+  };
+
+  const addHashtagSet = () => {
+    if (!draft) return;
+    const h = [...(draft.hashtagSets ?? []), { id: `h-${Date.now()}`, name: '', hashtags: [] }];
+    setDraft({ ...draft, hashtagSets: h });
+  };
+  const updateHashtagSet = (idx: number, patch: Partial<HashtagSet>) => {
+    if (!draft) return;
+    const h = [...(draft.hashtagSets ?? [])];
+    h[idx] = { ...h[idx], ...patch };
+    setDraft({ ...draft, hashtagSets: h });
+  };
+  const removeHashtagSet = (idx: number) => {
+    if (!draft) return;
+    setDraft({ ...draft, hashtagSets: (draft.hashtagSets ?? []).filter((_, i) => i !== idx) });
+  };
+
+  const copyHashtags = (tags: string[]) => {
+    navigator.clipboard.writeText(tags.join(' '));
+    toast.success('Hashtags copiadas');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -109,11 +149,13 @@ export default function EditorialDNAPage() {
       </motion.div>
 
       {/* Tabs */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex gap-2">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex flex-wrap gap-2">
         {([
           { key: 'pillars', label: 'Pilares', icon: Columns3, count: dna.pillars.length },
           { key: 'voices', label: 'Vozes', icon: Mic, count: dna.voices.length },
           { key: 'formats', label: 'Formatos', icon: BookOpen, count: dna.formats.length },
+          { key: 'templates', label: 'Templates Caption', icon: FileText, count: templates.length },
+          { key: 'hashtags', label: 'Hashtag Sets', icon: Hash, count: hashtagSets.length },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -226,6 +268,81 @@ export default function EditorialDNAPage() {
             {editing && (
               <button onClick={addFormat} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-all">
                 <Plus className="w-4 h-4" /> Adicionar Formato
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'templates' && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground mb-4">Templates reutilizáveis com placeholders: {'{projeto}'}, {'{localização}'}, {'{material}'}</p>
+            {templates.map((t, i) => (
+              <div key={t.id} className="bg-card border border-border rounded-xl p-5">
+                {editing ? (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input value={t.name} onChange={(e) => updateTemplate(i, { name: e.target.value })} placeholder="Nome do template" className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-xl text-sm font-medium focus:border-primary focus:outline-none" />
+                      <button onClick={() => removeTemplate(i)} className="p-2 text-destructive hover:bg-destructive/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                    <textarea value={t.text} onChange={(e) => updateTemplate(i, { text: e.target.value })} placeholder="Texto com {projeto}, {localização}, {material}..." rows={3} className="w-full px-4 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:border-primary focus:outline-none resize-none" />
+                    <input value={(t.hashtags || []).join(', ')} onChange={(e) => updateTemplate(i, { hashtags: e.target.value.split(',').map((h) => h.trim()).filter(Boolean) })} placeholder="Hashtags (separadas por vírgula)" className="w-full px-4 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:border-primary focus:outline-none" />
+                  </div>
+                ) : (
+                  <div>
+                    <h3 className="font-semibold mb-2">{t.name}</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{t.text}</p>
+                    {(t.hashtags?.length ?? 0) > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {t.hashtags?.map((h) => (
+                          <span key={h} className="px-2 py-0.5 rounded bg-muted text-xs">{h}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+            {editing && (
+              <button onClick={addTemplate} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-all">
+                <Plus className="w-4 h-4" /> Novo Template
+              </button>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'hashtags' && (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground mb-4">Grupos de hashtags por pilar editorial. Botão para copiar.</p>
+            {hashtagSets.map((h, i) => (
+              <div key={h.id} className="bg-card border border-border rounded-xl p-5">
+                {editing ? (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input value={h.name} onChange={(e) => updateHashtagSet(i, { name: e.target.value })} placeholder="Nome (ex: Habitação)" className="flex-1 px-4 py-2 bg-muted/50 border border-border rounded-xl text-sm font-medium focus:border-primary focus:outline-none" />
+                      <button onClick={() => removeHashtagSet(i)} className="p-2 text-destructive hover:bg-destructive/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                    <input value={(h.hashtags || []).join(', ')} onChange={(e) => updateHashtagSet(i, { hashtags: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} placeholder="#arquitetura #aveiro #moradia #designinteriores..." className="w-full px-4 py-2 bg-muted/50 border border-border rounded-xl text-sm focus:border-primary focus:outline-none" />
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">{h.name}</h3>
+                      <div className="flex flex-wrap gap-1">
+                        {h.hashtags?.map((tag) => (
+                          <span key={tag} className="px-2 py-0.5 rounded bg-muted text-xs">{tag}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <button onClick={() => copyHashtags(h.hashtags || [])} className="shrink-0 inline-flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors">
+                      <Copy className="w-4 h-4" /> Copiar
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {editing && (
+              <button onClick={addHashtagSet} className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-primary/40 hover:text-primary transition-all">
+                <Plus className="w-4 h-4" /> Novo Hashtag Set
               </button>
             )}
           </div>

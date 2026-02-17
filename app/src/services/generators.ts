@@ -194,6 +194,12 @@ export function generateRecycledContent(input: RecycleInput): RecycleOutput {
   const copies: ContentCopy[] = [
     { lang: 'pt', channel: 'ig-reels', text: `${proj} — o processo completo em 20 segundos.\n\nGuarda para inspiração 🔖\n\n#arquitetura #reels #processo` },
     { lang: 'en', channel: 'ig-reels', text: `${proj} — the full process in 20 seconds.\n\nSave for inspiration 🔖\n\n#architecture #reels #process` },
+    { lang: 'pt', channel: 'tiktok', text: `${proj} — o melhor momento em 10 segundos. 🔥\n\n#arquitetura #portugal #processo` },
+    { lang: 'en', channel: 'tiktok', text: `${proj} — the best moment in 10 seconds. 🔥\n\n#architecture #portugal #process` },
+    { lang: 'pt', channel: 'youtube', text: `${proj} — resultado final.\n\nO projeto completo em vídeo. Subscreve para mais conteúdo de arquitetura.` },
+    { lang: 'en', channel: 'youtube', text: `${proj} — final result.\n\nThe complete project on video. Subscribe for more architecture content.` },
+    { lang: 'pt', channel: 'ig-stories', text: `📐 ${proj}\n\nDesliza para ver o processo completo →` },
+    { lang: 'en', channel: 'ig-stories', text: `📐 ${proj}\n\nSwipe to see the full process →` },
     { lang: 'pt', channel: 'linkedin', text: `O que ${proj} me ensinou:\n\nCada projeto traz lições. Esta é uma das mais importantes: o processo importa tanto quanto o resultado.\n\nQuando investimos tempo em planear, a execução flui. Quando cortamos atalhos, pagamos depois.\n\n#arquitetura #liderança #portugal` },
     { lang: 'en', channel: 'linkedin', text: `What ${proj} taught me:\n\nEvery project brings lessons. This is one of the most important: the process matters as much as the result.\n\nWhen we invest time in planning, execution flows. When we cut corners, we pay later.\n\n#architecture #leadership #portugal` },
     { lang: 'pt', channel: 'pinterest', text: `${proj} | Arquitetura contemporânea em Portugal | FERREIRARQUITETOS` },

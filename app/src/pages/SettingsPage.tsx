@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, Trash2, Image, Users, AlertTriangle } from 'lucide-react';
+import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
+import { hasApiKey } from '@/services/ai';
+import AISettingsDialog from '@/components/media/AISettingsDialog';
 const STORAGE_KEY = 'fa360_data';
 
 export default function SettingsPage() {
   const { resetAllData } = useData();
-  const { resetMediaData } = useMedia();
+  const { resetMediaData, trashAssets, trashPacks, trashPosts } = useMedia();
+  const trashCount = trashAssets.length + trashPacks.length + trashPosts.length;
   const [confirmReset, setConfirmReset] = useState<'data' | 'media' | 'all' | null>(null);
+  const [showAISettings, setShowAISettings] = useState(false);
 
   const handleResetData = async () => {
     await resetAllData();
@@ -40,6 +45,72 @@ export default function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight">Definições</h1>
         <p className="text-muted-foreground mt-1">Configurações e gestão de dados</p>
       </motion.div>
+
+      {/* AI Copilot */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
+        <div className="p-5 border-b border-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            AI Copilot
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            OpenAI GPT-4 Vision para análise de imagens e geração de copy
+          </p>
+        </div>
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${hasApiKey() ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                <Key className={`w-5 h-5 ${hasApiKey() ? 'text-emerald-500' : 'text-amber-500'}`} />
+              </div>
+              <div>
+                <p className="font-medium">{hasApiKey() ? 'API key configurada' : 'API key não configurada'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {hasApiKey() ? 'O AI está ativo para análise e geração de conteúdo' : 'Configura a key para usar AI Analisar, Gerar articulação, etc.'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAISettings(true)}
+              className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors"
+            >
+              {hasApiKey() ? 'Alterar' : 'Configurar'}
+            </button>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Lixo */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
+        <div className="p-5 border-b border-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-muted-foreground" />
+            Lixo
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Assets, packs e posts apagados ficam aqui e podem ser recuperados
+          </p>
+        </div>
+        <div className="p-5">
+          <Link
+            to="/trash"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Ver lixo {trashCount > 0 && `(${trashCount})`}
+          </Link>
+        </div>
+      </motion.section>
 
       {/* Zona de Perigo */}
       <motion.section
@@ -169,6 +240,8 @@ export default function SettingsPage() {
           </motion.div>
         </motion.div>
       )}
+
+      <AISettingsDialog open={showAISettings} onClose={() => setShowAISettings(false)} />
     </div>
   );
 }

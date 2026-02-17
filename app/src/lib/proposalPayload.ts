@@ -198,6 +198,7 @@ export const proposalPayloadSchema = z.object({
   lotDependencias: z.array(z.string()).optional(),
   // Fase 2: Modelo paramétrico de custos de infraestruturas
   lotCustosInfra: z.array(z.object({
+    infraId: z.string().optional(),
     nome: z.string(),
     unidade: z.string(),
     quantidade: z.number(),
@@ -216,6 +217,7 @@ export const proposalPayloadSchema = z.object({
   // Per-scenario infrastructure costs (P1: infraestruturas por cenário A/B/C)
   lotCustosInfraPorCenario: z.array(z.object({
     label: z.string(),
+    items: z.array(z.object({ nome: z.string(), infraId: z.string(), subtotal: z.number() })).optional(),
     subtotal: z.number(),
     total: z.number(),
     min: z.number(),

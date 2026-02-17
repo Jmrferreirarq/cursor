@@ -961,7 +961,7 @@ const DESCRICOES_ESPECIALIDADES: Record<string, string> = {
   termico: 'Estudo térmico e eficiência energética do edifício, conformidade com RCCTE/SCE e certificação energética.',
   scie: 'Ficha ou projeto de segurança contra incêndios em edifícios (SCIE), cumprimento das normas de evacuação e proteção.',
   domotica: 'Projeto de sistemas de automação e gestão técnica centralizada (GTC) do edifício.',
-  paisagismo: 'Projeto de arranjos exteriores ao nível de licenciamento: conceito geral, planta de implantação, definição de áreas permeáveis/impermeáveis e enquadramento paisagístico. Não inclui caderno de encargos, medições detalhadas ou projeto de execução de paisagismo.',
+  paisagismo: 'Projeto de arranjos exteriores ao nível de licenciamento (conceito geral, planta de implantação, áreas permeáveis/impermeáveis). Não inclui caderno de encargos, medições detalhadas ou projeto de execução de paisagismo.',
   interiores: 'Projeto de arquitetura de interiores, layout, acabamentos e equipamentos dos espaços.',
   geotecnia: 'Estudo geotécnico, caracterização do terreno e definição de soluções de fundações e contenções.',
   coord_especialidades: 'Coordenação e compatibilização dos projetos de especialidades com o projeto de arquitetura/urbanismo. Inclui reuniões de coordenação (quinzenais), compatibilização de peças desenhadas (BIM quando aplicável), compilação de peças finais para entrega à CM, e resposta técnica a notificações de entidades consultadas (SMAS, ANEPC, etc.).',
@@ -1851,15 +1851,25 @@ export default function CalculatorPage() {
       lotAfastamentoFrontal, lotAfastamentoLateral, lotAfastamentoPosterior, lotNumPisos, lotAlturaMaxima,
       lotIndiceImplantacao, lotIndiceConstrucao, lotProfundidadeMaxConstrucao]);
 
+  // areaMedia do cenário de referência (plan: ABC = areaMedia * 0.7)
+  const areaMediaCenarioRef = useMemo(() => {
+    const cen = lotCenarioRef === 'C' ? lotCenarioC : lotCenarioRef === 'B' ? lotCenarioB : lotCenarioA;
+    return parseFloat(cen.areaMedia) || 0;
+  }, [lotCenarioRef, lotCenarioA, lotCenarioB, lotCenarioC]);
+
   const abcAutoMoradia = useMemo(() => {
-    // Prioridade: solução escolhida (N. lotes pretendidos)
+    // Prioridade 1 (plan): areaMedia do cenário ref × 70% — consistente com investimento do promotor
+    if (areaMediaCenarioRef > 0) {
+      return Math.round(areaMediaCenarioRef * MORADIA_ADDON_DEFAULTS.abcFactor);
+    }
+    // Prioridade 2: solução escolhida (N. lotes pretendidos)
     if (implSolucaoEscolhida) {
       const { areaImplantacao, abcEstimada, numPisos } = implSolucaoEscolhida;
       const fator = PISO_FACTOR[numPisos] ?? (1 + (numPisos - 1) * 0.85);
       const abcFromImpl = Math.round(areaImplantacao * fator);
       return Math.min(abcFromImpl, abcEstimada);
     }
-    // Fallback: cenário de referência
+    // Prioridade 3: cenário de referência
     if (implCenarioRef) {
       const { areaImplantacao, abcEstimada, numPisos } = implCenarioRef;
       const fator = PISO_FACTOR[numPisos] ?? (1 + (numPisos - 1) * 0.85);
@@ -1871,8 +1881,8 @@ export default function CalculatorPage() {
     const pctCed = parseFloat(lotPercentagemCedencias) || 15;
     const nLotes = parseInt(lotNumLotes, 10) || 0;
     const areaMediaFb = areaEst > 0 && nLotes > 0 ? Math.round((areaEst - areaEst * pctCed / 100) / nLotes) : 0;
-    return areaMediaFb > 0 ? Math.round(areaMediaFb * (parseFloat(lotIndiceConstrucao) || 0.7)) : 0;
-  }, [implSolucaoEscolhida, implCenarioRef, lotAreaEstudo, lotPercentagemCedencias, lotNumLotes, lotIndiceConstrucao]);
+    return areaMediaFb > 0 ? Math.round(areaMediaFb * MORADIA_ADDON_DEFAULTS.abcFactor) : 0;
+  }, [areaMediaCenarioRef, implSolucaoEscolhida, implCenarioRef, lotAreaEstudo, lotPercentagemCedencias, lotNumLotes]);
 
   // ── Cálculo do Add-on Moradia Tipo ──
   const calcularMoradiaAddon = () => {
@@ -1900,12 +1910,12 @@ export default function CalculatorPage() {
     const descontoIgual = MORADIA_ADDON_DEFAULTS.descontoIgual;
     const descontoAdaptada = MORADIA_ADDON_DEFAULTS.descontoAdaptada;
     const totalOriginal = numTipos * feeEfetivo;
-    // Repetição: fee one-time por tipo de variante (1× idêntica, 1× adaptada), não por lote
-    // O trabalho por lote (implantação + submissão) está coberto pela parcela fixa
+    // Repetição: feeBase * (1 - desconto) por unidade (plan: repeticoesIguais * feeBase * 0.50)
+    // Parcela fixa por lote cobre implantação, peças do lote, submissão
     const feeRepIgual = Math.round(feeBase * (1 - descontoIgual / 100));
     const feeRepAdapt = Math.round(feeBase * (1 - descontoAdaptada / 100));
-    const totalRepIguais = repIguais > 0 ? feeRepIgual : 0;
-    const totalRepAdapt = repAdapt > 0 ? feeRepAdapt : 0;
+    const totalRepIguais = repIguais * feeRepIgual;
+    const totalRepAdapt = repAdapt * feeRepAdapt;
     const totalFixo = fixoLoteQty * fixoLote;
     const totalAddon = totalOriginal + totalRepIguais + totalRepAdapt + totalFixo;
     // Cláusulas
@@ -1951,7 +1961,8 @@ export default function CalculatorPage() {
   const areaRef = honorMode === 'area' ? parseFloat(area) || 0 : Math.round((parseFloat(valorObra) || 0) / 1000);
   const valorExtras = EXTRAS_PROPOSTA.reduce((s, e) => s + (parseFloat(extrasValores[e.id] || '0') || 0), 0);
   const moradiaAddonTotal = moradiaAddonCalc?.totalAddon ?? 0;
-  const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal;
+  const lotAddonsPoolTotal = isLoteamento ? calcularAddonsPool().total : 0;
+  const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal + lotAddonsPoolTotal;
   // Desconto comercial: aplica-se sobre serviços (arq + esp + moradia addon), NÃO sobre despesas reembolsáveis
   const descontoValorCalc = descontoAtivo && descontoTipo ? Math.round(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100) : 0;
   const totalServicosSemIVAComDesconto = totalServicosSemIVA - descontoValorCalc;
@@ -2022,6 +2033,11 @@ export default function CalculatorPage() {
     }
     if (!projectType) {
       toast.error(t('proposalValidation.typologyRequired', lang));
+      return false;
+    }
+    // Desconto personalizado exige justificação obrigatória
+    if (descontoAtivo && descontoTipo === 'personalizado' && (parseFloat(descontoPct) || 0) > 0 && !descontoJustificacao.trim()) {
+      toast.error(lang === 'en' ? 'Custom discount requires a justification.' : 'Desconto personalizado exige justificação.');
       return false;
     }
     return true;
@@ -2336,11 +2352,19 @@ export default function CalculatorPage() {
           const labels: ('A' | 'B' | 'C')[] = lotNumAlternativas === '3' ? ['A', 'B', 'C'] : ['A', 'B'];
           const perCenario = labels.map(lbl => {
             const r = calcularCustosInfra(lbl);
-            return { label: lbl, subtotal: r.subtotalObra, total: r.totalComContingencia, min: r.custoMin, max: r.custoMax, contingenciaPct: r.contingenciaPct };
+            return {
+              label: lbl,
+              items: r.items.map(i => ({ nome: i.nome, infraId: i.infraId, subtotal: i.subtotal })),
+              subtotal: r.subtotalObra,
+              total: r.totalComContingencia,
+              min: r.custoMin,
+              max: r.custoMax,
+              contingenciaPct: r.contingenciaPct,
+            };
           });
           return {
             lotCustosInfra: ci.items.map(i => ({
-              nome: i.nome, unidade: i.unidade, quantidade: i.quantidade,
+              infraId: i.infraId, nome: i.nome, unidade: i.unidade, quantidade: i.quantidade,
               custoUnitario: i.custoUnitario, custoRamal: i.custoRamal > 0 ? i.custoRamal : undefined,
               subtotal: i.subtotal, honorario: i.honorarioProjeto,
             })),
@@ -2357,6 +2381,15 @@ export default function CalculatorPage() {
             lotCenarioRecomendado: lotCenarioRecomendado || undefined,
           };
         })(),
+        // B1: PIP opcional — nota com/sem PIP (valor em €)
+        ...(isLoteamento && fasesIncluidas.has('lot_pip') ? (() => {
+          const pctPIP = FASES_LOTEAMENTO.find(f => f.id === 'lot_pip')?.pct ?? 15;
+          const somaPct = Array.from(fasesIncluidas).reduce((s, id) => s + (FASES_LOTEAMENTO.find(p => p.id === id)?.pct ?? 0), 0);
+          if (somaPct <= 0) return {};
+          const valorPIP = Math.round(valorArq * pctPIP / somaPct);
+          const valorSemPIP = valorArq - valorPIP;
+          return { lotPipNotaOpcional: { valorPIP, valorSemPIP } };
+        })() : {}),
         // Equipamentos (cave, piscina, exteriores)
         lotBasement: lotBasement !== 'nenhuma' ? BASEMENT_OPTIONS[lotBasement].label : undefined,
         lotBasementArea: lotBasement !== 'nenhuma' && lotBasementArea ? lotBasementArea : undefined,
@@ -4648,8 +4681,8 @@ export default function CalculatorPage() {
                     {moradiaAddonCalc && (
                       <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg space-y-1 text-sm">
                         <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.numTipos}× {moradiaAddonModo === 'previo' ? 'Estudo prévio' : 'Moradia original'}</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalOriginal)}</span></div>
-                        {moradiaAddonCalc.repeticoesIguais > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição idêntica (−{moradiaAddonCalc.descontoIgual}%) → {moradiaAddonCalc.repeticoesIguais} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesIguais)}</span></div>}
-                        {moradiaAddonCalc.repeticoesAdaptadas > 0 && <div className="flex justify-between"><span className="text-muted-foreground">1× Repetição adaptada (−{moradiaAddonCalc.descontoAdaptada}%) → {moradiaAddonCalc.repeticoesAdaptadas} lotes</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesAdaptadas)}</span></div>}
+                        {moradiaAddonCalc.repeticoesIguais > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesIguais}× Repetição idêntica (−{moradiaAddonCalc.descontoIgual}%)</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesIguais)}</span></div>}
+                        {moradiaAddonCalc.repeticoesAdaptadas > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.repeticoesAdaptadas}× Repetição adaptada (−{moradiaAddonCalc.descontoAdaptada}%)</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalRepeticoesAdaptadas)}</span></div>}
                         {moradiaAddonCalc.fixoLoteQty > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{moradiaAddonCalc.fixoLoteQty}× Parcela fixa lote</span><span className="font-medium">{formatCurrency(moradiaAddonCalc.totalFixoLotes)}</span></div>}
                         <div className="flex justify-between pt-1 border-t border-amber-500/30 font-semibold text-amber-400"><span>Total Add-on Moradia</span><span>{formatCurrency(moradiaAddonCalc.totalAddon)}</span></div>
                       </div>
@@ -5254,9 +5287,9 @@ export default function CalculatorPage() {
     </AnimatePresence>
 
     {/* Modal de histórico de propostas */}
-    <ProposalHistoryModal 
-      isOpen={showHistoryModal} 
-      onClose={() => setShowHistoryModal(false)} 
+    <ProposalHistoryModal
+      isOpen={showHistoryModal}
+      onClose={() => setShowHistoryModal(false)}
     />
     </>
   );

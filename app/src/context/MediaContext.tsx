@@ -3,6 +3,7 @@ import type {
   MediaAsset, ContentPack, ContentPost,
   EditorialDNA, PublicationSlot, PerformanceEntry,
 } from '@/types';
+import type { TrashEntry } from '@/services/storage';
 import { localStorageService } from '@/services/localStorage';
 
 interface MediaContextType {
@@ -38,6 +39,15 @@ interface MediaContextType {
   addPerformanceEntry: (entry: PerformanceEntry) => void;
   /** Apaga todo o conteúdo da Content Factory (media, posts, packs, performance) */
   resetMediaData: () => void;
+
+  // Lixo (recuperável)
+  trashAssets: TrashEntry<MediaAsset>[];
+  trashPacks: TrashEntry<ContentPack>[];
+  trashPosts: TrashEntry<ContentPost>[];
+  restoreAsset: (id: string) => void;
+  restorePack: (id: string) => void;
+  restorePost: (id: string) => void;
+  emptyTrash: () => void;
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined);
@@ -88,6 +98,9 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [contentPacks, setContentPacks] = useState<ContentPack[]>([]);
   const [posts, setPosts] = useState<ContentPost[]>([]);
+  const [trashAssets, setTrashAssets] = useState<TrashEntry<MediaAsset>[]>([]);
+  const [trashPacks, setTrashPacks] = useState<TrashEntry<ContentPack>[]>([]);
+  const [trashPosts, setTrashPosts] = useState<TrashEntry<ContentPost>[]>([]);
   const [editorialDNA, _setEditorialDNA] = useState<EditorialDNA | null>(null);
   const [slots, _setSlots] = useState<PublicationSlot[]>(defaultSlots);
   const [performanceEntries, setPerformanceEntries] = useState<PerformanceEntry[]>([]);
@@ -99,6 +112,9 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
       if (data.mediaAssets.length) setAssets(data.mediaAssets);
       if (data.contentPacks.length) setContentPacks(data.contentPacks);
       if (data.contentPosts.length) setPosts(data.contentPosts);
+      if (data.trashAssets?.length) setTrashAssets(data.trashAssets);
+      if (data.trashPacks?.length) setTrashPacks(data.trashPacks);
+      if (data.trashPosts?.length) setTrashPosts(data.trashPosts);
       _setEditorialDNA(data.editorialDNA ?? defaultEditorialDNA);
       if (data.slots.length) _setSlots(data.slots);
       if (data.performanceEntries.length) setPerformanceEntries(data.performanceEntries);
@@ -116,12 +132,15 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
         mediaAssets: assets,
         contentPacks,
         contentPosts: posts,
+        trashAssets,
+        trashPacks,
+        trashPosts,
         editorialDNA,
         slots,
         performanceEntries,
       });
     } catch { /* quota */ }
-  }, [assets, contentPacks, posts, editorialDNA, slots, performanceEntries]);
+  }, [assets, contentPacks, posts, trashAssets, trashPacks, trashPosts, editorialDNA, slots, performanceEntries]);
 
   // ── Assets ──
   const addAsset = useCallback((asset: MediaAsset) => {
@@ -133,8 +152,12 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteAsset = useCallback((id: string) => {
-    setAssets((prev) => prev.filter((a) => a.id !== id));
-  }, []);
+    const asset = assets.find((a) => a.id === id);
+    if (asset) {
+      setTrashAssets((prev) => [...prev, { item: asset, deletedAt: new Date().toISOString() }]);
+      setAssets((prev) => prev.filter((a) => a.id !== id));
+    }
+  }, [assets]);
 
   // ── Content Packs ──
   const addContentPack = useCallback((pack: ContentPack) => {
@@ -146,8 +169,12 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteContentPack = useCallback((id: string) => {
-    setContentPacks((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+    const pack = contentPacks.find((p) => p.id === id);
+    if (pack) {
+      setTrashPacks((prev) => [...prev, { item: pack, deletedAt: new Date().toISOString() }]);
+      setContentPacks((prev) => prev.filter((p) => p.id !== id));
+    }
+  }, [contentPacks]);
 
   // ── Posts ──
   const addPost = useCallback((post: ContentPost) => {
@@ -159,8 +186,12 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deletePost = useCallback((id: string) => {
-    setPosts((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+    const post = posts.find((p) => p.id === id);
+    if (post) {
+      setTrashPosts((prev) => [...prev, { item: post, deletedAt: new Date().toISOString() }]);
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+    }
+  }, [posts]);
 
   const reorderPosts = useCallback((orderedIds: string[]) => {
     setPosts((prev) => {
@@ -190,9 +221,42 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     setAssets([]);
     setContentPacks([]);
     setPosts([]);
+    setTrashAssets([]);
+    setTrashPacks([]);
+    setTrashPosts([]);
     _setEditorialDNA(defaultEditorialDNA);
     _setSlots(defaultSlots);
     setPerformanceEntries([]);
+  }, []);
+
+  const restoreAsset = useCallback((id: string) => {
+    const entry = trashAssets.find((e) => e.item.id === id);
+    if (entry) {
+      setAssets((prev) => [entry.item, ...prev]);
+      setTrashAssets((prev) => prev.filter((e) => e.item.id !== id));
+    }
+  }, [trashAssets]);
+
+  const restorePack = useCallback((id: string) => {
+    const entry = trashPacks.find((e) => e.item.id === id);
+    if (entry) {
+      setContentPacks((prev) => [entry.item, ...prev]);
+      setTrashPacks((prev) => prev.filter((e) => e.item.id !== id));
+    }
+  }, [trashPacks]);
+
+  const restorePost = useCallback((id: string) => {
+    const entry = trashPosts.find((e) => e.item.id === id);
+    if (entry) {
+      setPosts((prev) => [entry.item, ...prev]);
+      setTrashPosts((prev) => prev.filter((e) => e.item.id !== id));
+    }
+  }, [trashPosts]);
+
+  const emptyTrash = useCallback(() => {
+    setTrashAssets([]);
+    setTrashPacks([]);
+    setTrashPosts([]);
   }, []);
 
   return (
@@ -205,6 +269,8 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
         slots, setSlots,
         performanceEntries, addPerformanceEntry,
         resetMediaData,
+        trashAssets, trashPacks, trashPosts,
+        restoreAsset, restorePack, restorePost, emptyTrash,
       }}
     >
       {children}

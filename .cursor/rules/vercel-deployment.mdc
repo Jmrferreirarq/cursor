@@ -1,0 +1,12 @@
+---
+description: Vercel production deployment target
+alwaysApply: true
+---
+
+# Vercel Deployment
+
+O projeto correto é **cursor**, NÃO kimi.
+
+- Projeto: https://vercel.com/jose-ferreiras-projects-7a967533/cursor
+- Produção: https://cursor-blond-two.vercel.app
+- Deploy: `vercel --prod --yes` (já ligado ao cursor)

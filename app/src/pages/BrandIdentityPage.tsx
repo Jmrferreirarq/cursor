@@ -85,6 +85,59 @@ export default function BrandIdentityPage() {
         </button>
       </motion.div>
 
+      {/* Logotipo FERREIRARQUITETOS */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Logotipo</h2>
+          <p className="text-sm text-muted-foreground mt-1">Wordmark principal FERREIRARQUITETOS</p>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-8 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <p className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground">FERREIRA</p>
+            <p className="text-2xl sm:text-4xl font-light tracking-[0.3em] text-muted-foreground mt-1">ARQUITETOS</p>
+          </div>
+          <p className="text-xs text-muted-foreground mt-6">Versão principal · Usar em fundos claros e escuros com contraste adequado</p>
+        </div>
+      </motion.section>
+
+      {/* Paleta FERREIRARQUITETOS */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.08 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Paleta FERREIRARQUITETOS</h2>
+          <p className="text-sm text-muted-foreground mt-1">Cores da marca para materiais de comunicação</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {[
+            { name: 'Preto', hex: '#000000', usage: 'Texto principal, logo' },
+            { name: 'Branco', hex: '#FFFFFF', usage: 'Fundos, logo em dark' },
+            { name: 'Indigo', hex: '#4F46E5', usage: 'Destaques, CTAs' },
+            { name: 'Off-white', hex: '#F5F5F0', usage: 'Fundos suaves' },
+            { name: 'Taupe', hex: '#8B7355', usage: 'Acentos, materiais' },
+            { name: 'Accent', hex: '#E74C3C', usage: 'Alertas, destaques' },
+          ].map((c) => (
+            <div
+              key={c.name}
+              onClick={() => copyToClipboard(c.hex, c.name)}
+              className="cursor-pointer group bg-card border border-border rounded-xl overflow-hidden hover:border-primary/40 transition-all"
+            >
+              <div className="aspect-[3/2]" style={{ backgroundColor: c.hex }} />
+              <div className="p-3">
+                <p className="font-medium text-sm">{c.name}</p>
+                <code className="text-xs text-muted-foreground">{c.hex}</code>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.section>
+
       {/* Brand Colors */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -298,6 +351,28 @@ export default function BrandIdentityPage() {
               </div>
             </motion.div>
           ))}
+        </div>
+      </motion.section>
+
+      {/* Estilo Fotográfico & Tom */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold">Estilo Fotográfico & Tom</h2>
+          <p className="text-sm text-muted-foreground mt-1">Diretrizes visuais e de comunicação</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h4 className="font-medium mb-2 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-primary" /> Estilo Fotográfico</h4>
+            <p className="text-sm text-muted-foreground">Imagens com luz natural, ângulos limpos, materiais em evidência. Evitar filtros excessivos. Preferir fotografia de arquitetura com pessoas em escala para humanizar.</p>
+          </div>
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h4 className="font-medium mb-2 flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /> Tom de Comunicação</h4>
+            <p className="text-sm text-muted-foreground">Profissional mas acessível. Técnico quando necessário, humano nos bastidores. Evitar jargão excessivo. Foco em clareza e confiança.</p>
+          </div>
         </div>
       </motion.section>
 

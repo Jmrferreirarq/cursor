@@ -3,14 +3,28 @@ import { motion } from 'framer-motion';
 import {
   Calendar as CalendarIcon, LayoutGrid, Plus, ChevronLeft, ChevronRight,
   GripVertical, Image, Video, Trash2, Edit3, Send, Eye, Sparkles, Loader2,
-  Instagram, Linkedin, Youtube, MessageCircle,
+  Instagram, Linkedin, Youtube, MessageCircle, AlertTriangle, Copy, Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
 import { checkSimilarity, checkChannelBalance } from '@/services/antiRepetition';
 import { generateCalendarSuggestions, autoFillCalendar } from '@/services/autoSlots';
+import { validateCalendar, generateQueueItems, calculateScore } from '@/services/contentQueue';
 import { hasApiKey, suggestFeedMix, feedMixToPosts } from '@/services/ai';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { imageUrlToPngBlob } from '@/lib/clipboardImage';
 import type { ContentPost, PostStatus, ContentChannel } from '@/types';
+
+function buildFullPost(copy: string, hashtags: string[], cta: string): string {
+  const parts = [copy.trim()];
+  if (hashtags?.length) parts.push('\n\n' + hashtags.join(' '));
+  if (cta?.trim()) parts.push('\n\n' + cta.trim());
+  return parts.join('');
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 const KANBAN_COLS: { status: PostStatus; label: string; color: string }[] = [
   { status: 'inbox', label: 'Inbox', color: 'border-zinc-500/40' },
@@ -29,10 +43,13 @@ const CHANNEL_ICONS: Partial<Record<ContentChannel, typeof Instagram>> = {
 const DAY_NAMES = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 export default function PlannerPage() {
-  const { posts, updatePost, deletePost, addPost, slots, assets, editorialDNA } = useMedia();
+  const { posts, updatePost, deletePost, addPost, slots, assets, contentPacks, editorialDNA } = useMedia();
   const [view, setView] = useState<'kanban' | 'calendar'>('kanban');
   const [calMonth, setCalMonth] = useState(() => new Date());
   const [aiMixLoading, setAiMixLoading] = useState(false);
+  const [generateFromAssetsLoading, setGenerateFromAssetsLoading] = useState(false);
+
+  const conflicts = useMemo(() => validateCalendar(posts, 30), [posts]);
 
   const handleAutoFill = () => {
     const suggestions = generateCalendarSuggestions(slots, assets, posts, editorialDNA, 4);
@@ -71,6 +88,43 @@ export default function PlannerPage() {
     }
   };
 
+  const handleGenerateFromAssets = () => {
+    setGenerateFromAssetsLoading(true);
+    const eligibleAssets = assets.filter((a) => (a.status === 'analisado' || a.status === 'pronto') && contentPacks.some((cp) => cp.assetId === a.id));
+    if (eligibleAssets.length === 0) {
+      toast.error('Nenhum asset com content pack. Cria packs na Media Inbox primeiro.');
+      setGenerateFromAssetsLoading(false);
+      return;
+    }
+    let generated = 0;
+    eligibleAssets.forEach((asset) => {
+      const pack = contentPacks.find((cp) => cp.assetId === asset.id);
+      if (!pack) return;
+      const result = generateQueueItems(asset, pack, asset.projectId, undefined);
+      const coreId = `post-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const derivIds: string[] = [];
+      result.derivativePosts.forEach((dp) => {
+        const did = `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        derivIds.push(did);
+        addPost({
+          ...dp,
+          id: did,
+          parentPostId: coreId,
+          score: calculateScore(dp as ContentPost, asset, posts, editorialDNA),
+        } as ContentPost);
+      });
+      addPost({
+        ...result.post,
+        id: coreId,
+        derivativeIds: derivIds,
+        score: calculateScore(result.post as ContentPost, asset, posts, editorialDNA),
+      } as ContentPost);
+      generated++;
+    });
+    toast.success(`${generated} asset(s) → core + derivados em Em Revisão`);
+    setGenerateFromAssetsLoading(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -83,7 +137,15 @@ export default function PlannerPage() {
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Conteúdo</h1>
           <p className="text-muted-foreground mt-2">Kanban + Calendário — do inbox à publicação</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleGenerateFromAssets}
+            disabled={generateFromAssetsLoading}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-border rounded-xl text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+          >
+            {generateFromAssetsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
+            Gerar a partir de Assets
+          </button>
           <button onClick={handleAutoFill} className="inline-flex items-center gap-2 px-4 py-2 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors">
             <Sparkles className="w-4 h-4" />Auto-preencher
           </button>
@@ -125,9 +187,27 @@ export default function PlannerPage() {
         </div>
       </motion.div>
 
+      {/* Conflicts alert */}
+      {conflicts.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+            <p className="font-medium text-sm">{conflicts.length} conflito(s) no calendário</p>
+          </div>
+          <div className="space-y-1">
+            {conflicts.slice(0, 5).map((c, i) => (
+              <p key={i} className="text-xs text-muted-foreground">• {c.message}</p>
+            ))}
+            {conflicts.length > 5 && (
+              <p className="text-xs text-muted-foreground">…e mais {conflicts.length - 5}</p>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* Content */}
       {view === 'kanban' ? (
-        <KanbanView posts={posts} assets={assets} updatePost={updatePost} deletePost={deletePost} />
+        <KanbanView posts={posts} assets={assets} updatePost={updatePost} deletePost={deletePost} buildFullPost={buildFullPost} />
       ) : (
         <CalendarView posts={posts} assets={assets} calMonth={calMonth} setCalMonth={setCalMonth} slots={slots} updatePost={updatePost} />
       )}
@@ -136,10 +216,13 @@ export default function PlannerPage() {
 }
 
 /* ── Kanban View ── */
-function KanbanView({ posts, assets, updatePost, deletePost }: {
+function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
   posts: ContentPost[]; assets: { id: string; name: string; thumbnail?: string; src?: string; type: string }[];
   updatePost: (id: string, patch: Partial<ContentPost>) => void; deletePost: (id: string) => void;
+  buildFullPost: (copy: string, hashtags: string[], cta: string) => string;
 }) {
+  const [previewPost, setPreviewPost] = useState<ContentPost | null>(null);
+
   const grouped = useMemo(() => {
     const map: Record<string, ContentPost[]> = { inbox: [], generated: [], review: [], approved: [], scheduled: [], published: [] };
     posts.forEach((p) => { if (map[p.status]) map[p.status].push(p); });
@@ -180,7 +263,10 @@ function KanbanView({ posts, assets, updatePost, deletePost }: {
     toast.success(`Movido para ${KANBAN_COLS.find((c) => c.status === newStatus)?.label}`);
   };
 
+  const previewAsset = previewPost ? assets.find((a) => a.id === previewPost.assetId) : null;
+
   return (
+    <>
     <div className="flex gap-4 overflow-x-auto pb-4">
       {KANBAN_COLS.map((col) => (
         <div key={col.status} className={`flex-shrink-0 w-72 bg-card border-t-2 ${col.color} border border-border rounded-xl`}>
@@ -195,7 +281,11 @@ function KanbanView({ posts, assets, updatePost, deletePost }: {
               const colIdx = KANBAN_COLS.findIndex((c) => c.status === col.status);
               const nextStatus = colIdx < KANBAN_COLS.length - 1 ? KANBAN_COLS[colIdx + 1].status : null;
               return (
-                <div key={post.id} className="bg-background border border-border rounded-xl p-3 space-y-2 group">
+                <div
+                  key={post.id}
+                  onClick={() => setPreviewPost(post)}
+                  className="bg-background border border-border rounded-xl p-3 space-y-2 group cursor-pointer hover:border-primary/30 transition-colors"
+                >
                   {/* Thumbnail */}
                   {asset?.thumbnail || asset?.src ? (
                     <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
@@ -213,7 +303,7 @@ function KanbanView({ posts, assets, updatePost, deletePost }: {
                   {/* Date */}
                   {post.scheduledDate && <p className="text-[10px] text-muted-foreground">{new Date(post.scheduledDate).toLocaleDateString('pt-PT')}</p>}
                   {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                     {nextStatus && (
                       <button onClick={() => movePost(post.id, nextStatus)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20">
                         <Send className="w-3 h-3" /> Avançar
@@ -228,6 +318,120 @@ function KanbanView({ posts, assets, updatePost, deletePost }: {
         </div>
       ))}
     </div>
+
+    <Sheet open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
+      <SheetContent side="right" className="w-full max-w-md overflow-y-auto">
+        {previewPost && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Preview do post</h3>
+            {previewAsset && (previewAsset.thumbnail || previewAsset.src) && (
+              <div className="aspect-video rounded-xl overflow-hidden bg-muted">
+                <img src={previewAsset.thumbnail || previewAsset.src} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Copy PT</p>
+              <p className="text-sm whitespace-pre-wrap">{previewPost.copyPt || '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Copy EN</p>
+              <p className="text-sm whitespace-pre-wrap">{previewPost.copyEn || '—'}</p>
+            </div>
+            {previewPost.hashtags?.length ? (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Hashtags</p>
+                <p className="text-sm">{previewPost.hashtags.join(' ')}</p>
+              </div>
+            ) : null}
+            {previewPost.cta ? (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">CTA</p>
+                <p className="text-sm">{previewPost.cta}</p>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button
+                onClick={async () => {
+                  const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
+                  const fullEn = buildFullPost(previewPost.copyEn || '', previewPost.hashtags || [], previewPost.cta || '');
+                  const fullText = `——— PT ———\n${fullPt}\n\n——— EN ———\n${fullEn}`;
+                  const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
+                  try {
+                    if (imgSrc) {
+                      const html = `<div style="font-family:sans-serif;max-width:600px">
+                        <img src="${imgSrc}" alt="" style="max-width:100%;height:auto;border-radius:8px;display:block;margin-bottom:16px" />
+                        <div style="margin-bottom:16px"><strong style="color:#666;font-size:11px">PT</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullPt)}</p></div>
+                        <div><strong style="color:#666;font-size:11px">EN</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullEn)}</p></div>
+                      </div>`;
+                      await navigator.clipboard.write([
+                        new ClipboardItem({
+                          'text/plain': new Blob([fullText], { type: 'text/plain' }),
+                          'text/html': new Blob([html], { type: 'text/html' }),
+                        }),
+                      ]);
+                      toast.success('Texto PT + EN copiado — cola em Word, Notion ou na legenda do WhatsApp');
+                    } else {
+                      await navigator.clipboard.writeText(fullText);
+                      toast.success('Post completo (PT + EN) copiado');
+                    }
+                  } catch {
+                    await navigator.clipboard.writeText(fullText);
+                    toast.success('Texto copiado');
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20"
+              >
+                <Copy className="w-4 h-4" /> Copiar post completo
+              </button>
+              <button
+                onClick={async () => {
+                  const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
+                  if (!imgSrc) {
+                    toast.error('Sem imagem');
+                    return;
+                  }
+                  try {
+                    const imageBlob = await imageUrlToPngBlob(imgSrc);
+                    if (imageBlob) {
+                      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imageBlob })]);
+                      toast.success('Imagem copiada — cola no WhatsApp, depois cola o texto');
+                    } else {
+                      toast.error('Não foi possível copiar a imagem');
+                    }
+                  } catch {
+                    toast.error('Não foi possível copiar a imagem');
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
+              >
+                <Image className="w-4 h-4" /> Copiar imagem
+              </button>
+              <button
+                onClick={() => {
+                  const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
+                  navigator.clipboard.writeText(fullPt);
+                  toast.success('Copy PT copiado');
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
+              >
+                <Copy className="w-4 h-4" /> Copiar PT
+              </button>
+              <button
+                onClick={() => {
+                  const fullEn = buildFullPost(previewPost.copyEn || '', previewPost.hashtags || [], previewPost.cta || '');
+                  navigator.clipboard.writeText(fullEn);
+                  toast.success('Copy EN copiado');
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
+              >
+                <Copy className="w-4 h-4" /> Copiar EN
+              </button>
+            </div>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+    </>
   );
 }
 

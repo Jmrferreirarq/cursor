@@ -1,6 +1,7 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { parseISO } from 'date-fns';
 import {
   Calendar, ChevronLeft, ChevronRight, Star, AlertTriangle,
   ArrowRight, Zap, Loader2,
@@ -21,14 +22,20 @@ const CHANNEL_SHORT: Record<string, string> = {
   'pinterest': 'Pin', 'youtube': 'YT', 'threads': 'Thrd',
 };
 
+const CHANNEL_DOT_COLOR: Record<string, string> = {
+  'ig-feed': 'bg-orange-500', 'ig-reels': 'bg-orange-500', 'ig-stories': 'bg-orange-500', 'ig-carrossel': 'bg-orange-500',
+  'tiktok': 'bg-zinc-900', 'pinterest': 'bg-red-500', 'linkedin': 'bg-blue-600', 'youtube': 'bg-red-600', 'threads': 'bg-zinc-700',
+};
+
 export default function ContentCalendarPage() {
   const navigate = useNavigate();
   const { posts, updatePost, assets, editorialDNA, slots } = useMedia();
   const { projects } = useData();
 
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [scheduling, setScheduling] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // ── Date helpers ──
 
@@ -165,27 +172,41 @@ export default function ContentCalendarPage() {
   // ── Render: Day cell ──
 
   const DayCell = ({ date, isWeekView }: { date: Date; isWeekView: boolean }) => {
+    const dateStr = date.toISOString().slice(0, 10);
     const dayPosts = getPostsForDate(date);
     const cores = dayPosts.filter((p) => p.isCore !== false);
     const derivs = dayPosts.filter((p) => p.isCore === false);
     const slot = getSlotForDay(date.getDay());
     const today = isToday(date);
     const inMonth = isCurrentMonth(date);
-    const dateConflicts = conflicts.filter((c) => c.date === date.toISOString().slice(0, 10));
+    const dateConflicts = conflicts.filter((c) => c.date === dateStr);
+    const channels = [...new Set(dayPosts.map((p) => p.channel))];
 
     return (
-      <div className={`border border-border rounded-xl p-2 ${isWeekView ? 'min-h-[300px]' : 'min-h-[120px]'} ${
-        today ? 'border-primary/50 bg-primary/5' : inMonth ? 'bg-card' : 'bg-muted/20 opacity-60'
-      }`}>
+      <div
+        onClick={() => setSelectedDate(selectedDate === dateStr ? null : dateStr)}
+        className={`border border-border rounded-xl p-2 cursor-pointer ${isWeekView ? 'min-h-[300px]' : 'min-h-[120px]'} ${
+          today ? 'border-primary/50 bg-primary/5' : inMonth ? 'bg-card' : 'bg-muted/20 opacity-60'
+        } ${selectedDate === dateStr ? 'ring-2 ring-primary' : ''}`}
+      >
         {/* Date header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
             <span className={`text-sm font-bold ${today ? 'text-primary' : ''}`}>{date.getDate()}</span>
             {isWeekView && <span className="text-[10px] text-muted-foreground">{WEEKDAYS[date.getDay() === 0 ? 6 : date.getDay() - 1]}</span>}
           </div>
-          {dateConflicts.length > 0 && (
-            <span title={dateConflicts.map((c) => c.message).join(', ')}><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /></span>
-          )}
+          <div className="flex items-center gap-1">
+            {!isWeekView && channels.length > 0 && (
+              <div className="flex gap-0.5">
+                {channels.slice(0, 3).map((ch) => (
+                  <span key={ch} className={`w-1.5 h-1.5 rounded-full ${CHANNEL_DOT_COLOR[ch] || 'bg-muted-foreground'}`} title={CHANNEL_SHORT[ch]} />
+                ))}
+              </div>
+            )}
+            {dateConflicts.length > 0 && (
+              <span title={dateConflicts.map((c) => c.message).join(', ')}><AlertTriangle className="w-3.5 h-3.5 text-amber-500" /></span>
+            )}
+          </div>
         </div>
 
         {/* Slot info */}
@@ -234,6 +255,9 @@ export default function ContentCalendarPage() {
           <p className="text-muted-foreground mt-1 text-sm">Valida ritmo, equilíbrio e conflitos — sincronizado com a Queue.</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={() => navigate('/queue')} className="inline-flex items-center gap-2 px-4 py-2.5 border border-primary/50 text-primary text-sm rounded-xl hover:bg-primary/10 transition-colors">
+            <Zap className="w-4 h-4" /> Agendar Conteúdo
+          </button>
           <button onClick={() => navigate('/queue')} className="inline-flex items-center gap-2 px-4 py-2.5 border border-border text-sm rounded-xl hover:bg-muted transition-colors">
             <ArrowRight className="w-4 h-4" /> Ver Queue
           </button>
@@ -310,6 +334,25 @@ export default function ContentCalendarPage() {
           <div className="grid grid-cols-7 gap-2">
             {getMonthDates(currentDate).map((date) => (
               <DayCell key={date.toISOString()} date={date} isWeekView={false} />
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Sidebar: selected day contents */}
+      {selectedDate && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="fixed right-0 top-20 bottom-0 w-80 bg-card border-l border-border shadow-xl z-40 overflow-y-auto p-4"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Conteúdos — {new Date(selectedDate).toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'short' })}</h3>
+            <button onClick={() => setSelectedDate(null)} className="p-1 rounded hover:bg-muted text-muted-foreground">×</button>
+          </div>
+          <div className="space-y-2">
+            {getPostsForDate(parseISO(selectedDate)).map((p) => (
+              <PostChip key={p.id} post={p} compact={false} />
             ))}
           </div>
         </motion.div>

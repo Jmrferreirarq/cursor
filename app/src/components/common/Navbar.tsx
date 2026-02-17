@@ -32,6 +32,7 @@ import {
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useData } from '@/context/DataContext';
+import { useMedia } from '@/context/MediaContext';
 
 interface NavItem {
   path: string;
@@ -80,6 +81,7 @@ const navEntries: NavEntry[] = [
   { path: '/brand', label: 'Marca', icon: Palette },
   { path: '/calculator', label: 'Calc.', icon: Calculator },
   { path: '/agent', label: 'AI', icon: Bot },
+  { path: '/trash', label: 'Lixo', icon: Trash2 },
 ];
 
 // Flat list for mobile menu
@@ -98,6 +100,8 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const { resetAllData } = useData();
+  const { trashAssets, trashPacks, trashPosts } = useMedia();
+  const trashCount = trashAssets.length + trashPacks.length + trashPosts.length;
 
   const handleResetData = async () => {
     await resetAllData();
@@ -217,9 +221,14 @@ export default function Navbar() {
                   }
                 >
                   <item.icon className="w-[18px] h-[18px]" />
+                  {item.path === '/trash' && trashCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-amber-500 text-[10px] font-medium text-white flex items-center justify-center">
+                      {trashCount > 99 ? '99+' : trashCount}
+                    </span>
+                  )}
                   {/* Tooltip */}
                   <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[11px] font-medium bg-foreground text-background rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-                    {item.label}
+                    {item.label}{item.path === '/trash' && trashCount > 0 ? ` (${trashCount})` : ''}
                   </span>
                 </NavLink>
               );
@@ -345,6 +354,11 @@ export default function Navbar() {
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
                     <span>{item.label}</span>
+                    {item.path === '/trash' && trashCount > 0 && (
+                      <span className="ml-auto px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium">
+                        {trashCount}
+                      </span>
+                    )}
                   </NavLink>
                 </motion.div>
               ))}

@@ -45,6 +45,7 @@ import PropostaPublicPage from './pages/PropostaPublicPage';
 import PropostaShortPage from './pages/PropostaShortPage';
 import PortfolioPublicPage from './pages/PortfolioPublicPage';
 import SettingsPage from './pages/SettingsPage';
+import TrashPage from './pages/TrashPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
@@ -131,6 +132,7 @@ function App() {
                 <Route path="/inbox" element={<StudioInboxPage />} />
                 <Route path="/brand" element={<BrandIdentityPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/trash" element={<TrashPage />} />
                 <Route path="/calculator" element={
                   <ErrorBoundary fallback={
                     <div className="p-8 rounded-xl border border-destructive/50 bg-destructive/5">

@@ -10,6 +10,11 @@ import type {
   EditorialDNA, PublicationSlot, PerformanceEntry,
 } from '@/types';
 
+export interface TrashEntry<T> {
+  item: T;
+  deletedAt: string;
+}
+
 export interface AppData {
   clients: Client[];
   projects: Project[];
@@ -20,6 +25,10 @@ export interface AppData {
   editorialDNA: EditorialDNA | null;
   slots: PublicationSlot[];
   performanceEntries: PerformanceEntry[];
+  /** Lixo — itens apagados, recuperáveis */
+  trashAssets: TrashEntry<MediaAsset>[];
+  trashPacks: TrashEntry<ContentPack>[];
+  trashPosts: TrashEntry<ContentPost>[];
 }
 
 export const EMPTY_DATA: AppData = {
@@ -32,6 +41,9 @@ export const EMPTY_DATA: AppData = {
   editorialDNA: null,
   slots: [],
   performanceEntries: [],
+  trashAssets: [],
+  trashPacks: [],
+  trashPosts: [],
 };
 
 export interface IStorageService {

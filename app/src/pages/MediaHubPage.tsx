@@ -346,10 +346,6 @@ export default function MediaHubPage() {
             {aiProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : hasApiKey() ? <Sparkles className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
             {aiProcessing ? 'AI a processar...' : hasApiKey() ? `AI Analisar ${selected.size > 0 ? `(${selected.size})` : 'Todos'}` : `Analisar ${selected.size > 0 ? `(${selected.size})` : 'Todos'}`}
           </button>
-          <button onClick={generateArticulationAndPosts} disabled={articulationProcessing || !hasApiKey()} className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50" title="Analisa, gera narrativa e cria posts no Planner">
-            {articulationProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-            <span className="whitespace-nowrap">{articulationProcessing ? 'A gerar...' : 'Gerar articulação e posts'}</span>
-          </button>
           {selected.size > 0 && (
             <button onClick={bulkDelete} className="flex items-center gap-2 px-4 py-2.5 border border-destructive/50 text-destructive rounded-xl text-sm font-medium hover:bg-destructive/10 transition-colors">
               <Trash2 className="w-4 h-4" />

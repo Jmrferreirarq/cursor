@@ -31,3 +31,4 @@ pnpm-debug.log*
 lerna-debug.log*
 
 .vercel
+.env*.local

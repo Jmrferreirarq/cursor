@@ -2,8 +2,14 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutGrid, Table2, Zap, Sparkles, AlertTriangle,
-  Star, Calendar, Loader2,
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
+  LayoutGrid, Table2, List, Zap, Sparkles, AlertTriangle,
+  Star, Calendar, Loader2, Plus, GripVertical, Pencil, Copy, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
@@ -13,9 +19,18 @@ import {
   getQueueStats, getValidTransitions, validateCalendar,
   generateQueueItems,
 } from '@/services/contentQueue';
-import type { ContentPost, PostStatus, PostWeight } from '@/types';
+import type { ContentPost, PostStatus, PostWeight, ContentChannel } from '@/types';
 
-type ViewMode = 'kanban' | 'table';
+type ViewMode = 'kanban' | 'table' | 'list';
+type StatusFilter = 'all' | 'rascunho' | 'agendado' | 'publicado' | 'arquivado';
+
+const STATUS_FILTER_MAP: Record<StatusFilter, PostStatus[]> = {
+  all: [],
+  rascunho: ['inbox', 'generated', 'review', 'rejected'],
+  agendado: ['scheduled'],
+  publicado: ['published'],
+  arquivado: ['measured'],
+};
 
 const WEIGHT_BADGE: Record<PostWeight, { label: string; class: string }> = {
   heavy: { label: 'Pesado', class: 'bg-red-500/10 text-red-500' },
@@ -30,15 +45,17 @@ const CHANNEL_LABELS: Record<string, string> = {
 
 export default function ContentQueuePage() {
   const navigate = useNavigate();
-  const { posts, updatePost, deletePost, addPost, assets, contentPacks, editorialDNA, slots } = useMedia();
+  const { posts, updatePost, deletePost, addPost, reorderPosts, assets, contentPacks, editorialDNA, slots } = useMedia();
   const { projects } = useData();
 
   const [view, setView] = useState<ViewMode>('kanban');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [filterPillar, setFilterPillar] = useState<string>('all');
   const [filterWeight, setFilterWeight] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'score' | 'date' | 'status'>('score');
   const [scheduling, setScheduling] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showNewModal, setShowNewModal] = useState(false);
 
   // ── Computed ──
 
@@ -47,12 +64,16 @@ export default function ContentQueuePage() {
 
   const filteredPosts = useMemo(() => {
     let result = [...posts];
+    if (filterStatus !== 'all') {
+      const allowed = STATUS_FILTER_MAP[filterStatus];
+      result = result.filter((p) => allowed.includes(p.status));
+    }
     if (filterPillar !== 'all') result = result.filter((p) => p.pillar === filterPillar);
     if (filterWeight !== 'all') result = result.filter((p) => (p.weight || 'light') === filterWeight);
     if (sortBy === 'score') result.sort((a, b) => (b.score || 0) - (a.score || 0));
     else if (sortBy === 'date') result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return result;
-  }, [posts, filterPillar, filterWeight, sortBy]);
+  }, [posts, filterStatus, filterPillar, filterWeight, sortBy]);
 
   const postsByStatus = useMemo(() => {
     const map: Record<PostStatus, ContentPost[]> = {
@@ -158,6 +179,33 @@ export default function ContentQueuePage() {
     setGenerating(false);
   }, [assets, contentPacks, projects, posts, editorialDNA, addPost]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = filteredPosts.findIndex((p) => p.id === active.id);
+    const newIndex = filteredPosts.findIndex((p) => p.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(filteredPosts, oldIndex, newIndex);
+    reorderPosts(reordered.map((p) => p.id));
+    toast.success('Ordem atualizada');
+  }, [filteredPosts, reorderPosts]);
+
+  const handleDuplicate = useCallback((post: ContentPost) => {
+    const newId = `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    addPost({ ...post, id: newId, status: 'generated' as PostStatus, createdAt: new Date().toISOString() });
+    toast.success('Post duplicado');
+  }, [addPost]);
+
+  const handleMoveToPublished = useCallback((postId: string) => {
+    updatePost(postId, { status: 'published', publishedDate: new Date().toISOString().slice(0, 10) });
+    toast.success('Movido para Publicado');
+  }, [updatePost]);
+
   // ── Render helpers ──
 
   const PostCard = ({ post }: { post: ContentPost }) => {
@@ -167,9 +215,21 @@ export default function ContentQueuePage() {
     const wb = WEIGHT_BADGE[weight];
     const validNext = getValidTransitions(post.status);
 
+    const handleDelete = () => {
+      if (window.confirm('Eliminar este conteúdo?')) deletePost(post.id);
+    };
+
     return (
-      <div className="bg-card border border-border rounded-xl p-3 hover:border-primary/30 transition-colors group">
-        <div className="flex items-start gap-2 mb-2">
+      <div className="bg-card border border-border rounded-xl p-3 hover:border-primary/30 transition-colors group relative">
+        {/* Eliminar — sempre visível à direita */}
+        <button
+          onClick={handleDelete}
+          className="absolute top-3 right-3 p-1.5 rounded-lg text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          title="Eliminar"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+        <div className="flex items-start gap-2 mb-2 pr-8">
           {/* Thumbnail */}
           {asset?.thumbnail ? (
             <img src={asset.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
@@ -232,6 +292,10 @@ export default function ContentQueuePage() {
           <p className="text-muted-foreground mt-1 text-sm">Queue-driven — do inbox à medição, tudo passa aqui.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={() => setShowNewModal(true)} className="inline-flex items-center gap-2 px-4 py-2.5 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors">
+            <Plus className="w-4 h-4" />
+            Novo Conteúdo
+          </button>
           <button onClick={handleBatchGenerate} disabled={generating} className="inline-flex items-center gap-2 px-4 py-2.5 border border-primary/50 text-primary rounded-xl text-sm font-medium hover:bg-primary/10 transition-colors disabled:opacity-50">
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             Gerar a partir de Assets
@@ -271,12 +335,22 @@ export default function ContentQueuePage() {
       {/* View toggle + Filters */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-2">
+          <div className="flex gap-2 mb-2">
+            {(['all', 'rascunho', 'agendado', 'publicado', 'arquivado'] as StatusFilter[]).map((s) => (
+              <button key={s} onClick={() => setFilterStatus(s)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === s ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-muted/50 text-muted-foreground border border-transparent'}`}>
+                {s === 'all' ? 'Todos' : s === 'rascunho' ? 'Rascunho' : s === 'agendado' ? 'Agendado' : s === 'publicado' ? 'Publicado' : 'Arquivado'}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-xl">
             <button onClick={() => setView('kanban')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${view === 'kanban' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}>
               <LayoutGrid className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" /> Kanban
             </button>
             <button onClick={() => setView('table')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${view === 'table' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}>
               <Table2 className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" /> Tabela
+            </button>
+            <button onClick={() => setView('list')} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${view === 'list' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'}`}>
+              <List className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" /> Lista
             </button>
           </div>
         </div>
@@ -301,7 +375,36 @@ export default function ContentQueuePage() {
 
       {/* View content */}
       <AnimatePresence mode="wait">
-        {view === 'kanban' ? (
+        {view === 'list' ? (
+          <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={filteredPosts.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {filteredPosts.map((post) => (
+                    <SortableQueueItem
+                      key={post.id}
+                      post={post}
+                      assets={assets}
+                      projects={projects}
+                      editorialDNA={editorialDNA}
+                      CHANNEL_LABELS={CHANNEL_LABELS}
+                      WEIGHT_BADGE={WEIGHT_BADGE}
+                      onDuplicate={handleDuplicate}
+                      onDelete={deletePost}
+                      onMoveToPublished={handleMoveToPublished}
+                      getValidTransitions={getValidTransitions}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+            {filteredPosts.length === 0 && (
+              <div className="py-16 text-center text-muted-foreground text-sm">
+                Queue vazia. Carrega assets na Media Inbox e gera conteúdo.
+              </div>
+            )}
+          </motion.div>
+        ) : view === 'kanban' ? (
           <motion.div key="kanban" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-x-auto pb-4">
             <div className="flex gap-3" style={{ minWidth: `${QUEUE_COLUMNS.length * 220}px` }}>
               {QUEUE_COLUMNS.map((col) => (
@@ -366,6 +469,13 @@ export default function ContentQueuePage() {
                                   → {QUEUE_COLUMNS.find((c) => c.id === ns)?.label}
                                 </button>
                               ))}
+                              <button
+                                onClick={() => { if (window.confirm('Eliminar?')) deletePost(post.id); }}
+                                className="p-1.5 rounded hover:bg-destructive/10 text-destructive"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -383,6 +493,201 @@ export default function ContentQueuePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* New Content Modal */}
+      <AnimatePresence>
+        {showNewModal && (
+          <NewContentModal
+            onClose={() => setShowNewModal(false)}
+            onSave={(data) => {
+              const newPost: ContentPost = {
+                id: `post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                channel: data.channel,
+                format: data.format,
+                copyPt: data.caption,
+                copyEn: data.caption,
+                hashtags: data.hashtags.split(',').map((h) => h.trim()).filter(Boolean),
+                cta: '',
+                status: 'generated',
+                createdAt: new Date().toISOString(),
+                pillar: data.pillar,
+              };
+              addPost(newPost);
+              setShowNewModal(false);
+              toast.success('Conteúdo criado');
+            }}
+            pillars={editorialDNA?.pillars ?? []}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+function SortableQueueItem({
+  post,
+  assets,
+  projects,
+  editorialDNA,
+  CHANNEL_LABELS,
+  WEIGHT_BADGE,
+  onDuplicate,
+  onDelete,
+  onMoveToPublished,
+  getValidTransitions,
+}: {
+  post: ContentPost;
+  assets: { id: string; thumbnail?: string }[];
+  projects: { id: string; name: string }[];
+  editorialDNA: { pillars?: { id: string; name: string }[] } | null;
+  CHANNEL_LABELS: Record<string, string>;
+  WEIGHT_BADGE: Record<PostWeight, { label: string; class: string }>;
+  onDuplicate: (post: ContentPost) => void;
+  onDelete: (id: string) => void;
+  onMoveToPublished: (id: string) => void;
+  getValidTransitions: (status: PostStatus) => PostStatus[];
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: post.id });
+  const asset = assets.find((a) => a.id === post.assetId);
+  const project = projects.find((p) => p.id === post.projectId);
+  const weight = post.weight || 'light';
+  const wb = WEIGHT_BADGE[weight];
+  const colInfo = QUEUE_COLUMNS.find((c) => c.id === post.status);
+  const pillar = editorialDNA?.pillars?.find((p) => p.id === post.pillar);
+  const validNext = getValidTransitions(post.status);
+
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-4 bg-card border border-border rounded-xl ${isDragging ? 'opacity-50 shadow-lg' : ''}`}
+    >
+      <button {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+        <GripVertical className="w-4 h-4" />
+      </button>
+      {asset?.thumbnail ? (
+        <img src={asset.thumbnail} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+      ) : (
+        <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0">
+          <Calendar className="w-5 h-5 text-muted-foreground" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{post.copyPt.slice(0, 60)}{post.copyPt.length > 60 ? '...' : ''}</p>
+        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+          <span>{CHANNEL_LABELS[post.channel] || post.channel}</span>
+          <span>·</span>
+          <span>{post.format}</span>
+          {project && <span>· {project.name}</span>}
+        </div>
+      </div>
+      <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${colInfo?.color || 'bg-muted'} text-white`}>
+        {colInfo?.label || post.status}
+      </span>
+      {post.scheduledDate && (
+        <span className="text-xs text-muted-foreground">{new Date(post.scheduledDate).toLocaleDateString('pt-PT')}</span>
+      )}
+      {pillar && <span className="px-2 py-0.5 bg-muted rounded text-[10px]">{pillar.name}</span>}
+      <div className="flex items-center gap-1">
+        {validNext.includes('published') && (
+          <button onClick={() => onMoveToPublished(post.id)} className="p-2 rounded-lg hover:bg-muted" title="Mover para Publicado">
+            <Star className="w-4 h-4" />
+          </button>
+        )}
+        <button onClick={() => onDuplicate(post)} className="p-2 rounded-lg hover:bg-muted" title="Duplicar">
+          <Copy className="w-4 h-4" />
+        </button>
+        <button onClick={() => { if (window.confirm('Eliminar?')) onDelete(post.id); }} className="p-2 rounded-lg hover:bg-destructive/10 text-destructive" title="Eliminar">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NewContentModal({
+  onClose,
+  onSave,
+  pillars,
+}: {
+  onClose: () => void;
+  onSave: (data: { channel: ContentChannel; format: string; caption: string; hashtags: string; pillar: string }) => void;
+  pillars: { id: string; name: string }[];
+}) {
+  const [channel, setChannel] = useState<ContentChannel>('ig-feed');
+  const [format, setFormat] = useState('Post');
+  const [caption, setCaption] = useState('');
+  const [hashtags, setHashtags] = useState('');
+  const [pillar, setPillar] = useState(pillars[0]?.id ?? '');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+      >
+        <h2 className="text-lg font-semibold mb-4">Novo Conteúdo</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Plataforma</label>
+            <select value={channel} onChange={(e) => setChannel(e.target.value as ContentChannel)} className="w-full px-4 py-2 rounded-xl border border-border bg-background">
+              <option value="ig-feed">Instagram Feed</option>
+              <option value="ig-reels">Instagram Reels</option>
+              <option value="ig-stories">Instagram Stories</option>
+              <option value="ig-carrossel">Instagram Carrossel</option>
+              <option value="linkedin">LinkedIn</option>
+              <option value="tiktok">TikTok</option>
+              <option value="pinterest">Pinterest</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Tipo</label>
+            <select value={format} onChange={(e) => setFormat(e.target.value)} className="w-full px-4 py-2 rounded-xl border border-border bg-background">
+              <option value="Post">Post</option>
+              <option value="Reel">Reel</option>
+              <option value="Carrossel">Carrossel</option>
+              <option value="Story">Story</option>
+              <option value="Pin">Pin</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Caption / Texto</label>
+            <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={4} placeholder="Texto do post..." className="w-full px-4 py-2 rounded-xl border border-border bg-background resize-none" />
+            <p className="text-xs text-muted-foreground mt-1">{caption.length} caracteres</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Hashtags (separadas por vírgula)</label>
+            <input type="text" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#arquitetura #aveiro" className="w-full px-4 py-2 rounded-xl border border-border bg-background" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Pilar editorial</label>
+            <select value={pillar} onChange={(e) => setPillar(e.target.value)} className="w-full px-4 py-2 rounded-xl border border-border bg-background">
+              {pillars.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button onClick={onClose} className="px-4 py-2 border border-border rounded-xl font-medium hover:bg-muted">
+            Cancelar
+          </button>
+          <button onClick={() => onSave({ channel, format, caption, hashtags, pillar })} className="px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90">
+            Criar
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

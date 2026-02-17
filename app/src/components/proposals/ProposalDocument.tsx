@@ -427,7 +427,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               </div>
             )}
 
-            {/* Estimativa de Investimento em Infraestruturas (Fase 2) */}
+            {/* Estimativa de Investimento em Infraestruturas (Fase 2) — P1: colunas A/B/C por cenário */}
             {p.lotCustosInfra && p.lotCustosInfra.length > 0 && (
               <div className="pdf-no-break" style={{ marginBottom: '4mm', padding: '3mm 4mm', background: '#f8fafc', borderRadius: 2, border: `1px solid ${C.cinzaLinha}`, breakInside: 'avoid', pageBreakInside: 'avoid' }}>
                 <p style={{ fontSize: fs(9), fontWeight: 700, margin: '0 0 2mm 0', color: C.grafite, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -436,89 +436,117 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 <p style={{ fontSize: fs(7), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
                   Estimativa parametrica para efeitos de planeamento do investimento. Valores sujeitos a confirmacao apos levantamento topografico e projetos de especialidades.
                 </p>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '2mm' }}>
-                  <thead>
-                    <tr style={{ background: C.accent, color: '#fff' }}>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 700 }}>Infraestrutura</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 700, width: '12mm' }}>Unid.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '14mm' }}>Qtd.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '20mm' }}>P. Unit.</th>
-                      <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '22mm' }}>Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {p.lotCustosInfra.map((item, i) => (
-                      <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
-                        <td style={{ padding: '1.5mm 2mm' }}>
-                          {item.nome}
-                          {item.custoRamal ? <span style={{ fontSize: fs(6), color: C.cinzaMarca }}> (+ramal)</span> : null}
-                        </td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: C.cinzaMarca }}>{item.unidade}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.quantidade}</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.custoUnitario.toLocaleString('pt-PT')} &euro;</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{item.subtotal.toLocaleString('pt-PT')} &euro;</td>
+                {p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 && p.lotCustosInfraPorCenario.every(c => c.items && c.items.length > 0) ? (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '2mm' }}>
+                    <thead>
+                      <tr style={{ background: C.accent, color: '#fff' }}>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 700 }}>Infraestrutura</th>
+                        {p.lotCustosInfraPorCenario.map(c => (
+                          <th key={c.label} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '18mm' }}>
+                            Cen. {c.label}{c.label === p.lotCenarioRecomendado ? ' *' : ''}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ borderTop: `1px solid ${C.cinzaLinha}` }}>
-                      <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>Subtotal</td>
-                      <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{(p.lotCustoObraSubtotal ?? 0).toLocaleString('pt-PT')} &euro;</td>
-                    </tr>
-                    {p.lotContingenciaPct != null && p.lotContingenciaPct > 0 && (
-                      <tr style={{ borderTop: `1px solid ${C.cinzaLinha}`, color: C.cinzaMarca }}>
-                        <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>Contingencia ({p.lotContingenciaPct}%)</td>
-                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{((p.lotCustoObraTotal ?? 0) - (p.lotCustoObraSubtotal ?? 0)).toLocaleString('pt-PT')} &euro;</td>
+                    </thead>
+                    <tbody>
+                      {p.lotCustosInfra.map((item, i) => {
+                        const infraId = (item as { infraId?: string }).infraId;
+                        const subtotalsByCenario = p.lotCustosInfraPorCenario!.map(c => {
+                          const match = c.items?.find(it => it.infraId === infraId || it.nome === item.nome);
+                          return match?.subtotal ?? 0;
+                        });
+                        return (
+                          <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                            <td style={{ padding: '1.5mm 2mm' }}>
+                              {item.nome}
+                              {item.custoRamal ? <span style={{ fontSize: fs(6), color: C.cinzaMarca }}> (+ramal)</span> : null}
+                            </td>
+                            {subtotalsByCenario.map((st, j) => (
+                              <td key={j} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: p.lotCustosInfraPorCenario![j].label === p.lotCenarioRecomendado ? 600 : 400 }}>
+                                {st.toLocaleString('pt-PT')} &euro;
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: `1px solid ${C.cinzaLinha}` }}>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>Subtotal</td>
+                        {p.lotCustosInfraPorCenario.map(c => (
+                          <td key={c.label} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{c.subtotal.toLocaleString('pt-PT')} &euro;</td>
+                        ))}
                       </tr>
-                    )}
-                    <tr style={{ background: C.accent, color: '#fff' }}>
-                      <td colSpan={4} style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>Total Estimado</td>
-                      <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>{(p.lotCustoObraTotal ?? 0).toLocaleString('pt-PT')} &euro;</td>
-                    </tr>
-                  </tfoot>
-                </table>
-                <div style={{ display: 'flex', gap: '3mm', alignItems: 'center', fontSize: fs(7) }}>
+                      {p.lotCustosInfraPorCenario.some(c => c.contingenciaPct > 0) && (
+                        <tr style={{ borderTop: `1px solid ${C.cinzaLinha}`, color: C.cinzaMarca }}>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>Contingencia</td>
+                          {p.lotCustosInfraPorCenario.map(c => (
+                            <td key={c.label} style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{c.contingenciaPct}%</td>
+                          ))}
+                        </tr>
+                      )}
+                      <tr style={{ background: C.accent, color: '#fff' }}>
+                        <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>Total Estimado</td>
+                        {p.lotCustosInfraPorCenario.map(c => (
+                          <td key={c.label} style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>{c.total.toLocaleString('pt-PT')} &euro;</td>
+                        ))}
+                      </tr>
+                    </tfoot>
+                  </table>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '2mm' }}>
+                    <thead>
+                      <tr style={{ background: C.accent, color: '#fff' }}>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 700 }}>Infraestrutura</th>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'center', fontWeight: 700, width: '12mm' }}>Unid.</th>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '14mm' }}>Qtd.</th>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '20mm' }}>P. Unit.</th>
+                        <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 700, width: '22mm' }}>Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {p.lotCustosInfra.map((item, i) => (
+                        <tr key={i} style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
+                          <td style={{ padding: '1.5mm 2mm' }}>
+                            {item.nome}
+                            {item.custoRamal ? <span style={{ fontSize: fs(6), color: C.cinzaMarca }}> (+ramal)</span> : null}
+                          </td>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'center', color: C.cinzaMarca }}>{item.unidade}</td>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.quantidade}</td>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{item.custoUnitario.toLocaleString('pt-PT')} &euro;</td>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{item.subtotal.toLocaleString('pt-PT')} &euro;</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: `1px solid ${C.cinzaLinha}` }}>
+                        <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>Subtotal</td>
+                        <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{(p.lotCustoObraSubtotal ?? 0).toLocaleString('pt-PT')} &euro;</td>
+                      </tr>
+                      {p.lotContingenciaPct != null && p.lotContingenciaPct > 0 && (
+                        <tr style={{ borderTop: `1px solid ${C.cinzaLinha}`, color: C.cinzaMarca }}>
+                          <td colSpan={4} style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>Contingencia ({p.lotContingenciaPct}%)</td>
+                          <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{((p.lotCustoObraTotal ?? 0) - (p.lotCustoObraSubtotal ?? 0)).toLocaleString('pt-PT')} &euro;</td>
+                        </tr>
+                      )}
+                      <tr style={{ background: C.accent, color: '#fff' }}>
+                        <td colSpan={4} style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>Total Estimado</td>
+                        <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 700 }}>{(p.lotCustoObraTotal ?? 0).toLocaleString('pt-PT')} &euro;</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                )}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3mm', alignItems: 'center', fontSize: fs(7) }}>
                   <span style={{ padding: '1mm 2mm', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: 2, fontWeight: 600, color: '#92400e' }}>
                     {p.lotBandaPrecisao} &mdash; {p.lotBandaDescricao}
                   </span>
                   <span style={{ color: C.cinzaMarca }}>
                     Intervalo estimado: {(p.lotCustoObraMin ?? 0).toLocaleString('pt-PT')} &euro; &ndash; {(p.lotCustoObraMax ?? 0).toLocaleString('pt-PT')} &euro;
                   </span>
+                  {p.lotCenarioRecomendado && (
+                    <span style={{ color: C.cinzaMarca, fontStyle: 'italic' }}>* Cenario {p.lotCenarioRecomendado} recomendado para licenciamento</span>
+                  )}
                 </div>
-                {/* P1: Comparação de infraestruturas por cenário A/B/C */}
-                {p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 && (
-                  <div style={{ marginTop: '3mm', padding: '2mm 0' }}>
-                    <p style={{ fontSize: fs(7), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 1.5mm 0', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                      Infraestrutura por cenario
-                    </p>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8) }}>
-                      <thead>
-                        <tr style={{ background: C.offWhite }}>
-                          <th style={{ padding: '1.5mm 2mm', textAlign: 'left', fontWeight: 600, color: C.cinzaMarca }}>Cenario</th>
-                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Subtotal</th>
-                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Contingencia</th>
-                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Total</th>
-                          <th style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600, color: C.cinzaMarca }}>Intervalo</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {p.lotCustosInfraPorCenario.map(c => (
-                          <tr key={c.label} style={{ borderBottom: `1px solid ${C.cinzaLinha}`, background: c.label === p.lotCenarioRecomendado ? '#eff6ff' : undefined }}>
-                            <td style={{ padding: '1.5mm 2mm', fontWeight: c.label === p.lotCenarioRecomendado ? 700 : 400 }}>
-                              {c.label}{c.label === p.lotCenarioRecomendado ? ' (recomendado)' : ''}
-                            </td>
-                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right' }}>{c.subtotal.toLocaleString('pt-PT')} &euro;</td>
-                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', color: C.cinzaMarca }}>{c.contingenciaPct}%</td>
-                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontWeight: 600 }}>{c.total.toLocaleString('pt-PT')} &euro;</td>
-                            <td style={{ padding: '1.5mm 2mm', textAlign: 'right', fontSize: fs(7), color: C.cinzaMarca }}>
-                              {c.min.toLocaleString('pt-PT')} &ndash; {c.max.toLocaleString('pt-PT')} &euro;
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
               </div>
             )}
 
@@ -827,11 +855,11 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       <span style={{ fontWeight: 600 }}>Repetição idêntica</span>
                       <span style={{ fontSize: fs(7), color: '#16a34a', marginLeft: '2mm', fontWeight: 600 }}>−{ma.descontoIgual}%</span>
                       <span style={{ display: 'block', fontSize: fs(6.5), color: C.cinzaMarca, marginTop: '0.5mm' }}>
-                        Desenho criado 1× (espelhamento/ajuste de implantacao). Aplica-se a {ma.repeticoesIguais} lote{ma.repeticoesIguais > 1 ? 's' : ''}.
+                        Desenho base com desconto por repeticao. Aplica-se a {ma.repeticoesIguais} lote{ma.repeticoesIguais > 1 ? 's' : ''}.
                         <br />Inclui: adaptacao de pecas desenhadas, compatibilizacao com lote, revisao de memorias.
                       </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>1</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.repeticoesIguais}</td>
                     <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(ma.feeOriginal * (1 - ma.descontoIgual / 100)), lang)}</td>
                     <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalRepeticoesIguais, lang)}</td>
                   </tr>
@@ -848,7 +876,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         <br />Inclui: redesenho parcial, novas pecas desenhadas, compatibilizacao e memorias actualizadas.
                       </span>
                     </td>
-                    <td style={{ padding: '2mm', textAlign: 'center' }}>1</td>
+                    <td style={{ padding: '2mm', textAlign: 'center' }}>{ma.repeticoesAdaptadas}</td>
                     <td style={{ padding: '2mm', textAlign: 'right' }}>{formatCurrency(Math.round(ma.feeOriginal * (1 - ma.descontoAdaptada / 100)), lang)}</td>
                     <td style={{ padding: '2mm', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(ma.totalRepeticoesAdaptadas, lang)}</td>
                   </tr>
@@ -1402,10 +1430,13 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             )}
             <p style={{ fontSize: fs(9), color: C.cinzaMarca, fontStyle: 'italic', margin: 0 }}>{t('proposal.durationNote', lang)}</p>
             
-            {/* P3: Nota sobre PIP opcional */}
+            {/* P3/B1: Nota sobre PIP opcional — com valor em € quando disponível */}
             {p.isLoteamento && (p.duracaoEstimada ?? []).some(d => d.nome.includes('PIP')) && (
               <p className="pdf-no-break" style={{ fontSize: fs(7.5), color: '#1e40af', margin: '2mm 0 0 0', padding: '1.5mm 3mm', background: '#eff6ff', borderRadius: 2, borderLeft: '2px solid #3b82f6', breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                <strong>Nota PIP:</strong> O Pedido de Informacao Previa e uma fase opcional. Sem PIP, o prazo global reduz-se em 2-4 meses e a percentagem de honorarios e redistribuida pelas restantes fases, sem alteracao do valor total.
+                <strong>Nota PIP:</strong> O Pedido de Informacao Previa e uma fase opcional.
+                {p.lotPipNotaOpcional
+                  ? ` Sem PIP, o investimento em honorarios reduz-se em ${p.lotPipNotaOpcional.valorPIP.toLocaleString('pt-PT')} &euro; (total ${p.lotPipNotaOpcional.valorSemPIP.toLocaleString('pt-PT')} &euro;) e o prazo encurta 2-4 meses.`
+                  : ' Sem PIP, o prazo global reduz-se em 2-4 meses e a percentagem de honorarios e redistribuida pelas restantes fases, sem alteracao do valor total.'}
               </p>
             )}
             
@@ -1569,20 +1600,32 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
           const moradiaAddonPostDiscount = p.descontoPct && p.descontoPct > 0
             ? Math.round(moradiaAddonRaw * (1 - p.descontoPct / 100))
             : moradiaAddonRaw;
+          const porCenario = p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 ? p.lotCustosInfraPorCenario : null;
+          const honorariosTotal = (p.totalSemIVA ?? 0) - moradiaAddonPostDiscount;
+          const construcaoTotalMin = abcEstimada * custosMoradia.min * nLotes;
+          const construcaoTotalMed = abcEstimada * custosMoradia.med * nLotes;
+          const construcaoTotalMax = abcEstimada * custosMoradia.max * nLotes;
           const inv = {
             infraTotal: p.lotCustoObraTotal ?? 0,
-            honorariosTotal: (p.totalSemIVA ?? 0) - moradiaAddonPostDiscount,
+            honorariosTotal,
             construcaoAreaMediaLote: abcEstimada,
             construcaoNLotes: nLotes,
             construcaoMin: abcEstimada * custosMoradia.min,
             construcaoMed: abcEstimada * custosMoradia.med,
             construcaoMax: abcEstimada * custosMoradia.max,
-            construcaoTotalMin: abcEstimada * custosMoradia.min * nLotes,
-            construcaoTotalMed: abcEstimada * custosMoradia.med * nLotes,
-            construcaoTotalMax: abcEstimada * custosMoradia.max * nLotes,
-            investimentoTotalMin: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.min * nLotes,
-            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.med * nLotes,
-            investimentoTotalMax: (p.lotCustoObraTotal ?? 0) + (p.totalSemIVA ?? 0) + abcEstimada * custosMoradia.max * nLotes,
+            construcaoTotalMin,
+            construcaoTotalMed,
+            construcaoTotalMax,
+            investimentoTotalMin: (porCenario ? Math.min(...porCenario.map(c => c.total)) : (p.lotCustoObraTotal ?? 0)) + honorariosTotal + construcaoTotalMin,
+            investimentoTotalMed: (p.lotCustoObraTotal ?? 0) + honorariosTotal + construcaoTotalMed,
+            investimentoTotalMax: (porCenario ? Math.max(...porCenario.map(c => c.total)) : (p.lotCustoObraTotal ?? 0)) + honorariosTotal + construcaoTotalMax,
+            investimentoPorCenario: porCenario ? porCenario.map((c, i) => {
+              const constTotal = porCenario.length >= 3
+                ? (i === 0 ? construcaoTotalMin : i === 1 ? construcaoTotalMed : construcaoTotalMax)
+                : (i === 0 ? construcaoTotalMin : construcaoTotalMax);
+              return c.total + honorariosTotal + constTotal;
+            }) : null,
+            porCenario,
           };
           const fmtN = (n: number) => n.toLocaleString('pt-PT');
           return (
@@ -1594,25 +1637,35 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               Visao consolidada para planeamento financeiro &mdash; {inv.construcaoNLotes} lotes, ABC estimada {fmtN(inv.construcaoAreaMediaLote)} m2/moradia
             </p>
 
-            {/* Tabela principal */}
+            {/* Tabela principal — P1: colunas A/B/C por cenário quando aplicável */}
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: fs(8), marginBottom: '3mm' }}>
               <thead>
                 <tr style={{ background: C.accent }}>
                   <th style={{ padding: '2mm 3mm', textAlign: 'left', color: C.onAccent, fontWeight: 700 }}>Componente</th>
-                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Economico</th>
-                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Medio</th>
-                  <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Premium</th>
+                  {inv.porCenario ? (
+                    inv.porCenario.map(c => (
+                      <th key={c.label} style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>
+                        Cen. {c.label}{c.label === p.lotCenarioRecomendado ? ' *' : ''}
+                      </th>
+                    ))
+                  ) : (
+                    <>
+                      <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Economico</th>
+                      <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Medio</th>
+                      <th style={{ padding: '2mm 3mm', textAlign: 'right', color: C.onAccent, fontWeight: 700 }}>Premium</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                   <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Infraestruturas de urbanizacao</td>
-                  {p.lotCustosInfraPorCenario && p.lotCustosInfraPorCenario.length > 1 ? (
-                    <>
-                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>{fmtN(Math.min(...p.lotCustosInfraPorCenario.map(c => c.total)))} &euro;</td>
-                      <td style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: 600 }}>{fmtN(inv.infraTotal)} &euro;</td>
-                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>{fmtN(Math.max(...p.lotCustosInfraPorCenario.map(c => c.total)))} &euro;</td>
-                    </>
+                  {inv.porCenario ? (
+                    inv.porCenario.map(c => (
+                      <td key={c.label} style={{ padding: '2mm 3mm', textAlign: 'right', fontWeight: c.label === p.lotCenarioRecomendado ? 600 : 400 }}>
+                        {fmtN(c.total)} &euro;
+                      </td>
+                    ))
                   ) : (
                     <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
                       <strong>{fmtN(inv.infraTotal)} &euro;</strong>
@@ -1621,7 +1674,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                 </tr>
                 <tr style={{ borderBottom: `1px solid ${C.cinzaLinha}` }}>
                   <td style={{ padding: '2mm 3mm', fontWeight: 500 }}>Honorarios (loteamento)</td>
-                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
+                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={inv.porCenario ? inv.porCenario.length : 3}>
                     <strong>{fmtN(inv.honorariosTotal)} &euro;</strong>
                     <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(conforme proposta)</span>
                   </td>
@@ -1634,9 +1687,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                         {p.moradiaAddon.modo === 'previo' ? 'Estudo previo' : 'Licenciamento'} + {p.moradiaAddon.repeticoesIguais + p.moradiaAddon.repeticoesAdaptadas} repeticoes
                       </span>
                     </td>
-                    <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={3}>
-                      <strong>{fmtN(p.moradiaAddon.totalAddon)} &euro;</strong>
-                      <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(add-on moradia tipo)</span>
+                    <td style={{ padding: '2mm 3mm', textAlign: 'right' }} colSpan={inv.porCenario ? inv.porCenario.length : 3}>
+                      <strong>{fmtN(moradiaAddonPostDiscount)} &euro;</strong>
+                      <span style={{ fontSize: fs(7), color: C.cinzaMarca, marginLeft: '2mm' }}>(add-on moradia tipo{p.descontoPct && p.descontoPct > 0 ? `, −${p.descontoPct}%` : ''})</span>
                     </td>
                   </tr>
                 )}
@@ -1647,26 +1700,66 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
                       {inv.construcaoNLotes} un. &times; {fmtN(inv.construcaoAreaMediaLote)} m2 (chave na mao)
                     </span>
                   </td>
-                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
-                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMin)}&euro;/un.</span><br />
-                    <strong>{fmtN(inv.construcaoTotalMin)} &euro;</strong>
-                  </td>
-                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
-                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMed)}&euro;/un.</span><br />
-                    <strong>{fmtN(inv.construcaoTotalMed)} &euro;</strong>
-                  </td>
-                  <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
-                    <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMax)}&euro;/un.</span><br />
-                    <strong>{fmtN(inv.construcaoTotalMax)} &euro;</strong>
-                  </td>
+                  {inv.porCenario ? (
+                    inv.porCenario.length >= 3 ? (
+                      <>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                          <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMin)}&euro;/un.</span><br />
+                          <strong>{fmtN(inv.construcaoTotalMin)} &euro;</strong>
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                          <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMed)}&euro;/un.</span><br />
+                          <strong>{fmtN(inv.construcaoTotalMed)} &euro;</strong>
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                          <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMax)}&euro;/un.</span><br />
+                          <strong>{fmtN(inv.construcaoTotalMax)} &euro;</strong>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                          <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMin)}&euro;/un.</span><br />
+                          <strong>{fmtN(inv.construcaoTotalMin)} &euro;</strong>
+                        </td>
+                        <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                          <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMax)}&euro;/un.</span><br />
+                          <strong>{fmtN(inv.construcaoTotalMax)} &euro;</strong>
+                        </td>
+                      </>
+                    )
+                  ) : (
+                    <>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                        <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMin)}&euro;/un.</span><br />
+                        <strong>{fmtN(inv.construcaoTotalMin)} &euro;</strong>
+                      </td>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                        <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMed)}&euro;/un.</span><br />
+                        <strong>{fmtN(inv.construcaoTotalMed)} &euro;</strong>
+                      </td>
+                      <td style={{ padding: '2mm 3mm', textAlign: 'right' }}>
+                        <span style={{ fontSize: fs(7), color: C.cinzaMarca }}>{fmtN(inv.construcaoMax)}&euro;/un.</span><br />
+                        <strong>{fmtN(inv.construcaoTotalMax)} &euro;</strong>
+                      </td>
+                    </>
+                  )}
                 </tr>
               </tbody>
               <tfoot>
                 <tr style={{ background: C.accentSoft, borderTop: `2px solid ${C.accent}` }}>
                   <td style={{ padding: '2.5mm 3mm', fontWeight: 700, color: C.accent }}>Investimento Total</td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMin)} &euro;</td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, fontSize: fs(9), color: C.accent }}>{fmtN(inv.investimentoTotalMed)} &euro;</td>
-                  <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMax)} &euro;</td>
+                  {inv.investimentoPorCenario ? (
+                    inv.investimentoPorCenario.map((tot, i) => (
+                      <td key={i} style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(tot)} &euro;</td>
+                    ))
+                  ) : (
+                    <>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMin)} &euro;</td>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, fontSize: fs(9), color: C.accent }}>{fmtN(inv.investimentoTotalMed)} &euro;</td>
+                      <td style={{ padding: '2.5mm 3mm', textAlign: 'right', fontWeight: 700, color: C.accent }}>{fmtN(inv.investimentoTotalMax)} &euro;</td>
+                    </>
+                  )}
                 </tr>
               </tfoot>
             </table>
@@ -1688,6 +1781,9 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             {/* Duracao */}
             <p style={{ fontSize: fs(7.5), color: C.cinzaMarca, margin: '0 0 2mm 0' }}>
               Duracao estimada do empreendimento: <strong style={{ color: C.grafite }}>18-36 meses</strong> (licenciamento + construcao)
+              {p.lotCenarioRecomendado && inv.porCenario && (
+                <span style={{ marginLeft: '2mm' }}>* Cenario {p.lotCenarioRecomendado} recomendado para licenciamento.</span>
+              )}
             </p>
 
             {/* Disclaimer */}

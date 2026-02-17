@@ -3,11 +3,37 @@ import { motion } from 'framer-motion';
 import {
   BarChart3, TrendingUp, TrendingDown, Eye, Heart, MessageCircle,
   Share2, Bookmark, MousePointer, Users, Award, Lightbulb,
-  Plus, ArrowUpRight, ArrowDownRight,
+  Plus, ArrowUpRight, ArrowDownRight, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
 import type { ContentPost, PostMetrics, PerformanceEntry } from '@/types';
+
+const MOCK_METRICS = {
+  reach: 12400,
+  views: 28900,
+  likes: 892,
+  comments: 67,
+  shares: 124,
+  saves: 312,
+  clicks: 89,
+  posts: 12,
+};
+
+const MOCK_TOP_POSTS: Array<{ id: string; copy: string; channel: string; likes: number; comments: number }> = [
+  { id: 'm1', copy: 'Casa do Douro — antes e depois da reabilitação', channel: 'Instagram', likes: 245, comments: 18 },
+  { id: 'm2', copy: 'Detalhe técnico: encaixe em madeira CLT', channel: 'LinkedIn', likes: 189, comments: 12 },
+  { id: 'm3', copy: 'Bastidores da obra em Aveiro', channel: 'Instagram', likes: 156, comments: 8 },
+  { id: 'm4', copy: 'Material em foco: microcimento', channel: 'Pinterest', likes: 98, comments: 3 },
+  { id: 'm5', copy: '3 decisões de projeto que mudaram tudo', channel: 'Instagram', likes: 87, comments: 5 },
+];
+
+const MOCK_RECOMMENDATIONS = [
+  'Os teus conteúdos são mais guardados do que partilhados — foca em formatos "educativos" que as pessoas queiram rever.',
+  'Rácio comentários/likes baixo — experimenta perguntas no CTA ou formatos de "opinião".',
+  'O canal com mais posts é Instagram. Diversifica para LinkedIn e Pinterest para não saturar.',
+  'Boa taxa de cliques! O teu CTA está a funcionar — mantém esta abordagem.',
+];
 
 export default function PerformancePage() {
   const { posts, performanceEntries, addPerformanceEntry, updatePost, assets } = useMedia();
@@ -49,7 +75,11 @@ export default function PerformancePage() {
     return t;
   }, [publishedPosts]);
 
-  const engagementRate = totals.reach > 0 ? (((totals.likes + totals.comments + totals.shares + totals.saves) / totals.reach) * 100).toFixed(1) : '0';
+  const useMock = totals.reach === 0 && totals.posts === 0 && totals.views === 0;
+  const displayTotals = useMock ? MOCK_METRICS : totals;
+  const engagementRate = displayTotals.reach > 0
+    ? (((displayTotals.likes + displayTotals.comments + displayTotals.shares + displayTotals.saves) / displayTotals.reach) * 100).toFixed(1)
+    : '0';
 
   // Top performers
   const topPosts = useMemo(() => {
@@ -65,6 +95,7 @@ export default function PerformancePage() {
 
   // Recommendations
   const recommendations = useMemo(() => {
+    if (useMock) return MOCK_RECOMMENDATIONS;
     const recs: string[] = [];
     if (totals.posts === 0) {
       recs.push('Publica o teu primeiro post e regista métricas para começar a receber recomendações.');
@@ -79,7 +110,7 @@ export default function PerformancePage() {
     if (topChannel) recs.push(`O canal com mais posts é ${topChannel[0]} (${topChannel[1]} posts). Diversifica para não saturar.`);
     if (recs.length === 0) recs.push('Continua a publicar e registar métricas para receber insights mais detalhados.');
     return recs;
-  }, [totals, publishedPosts]);
+  }, [totals, publishedPosts, useMock]);
 
   const KPICard = ({ label, value, icon: Icon, trend }: { label: string; value: string | number; icon: typeof Eye; trend?: 'up' | 'down' | null }) => (
     <div className="bg-card border border-border rounded-xl p-5">
@@ -105,21 +136,32 @@ export default function PerformancePage() {
         <p className="text-muted-foreground mt-2">Métricas, insights e recomendações</p>
       </motion.div>
 
+      {useMock && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-200"
+        >
+          <Info className="w-5 h-5 shrink-0" />
+          <p className="text-sm">Dados de demonstração. Regista métricas nos teus posts publicados para ver dados reais.</p>
+        </motion.div>
+      )}
+
       {/* KPI Grid */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <KPICard label="Alcance Total" value={totals.reach} icon={Users} />
-        <KPICard label="Impressões" value={totals.views} icon={Eye} />
+        <KPICard label="Alcance Total" value={displayTotals.reach} icon={Users} />
+        <KPICard label="Impressões" value={displayTotals.views} icon={Eye} />
         <KPICard label="Engagement Rate" value={`${engagementRate}%`} icon={TrendingUp} />
-        <KPICard label="Posts Publicados" value={totals.posts} icon={BarChart3} />
+        <KPICard label="Posts Publicados" value={displayTotals.posts} icon={BarChart3} />
       </motion.div>
 
       {/* Detail KPIs */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-        <KPICard label="Likes" value={totals.likes} icon={Heart} />
-        <KPICard label="Comentários" value={totals.comments} icon={MessageCircle} />
-        <KPICard label="Partilhas" value={totals.shares} icon={Share2} />
-        <KPICard label="Guardados" value={totals.saves} icon={Bookmark} />
-        <KPICard label="Cliques" value={totals.clicks} icon={MousePointer} />
+        <KPICard label="Likes" value={displayTotals.likes} icon={Heart} />
+        <KPICard label="Comentários" value={displayTotals.comments} icon={MessageCircle} />
+        <KPICard label="Partilhas" value={displayTotals.shares} icon={Share2} />
+        <KPICard label="Guardados" value={displayTotals.saves} icon={Bookmark} />
+        <KPICard label="Cliques" value={displayTotals.clicks} icon={MousePointer} />
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -175,23 +217,33 @@ export default function PerformancePage() {
           </div>
 
           {/* Top Performers */}
-          {topPosts.length > 0 && (
+          {(topPosts.length > 0 || useMock) && (
             <div className="bg-card border border-border rounded-xl p-6">
               <h2 className="font-semibold mb-4 flex items-center gap-2"><Award className="w-4 h-4 text-primary" /> Top Performers</h2>
               <div className="space-y-2">
-                {topPosts.map((p, i) => {
-                  const asset = assets.find((a) => a.id === p.assetId);
-                  return (
-                    <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                      <span className="text-sm font-bold text-primary w-5">{i + 1}</span>
-                      {asset?.thumbnail && <img src={asset.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{(p.copyPt || p.copyEn || '').slice(0, 40)}</p>
-                        <p className="text-xs text-muted-foreground">{p.channel} · {p.metrics?.likes || 0} likes · {p.metrics?.comments || 0} coment.</p>
+                {useMock
+                  ? MOCK_TOP_POSTS.map((p, i) => (
+                      <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                        <span className="text-sm font-bold text-primary w-5">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{p.copy}</p>
+                          <p className="text-xs text-muted-foreground">{p.channel} · {p.likes} likes · {p.comments} coment.</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    ))
+                  : topPosts.map((p, i) => {
+                      const asset = assets.find((a) => a.id === p.assetId);
+                      return (
+                        <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                          <span className="text-sm font-bold text-primary w-5">{i + 1}</span>
+                          {asset?.thumbnail && <img src={asset.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover" />}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{(p.copyPt || p.copyEn || '').slice(0, 40)}</p>
+                            <p className="text-xs text-muted-foreground">{p.channel} · {p.metrics?.likes || 0} likes · {p.metrics?.comments || 0} coment.</p>
+                          </div>
+                        </div>
+                      );
+                    })}
               </div>
             </div>
           )}

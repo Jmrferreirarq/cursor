@@ -5,9 +5,13 @@
  * - Diversity (avoid same project/type in consecutive slots)
  * - Quality score
  * - Pillar match
+ * - Image/video balance (max videos per week, avoid consecutive same type)
  */
 
 import type { MediaAsset, PublicationSlot, ContentPost, ContentChannel, EditorialDNA } from '@/types';
+
+const MAX_VIDEOS_PER_WEEK = 3;
+const MAX_IMAGES_CONSECUTIVE = 2; // prefer video after 2 images in a row
 
 export interface SlotSuggestion {
   slotId: string;
@@ -33,10 +37,29 @@ export function generateCalendarSuggestions(
   const today = new Date();
   const usedAssetIds = new Set<string>();
 
-  // Track recently used assets from existing posts
+  // Track image/video and work/social count per week (for balance)
+  const videosPerWeek = new Map<string, number>();
+  const imagesPerWeek = new Map<string, number>();
+  const workPerWeek = new Map<string, number>();
+  const socialPerWeek = new Map<string, number>();
+  const lastTypePerWeek = new Map<string, 'image' | 'video'>();
+
+  // Count existing scheduled/published posts by type per week
   existingPosts.forEach((p) => {
-    if (p.assetId && (p.status === 'scheduled' || p.status === 'published')) {
+    if (p.assetId && (p.status === 'scheduled' || p.status === 'published') && p.scheduledDate) {
       usedAssetIds.add(p.assetId);
+      const weekKey = getWeekKey(p.scheduledDate);
+      const asset = assets.find((a) => a.id === p.assetId);
+      if (asset?.type === 'video') {
+        videosPerWeek.set(weekKey, (videosPerWeek.get(weekKey) ?? 0) + 1);
+      } else if (asset?.type === 'image') {
+        imagesPerWeek.set(weekKey, (imagesPerWeek.get(weekKey) ?? 0) + 1);
+      }
+      if (asset?.contentFocus === 'trabalho') {
+        workPerWeek.set(weekKey, (workPerWeek.get(weekKey) ?? 0) + 1);
+      } else if (asset?.contentFocus === 'vida-social') {
+        socialPerWeek.set(weekKey, (socialPerWeek.get(weekKey) ?? 0) + 1);
+      }
     }
   });
 
@@ -50,6 +73,7 @@ export function generateCalendarSuggestions(
       // Calculate next date for this slot
       const date = getNextDate(today, slot.dayOfWeek, week);
       const dateStr = date.toISOString().slice(0, 10);
+      const weekKey = getWeekKey(dateStr);
 
       // Check if there's already a post scheduled for this date
       const existingPost = existingPosts.find(
@@ -57,10 +81,18 @@ export function generateCalendarSuggestions(
       );
       if (existingPost) continue;
 
+      const balanceContext = {
+        videosThisWeek: videosPerWeek.get(weekKey) ?? 0,
+        imagesThisWeek: imagesPerWeek.get(weekKey) ?? 0,
+        workThisWeek: workPerWeek.get(weekKey) ?? 0,
+        socialThisWeek: socialPerWeek.get(weekKey) ?? 0,
+        lastType: lastTypePerWeek.get(weekKey) ?? null,
+      };
+
       // Score each available asset for this slot
       const scored = availableAssets.map((asset) => ({
         asset,
-        score: scoreAssetForSlot(asset, slot, editorialDNA, usedAssetIds, week),
+        score: scoreAssetForSlot(asset, slot, editorialDNA, usedAssetIds, week, balanceContext),
       })).sort((a, b) => b.score - a.score);
 
       const best = scored[0];
@@ -75,14 +107,35 @@ export function generateCalendarSuggestions(
         date: dateStr,
       });
 
-      // Mark as used to avoid suggesting the same asset twice
+      // Mark as used and update week counts
       if (best) {
         usedAssetIds.add(best.asset.id);
+        if (best.asset.type === 'video') {
+          videosPerWeek.set(weekKey, (videosPerWeek.get(weekKey) ?? 0) + 1);
+        } else {
+          imagesPerWeek.set(weekKey, (imagesPerWeek.get(weekKey) ?? 0) + 1);
+        }
+        if (best.asset.contentFocus === 'trabalho') {
+          workPerWeek.set(weekKey, (workPerWeek.get(weekKey) ?? 0) + 1);
+        } else if (best.asset.contentFocus === 'vida-social') {
+          socialPerWeek.set(weekKey, (socialPerWeek.get(weekKey) ?? 0) + 1);
+        }
+        lastTypePerWeek.set(weekKey, best.asset.type);
       }
     }
   }
 
   return suggestions;
+}
+
+/** Returns Monday of the week for the given date (YYYY-MM-DD) as week key */
+function getWeekKey(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().slice(0, 10);
 }
 
 function getNextDate(from: Date, dayOfWeek: number, weeksAhead: number): Date {
@@ -95,12 +148,21 @@ function getNextDate(from: Date, dayOfWeek: number, weeksAhead: number): Date {
   return d;
 }
 
+interface BalanceContext {
+  videosThisWeek: number;
+  imagesThisWeek: number;
+  workThisWeek: number;
+  socialThisWeek: number;
+  lastType: 'image' | 'video' | null;
+}
+
 function scoreAssetForSlot(
   asset: MediaAsset,
   slot: PublicationSlot,
   editorialDNA: EditorialDNA | null,
   alreadyUsed: Set<string>,
-  weekOffset: number
+  weekOffset: number,
+  balance?: BalanceContext
 ): number {
   let score = 50; // Base score
 
@@ -145,6 +207,33 @@ function scoreAssetForSlot(
     // Image assets are better for feed/pinterest/linkedin
     if (asset.type === 'image' && slot.channels.some((ch) => ['ig-feed', 'pinterest', 'linkedin', 'ig-carrossel'].includes(ch))) {
       score += 10;
+    }
+  }
+
+  // Image/video balance
+  if (balance) {
+    if (asset.type === 'video') {
+      if (balance.videosThisWeek >= MAX_VIDEOS_PER_WEEK) {
+        score -= 25; // Heavy penalty: too many videos this week
+      } else if (balance.videosThisWeek >= MAX_VIDEOS_PER_WEEK - 1) {
+        score -= 10; // Soft penalty: approaching limit
+      }
+      // Bonus: if last was image (or several images), video adds variety
+      if (balance.lastType === 'image' && balance.imagesThisWeek >= MAX_IMAGES_CONSECUTIVE) {
+        score += 8;
+      }
+    } else {
+      // Image: bonus if we've had too many videos or need to break video streak
+      if (balance.videosThisWeek >= MAX_VIDEOS_PER_WEEK - 1 && balance.lastType === 'video') {
+        score += 8;
+      }
+    }
+    // Work/social balance — ambos crescem juntos
+    if (asset.contentFocus === 'vida-social' && balance.workThisWeek >= 3 && balance.socialThisWeek < 1) {
+      score += 10; // Prefer social when week is too work-heavy
+    }
+    if (asset.contentFocus === 'trabalho' && balance.socialThisWeek >= 2 && balance.workThisWeek < 2) {
+      score += 8; // Prefer work when week is too social-heavy
     }
   }
 

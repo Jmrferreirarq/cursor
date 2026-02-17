@@ -28,7 +28,17 @@ function merge(raw: Partial<AppData>): AppData {
     editorialDNA: raw.editorialDNA ?? EMPTY_DATA.editorialDNA,
     slots: Array.isArray(raw.slots) ? raw.slots : EMPTY_DATA.slots,
     performanceEntries: Array.isArray(raw.performanceEntries) ? raw.performanceEntries : EMPTY_DATA.performanceEntries,
+    trashAssets: Array.isArray(raw.trashAssets) ? raw.trashAssets : EMPTY_DATA.trashAssets,
+    trashPacks: Array.isArray(raw.trashPacks) ? raw.trashPacks : EMPTY_DATA.trashPacks,
+    trashPosts: Array.isArray(raw.trashPosts) ? raw.trashPosts : EMPTY_DATA.trashPosts,
   };
+}
+
+/** Remove src de vídeos para reduzir tamanho (localStorage ~5MB). Mantém thumbnail. */
+function stripVideoSrc(assets: { src?: string; thumbnail?: string; type?: string }[]): typeof assets {
+  return assets.map((a) =>
+    a.type === 'video' && a.src ? { ...a, src: undefined } : a
+  );
 }
 
 export const localStorageService: IStorageService = {
@@ -39,7 +49,29 @@ export const localStorageService: IStorageService = {
   },
 
   save(data: AppData): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, exportedAt: new Date().toISOString() }));
+    const payload = { ...data, exportedAt: new Date().toISOString() };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (e) {
+      // QuotaExceededError: vídeos em data URL podem exceder ~5MB
+      if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22)) {
+        const stripped = {
+          ...payload,
+          mediaAssets: stripVideoSrc(payload.mediaAssets),
+        };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+        } catch {
+          // Ainda falha: guardar sem media assets
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({ ...payload, mediaAssets: [] })
+          );
+        }
+      } else {
+        throw e;
+      }
+    }
   },
 
   exportToFile(data: AppData): void {

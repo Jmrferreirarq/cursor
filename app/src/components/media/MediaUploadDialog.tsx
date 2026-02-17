@@ -1,11 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Image, Video, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
-import { hasApiKey, analyzeWithAI, aiResultToContentPack } from '@/services/ai';
-import type { MediaType, MediaObjective, MediaStatus, MediaRestriction, MediaAsset } from '@/types';
+import { hasApiKey, analyzeWithAI, aiResultToContentPack, classifyMediaWithAI, assessImageQuality } from '@/services/ai';
+import { generateVideoThumbnail } from '@/utils/videoThumbnail';
+import type { MediaType, MediaObjective, MediaStatus, MediaRestriction, MediaAsset, ContentFocus } from '@/types';
 
 interface Props {
   open: boolean;
@@ -13,11 +14,21 @@ interface Props {
 }
 
 const MEDIA_TYPES: { value: MediaType; label: string }[] = [
-  { value: 'obra', label: 'Obra' },
+  { value: 'fotografia', label: 'Fotografia' },
   { value: 'render', label: 'Render' },
+  { value: 'obra', label: 'Obra' },
+  { value: 'processo', label: 'Processo' },
   { value: 'detalhe', label: 'Detalhe' },
+  { value: 'pessoas', label: 'Pessoas' },
   { value: 'equipa', label: 'Equipa' },
   { value: 'before-after', label: 'Antes/Depois' },
+  { value: 'outros', label: 'Outros' },
+];
+
+const CONTENT_FOCUS_OPTIONS: { value: ContentFocus; label: string }[] = [
+  { value: 'trabalho', label: 'Trabalho' },
+  { value: 'vida-social', label: 'Vida Social' },
+  { value: 'ambos', label: 'Ambos' },
 ];
 
 const OBJECTIVES: { value: MediaObjective; label: string }[] = [
@@ -43,9 +54,13 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
   const [projectId, setProjectId] = useState('');
   const [mediaType, setMediaType] = useState<MediaType>('obra');
   const [objective, setObjective] = useState<MediaObjective>('portfolio');
+  const [contentFocus, setContentFocus] = useState<ContentFocus>('ambos');
   const [restrictions, setRestrictions] = useState<MediaRestriction[]>([]);
   const [tags, setTags] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [classifying, setClassifying] = useState(false);
+  const [aiClassified, setAiClassified] = useState(false);
+  const [aiMode, setAiMode] = useState<'full' | 'quality'>('full'); // full = copy+tags+quality, quality = só score
   const aiEnabled = hasApiKey();
 
   const toggleRestriction = (r: MediaRestriction) => {
@@ -55,8 +70,64 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
+      setAiClassified(false);
     }
   };
+
+  // Auto-classify first file with AI when files are selected
+  useEffect(() => {
+    if (!aiEnabled || files.length === 0) {
+      setClassifying(false);
+      return;
+    }
+    const file = files[0];
+    const isVideo = file.type.startsWith('video/');
+    const isImage = file.type.startsWith('image/');
+    if (!isImage && !isVideo) {
+      setClassifying(false);
+      return;
+    }
+
+    let cancelled = false;
+    setClassifying(true);
+
+    (async () => {
+      try {
+        let base64 = '';
+        if (isImage) {
+          base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+        } else {
+          const src = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+          base64 = await generateVideoThumbnail(src);
+        }
+        if (cancelled) return;
+        const result = await classifyMediaWithAI(base64);
+        if (cancelled) return;
+        setMediaType(result.mediaType);
+        setObjective(result.objective);
+        setContentFocus(result.contentFocus);
+        setAiClassified(true);
+        toast.success(`AI classificou: ${MEDIA_TYPES.find((t) => t.value === result.mediaType)?.label ?? result.mediaType} · ${CONTENT_FOCUS_OPTIONS.find((c) => c.value === result.contentFocus)?.label ?? result.contentFocus}`);
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Erro na classificação';
+          toast.error(msg);
+        }
+      } finally {
+        if (!cancelled) setClassifying(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [aiEnabled, files]);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -79,15 +150,25 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
         reader.readAsDataURL(file);
       });
 
+      let thumbnail: string | undefined = isVideo ? undefined : src;
+      if (isVideo) {
+        try {
+          thumbnail = await generateVideoThumbnail(src);
+        } catch {
+          // Fallback: sem thumbnail, o card mostra o ícone de vídeo
+        }
+      }
+
       const asset: MediaAsset = {
         id: `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         name: file.name.replace(/\.[^.]+$/, ''),
         type: isVideo ? 'video' : 'image',
         src,
-        thumbnail: isVideo ? undefined : src,
+        thumbnail,
         projectId: projectId || undefined,
         mediaType,
         objective,
+        contentFocus,
         status: 'por-classificar',
         restrictions,
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -99,23 +180,34 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
       addAsset(asset);
 
       // Auto AI analysis if API key is configured
-      if (aiEnabled && !isVideo) {
-        toast.info(`AI a analisar "${asset.name}"...`);
-        try {
-          const result = await analyzeWithAI(asset, projectName);
-          updateAsset(asset.id, {
-            tags: result.tags,
-            qualityScore: result.qualityScore,
-            risks: result.risks,
-            story: result.story,
-            status: 'analisado',
-          });
-          const pack = aiResultToContentPack(asset.id, result);
-          addContentPack(pack);
-          toast.success(`"${asset.name}" — AI gerou ${result.copies.length} copies + ${result.tags.length} tags`);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : 'Erro na análise AI';
-          toast.error(msg);
+      const imgSrc = asset.src || asset.thumbnail;
+      if (aiEnabled && imgSrc) {
+        if (imgSrc) {
+          try {
+            if (aiMode === 'quality') {
+              toast.info(`AI a avaliar qualidade "${asset.name}"...`);
+              const result = await assessImageQuality(imgSrc);
+              updateAsset(asset.id, { qualityScore: result.qualityScore, status: 'analisado' });
+              toast.success(`"${asset.name}" — Qualidade: ${result.qualityScore}`);
+            } else if (!isVideo) {
+              toast.info(`AI a analisar "${asset.name}"...`);
+              const result = await analyzeWithAI(asset, projectName);
+              updateAsset(asset.id, {
+                tags: result.tags,
+                qualityScore: result.qualityScore,
+                risks: result.risks,
+                story: result.story,
+                status: 'analisado',
+              });
+              const pack = aiResultToContentPack(asset.id, result);
+              addContentPack(pack);
+              toast.success(`"${asset.name}" — AI gerou ${result.copies.length} copies + ${result.tags.length} tags`);
+            }
+            // full analysis only for images; videos skip or use quality-only
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Erro na análise AI';
+            toast.error(msg);
+          }
         }
       }
     }
@@ -124,10 +216,12 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
     setUploading(false);
     setFiles([]);
     setProjectId('');
-    setMediaType('obra');
-    setObjective('portfolio');
-    setRestrictions([]);
+        setMediaType('obra');
+        setObjective('portfolio');
+        setContentFocus('ambos');
+        setRestrictions([]);
     setTags('');
+    setAiClassified(false);
     onClose();
   };
 
@@ -208,7 +302,19 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
 
             {/* Media Type */}
             <div>
-              <label className="block text-sm font-medium mb-2">Tipo *</label>
+              <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                Tipo *
+                {aiClassified && (
+                  <span className="text-xs font-normal text-emerald-600 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Sugerido pela AI
+                  </span>
+                )}
+                {classifying && (
+                  <span className="text-xs font-normal text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> A classificar...
+                  </span>
+                )}
+              </label>
               <div className="flex flex-wrap gap-2">
                 {MEDIA_TYPES.map((t) => (
                   <button
@@ -229,7 +335,12 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
 
             {/* Objective */}
             <div>
-              <label className="block text-sm font-medium mb-2">Objetivo *</label>
+              <label className="block text-sm font-medium mb-2">
+                Objetivo *
+                {aiClassified && (
+                  <span className="ml-2 text-xs font-normal text-emerald-600">(sugerido pela AI)</span>
+                )}
+              </label>
               <div className="flex flex-wrap gap-2">
                 {OBJECTIVES.map((o) => (
                   <button
@@ -243,6 +354,33 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
                     }`}
                   >
                     {o.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Focus — trabalho vs vida social */}
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Foco
+                {aiClassified && (
+                  <span className="ml-2 text-xs font-normal text-emerald-600">(sugerido pela AI)</span>
+                )}
+              </label>
+              <p className="text-xs text-muted-foreground mb-2">Trabalho e vida social crescem juntos</p>
+              <div className="flex flex-wrap gap-2">
+                {CONTENT_FOCUS_OPTIONS.map((c) => (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setContentFocus(c.value)}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
+                      contentFocus === c.value
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-muted/30 text-muted-foreground hover:border-primary/40'
+                    }`}
+                  >
+                    {c.label}
                   </button>
                 ))}
               </div>
@@ -287,13 +425,33 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
 
           {/* AI Status */}
           {files.length > 0 && (
-            <div className={`mx-6 mb-4 flex items-center gap-3 p-3 rounded-xl border ${aiEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
-              <Sparkles className={`w-4 h-4 shrink-0 ${aiEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
-              <p className="text-xs">
-                {aiEnabled
-                  ? 'AI Copilot ativo — após upload, a AI analisa e gera conteúdo automaticamente.'
-                  : 'AI Copilot inativo — configura a API key nas definições para ativar análise automática.'}
-              </p>
+            <div className={`mx-6 mb-4 p-3 rounded-xl border space-y-2 ${aiEnabled ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
+              <div className="flex items-center gap-3">
+                <Sparkles className={`w-4 h-4 shrink-0 ${aiEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+                <p className="text-xs">
+                  {aiEnabled
+                    ? 'AI Copilot ativo — após upload, a AI processa automaticamente.'
+                    : 'AI Copilot inativo — configura a API key nas definições para ativar análise automática.'}
+                </p>
+              </div>
+              {aiEnabled && (
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setAiMode('full')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${aiMode === 'full' ? 'bg-primary/20 text-primary border border-primary/40' : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border'}`}
+                  >
+                    Análise completa
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAiMode('quality')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${aiMode === 'quality' ? 'bg-primary/20 text-primary border border-primary/40' : 'bg-muted/50 text-muted-foreground border border-transparent hover:border-border'}`}
+                  >
+                    Só qualidade
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
