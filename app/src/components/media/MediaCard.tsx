@@ -22,7 +22,7 @@ interface MediaCardProps {
   onOpenLightbox?: (item: MediaItem) => void;
 }
 
-export function MediaCard({ 
+export const MediaCard = React.memo(function MediaCard({ 
   item, 
   index = 0, 
   variant = 'default',
@@ -121,10 +121,9 @@ export function MediaCard({
       </div>
     </motion.article>
   );
-}
+});
 
-// Variante Featured para destaque maior
-export function MediaCardFeatured({ 
+export const MediaCardFeatured = React.memo(function MediaCardFeatured({ 
   item, 
   index = 0,
   onTagClick,
@@ -202,6 +201,6 @@ export function MediaCardFeatured({
       </div>
     </motion.article>
   );
-}
+});
 
 export default MediaCard;

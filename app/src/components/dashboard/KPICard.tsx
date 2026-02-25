@@ -14,7 +14,7 @@ interface KPICardProps {
   delay?: number;
 }
 
-export default function KPICard({
+const KPICard = React.memo(function KPICard({
   title,
   children,
   icon: Icon,
@@ -49,4 +49,6 @@ export default function KPICard({
       <div>{children}</div>
     </motion.div>
   );
-}
+});
+
+export default KPICard;
