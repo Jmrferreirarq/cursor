@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Client, Project, Proposal, CalculatorState } from '@/types';
 import { localStorageService } from '@/services/localStorage';
+import { isCloudConfigured, cloudLoad, cloudSave } from '@/services/supabaseSync';
 
 // Iniciar com arrays vazios - sem dados de exemplo
 const initialClients: Client[] = [];
@@ -68,32 +69,54 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [proposals, setProposals] = useState<Proposal[]>([]);
 
-  // Load from storage on mount
+  const cloudSyncTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Load from storage on mount (cloud first, then localStorage fallback)
   useEffect(() => {
-    try {
-      const data = svc.load();
-      if (data.clients.length) setClients(data.clients);
-      if (data.projects.length) setProjects(data.projects);
-      if (data.proposals.length) {
-        setProposals(data.proposals.map((p: Proposal) => ({
-          ...p,
-          status: p.status || 'draft',
-        })));
+    let cancelled = false;
+    async function load() {
+      let loaded = false;
+      if (isCloudConfigured()) {
+        try {
+          const cloud = await cloudLoad();
+          if (cloud && !cancelled) {
+            if (cloud.clients?.length) setClients(cloud.clients);
+            if (cloud.projects?.length) setProjects(cloud.projects);
+            if (cloud.proposals?.length) {
+              setProposals(cloud.proposals.map((p: Proposal) => ({ ...p, status: p.status || 'draft' })));
+            }
+            svc.save(cloud);
+            loaded = true;
+          }
+        } catch { /* cloud unavailable */ }
       }
-    } catch {
-      /* ignore */
+      if (!loaded && !cancelled) {
+        try {
+          const data = svc.load();
+          if (data.clients.length) setClients(data.clients);
+          if (data.projects.length) setProjects(data.projects);
+          if (data.proposals.length) {
+            setProposals(data.proposals.map((p: Proposal) => ({ ...p, status: p.status || 'draft' })));
+          }
+        } catch { /* ignore */ }
+      }
+      if (!cancelled) setIsReady(true);
     }
-    setIsReady(true);
+    load();
+    return () => { cancelled = true; };
   }, []);
 
-  // Persist on change — merges with existing storage to preserve media/planner data
+  // Persist on change — localStorage (instant) + cloud (debounced)
   useEffect(() => {
     try {
       const existing = svc.load();
-      svc.save({ ...existing, clients, projects, proposals });
-    } catch {
-      /* quota exceeded */
-    }
+      const merged = { ...existing, clients, projects, proposals };
+      svc.save(merged);
+      if (isCloudConfigured()) {
+        clearTimeout(cloudSyncTimer.current);
+        cloudSyncTimer.current = setTimeout(() => { cloudSave(merged); }, 2000);
+      }
+    } catch { /* quota exceeded */ }
   }, [clients, projects, proposals]);
 
   const addClient = useCallback((client: Client) => {

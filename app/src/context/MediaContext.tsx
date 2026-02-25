@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type {
   MediaAsset, ContentPack, ContentPost,
   EditorialDNA, PublicationSlot, PerformanceEntry,
 } from '@/types';
 import type { TrashEntry } from '@/services/storage';
 import { localStorageService } from '@/services/localStorage';
+import { isCloudConfigured, cloudSave } from '@/services/supabaseSync';
 
 interface MediaContextType {
   // Media Assets
@@ -123,11 +124,13 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Persist on change
+  const cloudSyncTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Persist on change — localStorage (instant) + cloud (debounced)
   useEffect(() => {
     try {
       const existing = svc.load();
-      svc.save({
+      const merged = {
         ...existing,
         mediaAssets: assets,
         contentPacks,
@@ -138,7 +141,12 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
         editorialDNA,
         slots,
         performanceEntries,
-      });
+      };
+      svc.save(merged);
+      if (isCloudConfigured()) {
+        clearTimeout(cloudSyncTimer.current);
+        cloudSyncTimer.current = setTimeout(() => { cloudSave(merged); }, 2000);
+      }
     } catch { /* quota */ }
   }, [assets, contentPacks, posts, trashAssets, trashPacks, trashPosts, editorialDNA, slots, performanceEntries]);
 

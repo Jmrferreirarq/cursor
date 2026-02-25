@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw, Download, Upload, Database } from 'lucide-react';
+import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw, Download, Upload, Database, Cloud, CloudOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { t } from '@/locales';
 import { hasApiKey } from '@/services/ai';
+import { isCloudConfigured } from '@/services/supabaseSync';
 import AISettingsDialog from '@/components/media/AISettingsDialog';
 const STORAGE_KEY = 'fa360_data';
 
@@ -113,6 +114,45 @@ export default function SettingsPage() {
             >
               {hasApiKey() ? 'Alterar' : 'Configurar'}
             </button>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Cloud Sync */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.06 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
+        <div className="p-5 border-b border-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            {isCloudConfigured() ? <Cloud className="w-5 h-5 text-primary" /> : <CloudOff className="w-5 h-5 text-muted-foreground" />}
+            Cloud Sync
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isCloudConfigured()
+              ? 'Os dados sincronizam automaticamente entre dispositivos'
+              : 'Configura o Supabase para aceder aos dados em qualquer dispositivo'}
+          </p>
+        </div>
+        <div className="p-5">
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isCloudConfigured() ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                {isCloudConfigured()
+                  ? <Cloud className="w-5 h-5 text-emerald-500" />
+                  : <CloudOff className="w-5 h-5 text-amber-500" />}
+              </div>
+              <div>
+                <p className="font-medium">{isCloudConfigured() ? 'Cloud ativa' : 'Apenas local'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isCloudConfigured()
+                    ? 'Dados guardados no browser e na cloud (Supabase)'
+                    : 'Dados guardados apenas neste browser. Usa Backup para transferir.'}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </motion.section>
