@@ -202,6 +202,7 @@ export default function PortfolioPublicPage() {
                     <img
                       src={proj.images[0]}
                       alt={proj.name}
+                      loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (

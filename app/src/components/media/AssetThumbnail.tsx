@@ -41,6 +41,7 @@ export function AssetThumbnail({
     <img
       src={imgSrc}
       alt={asset.name}
+      loading="lazy"
       className={className}
       onError={() => setImgError(true)}
     />

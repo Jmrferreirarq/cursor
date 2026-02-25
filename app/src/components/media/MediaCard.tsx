@@ -55,6 +55,7 @@ export const MediaCard = React.memo(function MediaCard({
           <img
             src={item.thumbnail || item.src}
             alt={item.name}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
@@ -148,6 +149,7 @@ export const MediaCardFeatured = React.memo(function MediaCardFeatured({
           <img
             src={item.thumbnail || item.src}
             alt={item.name}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
         ) : (
