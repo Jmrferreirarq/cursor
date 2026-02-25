@@ -5,6 +5,8 @@ import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { t } from '@/locales';
 import { hasApiKey } from '@/services/ai';
 import AISettingsDialog from '@/components/media/AISettingsDialog';
 const STORAGE_KEY = 'fa360_data';
@@ -12,6 +14,9 @@ const STORAGE_KEY = 'fa360_data';
 export default function SettingsPage() {
   const { resetAllData, exportToFile, importFromFile } = useData();
   const { resetMediaData, trashAssets, trashPacks, trashPosts } = useMedia();
+  const { language } = useLanguage();
+  const s = (key: string) => t(`settings.${key}`, language);
+  const c = (key: string) => t(`common.${key}`, language);
   const trashCount = trashAssets.length + trashPacks.length + trashPosts.length;
   const [confirmReset, setConfirmReset] = useState<'data' | 'media' | 'all' | null>(null);
   const [showAISettings, setShowAISettings] = useState(false);
@@ -69,8 +74,8 @@ export default function SettingsPage() {
           <Settings className="w-4 h-4" />
           <span className="text-sm font-medium tracking-wide uppercase">Sistema</span>
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">Definições</h1>
-        <p className="text-muted-foreground mt-1">Configurações e gestão de dados</p>
+        <h1 className="text-3xl font-bold tracking-tight">{s('title')}</h1>
+        <p className="text-muted-foreground mt-1">{s('subtitle')}</p>
       </motion.div>
 
       {/* AI Copilot */}
@@ -83,10 +88,10 @@ export default function SettingsPage() {
         <div className="p-5 border-b border-border">
           <h2 className="font-semibold flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            AI Copilot
+            {s('aiCopilot')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            OpenAI GPT-4 Vision para análise de imagens e geração de copy
+            {s('aiDescription')}
           </p>
         </div>
         <div className="p-5">
@@ -96,7 +101,7 @@ export default function SettingsPage() {
                 <Key className={`w-5 h-5 ${hasApiKey() ? 'text-emerald-500' : 'text-amber-500'}`} />
               </div>
               <div>
-                <p className="font-medium">{hasApiKey() ? 'API key configurada' : 'API key não configurada'}</p>
+                <p className="font-medium">{hasApiKey() ? s('apiKeyConfigured') : s('apiKeyNotConfigured')}</p>
                 <p className="text-sm text-muted-foreground">
                   {hasApiKey() ? 'O AI está ativo para análise e geração de conteúdo' : 'Configura a key para usar AI Analisar, Gerar articulação, etc.'}
                 </p>
@@ -122,10 +127,10 @@ export default function SettingsPage() {
         <div className="p-5 border-b border-border">
           <h2 className="font-semibold flex items-center gap-2">
             <Database className="w-5 h-5 text-primary" />
-            Backup & Restore
+            {s('backup')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Exporta os teus dados para ficheiro JSON ou importa um backup anterior
+            {s('backupDescription')}
           </p>
         </div>
         <div className="p-5 space-y-4">
@@ -135,15 +140,15 @@ export default function SettingsPage() {
                 <Download className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <p className="font-medium">Exportar Backup</p>
-                <p className="text-sm text-muted-foreground">Descarrega todos os dados num ficheiro JSON</p>
+                <p className="font-medium">{s('exportBackup')}</p>
+                <p className="text-sm text-muted-foreground">{s('exportDescription')}</p>
               </div>
             </div>
             <button
               onClick={handleExport}
               className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors"
             >
-              Exportar
+              {c('export')}
             </button>
           </div>
 
@@ -153,12 +158,12 @@ export default function SettingsPage() {
                 <Upload className="w-5 h-5 text-blue-500" />
               </div>
               <div>
-                <p className="font-medium">Importar Backup</p>
-                <p className="text-sm text-muted-foreground">Restaura dados a partir de um ficheiro JSON exportado</p>
+                <p className="font-medium">{s('importBackup')}</p>
+                <p className="text-sm text-muted-foreground">{s('importDescription')}</p>
               </div>
             </div>
             <label className={`px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
-              {importing ? 'A importar…' : 'Importar'}
+              {importing ? c('loading') : c('import')}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -181,10 +186,10 @@ export default function SettingsPage() {
         <div className="p-5 border-b border-border">
           <h2 className="font-semibold flex items-center gap-2">
             <RotateCcw className="w-5 h-5 text-muted-foreground" />
-            Lixo
+            {s('trash')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Assets, packs e posts apagados ficam aqui e podem ser recuperados
+            {s('trashDescription')}
           </p>
         </div>
         <div className="p-5">
@@ -193,7 +198,7 @@ export default function SettingsPage() {
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
-            Ver lixo {trashCount > 0 && `(${trashCount})`}
+            {s('viewTrash')} {trashCount > 0 && `(${trashCount})`}
           </Link>
         </div>
       </motion.section>
@@ -208,10 +213,10 @@ export default function SettingsPage() {
         <div className="p-5 border-b border-border bg-amber-500/5">
           <h2 className="font-semibold flex items-center gap-2 text-amber-600">
             <AlertTriangle className="w-5 h-5" />
-            Zona de Perigo
+            {s('dangerZone')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Estas ações apagam dados permanentemente. Não é possível reverter.
+            {s('dangerDescription')}
           </p>
         </div>
         <div className="p-5 space-y-4">
@@ -222,7 +227,7 @@ export default function SettingsPage() {
                 <Users className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Apagar Dados</p>
+                <p className="font-medium">{s('deleteData')}</p>
                 <p className="text-sm text-muted-foreground">Clientes, projetos e propostas</p>
               </div>
             </div>
@@ -241,7 +246,7 @@ export default function SettingsPage() {
                 <Image className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium">Apagar Content Factory</p>
+                <p className="font-medium">{s('deleteMedia')}</p>
                 <p className="text-sm text-muted-foreground">Media, posts, packs e métricas</p>
               </div>
             </div>
@@ -260,7 +265,7 @@ export default function SettingsPage() {
                 <Trash2 className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="font-medium text-destructive">Apagar Tudo</p>
+                <p className="font-medium text-destructive">{s('deleteAll')}</p>
                 <p className="text-sm text-muted-foreground">Coloca tudo a zero — dados, media e conteúdo</p>
               </div>
             </div>
@@ -293,9 +298,9 @@ export default function SettingsPage() {
                 <Trash2 className={`w-5 h-5 ${confirmReset === 'all' ? 'text-destructive' : 'text-amber-500'}`} />
               </div>
               <h3 className="text-lg font-semibold">
-                {confirmReset === 'data' && 'Apagar Dados'}
-                {confirmReset === 'media' && 'Apagar Content Factory'}
-                {confirmReset === 'all' && 'Apagar Tudo'}
+                {confirmReset === 'data' && s('deleteData')}
+                {confirmReset === 'media' && s('deleteMedia')}
+                {confirmReset === 'all' && s('deleteAll')}
               </h3>
             </div>
             <p className="text-muted-foreground mb-6">
@@ -308,7 +313,7 @@ export default function SettingsPage() {
                 onClick={() => setConfirmReset(null)}
                 className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-muted transition-colors"
               >
-                Cancelar
+                {c('cancel')}
               </button>
               <button
                 onClick={() => {
@@ -320,7 +325,7 @@ export default function SettingsPage() {
                   confirmReset === 'all' ? 'bg-destructive hover:bg-destructive/90' : 'bg-amber-500 hover:bg-amber-600'
                 }`}
               >
-                Confirmar
+                {c('confirm')}
               </button>
             </div>
           </motion.div>

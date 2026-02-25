@@ -1,8 +1,12 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, ArrowLeft } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import { t } from '@/locales';
 
 export default function NotFoundPage() {
+  const { language } = useLanguage();
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <motion.div
@@ -12,9 +16,9 @@ export default function NotFoundPage() {
       >
         <div className="text-8xl font-bold text-muted-foreground/20">404</div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Página não encontrada</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('pages.notFound', language)}</h1>
           <p className="text-muted-foreground max-w-md">
-            A página que procuras não existe ou foi movida.
+            {t('pages.notFoundDescription', language)}
           </p>
         </div>
         <div className="flex items-center justify-center gap-3">
@@ -23,7 +27,7 @@ export default function NotFoundPage() {
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar
+            {t('common.back', language)}
           </button>
           <Link
             to="/"
