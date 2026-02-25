@@ -36,6 +36,7 @@ export interface CalculatorProposalInput {
 }
 
 interface DataContextType {
+  isReady: boolean;
   clients: Client[];
   projects: Project[];
   proposals: Proposal[];
@@ -60,6 +61,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const svc = localStorageService;
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
+  const [isReady, setIsReady] = useState(false);
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -71,7 +73,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (data.clients.length) setClients(data.clients);
       if (data.projects.length) setProjects(data.projects);
       if (data.proposals.length) {
-        // Garantir que propostas antigas tenham status
         setProposals(data.proposals.map((p: Proposal) => ({
           ...p,
           status: p.status || 'draft',
@@ -80,6 +81,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     } catch {
       /* ignore */
     }
+    setIsReady(true);
   }, []);
 
   // Persist on change — merges with existing storage to preserve media/planner data
@@ -245,6 +247,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(() => ({
+    isReady,
     clients,
     projects,
     proposals,
@@ -258,7 +261,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     resetAllData,
     exportToFile,
     importFromFile,
-  }), [clients, projects, proposals, addClient, addProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
+  }), [isReady, clients, projects, proposals, addClient, addProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
 
   return (
     <DataContext.Provider value={value}>

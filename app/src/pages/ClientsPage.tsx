@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Search, Phone, MapPin, FolderKanban, Mail, Calendar, LayoutGrid, List, ArrowUpRight } from 'lucide-react';
 import NewClientDialog from '@/components/clients/NewClientDialog';
 import { useData } from '@/context/DataContext';
+import { ClientsPageSkeleton } from '@/components/common/Skeleton';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
-  const { clients, addClient, projects } = useData();
+  const { isReady, clients, addClient, projects } = useData();
+
+  if (!isReady) return <ClientsPageSkeleton />;
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
   const [newClientOpen, setNewClientOpen] = useState(false);

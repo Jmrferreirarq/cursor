@@ -5,6 +5,7 @@ import { FolderKanban, Plus, Search, Calendar, Users, Euro, ArrowUpRight, Layout
 import type { Project } from '@/types';
 import NewProjectDialog from '@/components/projects/NewProjectDialog';
 import { useData } from '@/context/DataContext';
+import { ProjectsPageSkeleton } from '@/components/common/Skeleton';
 
 const statusConfig = {
   lead: { label: 'Lead', color: 'bg-slate-500/20 text-slate-400', dot: 'bg-slate-400' },
@@ -26,7 +27,9 @@ const statusFilters = [
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
-  const { projects, addProject, clients } = useData();
+  const { isReady, projects, addProject, clients } = useData();
+
+  if (!isReady) return <ProjectsPageSkeleton />;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');

@@ -5,6 +5,7 @@ import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
+import { DashboardSkeleton } from '@/components/common/Skeleton';
 import DayPanel from '@/components/dashboard/DayPanel';
 import CashflowCard from '@/components/dashboard/CashflowCard';
 import PipelineCard from '@/components/dashboard/PipelineCard';
@@ -24,8 +25,10 @@ const mockTeam: TeamMember[] = [
 export default function DashboardPage() {
   const { greeting } = useTime();
   const navigate = useNavigate();
-  const { projects, proposals } = useData();
+  const { isReady, projects, proposals } = useData();
   const { assets, posts } = useMedia();
+
+  if (!isReady) return <DashboardSkeleton />;
 
   const contentFactoryStats = useMemo(() => {
     const now = new Date();
