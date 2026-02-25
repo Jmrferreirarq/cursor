@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -13,40 +13,41 @@ import GlobalUtilities from './components/common/GlobalUtilities';
 import { PresentationOverlay, PresentationButton } from './components/common/PresentationOverlay';
 import MobileNavigation from './components/common/MobileNavigation';
 import { PWAInstallBanner, OfflineIndicator, UpdateAvailableBanner } from './components/common/PWAInstallBanner';
-
-// Pages
-import DashboardPage from './pages/DashboardPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailsPage from './pages/ProjectDetailsPage';
-import ClientsPage from './pages/ClientsPage';
-import ClientDetailsPage from './pages/ClientDetailsPage';
-import TasksPage from './pages/TasksPage';
-import FinancialPage from './pages/FinancialPage';
-import CalendarPage from './pages/CalendarPage';
-import MarketingPage from './pages/MarketingPage';
-import TechnicalHubPage from './pages/TechnicalHubPage';
-import ConstructionDetailsPage from './pages/ConstructionDetailsPage';
-import ProposalsManagementPage from './pages/ProposalsManagementPage';
-import MediaHubPage from './pages/MediaHubPage';
-import AssetDetailPage from './pages/AssetDetailPage';
-import PlannerPage from './pages/PlannerPage';
-import PerformancePage from './pages/PerformancePage';
-import EditorialDNAPage from './pages/EditorialDNAPage';
-import AgentPage from './pages/AgentPage';
-import MaterialLibraryPage from './pages/MaterialLibraryPage';
-import StudioInboxPage from './pages/StudioInboxPage';
-import BrandIdentityPage from './pages/BrandIdentityPage';
-import CalculatorPage from './pages/CalculatorPage';
-import LegislacaoPage from './pages/LegislacaoPage';
-import ConsultaLegislacaoPage from './pages/ConsultaLegislacaoPage';
-import ChecklistPage from './pages/ChecklistPage';
-import MunicipiosPage from './pages/MunicipiosPage';
-import PropostaPublicPage from './pages/PropostaPublicPage';
-import PropostaShortPage from './pages/PropostaShortPage';
-import PortfolioPublicPage from './pages/PortfolioPublicPage';
-import SettingsPage from './pages/SettingsPage';
-import TrashPage from './pages/TrashPage';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+// Lazy-loaded pages — each page is only downloaded when the user navigates to it
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const ProjectDetailsPage = lazy(() => import('./pages/ProjectDetailsPage'));
+const ClientsPage = lazy(() => import('./pages/ClientsPage'));
+const ClientDetailsPage = lazy(() => import('./pages/ClientDetailsPage'));
+const TasksPage = lazy(() => import('./pages/TasksPage'));
+const FinancialPage = lazy(() => import('./pages/FinancialPage'));
+const CalendarPage = lazy(() => import('./pages/CalendarPage'));
+const MarketingPage = lazy(() => import('./pages/MarketingPage'));
+const TechnicalHubPage = lazy(() => import('./pages/TechnicalHubPage'));
+const ConstructionDetailsPage = lazy(() => import('./pages/ConstructionDetailsPage'));
+const ProposalsManagementPage = lazy(() => import('./pages/ProposalsManagementPage'));
+const MediaHubPage = lazy(() => import('./pages/MediaHubPage'));
+const AssetDetailPage = lazy(() => import('./pages/AssetDetailPage'));
+const PlannerPage = lazy(() => import('./pages/PlannerPage'));
+const PerformancePage = lazy(() => import('./pages/PerformancePage'));
+const EditorialDNAPage = lazy(() => import('./pages/EditorialDNAPage'));
+const AgentPage = lazy(() => import('./pages/AgentPage'));
+const MaterialLibraryPage = lazy(() => import('./pages/MaterialLibraryPage'));
+const StudioInboxPage = lazy(() => import('./pages/StudioInboxPage'));
+const BrandIdentityPage = lazy(() => import('./pages/BrandIdentityPage'));
+const CalculatorPage = lazy(() => import('./pages/CalculatorPage'));
+const LegislacaoPage = lazy(() => import('./pages/LegislacaoPage'));
+const ConsultaLegislacaoPage = lazy(() => import('./pages/ConsultaLegislacaoPage'));
+const ChecklistPage = lazy(() => import('./pages/ChecklistPage'));
+const MunicipiosPage = lazy(() => import('./pages/MunicipiosPage'));
+const PropostaPublicPage = lazy(() => import('./pages/PropostaPublicPage'));
+const PropostaShortPage = lazy(() => import('./pages/PropostaShortPage'));
+const PortfolioPublicPage = lazy(() => import('./pages/PortfolioPublicPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const TrashPage = lazy(() => import('./pages/TrashPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -93,6 +94,11 @@ function App() {
           <Router>
             <PresentationProvider>
             <AppLayout>
+              <Suspense fallback={
+                <div className="flex items-center justify-center min-h-[60vh]">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+                </div>
+              }>
               <Routes>
                 <Route path="/" element={<DashboardPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
@@ -148,7 +154,9 @@ function App() {
                 <Route path="/proposta" element={<PropostaPublicPage />} />
                 <Route path="/p/:shortId" element={<PropostaShortPage />} />
                 <Route path="/portfolio" element={<PortfolioPublicPage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
+              </Suspense>
             </AppLayout>
             </PresentationProvider>
           </Router>
