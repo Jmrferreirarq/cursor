@@ -41,15 +41,15 @@ interface DataContextType {
   projects: Project[];
   proposals: Proposal[];
   addClient: (client: Client) => void;
+  updateClient: (id: string, patch: Partial<Client>) => void;
+  deleteClient: (id: string) => void;
   addProject: (project: Project) => void;
+  updateProject: (id: string, patch: Partial<Project>) => void;
+  deleteProject: (id: string) => void;
   addProposal: (proposal: Proposal) => void;
-  /** Elimina uma proposta pelo ID */
   deleteProposal: (id: string) => void;
-  /** Atualiza o estado de uma proposta (ex: rascunho → enviada) */
   updateProposalStatus: (id: string, status: Proposal['status']) => void;
-  /** Encontra cliente existente (por nome ou NIF) ou cria novo. Retorna o ID do cliente. */
   findOrCreateClient: (input: ClientInput) => string;
-  /** Guarda proposta da calculadora e liga ao cliente. Retorna o ID da proposta. */
   saveCalculatorProposal: (input: CalculatorProposalInput) => string;
   resetAllData: () => Promise<boolean>;
   exportToFile: () => void;
@@ -98,8 +98,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setClients((prev) => [client, ...prev]);
   }, []);
 
+  const updateClient = useCallback((id: string, patch: Partial<Client>) => {
+    setClients((prev) => prev.map((c) => c.id === id ? { ...c, ...patch } : c));
+  }, []);
+
+  const deleteClient = useCallback((id: string) => {
+    setClients((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
   const addProject = useCallback((project: Project) => {
     setProjects((prev) => [project, ...prev]);
+  }, []);
+
+  const updateProject = useCallback((id: string, patch: Partial<Project>) => {
+    setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
+  }, []);
+
+  const deleteProject = useCallback((id: string) => {
+    setProjects((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
   const addProposal = useCallback((proposal: Proposal) => {
@@ -252,7 +268,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     projects,
     proposals,
     addClient,
+    updateClient,
+    deleteClient,
     addProject,
+    updateProject,
+    deleteProject,
     addProposal,
     deleteProposal,
     updateProposalStatus,
@@ -261,7 +281,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     resetAllData,
     exportToFile,
     importFromFile,
-  }), [isReady, clients, projects, proposals, addClient, addProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
+  }), [isReady, clients, projects, proposals, addClient, updateClient, deleteClient, addProject, updateProject, deleteProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
 
   return (
     <DataContext.Provider value={value}>
