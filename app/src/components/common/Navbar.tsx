@@ -264,6 +264,8 @@ export default function Navbar() {
               <button
                 onClick={(e) => { e.stopPropagation(); setUserMenuOpen(!userMenuOpen); }}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors"
+                aria-label="Menu do utilizador"
+                aria-expanded={userMenuOpen}
               >
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                   <span className="text-sm font-medium text-primary">F</span>

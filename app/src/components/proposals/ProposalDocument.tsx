@@ -1563,7 +1563,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
               : pp as unknown as ParametrosUrbanisticos;
           }
           const paramInv = (key: keyof ParametrosUrbanisticos): string =>
-            (p.lotParametros as any)?.[key] || munPInv?.[key] || '';
+            (p.lotParametros as Record<string, string | undefined>)?.[key] || munPInv?.[key] || '';
 
           const pctCed = parseFloat(paramInv('percentagemCedencias') || '15');
           const largura = frente / nLotes;

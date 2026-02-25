@@ -99,7 +99,7 @@ export default function ConsultaLegislacaoPage() {
 
   // Requisitos stats by phase
   const reqStatsByPhase = useMemo(() => {
-    const phaseMap: Record<FaseProjeto, { total: number; critico: number; importante: number; informativo: number }> = {} as any;
+    const phaseMap = {} as Record<FaseProjeto, { total: number; critico: number; importante: number; informativo: number }>;
     for (const f of FASES_PROJECTO) {
       phaseMap[f.id] = { total: 0, critico: 0, importante: 0, informativo: 0 };
     }
