@@ -437,10 +437,8 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
   let parsed: unknown = null;
   try {
     const decompressed = decompressFromEncodedURIComponent(raw);
-    console.log('[Decode] LZ decompressed:', decompressed ? 'success' : 'null');
     if (decompressed) parsed = tryParseJson(decompressed);
-  } catch (e) {
-    console.log('[Decode] LZ error:', e);
+  } catch {
     /* não é LZ; tentar base64 */
   }
   if (!parsed) {
@@ -450,24 +448,13 @@ export function decodeProposalPayload(encoded: string): ProposalPayload | null {
       if (pad) b64 += '='.repeat(4 - pad);
       const json = decodeURIComponent(escape(atob(b64)));
       parsed = tryParseJson(json);
-      console.log('[Decode] Base64 parsed:', parsed ? 'success' : 'null');
-    } catch (e) {
-      console.log('[Decode] Base64 error:', e);
+    } catch {
       return null;
     }
   }
-  if (!parsed || typeof parsed !== 'object') {
-    console.log('[Decode] Parsed is null or not object');
-    return null;
-  }
+  if (!parsed || typeof parsed !== 'object') return null;
   const expanded = expandValue(parsed);
-  console.log('[Decode] Expanded object keys:', Object.keys(expanded as object));
   const result = proposalPayloadSchema.safeParse(expanded);
-  if (!result.success) {
-    console.error('[Decode] Schema validation FAILED:', JSON.stringify(result.error, null, 2));
-  } else {
-    console.log('[Decode] Schema validation: success');
-  }
   return result.success ? result.data : null;
 }
 
@@ -493,8 +480,7 @@ export function savePayloadLocally(p: ProposalPayload, existingId?: string | nul
   const minified = minifyPayload(p);
   try {
     localStorage.setItem(`${LOCAL_PAYLOAD_PREFIX}${id}`, JSON.stringify(minified));
-  } catch (e) {
-    console.warn('[LocalPayload] Erro ao guardar:', e);
+  } catch {
     // Limpar payloads antigos e tentar de novo
     cleanOldLocalPayloads();
     localStorage.setItem(`${LOCAL_PAYLOAD_PREFIX}${id}`, JSON.stringify(minified));
