@@ -71,11 +71,25 @@ async function redisExists(key: string): Promise<boolean> {
   }
 }
 
+const ALLOWED_ORIGINS = [
+  'https://cursor-blond-two.vercel.app',
+  'https://cursor-git-main-jose-ferreiras-projects-7a967533.vercel.app',
+];
+if (process.env.NODE_ENV === 'development') ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:3000');
+
+function getCorsOrigin(req: VercelRequest): string {
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return ALLOWED_ORIGINS[0];
+}
+
+const MAX_PAYLOAD_SIZE = 1024 * 1024; // 1MB
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', getCorsOrigin(req));
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -85,11 +99,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verificar se Redis está configurado
   if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-    console.error('Upstash Redis not configured. URL:', !!UPSTASH_URL, 'TOKEN:', !!UPSTASH_TOKEN);
-    console.error('Available env vars with KV/UPSTASH:', Object.keys(process.env).filter(k => k.includes('KV') || k.includes('UPSTASH')));
-    return res.status(500).json({ error: 'Database not configured', debug: { hasUrl: !!UPSTASH_URL, hasToken: !!UPSTASH_TOKEN } });
+    return res.status(500).json({ error: 'Database not configured' });
   }
 
   try {
@@ -97,6 +108,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!payload) {
       return res.status(400).json({ error: 'Payload is required' });
+    }
+
+    const bodySize = JSON.stringify(req.body).length;
+    if (bodySize > MAX_PAYLOAD_SIZE) {
+      return res.status(413).json({ error: 'Payload too large', maxSize: '1MB' });
+    }
+
+    if (reference && typeof reference !== 'string') {
+      return res.status(400).json({ error: 'Invalid reference' });
+    }
+    if (clientName && typeof clientName !== 'string') {
+      return res.status(400).json({ error: 'Invalid clientName' });
+    }
+    if (projectName && typeof projectName !== 'string') {
+      return res.status(400).json({ error: 'Invalid projectName' });
     }
 
     // Gerar ID único

@@ -37,11 +37,23 @@ async function redisIncr(key: string, field: string): Promise<void> {
   }
 }
 
+const ALLOWED_ORIGINS = [
+  'https://cursor-blond-two.vercel.app',
+  'https://cursor-git-main-jose-ferreiras-projects-7a967533.vercel.app',
+];
+if (process.env.NODE_ENV === 'development') ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:3000');
+
+function getCorsOrigin(req: VercelRequest): string {
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return ALLOWED_ORIGINS[0];
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', getCorsOrigin(req));
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -53,28 +65,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { id } = req.query;
 
-  if (!id || typeof id !== 'string') {
+  if (!id || typeof id !== 'string' || id.length > 32 || !/^[A-Za-z0-9]+$/.test(id)) {
     return res.status(400).json({ error: 'Invalid proposal ID' });
   }
 
-  // Verificar se Redis está configurado
   if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-    console.error('Upstash Redis not configured');
     return res.status(500).json({ error: 'Database not configured' });
   }
 
   try {
     const data = await redisGet(`proposal:${id}`);
-    console.log('[API] Raw data from Redis:', data ? data.substring(0, 200) : 'null');
 
     if (!data) {
       return res.status(404).json({ error: 'Proposal not found' });
     }
 
-    const proposal = JSON.parse(data);
-    console.log('[API] Parsed proposal keys:', Object.keys(proposal));
-    console.log('[API] Payload type:', typeof proposal.payload);
-    console.log('[API] Payload exists:', !!proposal.payload);
+    let proposal: Record<string, unknown>;
+    try {
+      proposal = JSON.parse(data);
+    } catch {
+      return res.status(500).json({ error: 'Corrupted proposal data' });
+    }
 
     // Incrementar visualizações (fire and forget)
     redisIncr(`proposal:${id}`, 'views');
