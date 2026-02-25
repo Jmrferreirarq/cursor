@@ -1,12 +1,18 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 /** Status efetivo — propostas antigas podem não ter status */
-const getStatus = (p: { status?: string }) => (p.status || 'draft') as 'draft' | 'sent' | 'accepted' | 'rejected';
+const getStatus = (p: { status?: string }) => (p.status || 'draft') as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
 import { useData } from '@/context/DataContext';
 import { useState } from 'react';
+
+function daysSince(dateStr?: string): number | null {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
+}
 
 const projectTypes: Record<string, string> = {
   'habitacao_unifamiliar': 'Habitação Unifamiliar',
@@ -52,7 +58,7 @@ const projectTypes: Record<string, string> = {
 
 export default function ProposalsManagementPage() {
   const navigate = useNavigate();
-  const { proposals, deleteProposal, updateProposalStatus } = useData();
+  const { proposals, deleteProposal, updateProposalStatus, acceptProposal } = useData();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => {
@@ -180,45 +186,77 @@ export default function ProposalsManagementPage() {
                     </p>
                   </div>
 
-                  {/* Status + ação para marcar como enviada */}
+                  {/* Status + ações */}
                   {(() => {
                     const status = getStatus(p);
-                    const isDraft = status === 'draft';
-                    const handleMarkSent = (e: React.MouseEvent) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      updateProposalStatus(p.id, 'sent');
-                      toast.success('Proposta marcada como enviada');
+                    const days = daysSince(p.sentAt || p.createdAt);
+                    const statusStyles: Record<string, string> = {
+                      draft: 'bg-muted text-muted-foreground',
+                      sent: 'bg-blue-500/20 text-blue-400',
+                      accepted: 'bg-emerald-500/20 text-emerald-400',
+                      rejected: 'bg-red-500/20 text-red-400',
+                      expired: 'bg-amber-500/20 text-amber-400',
+                    };
+                    const statusLabels: Record<string, string> = {
+                      draft: 'Rascunho',
+                      sent: 'Enviada',
+                      accepted: 'Aceite',
+                      rejected: 'Recusada',
+                      expired: 'Expirada',
                     };
                     return (
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-xs px-2.5 py-1 rounded-full ${
-                            status === 'sent'
-                              ? 'bg-blue-500/20 text-blue-400'
-                              : status === 'accepted'
-                              ? 'bg-emerald-500/20 text-emerald-400'
-                              : status === 'rejected'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-muted text-muted-foreground'
-                          }`}
-                        >
-                          {status === 'draft' ? 'Rascunho' :
-                           status === 'sent' ? 'Enviada' :
-                           status === 'accepted' ? 'Aceite' :
-                           status === 'rejected' ? 'Rejeitada' : status}
-                        </span>
-                        {isDraft && (
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2.5 py-1 rounded-full ${statusStyles[status] || statusStyles.draft}`}>
+                            {statusLabels[status] || status}
+                          </span>
+                          {status === 'sent' && days !== null && (
+                            <span className={`text-xs flex items-center gap-1 ${days > 14 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                              <Clock className="w-3 h-3" />
+                              {days}d
+                            </span>
+                          )}
+                        </div>
+                        {status === 'draft' && (
                           <button
                             type="button"
-                            onMouseDown={handleMarkSent}
-                            onClick={handleMarkSent}
+                            onClick={(e) => { e.stopPropagation(); updateProposalStatus(p.id, 'sent'); toast.success('Marcada como enviada'); }}
                             className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
-                            title="Marcar proposta como enviada"
                           >
-                            <Send className="w-3.5 h-3.5" />
+                            <Send className="w-3 h-3" />
                             Enviada
                           </button>
+                        )}
+                        {status === 'sent' && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); acceptProposal(p.id); toast.success('Proposta aceite! Projeto criado.'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg transition-colors"
+                              title="Aceitar proposta e criar projeto"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                              Aceite
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); updateProposalStatus(p.id, 'rejected'); toast('Proposta marcada como recusada'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
+                              title="Marcar como recusada"
+                            >
+                              <XCircle className="w-3 h-3" />
+                            </button>
+                            {days !== null && days > 30 && (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); updateProposalStatus(p.id, 'expired'); toast('Proposta expirada'); }}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors"
+                                title="Marcar como expirada"
+                              >
+                                <AlertTriangle className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     );

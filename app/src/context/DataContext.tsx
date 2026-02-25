@@ -49,6 +49,8 @@ interface DataContextType {
   addProposal: (proposal: Proposal) => void;
   deleteProposal: (id: string) => void;
   updateProposalStatus: (id: string, status: Proposal['status']) => void;
+  /** Aceita proposta e cria projeto ativo automaticamente */
+  acceptProposal: (id: string) => void;
   findOrCreateClient: (input: ClientInput) => string;
   saveCalculatorProposal: (input: CalculatorProposalInput) => string;
   resetAllData: () => Promise<boolean>;
@@ -133,6 +135,36 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         : p
     ));
   }, []);
+
+  const acceptProposal = useCallback((id: string) => {
+    const proposal = proposals.find((p) => p.id === id);
+    if (!proposal) return;
+
+    updateProposalStatus(id, 'accepted');
+
+    const projectId = `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const newProject: Project = {
+      id: projectId,
+      name: proposal.projectName || `Projeto ${proposal.clientName}`,
+      client: proposal.clientName,
+      status: 'active',
+      phase: 'Estudo Prévio',
+      budget: proposal.totalValue,
+      startDate: new Date().toISOString().slice(0, 10),
+      deadline: '',
+      hoursLogged: 0,
+      team: [],
+      address: proposal.location || '',
+      municipality: proposal.location || '',
+    };
+    setProjects((prev) => [newProject, ...prev]);
+
+    setClients((prev) => prev.map((c) =>
+      c.id === proposal.clientId && !c.projects.includes(projectId)
+        ? { ...c, projects: [...c.projects, projectId] }
+        : c
+    ));
+  }, [proposals, updateProposalStatus]);
 
   /** Encontra cliente existente (por nome ou NIF) ou cria novo */
   const findOrCreateClient = useCallback((input: ClientInput): string => {
@@ -276,12 +308,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addProposal,
     deleteProposal,
     updateProposalStatus,
+    acceptProposal,
     findOrCreateClient,
     saveCalculatorProposal,
     resetAllData,
     exportToFile,
     importFromFile,
-  }), [isReady, clients, projects, proposals, addClient, updateClient, deleteClient, addProject, updateProject, deleteProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
+  }), [isReady, clients, projects, proposals, addClient, updateClient, deleteClient, addProject, updateProject, deleteProject, addProposal, deleteProposal, updateProposalStatus, acceptProposal, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
 
   return (
     <DataContext.Provider value={value}>
