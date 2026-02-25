@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw } from 'lucide-react';
+import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw, Download, Upload, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
@@ -10,11 +10,38 @@ import AISettingsDialog from '@/components/media/AISettingsDialog';
 const STORAGE_KEY = 'fa360_data';
 
 export default function SettingsPage() {
-  const { resetAllData } = useData();
+  const { resetAllData, exportToFile, importFromFile } = useData();
   const { resetMediaData, trashAssets, trashPacks, trashPosts } = useMedia();
   const trashCount = trashAssets.length + trashPacks.length + trashPosts.length;
   const [confirmReset, setConfirmReset] = useState<'data' | 'media' | 'all' | null>(null);
   const [showAISettings, setShowAISettings] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    exportToFile();
+    toast.success('Backup exportado com sucesso');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const result = await importFromFile(file);
+      if (result.ok) {
+        toast.success('Dados importados com sucesso. A recarregar…');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        toast.error(result.error || 'Erro ao importar dados');
+      }
+    } catch {
+      toast.error('Ficheiro inválido');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleResetData = async () => {
     await resetAllData();
@@ -81,6 +108,65 @@ export default function SettingsPage() {
             >
               {hasApiKey() ? 'Alterar' : 'Configurar'}
             </button>
+          </div>
+        </div>
+      </motion.section>
+
+      {/* Backup & Restore */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.07 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
+        <div className="p-5 border-b border-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Database className="w-5 h-5 text-primary" />
+            Backup & Restore
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Exporta os teus dados para ficheiro JSON ou importa um backup anterior
+          </p>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <Download className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="font-medium">Exportar Backup</p>
+                <p className="text-sm text-muted-foreground">Descarrega todos os dados num ficheiro JSON</p>
+              </div>
+            </div>
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 text-sm font-medium bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors"
+            >
+              Exportar
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-muted/30 border border-border">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Upload className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="font-medium">Importar Backup</p>
+                <p className="text-sm text-muted-foreground">Restaura dados a partir de um ficheiro JSON exportado</p>
+              </div>
+            </div>
+            <label className={`px-4 py-2 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors cursor-pointer ${importing ? 'opacity-50 pointer-events-none' : ''}`}>
+              {importing ? 'A importar…' : 'Importar'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImport}
+                className="hidden"
+              />
+            </label>
           </div>
         </div>
       </motion.section>
