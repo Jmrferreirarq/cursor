@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import type {
   MediaAsset, ContentPack, ContentPost,
   EditorialDNA, PublicationSlot, PerformanceEntry,
@@ -259,20 +259,20 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     setTrashPosts([]);
   }, []);
 
+  const value = useMemo(() => ({
+    assets, addAsset, updateAsset, deleteAsset,
+    contentPacks, addContentPack, updateContentPack, deleteContentPack,
+    posts, addPost, updatePost, deletePost, reorderPosts,
+    editorialDNA, setEditorialDNA,
+    slots, setSlots,
+    performanceEntries, addPerformanceEntry,
+    resetMediaData,
+    trashAssets, trashPacks, trashPosts,
+    restoreAsset, restorePack, restorePost, emptyTrash,
+  }), [assets, addAsset, updateAsset, deleteAsset, contentPacks, addContentPack, updateContentPack, deleteContentPack, posts, addPost, updatePost, deletePost, reorderPosts, editorialDNA, setEditorialDNA, slots, setSlots, performanceEntries, addPerformanceEntry, resetMediaData, trashAssets, trashPacks, trashPosts, restoreAsset, restorePack, restorePost, emptyTrash]);
+
   return (
-    <MediaContext.Provider
-      value={{
-        assets, addAsset, updateAsset, deleteAsset,
-        contentPacks, addContentPack, updateContentPack, deleteContentPack,
-        posts, addPost, updatePost, deletePost, reorderPosts,
-        editorialDNA, setEditorialDNA,
-        slots, setSlots,
-        performanceEntries, addPerformanceEntry,
-        resetMediaData,
-        trashAssets, trashPacks, trashPosts,
-        restoreAsset, restorePack, restorePost, emptyTrash,
-      }}
-    >
+    <MediaContext.Provider value={value}>
       {children}
     </MediaContext.Provider>
   );

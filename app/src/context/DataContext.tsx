@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import type { Client, Project, Proposal, CalculatorState } from '@/types';
 import { localStorageService } from '@/services/localStorage';
 
@@ -244,24 +244,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return { ok: true };
   }, []);
 
+  const value = useMemo(() => ({
+    clients,
+    projects,
+    proposals,
+    addClient,
+    addProject,
+    addProposal,
+    deleteProposal,
+    updateProposalStatus,
+    findOrCreateClient,
+    saveCalculatorProposal,
+    resetAllData,
+    exportToFile,
+    importFromFile,
+  }), [clients, projects, proposals, addClient, addProject, addProposal, deleteProposal, updateProposalStatus, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
+
   return (
-    <DataContext.Provider
-      value={{
-        clients,
-        projects,
-        proposals,
-        addClient,
-        addProject,
-        addProposal,
-        deleteProposal,
-        updateProposalStatus,
-        findOrCreateClient,
-        saveCalculatorProposal,
-        resetAllData,
-        exportToFile,
-        importFromFile,
-      }}
-    >
+    <DataContext.Provider value={value}>
       {children}
     </DataContext.Provider>
   );
