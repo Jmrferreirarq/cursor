@@ -19,9 +19,7 @@ import ActiveProjects from '@/components/dashboard/ActiveProjects';
 import type { TeamMember } from '@/types';
 
 const mockTeam: TeamMember[] = [
-  { id: '1', name: 'CEO', role: 'Diretor', targetHours: 40, loggedHours: 0, email: 'ceo@fa360.pt' },
-  { id: '2', name: 'JÉSSICA', role: 'Arquiteta', targetHours: 40, loggedHours: 0, email: 'jessica@fa360.pt' },
-  { id: '3', name: 'SOFIA', role: 'Arquiteta', targetHours: 40, loggedHours: 0, email: 'sofia@fa360.pt' },
+  { id: '1', name: 'JOSÉ FERREIRA', role: 'Arquiteto / Diretor', targetHours: 40, loggedHours: 0, email: 'jmrferreirarq@gmail.com' },
 ];
 
 export default function DashboardPage() {
