@@ -4,7 +4,7 @@
  */
 
 import type { IStorageService, AppData } from './storage';
-import { EMPTY_DATA } from './storage';
+import { EMPTY_DATA, DATA_VERSION } from './storage';
 
 const STORAGE_KEY = 'fa360_data';
 
@@ -41,15 +41,23 @@ function stripVideoSrc(assets: { src?: string; thumbnail?: string; type?: string
   );
 }
 
+function migrate(data: AppData): AppData {
+  const version = data._version ?? 0;
+  if (version >= DATA_VERSION) return data;
+  // Future migrations go here:
+  // if (version < 2) { /* migrate v1 → v2 */ }
+  return { ...data, _version: DATA_VERSION };
+}
+
 export const localStorageService: IStorageService = {
   load(): AppData {
     const raw = safeParse(localStorage.getItem(STORAGE_KEY));
     if (!raw) return { ...EMPTY_DATA };
-    return merge(raw);
+    return migrate(merge(raw));
   },
 
   save(data: AppData): void {
-    const payload = { ...data, exportedAt: new Date().toISOString() };
+    const payload = { ...data, _version: DATA_VERSION, exportedAt: new Date().toISOString() };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {

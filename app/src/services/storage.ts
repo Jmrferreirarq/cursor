@@ -15,7 +15,10 @@ export interface TrashEntry<T> {
   deletedAt: string;
 }
 
+export const DATA_VERSION = 1;
+
 export interface AppData {
+  _version?: number;
   clients: Client[];
   projects: Project[];
   proposals: Proposal[];
@@ -32,6 +35,7 @@ export interface AppData {
 }
 
 export const EMPTY_DATA: AppData = {
+  _version: DATA_VERSION,
   clients: [],
   projects: [],
   proposals: [],
