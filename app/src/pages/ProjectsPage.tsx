@@ -5,6 +5,8 @@ import { FolderKanban, Plus, Search, Calendar, Users, Euro, ArrowUpRight, Layout
 import type { Project } from '@/types';
 import NewProjectDialog from '@/components/projects/NewProjectDialog';
 import { useData } from '@/context/DataContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { t } from '@/locales';
 import { ProjectsPageSkeleton } from '@/components/common/Skeleton';
 
 const statusConfig = {
@@ -28,6 +30,8 @@ const statusFilters = [
 export default function ProjectsPage() {
   const navigate = useNavigate();
   const { isReady, projects, addProject, clients } = useData();
+  const { language } = useLanguage();
+  const p = (key: string) => t(`projectsPage.${key}`, language);
 
   if (!isReady) return <ProjectsPageSkeleton />;
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,11 +87,11 @@ export default function ProjectsPage() {
         <div>
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <FolderKanban className="w-4 h-4" />
-            <span className="text-sm font-medium tracking-wide uppercase">Gestão</span>
+            <span className="text-sm font-medium tracking-wide uppercase">{p('management')}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Projetos</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{p('title')}</h1>
           <p className="text-muted-foreground mt-2">
-            {projects.length} projetos • {statusCounts['active'] || 0} ativos
+            {projects.length} {p('count')} • {statusCounts['active'] || 0} {p('active')}
           </p>
         </div>
         <button
@@ -95,7 +99,7 @@ export default function ProjectsPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
-          <span>Novo Projeto</span>
+          <span>{p('newProject')}</span>
         </button>
       </motion.div>
 
@@ -112,7 +116,7 @@ export default function ProjectsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar projetos..."
+            placeholder={p('searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm"
           />
         </div>

@@ -264,6 +264,23 @@ export const pt = {
     notFound: 'Página não encontrada',
     notFoundDescription: 'A página que procuras não existe ou foi movida.',
   },
+  projectsPage: {
+    management: 'Gestão',
+    title: 'Projetos',
+    count: 'projetos',
+    active: 'ativos',
+    newProject: 'Novo Projeto',
+    searchPlaceholder: 'Pesquisar projetos...',
+  },
+  clientsPage: {
+    relations: 'Relações',
+    title: 'Clientes',
+    registered: 'clientes registados',
+    newClient: 'Novo Cliente',
+    searchPlaceholder: 'Pesquisar por nome, email ou localização...',
+    projects: 'projetos',
+    since: 'Cliente desde',
+  },
   dashboard: {
     newProposal: 'Nova Proposta',
     contentFactory: 'Content Factory — Resumo',

@@ -4,11 +4,15 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Search, Phone, MapPin, FolderKanban, Mail, Calendar, LayoutGrid, List, ArrowUpRight } from 'lucide-react';
 import NewClientDialog from '@/components/clients/NewClientDialog';
 import { useData } from '@/context/DataContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { t } from '@/locales';
 import { ClientsPageSkeleton } from '@/components/common/Skeleton';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
   const { isReady, clients, addClient, projects } = useData();
+  const { language } = useLanguage();
+  const cl = (key: string) => t(`clientsPage.${key}`, language);
 
   if (!isReady) return <ClientsPageSkeleton />;
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,11 +78,11 @@ export default function ClientsPage() {
         <div>
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <Users className="w-4 h-4" />
-            <span className="text-sm font-medium tracking-wide uppercase">Relações</span>
+            <span className="text-sm font-medium tracking-wide uppercase">{cl('relations')}</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Clientes</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{cl('title')}</h1>
           <p className="text-muted-foreground mt-2">
-            {clients.length} clientes registados
+            {clients.length} {cl('registered')}
           </p>
         </div>
         <button
@@ -86,7 +90,7 @@ export default function ClientsPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
-          <span>Novo Cliente</span>
+          <span>{cl('newClient')}</span>
         </button>
       </motion.div>
 
@@ -103,7 +107,7 @@ export default function ClientsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar por nome, email ou localização..."
+            placeholder={cl('searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-sm"
           />
         </div>

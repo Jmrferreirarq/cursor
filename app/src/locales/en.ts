@@ -264,6 +264,23 @@ export const en = {
     notFound: 'Page not found',
     notFoundDescription: 'The page you are looking for does not exist or has been moved.',
   },
+  projectsPage: {
+    management: 'Management',
+    title: 'Projects',
+    count: 'projects',
+    active: 'active',
+    newProject: 'New Project',
+    searchPlaceholder: 'Search projects...',
+  },
+  clientsPage: {
+    relations: 'Relations',
+    title: 'Clients',
+    registered: 'registered clients',
+    newClient: 'New Client',
+    searchPlaceholder: 'Search by name, email or location...',
+    projects: 'projects',
+    since: 'Client since',
+  },
   dashboard: {
     newProposal: 'New Proposal',
     contentFactory: 'Content Factory — Summary',
