@@ -24,43 +24,36 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('FA-360 Error:', error, errorInfo);
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: undefined });
+  };
+
   render() {
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
       return (
-        <div
-          style={{
-            minHeight: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 24,
-            fontFamily: 'system-ui, sans-serif',
-            background: '#0a0a0a',
-            color: '#e5e5e5',
-          }}
-        >
-          <h1 style={{ fontSize: 24, marginBottom: 16 }}>Algo correu mal</h1>
-          <p style={{ color: '#a3a3a3', marginBottom: 24, maxWidth: 400, textAlign: 'center' }}>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold mb-2">Algo correu mal</h1>
+          <p className="text-muted-foreground mb-6 max-w-md">
             {this.state.error.message}
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '12px 24px',
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 14,
-            }}
-          >
-            Recarregar página
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={this.handleRetry}
+              className="px-5 py-2.5 text-sm font-medium border border-border rounded-xl hover:bg-muted/50 transition-colors"
+            >
+              Tentar novamente
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-5 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-colors"
+            >
+              Recarregar página
+            </button>
+          </div>
         </div>
       );
     }
