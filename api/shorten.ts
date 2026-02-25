@@ -76,23 +76,10 @@ async function tryShorten(longUrl: string): Promise<string | null> {
   return null;
 }
 
-const ALLOWED_ORIGINS = [
-  'https://cursor-blond-two.vercel.app',
-  'https://cursor-git-main-jose-ferreiras-projects-7a967533.vercel.app',
-];
-if (process.env.NODE_ENV === 'development') ALLOWED_ORIGINS.push('http://localhost:5173', 'http://localhost:3000');
-
-function getCorsOrigin(req: VercelRequest): string {
-  const origin = req.headers.origin || '';
-  if (ALLOWED_ORIGINS.includes(origin)) return origin;
-  return ALLOWED_ORIGINS[0];
-}
+import { setCorsHeaders } from './_cors';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', getCorsOrigin(req));
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  res.setHeader('Vary', 'Origin');
+  setCorsHeaders(req, res, 'POST, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
