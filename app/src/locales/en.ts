@@ -264,4 +264,13 @@ export const en = {
     notFound: 'Page not found',
     notFoundDescription: 'The page you are looking for does not exist or has been moved.',
   },
+  dashboard: {
+    newProposal: 'New Proposal',
+    contentFactory: 'Content Factory — Summary',
+    mediaInbox: 'Media Inbox',
+    inQueue: 'In Queue',
+    scheduled: 'Scheduled',
+    publishedThisMonth: 'Published this month',
+    activeProposals: 'Active Proposals',
+  },
 };

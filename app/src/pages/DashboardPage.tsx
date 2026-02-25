@@ -5,6 +5,8 @@ import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { t } from '@/locales';
 import { DashboardSkeleton } from '@/components/common/Skeleton';
 import DayPanel from '@/components/dashboard/DayPanel';
 import CashflowCard from '@/components/dashboard/CashflowCard';
@@ -27,6 +29,8 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { isReady, projects, proposals } = useData();
   const { assets, posts } = useMedia();
+  const { language } = useLanguage();
+  const d = (key: string) => t(`dashboard.${key}`, language);
 
   if (!isReady) return <DashboardSkeleton />;
 
@@ -61,7 +65,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center gap-2 text-muted-foreground mb-1">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm">Comando Operacional</span>
+            <span className="text-sm">{t('pages.dashboard', language)}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold">
             {greeting}, <span className="text-primary">Ferreira</span>.
@@ -72,7 +76,7 @@ export default function DashboardPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors w-fit"
         >
           <Plus className="w-4 h-4" />
-          <span>Nova Proposta</span>
+          <span>{d('newProposal')}</span>
         </button>
       </motion.div>
 
@@ -85,7 +89,7 @@ export default function DashboardPage() {
       >
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-primary" />
-          Content Factory — Resumo
+          {d('contentFactory')}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
           <button
@@ -97,7 +101,7 @@ export default function DashboardPage() {
                 <Image className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-sm">Media Inbox</p>
+                <p className="font-medium text-sm">{d('mediaInbox')}</p>
                 <p className="text-2xl font-bold">{contentFactoryStats.mediaInbox}</p>
               </div>
             </div>
@@ -112,7 +116,7 @@ export default function DashboardPage() {
                 <ListTodo className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-sm">Na Queue</p>
+                <p className="font-medium text-sm">{d('inQueue')}</p>
                 <p className="text-2xl font-bold">{contentFactoryStats.naQueue}</p>
               </div>
             </div>
@@ -127,7 +131,7 @@ export default function DashboardPage() {
                 <Calendar className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-sm">Agendados</p>
+                <p className="font-medium text-sm">{d('scheduled')}</p>
                 <p className="text-2xl font-bold">{contentFactoryStats.agendados}</p>
               </div>
             </div>
@@ -142,7 +146,7 @@ export default function DashboardPage() {
                 <BarChart3 className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-sm">Publicados este mês</p>
+                <p className="font-medium text-sm">{d('publishedThisMonth')}</p>
                 <p className="text-2xl font-bold">{contentFactoryStats.publicadosEsteMes}</p>
               </div>
             </div>
@@ -158,7 +162,7 @@ export default function DashboardPage() {
                   <FileText className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm">Propostas Ativas</p>
+                  <p className="font-medium text-sm">{d('activeProposals')}</p>
                   <p className="text-2xl font-bold">{proposals.filter((p) => p.status === 'sent').length}</p>
                 </div>
               </div>

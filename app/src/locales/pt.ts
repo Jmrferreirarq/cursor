@@ -264,4 +264,13 @@ export const pt = {
     notFound: 'Página não encontrada',
     notFoundDescription: 'A página que procuras não existe ou foi movida.',
   },
+  dashboard: {
+    newProposal: 'Nova Proposta',
+    contentFactory: 'Content Factory — Resumo',
+    mediaInbox: 'Media Inbox',
+    inQueue: 'Na Queue',
+    scheduled: 'Agendados',
+    publishedThisMonth: 'Publicados este mês',
+    activeProposals: 'Propostas Ativas',
+  },
 };
