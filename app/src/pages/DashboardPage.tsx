@@ -51,6 +51,23 @@ export default function DashboardPage() {
     ['lead', 'negotiation', 'active'].includes(p.status)
   );
 
+  const pipelineStats = useMemo(() => {
+    const leads = projects.filter((p) => p.status === 'lead').length;
+    const negotiation = projects.filter((p) => p.status === 'negotiation').length;
+    const closed = projects.filter((p) => p.status === 'active' || p.status === 'completed').length;
+    const potentialValue = projects
+      .filter((p) => ['lead', 'negotiation', 'active'].includes(p.status))
+      .reduce((sum, p) => sum + p.budget, 0);
+    return { leads, negotiation, closed, potentialValue };
+  }, [projects]);
+
+  const cashflowStats = useMemo(() => {
+    const activeValue = projects
+      .filter((p) => p.status === 'active')
+      .reduce((sum, p) => sum + p.budget, 0);
+    return { netAmount: activeValue, overdueAmount: 0, next7DaysAmount: 0 };
+  }, [projects]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -173,8 +190,8 @@ export default function DashboardPage() {
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
         <DayPanel delayed={0} sevenDays={0} rec={0} delay={0} />
-        <CashflowCard netAmount={0} overdueAmount={0} next7DaysAmount={0} delay={1} />
-        <PipelineCard potentialValue={0} leads={0} negotiation={0} closed={0} delay={2} />
+        <CashflowCard netAmount={cashflowStats.netAmount} overdueAmount={cashflowStats.overdueAmount} next7DaysAmount={cashflowStats.next7DaysAmount} delay={1} />
+        <PipelineCard potentialValue={pipelineStats.potentialValue} leads={pipelineStats.leads} negotiation={pipelineStats.negotiation} closed={pipelineStats.closed} delay={2} />
         <HealthIndexCard
           score={100}
           deadlines={100}
