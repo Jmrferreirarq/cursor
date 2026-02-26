@@ -27,7 +27,7 @@ const websiteData = [
 const PRESENCA_DIGITAL = [
   { id: 'ig', name: 'Instagram', url: 'https://instagram.com/ferreirarquitetos', icon: Instagram, color: 'bg-pink-500/20 text-pink-400' },
   { id: 'pin', name: 'Pinterest', url: 'https://pinterest.com/ferreirarquitetos', icon: Share2, color: 'bg-red-500/20 text-red-400' },
-  { id: 'li', name: 'LinkedIn', url: 'https://linkedin.com/company/ferreirarquitetos', icon: Linkedin, color: 'bg-blue-500/20 text-blue-400' },
+  { id: 'li', name: 'LinkedIn', url: 'https://www.linkedin.com/company/ferreiraarquitetos/', icon: Linkedin, color: 'bg-blue-500/20 text-blue-400' },
   { id: 'be', name: 'Behance', url: 'https://behance.net/ferreirarquitetos', icon: Image, color: 'bg-cyan-500/20 text-cyan-400' },
 ];
 
