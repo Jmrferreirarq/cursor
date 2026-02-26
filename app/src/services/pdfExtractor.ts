@@ -3,9 +3,9 @@
  */
 
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configure the worker from CDN (avoids bundling the worker)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 export interface PDFExtractionResult {
   text: string;
