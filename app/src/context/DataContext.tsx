@@ -180,6 +180,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       team: [],
       address: proposal.location || '',
       municipality: proposal.location || '',
+      projectType: proposal.projectType,
     };
     setProjects((prev) => [newProject, ...prev]);
 

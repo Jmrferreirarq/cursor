@@ -225,19 +225,37 @@ export default function ProjectDetailsPage() {
         {/* Checklist */}
         <button
           onClick={() => navigate('/checklist')}
-          className="flex items-center gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors text-left"
+          className="flex items-start gap-4 p-5 bg-card border border-border rounded-xl hover:border-primary/30 transition-colors text-left"
         >
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${checklist ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${checklist ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
             <ClipboardCheck className={`w-6 h-6 ${checklist ? 'text-emerald-500' : 'text-amber-500'}`} />
           </div>
-          <div>
-            <p className="font-semibold">Checklist de Conformidade</p>
-            <p className="text-sm text-muted-foreground">
-              {checklist
-                ? `${Object.values(checklist.items).filter((s) => s === 'conforme').length}/${Object.keys(checklist.items).length} verificados`
-                : 'Nenhuma checklist — criar manualmente'}
-            </p>
-          </div>
+          {checklist ? (() => {
+            const total = Object.keys(checklist.items).length;
+            const conforme = Object.values(checklist.items).filter((s) => s === 'conforme').length;
+            const na = Object.values(checklist.items).filter((s) => s === 'nao_aplicavel').length;
+            const pendente = total - conforme - na;
+            const pct = total > 0 ? Math.round((conforme / (total - na || 1)) * 100) : 0;
+            return (
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold">Checklist de Conformidade</p>
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                  <span className="text-emerald-500 font-medium">{conforme} conforme</span>
+                  <span>{pendente} pendente</span>
+                  {na > 0 && <span>{na} N/A</span>}
+                </div>
+                <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{pct}% concluído</p>
+              </div>
+            );
+          })() : (
+            <div>
+              <p className="font-semibold">Checklist de Conformidade</p>
+              <p className="text-sm text-muted-foreground">Nenhuma checklist — criar manualmente</p>
+            </div>
+          )}
         </button>
 
         {/* Proposals */}

@@ -8,6 +8,7 @@ import {
   Check, Clock, ChevronRight,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useData } from '@/context/DataContext';
 import { legislacao, CATEGORIAS, type Diploma } from '../data/legislacao';
 import { TIPOLOGIAS, TIPOLOGIA_DIPLOMAS, type Tipologia } from '../data/tipologias';
 import {
@@ -68,11 +69,13 @@ for (const d of legislacao) diplomaMap[d.id] = d;
 // ─── Component ──────────────────────────────────────
 export default function ChecklistPage() {
   const navigate = useNavigate();
+  const { projects } = useData();
   const [checklists, setChecklists] = useState<SavedChecklist[]>(loadChecklists);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [newNome, setNewNome] = useState('');
   const [newTipologia, setNewTipologia] = useState('');
+  const [newProjectId, setNewProjectId] = useState('');
   const [filterFase, setFilterFase] = useState<FaseProjeto | null>(null);
   const [filterEstado, setFilterEstado] = useState<EstadoRequisito | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,6 +156,7 @@ export default function ChecklistPage() {
       id: `cl-${Date.now()}`,
       nome: newNome.trim(),
       tipologia: newTipologia,
+      projectId: newProjectId || undefined,
       criadoEm: new Date().toISOString(),
       atualizadoEm: new Date().toISOString(),
       items: {},
@@ -163,7 +167,8 @@ export default function ChecklistPage() {
     setShowCreate(false);
     setNewNome('');
     setNewTipologia('');
-  }, [newNome, newTipologia]);
+    setNewProjectId('');
+  }, [newNome, newTipologia, newProjectId]);
 
   const deleteChecklist = useCallback((id: string) => {
     setChecklists(prev => prev.filter(c => c.id !== id));
@@ -273,9 +278,9 @@ export default function ChecklistPage() {
             >
               <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
                 <h2 className="font-semibold text-lg">Criar Nova Checklist</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Nome do Projecto</label>
+                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Nome</label>
                     <input
                       type="text"
                       value={newNome}
@@ -294,6 +299,23 @@ export default function ChecklistPage() {
                       <option value="">Selecionar tipologia...</option>
                       {TIPOLOGIAS.map(t => (
                         <option key={t.id} value={t.id}>{t.nome}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Projeto (opcional)</label>
+                    <select
+                      value={newProjectId}
+                      onChange={e => {
+                        setNewProjectId(e.target.value);
+                        const proj = projects.find(p => p.id === e.target.value);
+                        if (proj && !newNome.trim()) setNewNome(proj.name);
+                      }}
+                      className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm"
+                    >
+                      <option value="">Sem projeto associado</option>
+                      {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} — {p.client}</option>
                       ))}
                     </select>
                   </div>
@@ -453,6 +475,24 @@ export default function ChecklistPage() {
               <Printer className="w-4 h-4" />
               Imprimir
             </button>
+            <button
+              onClick={async () => {
+                const el = document.getElementById('checklist-content');
+                if (!el) return;
+                const { default: html2pdf } = await import('html2pdf.js');
+                html2pdf().set({
+                  margin: [10, 10, 10, 10],
+                  filename: `checklist-${activeChecklist?.nome || 'projeto'}.pdf`,
+                  image: { type: 'jpeg', quality: 0.95 },
+                  html2canvas: { scale: 2 },
+                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                }).from(el).save();
+              }}
+              className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-lg text-sm font-medium hover:bg-emerald-500/20 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              PDF
+            </button>
           </div>
         </div>
 
@@ -551,6 +591,7 @@ export default function ChecklistPage() {
       </AnimatePresence>
 
       {/* Phase Timeline */}
+      <div id="checklist-content">
       <div className="flex gap-2 overflow-x-auto pb-1 print:hidden">
         <button
           onClick={() => setFilterFase(null)}
@@ -734,6 +775,7 @@ export default function ChecklistPage() {
         <p>Checklist de Conformidade — {activeChecklist?.nome} — {tip?.nome}</p>
         <p>Gerado em {new Date().toLocaleDateString('pt-PT')} pela plataforma FA-360</p>
       </div>
+      </div>{/* close checklist-content */}
     </div>
   );
 }

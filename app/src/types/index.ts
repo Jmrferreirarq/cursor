@@ -12,6 +12,7 @@ export interface Project {
   description?: string;
   address?: string;
   municipality?: string;
+  projectType?: string;
 }
 
 export interface Client {

@@ -8,6 +8,7 @@ import { useMedia } from '@/context/MediaContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { t } from '@/locales';
 import { DashboardSkeleton } from '@/components/common/Skeleton';
+import { getLegislationAlerts } from '@/lib/legislationAlerts';
 import DayPanel from '@/components/dashboard/DayPanel';
 import CashflowCard from '@/components/dashboard/CashflowCard';
 import PipelineCard from '@/components/dashboard/PipelineCard';
@@ -201,7 +202,13 @@ export default function DashboardPage() {
           quote="A aguardar dados."
           delay={3}
         />
-        <AlertsCard hasAlerts={false} delay={4} />
+        <AlertsCard
+          hasAlerts={getLegislationAlerts(projects).length > 0}
+          alerts={getLegislationAlerts(projects).slice(0, 3).map(a =>
+            `${a.diplomaSigla} (${a.tipo === 'alterado_2024' ? 'alterado' : 'novo'}) afeta ${a.projectName}`
+          )}
+          delay={4}
+        />
         <NeuralLinkCard isOnline={false} message="Conexão Sheets pendente" delay={5} />
       </div>
 
