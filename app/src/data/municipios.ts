@@ -2342,8 +2342,8 @@ export const municipios: Municipio[] = [
 ];
 
 // Link central SNIT para consulta de qualquer município
-export const SNIT_URL = 'https://snit.dgterritorio.gov.pt/';
-export const SNIT_VIEWER_URL = 'https://snit.dgterritorio.gov.pt/Viewer/ViewerPublic';
+export const SNIT_URL = 'https://snit-sgt.dgterritorio.gov.pt/';
+export const SNIT_VIEWER_URL = 'https://snit-sgt.dgterritorio.gov.pt/';
 
 // ═══════════════════════════════════════════════════════════════
 // CHECKLIST GENÉRICO — para municípios sem dados específicos
