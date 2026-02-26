@@ -227,7 +227,7 @@ export default function ProjectsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Prazo</p>
-                        <p className="text-xl font-bold">{new Date(featuredProject.deadline).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' })}</p>
+                        <p className="text-xl font-bold">{featuredProject.deadline ? new Date(featuredProject.deadline).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) : '—'}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Horas</p>
@@ -324,7 +324,7 @@ export default function ProjectsPage() {
                   <td className="px-6 py-4 hidden md:table-cell">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="w-4 h-4" />
-                      {new Date(project.deadline).toLocaleDateString('pt-PT')}
+                      {project.deadline ? new Date(project.deadline).toLocaleDateString('pt-PT') : '—'}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -426,7 +426,7 @@ function ProjectCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
-            <span>{new Date(project.deadline).toLocaleDateString('pt-PT')}</span>
+            <span>{project.deadline ? new Date(project.deadline).toLocaleDateString('pt-PT') : '—'}</span>
           </div>
           <span className="font-semibold">{formatCurrency(project.budget)}</span>
         </div>

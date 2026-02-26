@@ -175,7 +175,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       phase: 'Estudo Prévio',
       budget: proposal.totalValue,
       startDate: new Date().toISOString().slice(0, 10),
-      deadline: '',
+      deadline: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       hoursLogged: 0,
       team: [],
       address: proposal.location || '',
