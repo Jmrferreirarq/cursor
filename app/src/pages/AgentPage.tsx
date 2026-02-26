@@ -46,7 +46,7 @@ export default function AgentPage() {
 
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>([
-    createMessage('agent', 'Olá! Sou o Agente da plataforma FA-360. Posso ajudar-te com diagnósticos, sugestões, estatísticas e navegação.\n\nExperimenta perguntar algo ou usa uma das sugestões rápidas abaixo.'),
+    createMessage('agent', 'Olá! Sou o Agente da plataforma FA-360. Posso ajudar-te a gerir o teu dia, diagnosticar problemas, aceitar propostas e navegar pela plataforma.\n\nClica em **"Plano do dia"** para ver o que tens para fazer hoje, ou pergunta-me qualquer coisa.'),
   ]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);

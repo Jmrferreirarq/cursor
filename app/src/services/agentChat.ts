@@ -45,12 +45,14 @@ interface CommandMatch {
 // ── Quick Suggestions ──
 
 export const QUICK_SUGGESTIONS = [
+  { label: 'Plano do dia', message: 'O que devo fazer hoje?' },
   { label: 'Executar diagnóstico', message: 'Executa o diagnóstico da plataforma' },
   { label: 'Estado da plataforma', message: 'Qual é o estado actual da plataforma?' },
   { label: 'O que posso fazer?', message: 'O que posso fazer na plataforma?' },
   { label: 'Sugerir melhorias', message: 'Que melhorias sugeres para a plataforma?' },
   { label: 'Estatísticas', message: 'Mostra as estatísticas da plataforma' },
-  { label: 'Como funciona a AI?', message: 'Como funciona o AI Copilot?' },
+  { label: 'Aceitar proposta', message: 'Quero aceitar uma proposta' },
+  { label: 'Mudar fase', message: 'Quero mudar a fase de um projeto' },
   { label: 'Gerar relatório', message: 'Gera um relatório para o Cursor' },
   { label: 'Ajuda', message: 'Ajuda-me a usar a plataforma' },
 ];
@@ -144,6 +146,62 @@ const INTENT_PATTERNS: { intent: string; patterns: RegExp[]; }[] = [
     ],
   },
   {
+    intent: 'daily_actions',
+    patterns: [
+      /o\s*que\s*(devo|tenho)\s*(de\s*)?fazer\s*hoje/i, /tarefas?\s*(de\s*)?hoje/i,
+      /sugest[oõ]es?\s*(para\s*)?hoje/i, /prioridades?\s*(de\s*)?hoje/i,
+      /agenda\s*(de\s*)?hoje/i, /plano\s*(do\s*)?dia/i, /dia\s*de\s*hoje/i,
+    ],
+  },
+  {
+    intent: 'accept_proposal',
+    patterns: [
+      /aceit(a|ar)\s*(a\s*)?proposta/i, /aprovar?\s*(a\s*)?proposta/i,
+      /aceitar?\s*proposta\s*(d[eo]|da)/i,
+    ],
+  },
+  {
+    intent: 'reject_proposal',
+    patterns: [
+      /recusar?\s*(a\s*)?proposta/i, /rejeitar?\s*(a\s*)?proposta/i,
+    ],
+  },
+  {
+    intent: 'change_phase',
+    patterns: [
+      /mudar?\s*(a\s*)?fase/i, /avan[cç]ar?\s*(a\s*)?fase/i,
+      /passar?\s*(para\s*)?(a\s*)?(pr[oó]xima|seguinte)\s*fase/i,
+      /fase\s*(do\s*)?projec?to/i,
+    ],
+  },
+  {
+    intent: 'navigate_projects',
+    patterns: [
+      /projec?tos?/i, /ir\s*(para\s*)?(os\s*)?projec?tos/i,
+      /ver\s*projec?tos/i, /lista\s*de\s*projec?tos/i,
+    ],
+  },
+  {
+    intent: 'navigate_proposals',
+    patterns: [
+      /ir\s*(para\s*)?(as\s*)?propostas/i, /ver\s*propostas/i,
+      /lista\s*de\s*propostas/i,
+    ],
+  },
+  {
+    intent: 'navigate_checklist',
+    patterns: [
+      /checklist/i, /verifica[cç][aã]o/i, /conformidade/i,
+      /ir\s*(para\s*)?(a\s*)?checklist/i, /legisla[cç]/i,
+    ],
+  },
+  {
+    intent: 'navigate_settings',
+    patterns: [
+      /defini[cç][oõ]/i, /settings/i, /configura[cç]/i, /backup/i,
+    ],
+  },
+  {
     intent: 'greeting',
     patterns: [
       /^(ol[aá]|oi|hey|bom\s*dia|boa\s*tarde|boa\s*noite)/i,
@@ -174,6 +232,8 @@ function matchIntent(text: string): CommandMatch {
 function generateLocalResponse(intent: string, appData: AppData): { content: string; actions?: ChatAction[] } {
   const report = runPlatformDiagnostic(appData);
   const s = report.stats;
+  const sentProposals = appData.proposals.filter(p => (p.status || 'draft') === 'sent');
+  const activeProjects = appData.projects.filter(p => p.status === 'active');
 
   switch (intent) {
     case 'greeting':
@@ -332,6 +392,112 @@ function generateLocalResponse(intent: string, appData: AppData): { content: str
         content: `Vamos para a lista de **Clientes** — gere contactos e projetos associados.`,
         actions: [{ id: 'nav', label: 'Ver Clientes', type: 'navigate', payload: '/clients' }],
       };
+
+    case 'navigate_projects':
+      return {
+        content: `Vamos para os **Projetos** — ${s.totalProjects} projetos registados.`,
+        actions: [{ id: 'nav', label: 'Ver Projetos', type: 'navigate', payload: '/projects' }],
+      };
+
+    case 'navigate_proposals':
+      return {
+        content: `Vamos para as **Propostas** — ${s.totalProposals} propostas guardadas.`,
+        actions: [{ id: 'nav', label: 'Ver Propostas', type: 'navigate', payload: '/proposals' }],
+      };
+
+    case 'navigate_checklist':
+      return {
+        content: `Vamos para as **Checklists de Conformidade** — verificação regulamentar por projeto.`,
+        actions: [{ id: 'nav', label: 'Ver Checklists', type: 'navigate', payload: '/checklist' }],
+      };
+
+    case 'navigate_settings':
+      return {
+        content: `Vamos para as **Definições** — backup, AI Copilot e gestão de dados.`,
+        actions: [{ id: 'nav', label: 'Abrir Definições', type: 'navigate', payload: '/settings' }],
+      };
+
+    case 'daily_actions': {
+      const actions: ChatAction[] = [];
+      let content = `**📋 Plano do dia — ${new Date().toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}**\n\n`;
+      const todos: string[] = [];
+
+      const sentProposals = appData.proposals.filter(p => (p.status || 'draft') === 'sent');
+      if (sentProposals.length > 0) {
+        todos.push(`📄 **${sentProposals.length} proposta(s) enviada(s) a aguardar resposta** — Faz follow-up com os clientes`);
+        actions.push({ id: 'nav-proposals', label: 'Ver Propostas', type: 'navigate', payload: '/proposals' });
+      }
+
+      const draftProposals = appData.proposals.filter(p => (p.status || 'draft') === 'draft');
+      if (draftProposals.length > 0) {
+        todos.push(`✏️ **${draftProposals.length} rascunho(s)** — Finaliza e envia aos clientes`);
+      }
+
+      const activeProjects = appData.projects.filter(p => p.status === 'active');
+      if (activeProjects.length > 0) {
+        todos.push(`🏗️ **${activeProjects.length} projeto(s) ativo(s)** — Verifica progresso e atualiza fase`);
+        actions.push({ id: 'nav-projects', label: 'Ver Projetos', type: 'navigate', payload: '/projects' });
+      }
+
+      const postsInQueue = appData.contentPosts.filter(p => ['inbox', 'generated', 'review', 'approved'].includes(p.status));
+      if (postsInQueue.length > 0) {
+        todos.push(`📱 **${postsInQueue.length} post(s) na queue** — Agenda ou publica conteúdo`);
+        actions.push({ id: 'nav-planner', label: 'Abrir Planner', type: 'navigate', payload: '/planner' });
+      }
+
+      const unclassified = appData.mediaAssets.filter(a => !a.tags || a.tags.length === 0);
+      if (unclassified.length > 0) {
+        todos.push(`🖼️ **${unclassified.length} asset(s) sem tags** — Classifica para melhor organização`);
+      }
+
+      if (!s.aiConfigured) {
+        todos.push(`🤖 **AI Copilot inativo** — Configura a API key para análise automática`);
+      }
+
+      if (todos.length === 0) {
+        content += '✅ **Tudo em dia!** Não tens tarefas pendentes.\n\nPodes criar uma nova proposta ou publicar conteúdo.';
+        actions.push({ id: 'nav-calc', label: 'Nova Proposta', type: 'navigate', payload: '/calculator' });
+      } else {
+        content += todos.map((t, i) => `${i + 1}. ${t}`).join('\n\n');
+        content += `\n\n---\n_${todos.length} ação/ões para hoje. Precisa de ajuda com alguma?_`;
+      }
+
+      return { content, actions };
+    }
+
+    case 'accept_proposal': {
+      if (sentProposals.length === 0) {
+        return { content: 'Não tens propostas enviadas para aceitar. Cria uma nova proposta na Calculadora.', actions: [{ id: 'nav', label: 'Calculadora', type: 'navigate', payload: '/calculator' }] };
+      }
+      let content = `**Propostas enviadas (${sentProposals.length}):**\n\n`;
+      sentProposals.forEach((p, i) => {
+        content += `${i + 1}. **${p.clientName}** — ${p.projectName || p.projectType} — ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(p.totalWithVat)}\n`;
+      });
+      content += `\nPara aceitar, vai às **Propostas** e clica no botão verde "Aceite".`;
+      return { content, actions: [{ id: 'nav', label: 'Ir para Propostas', type: 'navigate', payload: '/proposals' }] };
+    }
+
+    case 'reject_proposal': {
+      if (sentProposals.length === 0) {
+        return { content: 'Não tens propostas enviadas.' };
+      }
+      return {
+        content: `Tens **${sentProposals.length} proposta(s) enviada(s)**. Para recusar, vai às Propostas e clica no botão vermelho.`,
+        actions: [{ id: 'nav', label: 'Ir para Propostas', type: 'navigate', payload: '/proposals' }],
+      };
+    }
+
+    case 'change_phase': {
+      if (activeProjects.length === 0) {
+        return { content: 'Não tens projetos ativos para mudar de fase.' };
+      }
+      let content = `**Projetos ativos (${activeProjects.length}):**\n\n`;
+      activeProjects.forEach((p, i) => {
+        content += `${i + 1}. **${p.name}** — Fase atual: ${p.phase} — ${p.client}\n`;
+      });
+      content += `\nPara mudar a fase, clica no projeto e depois no badge da fase.`;
+      return { content, actions: [{ id: 'nav', label: 'Ver Projetos', type: 'navigate', payload: '/projects' }] };
+    }
 
     default:
       return {
