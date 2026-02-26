@@ -20,6 +20,14 @@ const ESTADO_CONFIG: Record<string, { label: string; cor: string; bg: string }> 
   revogado: { label: 'Revogado', cor: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
 };
 
+const FAV_KEY = 'fa360_leg_favoritos';
+function loadFavoritos(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]')); } catch { return new Set(); }
+}
+function saveFavoritos(favs: Set<string>) {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...favs]));
+}
+
 export default function LegislacaoPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,13 +35,27 @@ export default function LegislacaoPage() {
   const [activeEstado, setActiveEstado] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(true);
+  const [favoritos, setFavoritos] = useState<Set<string>>(loadFavoritos);
+  const [showOnlyFavs, setShowOnlyFavs] = useState(false);
+
+  const toggleFavorito = (id: string) => {
+    setFavoritos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      saveFavoritos(next);
+      return next;
+    });
+  };
 
   // Filtragem
   const filteredDiplomas = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const isNovidadeFilter = searchQuery === '_novidade_';
+    const q = isNovidadeFilter ? '' : searchQuery.toLowerCase().trim();
     return legislacao.filter(d => {
       if (activeCategoria && d.categoria !== activeCategoria) return false;
       if (activeEstado && d.estado !== activeEstado) return false;
+      if (showOnlyFavs && !favoritos.has(d.id)) return false;
+      if (isNovidadeFilter) return !!d.novidade;
       if (!q) return true;
       return (
         d.sigla.toLowerCase().includes(q) ||
@@ -44,7 +66,7 @@ export default function LegislacaoPage() {
         d.subcategoria.toLowerCase().includes(q)
       );
     });
-  }, [searchQuery, activeCategoria, activeEstado]);
+  }, [searchQuery, activeCategoria, activeEstado, showOnlyFavs, favoritos]);
 
   // Contagens por categoria
   const contagemCategoria = useMemo(() => {
@@ -101,10 +123,40 @@ export default function LegislacaoPage() {
             <Scale className="w-4 h-4" />
             <span className="text-sm">Biblioteca Legal</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Legislacao Portuguesa</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Legislação Portuguesa</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {totalDiplomas} diplomas de arquitetura, urbanismo e construcao
+            {totalDiplomas} diplomas de arquitetura, urbanismo e construção
           </p>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <button
+              onClick={() => setActiveEstado(activeEstado === 'vigente' ? null : 'vigente')}
+              className={`text-xs px-2 py-1 rounded-full border transition-colors ${activeEstado === 'vigente' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'bg-muted/50 border-border text-muted-foreground hover:border-emerald-500/30'}`}
+            >
+              {legislacao.filter(d => d.estado === 'vigente').length} vigentes
+            </button>
+            <button
+              onClick={() => setActiveEstado(activeEstado === 'parcialmente_revogado' ? null : 'parcialmente_revogado')}
+              className={`text-xs px-2 py-1 rounded-full border transition-colors ${activeEstado === 'parcialmente_revogado' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'bg-muted/50 border-border text-muted-foreground hover:border-amber-500/30'}`}
+            >
+              {legislacao.filter(d => d.estado === 'parcialmente_revogado').length} parc. revogados
+            </button>
+            <button
+              onClick={() => {
+                if (searchQuery === '_novidade_') { setSearchQuery(''); } else { setSearchQuery('_novidade_'); }
+              }}
+              className={`text-xs px-2 py-1 rounded-full border transition-colors ${searchQuery === '_novidade_' ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400' : 'bg-muted/50 border-border text-muted-foreground hover:border-cyan-500/30'}`}
+            >
+              {legislacao.filter(d => d.novidade).length} alterados/novos
+            </button>
+            {favoritos.size > 0 && (
+              <button
+                onClick={() => setShowOnlyFavs(!showOnlyFavs)}
+                className={`text-xs px-2 py-1 rounded-full border transition-colors ${showOnlyFavs ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400' : 'bg-muted/50 border-border text-muted-foreground hover:border-yellow-500/30'}`}
+              >
+                ★ {favoritos.size} favoritos
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -334,6 +386,12 @@ export default function LegislacaoPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span
+                                role="button"
+                                onClick={(e) => { e.stopPropagation(); toggleFavorito(d.id); }}
+                                className={`cursor-pointer select-none ${favoritos.has(d.id) ? 'text-yellow-400' : 'text-muted-foreground/30 hover:text-yellow-400/60'}`}
+                                title={favoritos.has(d.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+                              >★</span>
                               <span className="text-sm font-bold text-primary">{d.sigla}</span>
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${estadoCfg.bg} ${estadoCfg.cor}`}>
                                 {estadoCfg.label}
