@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Users, Plus, Search, Phone, MapPin, FolderKanban, Mail, Calendar, LayoutGrid, List, ArrowUpRight } from 'lucide-react';
+import { Users, Plus, Search, Phone, MapPin, FolderKanban, Mail, Calendar, LayoutGrid, List, ArrowUpRight, FileText, Euro } from 'lucide-react';
 import NewClientDialog from '@/components/clients/NewClientDialog';
 import { useData } from '@/context/DataContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -10,7 +10,7 @@ import { ClientsPageSkeleton } from '@/components/common/Skeleton';
 
 export default function ClientsPage() {
   const navigate = useNavigate();
-  const { isReady, clients, addClient, projects } = useData();
+  const { isReady, clients, addClient, projects, proposals } = useData();
   const { language } = useLanguage();
   const cl = (key: string) => t(`clientsPage.${key}`, language);
 
@@ -27,25 +27,31 @@ export default function ClientsPage() {
     );
   }, [clients, searchQuery]);
 
-  // Enriquecer clientes com contagem de projetos ativos
   const enrichedClients = useMemo(() => {
     return filteredClients.map((client) => {
+      const nameLC = client.name.toLowerCase();
       const clientProjects = projects.filter((p) => 
-        p.client.toLowerCase() === client.name.toLowerCase()
+        p.client.toLowerCase() === nameLC
       );
       const activeProjects = clientProjects.filter((p) => 
         ['active', 'negotiation'].includes(p.status)
       );
-      const totalValue = clientProjects.reduce((sum, p) => sum + p.budget, 0);
+      const projectValue = clientProjects.reduce((sum, p) => sum + p.budget, 0);
+      const clientProposals = proposals.filter((p) =>
+        p.clientName.toLowerCase() === nameLC
+      );
+      const proposalValue = clientProposals.reduce((sum, p) => sum + p.totalValue, 0);
+      const totalValue = projectValue || proposalValue;
       
       return {
         ...client,
         projectCount: clientProjects.length,
         activeProjectCount: activeProjects.length,
+        proposalCount: clientProposals.length,
         totalValue,
       };
     });
-  }, [filteredClients, projects]);
+  }, [filteredClients, projects, proposals]);
 
   // Cliente em destaque (com mais projetos ativos)
   const featuredClient = viewMode === 'cards' 
@@ -380,6 +386,7 @@ interface EnrichedClient {
   createdAt: string;
   projectCount: number;
   activeProjectCount: number;
+  proposalCount: number;
   totalValue: number;
 }
 
@@ -421,14 +428,28 @@ function ClientCard({
 
       {/* Stats */}
       {!compact && (
-        <div className="flex items-center gap-4 mb-3 text-sm">
-          <div className="flex items-center gap-1.5 text-muted-foreground">
-            <FolderKanban className="w-3.5 h-3.5" />
-            <span>{client.projectCount} projetos</span>
-          </div>
+        <div className="flex items-center gap-3 mb-3 text-sm flex-wrap">
+          {client.projectCount > 0 ? (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <FolderKanban className="w-3.5 h-3.5" />
+              <span>{client.projectCount} {client.projectCount === 1 ? 'projeto' : 'projetos'}</span>
+            </div>
+          ) : client.proposalCount > 0 ? (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <FileText className="w-3.5 h-3.5" />
+              <span>{client.proposalCount} {client.proposalCount === 1 ? 'proposta' : 'propostas'}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground/60">Sem atividade</span>
+          )}
           {client.activeProjectCount > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-              {client.activeProjectCount} ativos
+              {client.activeProjectCount} {client.activeProjectCount === 1 ? 'ativo' : 'ativos'}
+            </span>
+          )}
+          {client.totalValue > 0 && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+              {new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(client.totalValue)}
             </span>
           )}
         </div>
@@ -436,14 +457,22 @@ function ClientCard({
 
       {/* Contact */}
       <div className={`space-y-1.5 ${compact ? 'text-xs' : 'text-sm'}`}>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Phone className="w-3.5 h-3.5" />
-          <span>{client.phone}</span>
-        </div>
+        {client.phone && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Phone className="w-3.5 h-3.5" />
+            <span>{client.phone}</span>
+          </div>
+        )}
         {client.municipality && (
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin className="w-3.5 h-3.5" />
             <span>{client.municipality}</span>
+          </div>
+        )}
+        {!client.phone && !client.municipality && client.email && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Mail className="w-3.5 h-3.5" />
+            <span className="truncate">{client.email}</span>
           </div>
         )}
       </div>
