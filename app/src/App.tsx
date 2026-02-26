@@ -13,6 +13,7 @@ import GlobalUtilities from './components/common/GlobalUtilities';
 import { PresentationOverlay, PresentationButton } from './components/common/PresentationOverlay';
 import MobileNavigation from './components/common/MobileNavigation';
 import { PWAInstallBanner, OfflineIndicator, UpdateAvailableBanner } from './components/common/PWAInstallBanner';
+import BuildVersion from './components/common/BuildVersion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy-loaded pages — each page is only downloaded when the user navigates to it
@@ -80,6 +81,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 lg:pb-8 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
         {children}
       </main>
+      <BuildVersion />
     </div>
   );
 }
