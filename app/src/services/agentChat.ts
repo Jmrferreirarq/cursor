@@ -723,6 +723,11 @@ export async function processMessage(
 
   const match = matchIntent(userMessage);
 
+  const ACTION_INTENTS = ['create_client', 'create_project', 'accept_proposal', 'reject_proposal', 'change_phase', 'daily_actions', 'diagnostic', 'stats', 'status', 'cursor_report'];
+  if (match.confidence >= 0.9 && ACTION_INTENTS.includes(match.intent)) {
+    return generateLocalResponse(match.intent, appData, match.params);
+  }
+
   // If we have a confident local match, use it (faster + free)
   if (match.confidence >= 0.9 && match.intent !== 'unknown') {
     return generateLocalResponse(match.intent, appData, match.params);
