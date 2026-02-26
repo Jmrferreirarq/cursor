@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { compareProposals, type ProposalComparison } from '@/lib/proposalComparison';
 import { toast } from 'sonner';
 
 /** Status efetivo — propostas antigas podem não ter status */
@@ -60,6 +61,8 @@ export default function ProposalsManagementPage() {
   const navigate = useNavigate();
   const { proposals, deleteProposal, updateProposalStatus, acceptProposal } = useData();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
+  const comparison = showComparison ? compareProposals(proposals) : null;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-PT', {
@@ -347,6 +350,94 @@ export default function ProposalsManagementPage() {
             <Calculator className="w-5 h-5" />
             <span>Ir para a Calculadora</span>
           </button>
+        </motion.div>
+      )}
+
+      {/* Comparison Toggle */}
+      {proposals.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <button
+            onClick={() => setShowComparison(!showComparison)}
+            className={`w-full flex items-center justify-between px-5 py-4 rounded-xl border transition-colors ${showComparison ? 'bg-primary/5 border-primary/30' : 'bg-muted/30 border-border hover:border-primary/20'}`}
+          >
+            <div className="flex items-center gap-3">
+              <BarChart3 className={`w-5 h-5 ${showComparison ? 'text-primary' : 'text-muted-foreground'}`} />
+              <div className="text-left">
+                <p className="font-medium">Comparativo: Valor Real vs Tabela</p>
+                <p className="text-sm text-muted-foreground">Compara os teus valores com a tabela ICHPOP/FA-360</p>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground">{showComparison ? 'Fechar' : 'Abrir'}</span>
+          </button>
+        </motion.div>
+      )}
+
+      {/* Comparison Report */}
+      {comparison && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="bg-card border border-border rounded-xl overflow-hidden"
+        >
+          {/* Summary */}
+          <div className="px-5 py-4 border-b border-border bg-muted/30">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold">{comparison.analisadas}</p>
+                <p className="text-xs text-muted-foreground">Analisadas</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-red-400">{comparison.abaixoTabela}</p>
+                <p className="text-xs text-muted-foreground">Abaixo tabela</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-400">{comparison.acimaTabela}</p>
+                <p className="text-xs text-muted-foreground">Acima tabela</p>
+              </div>
+              <div className="text-center">
+                <p className={`text-2xl font-bold ${comparison.diferencaTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {comparison.diferencaTotal >= 0 ? '+' : ''}{formatCurrency(comparison.diferencaTotal)}
+                </p>
+                <p className="text-xs text-muted-foreground">Diferença total</p>
+              </div>
+            </div>
+          </div>
+          {/* Items */}
+          <div className="divide-y divide-border">
+            {comparison.items.map((item) => (
+              <div key={item.id} className="px-5 py-3 flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{item.clientName}</p>
+                  <p className="text-xs text-muted-foreground">{item.tipologiaName} · {item.area} m²</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Real:</span>{' '}
+                    <span className="font-medium">{formatCurrency(item.valorReal)}</span>
+                  </p>
+                  <p className="text-sm">
+                    <span className="text-muted-foreground">Tabela:</span>{' '}
+                    <span className="font-medium">{formatCurrency(item.valorTabela)}</span>
+                  </p>
+                </div>
+                <div className={`flex items-center gap-1 shrink-0 px-2.5 py-1 rounded-full text-xs font-medium ${
+                  item.status === 'abaixo' ? 'bg-red-500/10 text-red-400' :
+                  item.status === 'acima' ? 'bg-emerald-500/10 text-emerald-400' :
+                  'bg-muted text-muted-foreground'
+                }`}>
+                  {item.status === 'abaixo' ? <TrendingDown className="w-3 h-3" /> :
+                   item.status === 'acima' ? <TrendingUp className="w-3 h-3" /> :
+                   <Minus className="w-3 h-3" />}
+                  {item.diferencaPct > 0 ? '+' : ''}{item.diferencaPct}%
+                </div>
+              </div>
+            ))}
+          </div>
+          {comparison.semDados > 0 && (
+            <div className="px-5 py-3 bg-muted/30 text-xs text-muted-foreground">
+              {comparison.semDados} proposta(s) sem dados suficientes para comparar (falta área ou tipologia)
+            </div>
+          )}
         </motion.div>
       )}
 
