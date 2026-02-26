@@ -35,7 +35,7 @@ type Tab = 'chat' | 'dashboard';
 
 export default function AgentPage() {
   const navigate = useNavigate();
-  const { clients, projects, proposals } = useData();
+  const { clients, projects, proposals, addClient, addProject, acceptProposal } = useData();
   const { assets, posts, contentPacks, editorialDNA, slots, performanceEntries } = useMedia();
 
   const [tab, setTab] = useState<Tab>('chat');
@@ -174,6 +174,53 @@ export default function AgentPage() {
         toast.success('Copiado! Cola no Cursor para implementar.');
       } catch {
         toast.error('Não foi possível copiar.');
+      }
+    } else if (action.type === 'execute' && action.data) {
+      if (action.payload === 'create_client') {
+        const name = action.data.name as string;
+        const id = `cli-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        addClient({
+          id,
+          name,
+          email: '',
+          phone: '',
+          projects: [],
+          createdAt: new Date().toISOString().slice(0, 10),
+        });
+        toast.success(`Cliente "${name}" criado!`);
+        const msg = createMessage('agent', `✅ Cliente **${name}** criado com sucesso! Podes ver na lista de clientes.`, [
+          { id: 'nav', label: 'Ver Clientes', type: 'navigate', payload: '/clients' },
+        ]);
+        setMessages((prev) => [...prev, msg]);
+      } else if (action.payload === 'create_project') {
+        const name = action.data.name as string;
+        const id = `proj-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        addProject({
+          id,
+          name,
+          client: '',
+          status: 'lead',
+          phase: 'Estudo Prévio',
+          budget: 0,
+          startDate: new Date().toISOString().slice(0, 10),
+          deadline: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+          hoursLogged: 0,
+          team: [],
+        });
+        toast.success(`Projeto "${name}" criado!`);
+        const msg = createMessage('agent', `✅ Projeto **${name}** criado como Lead! Podes editar os detalhes na página do projeto.`, [
+          { id: 'nav', label: 'Ver Projetos', type: 'navigate', payload: '/projects' },
+        ]);
+        setMessages((prev) => [...prev, msg]);
+      } else if (action.payload === 'accept_proposal') {
+        const proposalId = action.data.proposalId as string;
+        acceptProposal(proposalId);
+        toast.success('Proposta aceite! Projeto e checklist criados.');
+        const msg = createMessage('agent', `✅ Proposta aceite! Projeto ativo e checklist de conformidade criados automaticamente.`, [
+          { id: 'nav-proj', label: 'Ver Projetos', type: 'navigate', payload: '/projects' },
+          { id: 'nav-chk', label: 'Ver Checklist', type: 'navigate', payload: '/checklist' },
+        ]);
+        setMessages((prev) => [...prev, msg]);
       }
     }
   };

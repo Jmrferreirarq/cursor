@@ -34,6 +34,7 @@ export interface ChatAction {
   label: string;
   type: 'navigate' | 'execute' | 'copy';
   payload: string;
+  data?: Record<string, unknown>;
 }
 
 interface CommandMatch {
@@ -202,6 +203,20 @@ const INTENT_PATTERNS: { intent: string; patterns: RegExp[]; }[] = [
     ],
   },
   {
+    intent: 'create_client',
+    patterns: [
+      /cria(r)?\s*(um\s*)?(novo\s*)?cliente/i, /adicionar?\s*cliente/i,
+      /novo\s*cliente/i, /registar?\s*cliente/i,
+    ],
+  },
+  {
+    intent: 'create_project',
+    patterns: [
+      /cria(r)?\s*(um\s*)?(novo\s*)?projec?to/i, /adicionar?\s*projec?to/i,
+      /novo\s*projec?to/i, /registar?\s*projec?to/i,
+    ],
+  },
+  {
     intent: 'greeting',
     patterns: [
       /^(ol[aá]|oi|hey|bom\s*dia|boa\s*tarde|boa\s*noite)/i,
@@ -216,11 +231,27 @@ const INTENT_PATTERNS: { intent: string; patterns: RegExp[]; }[] = [
   },
 ];
 
+function extractParam(text: string, pattern: RegExp): string | null {
+  const m = text.match(pattern);
+  return m?.[1]?.trim() || null;
+}
+
 function matchIntent(text: string): CommandMatch {
   for (const { intent, patterns } of INTENT_PATTERNS) {
     for (const pattern of patterns) {
       if (pattern.test(text)) {
-        return { intent, confidence: 0.9, params: {} };
+        const params: Record<string, string> = {};
+        if (intent === 'create_client') {
+          const name = extractParam(text, /cliente\s+(.+?)(?:\s*$|\s*com|\s*de|\s*,)/i)
+            || extractParam(text, /(?:criar?|novo|adicionar|registar)\s+(?:um\s+)?(?:novo\s+)?cliente\s+(.+)/i);
+          if (name) params.name = name;
+        }
+        if (intent === 'create_project') {
+          const name = extractParam(text, /projec?to\s+(.+?)(?:\s*$|\s*com|\s*de|\s*para|\s*,)/i)
+            || extractParam(text, /(?:criar?|novo|adicionar|registar)\s+(?:um\s+)?(?:novo\s+)?projec?to\s+(.+)/i);
+          if (name) params.name = name;
+        }
+        return { intent, confidence: 0.9, params };
       }
     }
   }
@@ -229,7 +260,7 @@ function matchIntent(text: string): CommandMatch {
 
 // ── Response Generators ──
 
-function generateLocalResponse(intent: string, appData: AppData): { content: string; actions?: ChatAction[] } {
+function generateLocalResponse(intent: string, appData: AppData, params: Record<string, string> = {}): { content: string; actions?: ChatAction[] } {
   const report = runPlatformDiagnostic(appData);
   const s = report.stats;
   const sentProposals = appData.proposals.filter(p => (p.status || 'draft') === 'sent');
@@ -473,8 +504,15 @@ function generateLocalResponse(intent: string, appData: AppData): { content: str
       sentProposals.forEach((p, i) => {
         content += `${i + 1}. **${p.clientName}** — ${p.projectName || p.projectType} — ${new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(p.totalWithVat)}\n`;
       });
-      content += `\nPara aceitar, vai às **Propostas** e clica no botão verde "Aceite".`;
-      return { content, actions: [{ id: 'nav', label: 'Ir para Propostas', type: 'navigate', payload: '/proposals' }] };
+      content += `\nClica numa das propostas abaixo para aceitar diretamente:`;
+      const actions: ChatAction[] = sentProposals.slice(0, 5).map((p) => ({
+        id: `accept-${p.id}`,
+        label: `Aceitar ${p.clientName}`,
+        type: 'execute' as const,
+        payload: 'accept_proposal',
+        data: { proposalId: p.id },
+      }));
+      return { content, actions };
     }
 
     case 'reject_proposal': {
@@ -484,6 +522,51 @@ function generateLocalResponse(intent: string, appData: AppData): { content: str
       return {
         content: `Tens **${sentProposals.length} proposta(s) enviada(s)**. Para recusar, vai às Propostas e clica no botão vermelho.`,
         actions: [{ id: 'nav', label: 'Ir para Propostas', type: 'navigate', payload: '/proposals' }],
+      };
+    }
+
+    case 'create_client': {
+      const name = params.name;
+      if (!name) {
+        return {
+          content: 'Como se chama o cliente? Escreve por exemplo:\n\n**"Criar cliente João Silva"**',
+        };
+      }
+      const existing = appData.clients.find(c => c.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        return {
+          content: `O cliente **${existing.name}** já existe (desde ${new Date(existing.createdAt).toLocaleDateString('pt-PT')}).`,
+          actions: [{ id: 'nav', label: 'Ver Clientes', type: 'navigate', payload: '/clients' }],
+        };
+      }
+      return {
+        content: `Vou criar o cliente **${name}**. Confirma clicando no botão abaixo.`,
+        actions: [{
+          id: 'exec-create-client',
+          label: `Criar cliente "${name}"`,
+          type: 'execute',
+          payload: 'create_client',
+          data: { name },
+        }],
+      };
+    }
+
+    case 'create_project': {
+      const name = params.name;
+      if (!name) {
+        return {
+          content: 'Qual o nome do projeto? Escreve por exemplo:\n\n**"Criar projeto Moradia Silva"**',
+        };
+      }
+      return {
+        content: `Vou criar o projeto **${name}**. Confirma clicando no botão abaixo.`,
+        actions: [{
+          id: 'exec-create-project',
+          label: `Criar projeto "${name}"`,
+          type: 'execute',
+          payload: 'create_project',
+          data: { name },
+        }],
       };
     }
 
@@ -642,7 +725,7 @@ export async function processMessage(
 
   // If we have a confident local match, use it (faster + free)
   if (match.confidence >= 0.9 && match.intent !== 'unknown') {
-    return generateLocalResponse(match.intent, appData);
+    return generateLocalResponse(match.intent, appData, match.params);
   }
 
   // Otherwise, try AI if available
@@ -651,7 +734,7 @@ export async function processMessage(
   }
 
   // Fallback to local
-  return generateLocalResponse(match.intent, appData);
+  return generateLocalResponse(match.intent, appData, match.params);
 }
 
 export function createMessage(role: 'user' | 'agent', content: string, actions?: ChatAction[], attachment?: ChatAttachment): ChatMessage {
