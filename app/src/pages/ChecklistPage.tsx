@@ -42,6 +42,7 @@ interface SavedChecklist {
   id: string;
   nome: string;
   tipologia: string;
+  projectId?: string;
   criadoEm: string;
   atualizadoEm: string;
   items: Record<string, EstadoRequisito>;

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import type { Client, Project, Proposal, CalculatorState } from '@/types';
 import { localStorageService } from '@/services/localStorage';
 import { isCloudConfigured, cloudLoad, cloudSave } from '@/services/supabaseSync';
+import { createChecklistForProject } from '@/lib/checklistAutoCreate';
 
 // Iniciar com arrays vazios - sem dados de exemplo
 const initialClients: Client[] = [];
@@ -187,6 +188,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         ? { ...c, projects: [...c.projects, projectId] }
         : c
     ));
+
+    createChecklistForProject(
+      projectId,
+      proposal.projectName || `Projeto ${proposal.clientName}`,
+      proposal.projectType,
+    );
   }, [proposals, updateProposalStatus]);
 
   /** Encontra cliente existente (por nome ou NIF) ou cria novo */
