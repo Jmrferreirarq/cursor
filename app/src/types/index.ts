@@ -158,7 +158,7 @@ export interface Proposal {
   totalValue: number;
   vatRate: number;
   totalWithVat: number;
-  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'lost';
   createdAt: string;
   sentAt?: string;
   validUntil?: string;

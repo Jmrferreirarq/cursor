@@ -13,7 +13,7 @@ import { useMedia } from '@/context/MediaContext';
 import { localStorageService } from '@/services/localStorage';
 import { runPlatformDiagnostic } from '@/services/platformAgent';
 import { hasApiKey } from '@/services/ai';
-import { processMessage, createMessage, QUICK_SUGGESTIONS } from '@/services/agentChat';
+import { processMessage, createMessage, QUICK_SUGGESTIONS, getDynamicSuggestions } from '@/services/agentChat';
 import { extractTextFromPDF, readFileAsDataURL, getFileType } from '@/services/pdfExtractor';
 import type { PlatformReport, Severity } from '@/services/platformAgent';
 import type { ChatMessage, ChatAction, ChatAttachment } from '@/services/agentChat';
@@ -35,7 +35,7 @@ type Tab = 'chat' | 'dashboard';
 
 export default function AgentPage() {
   const navigate = useNavigate();
-  const { clients, projects, proposals, addClient, addProject, acceptProposal } = useData();
+  const { clients, projects, proposals, addClient, addProject, addProposal, acceptProposal, updateProposalStatus } = useData();
   const { assets, posts, contentPacks, editorialDNA, slots, performanceEntries } = useMedia();
 
   const [tab, setTab] = useState<Tab>('chat');
@@ -51,7 +51,7 @@ export default function AgentPage() {
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingAttachment, setPendingAttachment] = useState<ChatAttachment | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [fileProcessing, setFileProcessing] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,80 +79,88 @@ export default function AgentPage() {
   // ── File handling ──
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = ''; // Reset input
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = '';
 
-    const fileType = getFileType(file);
-    if (fileType === 'unsupported') {
-      toast.error('Tipo de ficheiro não suportado. Envia PDFs ou imagens.');
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('Ficheiro demasiado grande (máx. 20MB).');
-      return;
-    }
+    const validFiles = files.filter(f => {
+      const ft = getFileType(f);
+      if (ft === 'unsupported') { toast.error(`Tipo não suportado: ${f.name}`); return false; }
+      if (f.size > 20 * 1024 * 1024) { toast.error(`Ficheiro demasiado grande: ${f.name}`); return false; }
+      return true;
+    });
+    if (!validFiles.length) return;
 
     setFileProcessing(true);
-    setPendingFile(file);
+    const newAttachments: ChatAttachment[] = [];
 
-    try {
-      if (fileType === 'pdf') {
-        const result = await extractTextFromPDF(file);
-        setPendingAttachment({
-          type: 'pdf',
-          fileName: file.name,
-          sizeKB: result.sizeKB,
-          pages: result.pages,
-          extractedText: result.text,
-        });
-        toast.success(`PDF carregado: ${result.pages} páginas extraídas`);
-      } else if (fileType === 'image') {
-        const dataUrl = await readFileAsDataURL(file);
-        setPendingAttachment({
-          type: 'image',
-          fileName: file.name,
-          sizeKB: Math.round(file.size / 1024),
-          dataUrl,
-        });
-        toast.success('Imagem carregada');
-      }
-    } catch (err) {
-      toast.error('Erro ao processar ficheiro');
-      setPendingFile(null);
-      setPendingAttachment(null);
+    for (const file of validFiles) {
+      const fileType = getFileType(file);
+      try {
+        if (fileType === 'pdf') {
+          const result = await extractTextFromPDF(file);
+          newAttachments.push({ type: 'pdf', fileName: file.name, sizeKB: result.sizeKB, pages: result.pages, extractedText: result.text });
+        } else if (fileType === 'image') {
+          const dataUrl = await readFileAsDataURL(file);
+          newAttachments.push({ type: 'image', fileName: file.name, sizeKB: Math.round(file.size / 1024), dataUrl });
+        }
+      } catch { toast.error(`Erro ao processar: ${file.name}`); }
     }
+
+    if (newAttachments.length) {
+      setPendingAttachments(prev => [...prev, ...newAttachments]);
+      toast.success(`${newAttachments.length} ficheiro(s) carregado(s)`);
+    }
+    setPendingFile(null);
     setFileProcessing(false);
   };
 
+  const removeAttachment = (idx: number) => {
+    setPendingAttachments(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const clearFile = () => {
+    setPendingAttachments([]);
     setPendingFile(null);
-    setPendingAttachment(null);
   };
 
   // ── Chat ──
 
   const sendMessage = async (text: string) => {
-    if (!text.trim() && !pendingAttachment) return;
+    if (!text.trim() && !pendingAttachments.length) return;
 
-    const attachment = pendingAttachment || undefined;
-    const messageText = text.trim() || (attachment ? `Analisa este ficheiro: ${attachment.fileName}` : '');
-    const userMsg = createMessage('user', messageText, undefined, attachment);
-    setMessages((prev) => [...prev, userMsg]);
+    const attachments = [...pendingAttachments];
+    const messageText = text.trim() || (attachments.length ? `Analisa ${attachments.length > 1 ? 'estes ficheiros' : 'este ficheiro'}: ${attachments.map(a => a.fileName).join(', ')}` : '');
+
+    // Show user message (with first attachment preview for display)
+    const userMsg = createMessage('user', messageText, undefined, attachments[0]);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
+    setPendingAttachments([]);
     setPendingFile(null);
-    setPendingAttachment(null);
     setThinking(true);
 
     try {
       const appData = getAppData();
-      const response = await processMessage(messageText, appData, messages, true, attachment);
-      const agentMsg = createMessage('agent', response.content, response.actions);
-      setMessages((prev) => [...prev, agentMsg]);
+
+      if (attachments.length <= 1) {
+        // Single file — original flow
+        const response = await processMessage(messageText, appData, messages, true, attachments[0]);
+        setMessages(prev => [...prev, createMessage('agent', response.content, response.actions)]);
+      } else {
+        // Multiple files — process sequentially
+        const introMsg = createMessage('agent', `A processar **${attachments.length} ficheiros**...`);
+        setMessages(prev => [...prev, introMsg]);
+
+        for (let i = 0; i < attachments.length; i++) {
+          const att = attachments[i];
+          const msg = `Importa esta proposta: ${att.fileName}`;
+          const response = await processMessage(msg, getAppData(), messages, true, att);
+          setMessages(prev => [...prev, createMessage('agent', `**[${i + 1}/${attachments.length}] ${att.fileName}**\n\n${response.content}`, response.actions)]);
+        }
+      }
     } catch {
-      const errorMsg = createMessage('agent', 'Desculpa, ocorreu um erro ao processar o teu pedido. Tenta novamente.');
-      setMessages((prev) => [...prev, errorMsg]);
+      setMessages(prev => [...prev, createMessage('agent', 'Erro ao processar. Tenta novamente.')]);
     }
     setThinking(false);
     inputRef.current?.focus();
@@ -216,11 +224,68 @@ export default function AgentPage() {
         const proposalId = action.data.proposalId as string;
         acceptProposal(proposalId);
         toast.success('Proposta aceite! Projeto e checklist criados.');
-        const msg = createMessage('agent', `✅ Proposta aceite! Projeto ativo e checklist de conformidade criados automaticamente.`, [
+        const msg = createMessage('agent', `✅ Proposta aceite! Projeto ativo e checklist criados automaticamente.`, [
           { id: 'nav-proj', label: 'Ver Projetos', type: 'navigate', payload: '/projects' },
           { id: 'nav-chk', label: 'Ver Checklist', type: 'navigate', payload: '/checklist' },
         ]);
         setMessages((prev) => [...prev, msg]);
+      } else if (action.payload === 'lose_proposal') {
+        const proposalId = action.data.proposalId as string;
+        const clientName = action.data.clientName as string;
+        updateProposalStatus(proposalId, 'lost');
+        toast.success(`Proposta de ${clientName} marcada como perdida.`);
+        const msg = createMessage('agent', `🟠 Proposta de **${clientName}** marcada como **Perdida**.\n\nRegistado para análise futura da taxa de sucesso.`, [
+          { id: 'nav', label: 'Ver Propostas', type: 'navigate', payload: '/proposals' },
+        ]);
+        setMessages((prev) => [...prev, msg]);
+      } else if (action.payload === 'reject_proposal') {
+        const proposalId = action.data.proposalId as string;
+        const clientName = action.data.clientName as string;
+        updateProposalStatus(proposalId, 'rejected');
+        toast.success(`Proposta de ${clientName} marcada como recusada.`);
+        const msg = createMessage('agent', `❌ Proposta de **${clientName}** marcada como **Recusada**.`, [
+          { id: 'nav', label: 'Ver Propostas', type: 'navigate', payload: '/proposals' },
+        ]);
+        setMessages((prev) => [...prev, msg]);
+      } else if (action.payload === 'follow_up') {
+        sendMessage('Quais as propostas que precisam de follow-up?');
+      }
+    } else if (action.type === 'create_proposal' && action.data) {
+      try {
+        const d = action.data;
+        const id = `prop-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const phases = (d.phases as Array<{id:string;name:string;percentage:number;value:number;description:string}> || []).map((p, i) => ({
+          id: p.id || `ph-${i}`,
+          name: p.name || `Prestação ${i + 1}`,
+          description: p.description || '',
+          value: Number(p.value) || 0,
+          selected: true,
+        }));
+        const fallbackPhase = [{ id: 'ph-1', name: 'Honorários', description: '', value: Number(d.totalValue) || 0, selected: true }];
+        const totalValue = Number(d.totalValue) || 0;
+        const vatRate = Number(d.vatRate) || 23;
+        addProposal({
+          id,
+          clientId: '',
+          clientName: String(d.clientName || ''),
+          projectName: String(d.projectName || ''),
+          projectType: String(d.projectType || 'Habitação'),
+          reference: String(d.reference || ''),
+          phases: phases.length > 0 ? phases : fallbackPhase,
+          totalValue,
+          vatRate,
+          totalWithVat: totalValue * (1 + vatRate / 100),
+          status: String(d.status || 'sent') as 'draft'|'sent'|'accepted'|'rejected'|'expired'|'lost',
+          createdAt: new Date().toISOString().slice(0, 10),
+        });
+        toast.success(`Proposta de ${d.clientName} importada!`);
+        const msg = createMessage('agent',
+          `✅ **Proposta importada com sucesso!**\n\n**Cliente:** ${d.clientName}\n**Projeto:** ${d.projectName}\n**Valor:** ${new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(totalValue)} + IVA\n**Estado:** ${d.status === 'sent' ? 'Enviada' : String(d.status)}\n\nPodes ver e editar na página de Propostas.`,
+          [{ id: 'nav-prop', label: 'Ver Propostas', type: 'navigate', payload: '/proposals' }]
+        );
+        setMessages((prev) => [...prev, msg]);
+      } catch {
+        toast.error('Erro ao importar proposta. Tenta novamente.');
       }
     }
   };
@@ -374,7 +439,7 @@ export default function AgentPage() {
               <div className="px-4 sm:px-6 pb-2">
                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Sugestões rápidas</p>
                 <div className="flex flex-wrap gap-2">
-                  {QUICK_SUGGESTIONS.map((s) => (
+                  {getDynamicSuggestions(getAppData()).map((s) => (
                     <button key={s.label} onClick={() => sendMessage(s.message)} className="px-3 py-1.5 bg-muted/50 hover:bg-muted rounded-lg text-xs text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border">
                       {s.label}
                     </button>
@@ -385,29 +450,40 @@ export default function AgentPage() {
 
             {/* Input */}
             <div className="border-t border-border px-4 sm:px-6 py-3">
-              {/* Pending file preview */}
-              {pendingAttachment && (
-                <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-primary/5 border border-primary/20 rounded-xl">
-                  {pendingAttachment.type === 'pdf' ? <FileText className="w-4 h-4 text-primary shrink-0" /> : <ImageIcon className="w-4 h-4 text-primary shrink-0" />}
-                  <span className="text-xs font-medium text-foreground truncate">{pendingAttachment.fileName}</span>
-                  <span className="text-[10px] text-muted-foreground shrink-0">
-                    {pendingAttachment.type === 'pdf' ? `${pendingAttachment.pages} páginas · ` : ''}{pendingAttachment.sizeKB}KB
-                  </span>
-                  <button onClick={clearFile} className="ml-auto p-1 hover:bg-muted rounded-lg transition-colors shrink-0">
-                    <X className="w-3.5 h-3.5 text-muted-foreground" />
-                  </button>
+              {/* Pending files preview */}
+              {pendingAttachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {pendingAttachments.map((att, idx) => (
+                    <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1.5 bg-primary/5 border border-primary/20 rounded-xl max-w-[200px]">
+                      {att.type === 'pdf' ? <FileText className="w-3.5 h-3.5 text-primary shrink-0" /> : <ImageIcon className="w-3.5 h-3.5 text-primary shrink-0" />}
+                      <span className="text-xs font-medium text-foreground truncate">{att.fileName}</span>
+                      <button onClick={() => removeAttachment(idx)} className="p-0.5 hover:bg-muted rounded transition-colors shrink-0 ml-1">
+                        <X className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  ))}
+                  {pendingAttachments.length > 1 && (
+                    <button onClick={clearFile} className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-lg hover:bg-muted transition-colors">
+                      Limpar tudo
+                    </button>
+                  )}
                 </div>
               )}
               <div className="flex items-center gap-2">
-                {/* File upload button */}
-                <input ref={fileInputRef} type="file" accept=".pdf,image/*" onChange={handleFileSelect} className="hidden" />
+                {/* File upload button — multiple */}
+                <input ref={fileInputRef} type="file" accept=".pdf,image/*" multiple onChange={handleFileSelect} className="hidden" />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={thinking || fileProcessing}
-                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 shrink-0"
-                  title="Enviar ficheiro (PDF ou imagem)"
+                  className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors disabled:opacity-30 shrink-0 relative"
+                  title="Enviar ficheiros (PDF ou imagem) — suporta múltiplos"
                 >
                   {fileProcessing ? <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" /> : <Paperclip className="w-4 h-4 text-muted-foreground" />}
+                  {pendingAttachments.length > 1 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-primary-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
+                      {pendingAttachments.length}
+                    </span>
+                  )}
                 </button>
                 <input
                   ref={inputRef}
@@ -415,20 +491,20 @@ export default function AgentPage() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder={pendingAttachment ? 'Mensagem sobre o ficheiro (opcional)...' : 'Escreve uma mensagem ao Agente...'}
+                  placeholder={pendingAttachments.length > 0 ? `${pendingAttachments.length} ficheiro(s) — mensagem opcional...` : 'Escreve uma mensagem ao Agente...'}
                   className="flex-1 bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50"
                   disabled={thinking}
                 />
                 <button
                   onClick={() => sendMessage(input)}
-                  disabled={(!input.trim() && !pendingAttachment) || thinking}
+                  disabled={(!input.trim() && !pendingAttachments.length) || thinking}
                   className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
                 >
                   {thinking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                {hasApiKey() ? 'AI ativo — aceita PDFs, imagens e texto livre' : 'Respostas locais — ativa o AI Copilot para análise de ficheiros'}
+                {hasApiKey() ? 'AI ativo — aceita PDFs, imagens e texto livre · múltiplos ficheiros suportados' : 'Respostas locais — ativa o AI Copilot para análise de ficheiros'}
               </p>
             </div>
           </motion.div>

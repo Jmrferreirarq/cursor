@@ -48,6 +48,7 @@ const PropostaShortPage = lazy(() => import('./pages/PropostaShortPage'));
 const PortfolioPublicPage = lazy(() => import('./pages/PortfolioPublicPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const BillingPage = lazy(() => import('./pages/BillingPage'));
+const SpecialistsPage = lazy(() => import('./pages/SpecialistsPage'));
 const TrashPage = lazy(() => import('./pages/TrashPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
@@ -128,6 +129,7 @@ function App() {
                 <Route path="/municipios" element={<MunicipiosPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
                 <Route path="/billing" element={<BillingPage />} />
+                <Route path="/specialists" element={<SpecialistsPage />} />
                 <Route path="/media" element={<MediaHubPage />} />
                 <Route path="/library" element={<MaterialLibraryPage />} />
                 <Route path="/inbox" element={<StudioInboxPage />} />

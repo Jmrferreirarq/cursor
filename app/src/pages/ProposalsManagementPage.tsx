@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
 import { compareProposals, type ProposalComparison } from '@/lib/proposalComparison';
 import { toast } from 'sonner';
 
 /** Status efetivo — propostas antigas podem não ter status */
-const getStatus = (p: { status?: string }) => (p.status || 'draft') as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired';
+const getStatus = (p: { status?: string }) => (p.status || 'draft') as 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'lost';
 import { useData } from '@/context/DataContext';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import type { Proposal } from '@/types';
 
 function daysSince(dateStr?: string): number | null {
   if (!dateStr) return null;
@@ -62,7 +63,25 @@ export default function ProposalsManagementPage() {
   const { proposals, deleteProposal, updateProposalStatus, acceptProposal } = useData();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
   const comparison = showComparison ? compareProposals(proposals) : null;
+
+  const toggleYear = (year: string) => {
+    setCollapsedYears(prev => {
+      const next = new Set(prev);
+      next.has(year) ? next.delete(year) : next.add(year);
+      return next;
+    });
+  };
+
+  const proposalsByYear = useMemo(() => {
+    const groups: Record<string, typeof proposals> = {};
+    proposals.forEach(p => {
+      const year = p.createdAt?.slice(0, 4) || 'Sem data';
+      (groups[year] = groups[year] || []).push(p);
+    });
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+  }, [proposals]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-PT', {
@@ -148,7 +167,25 @@ export default function ProposalsManagementPage() {
             </h3>
           </div>
           <div className="divide-y divide-border">
-            {proposals.map((p) => (
+            {proposalsByYear.map(([year, yearProposals]) => {
+              const isCollapsed = collapsedYears.has(year);
+              const yearTotal = yearProposals.reduce((s, p) => s + p.totalWithVat, 0);
+              return (
+                <div key={year}>
+                  {/* Year header */}
+                  <button
+                    onClick={() => toggleYear(year)}
+                    className="w-full flex items-center justify-between px-5 py-2.5 bg-muted/40 hover:bg-muted/60 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      {isCollapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
+                      <span className="font-semibold text-sm">{year}</span>
+                      <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{yearProposals.length} proposta{yearProposals.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <span className="text-sm font-medium text-primary">{formatCurrency(yearTotal)}</span>
+                  </button>
+                  {/* Proposals for this year */}
+                  {!isCollapsed && yearProposals.map((p) => (
               <div
                 key={p.id}
                 className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
@@ -199,6 +236,7 @@ export default function ProposalsManagementPage() {
                       accepted: 'bg-emerald-500/20 text-emerald-400',
                       rejected: 'bg-red-500/20 text-red-400',
                       expired: 'bg-amber-500/20 text-amber-400',
+                      lost: 'bg-orange-500/20 text-orange-400',
                     };
                     const statusLabels: Record<string, string> = {
                       draft: 'Rascunho',
@@ -206,6 +244,7 @@ export default function ProposalsManagementPage() {
                       accepted: 'Aceite',
                       rejected: 'Recusada',
                       expired: 'Expirada',
+                      lost: 'Perdida',
                     };
                     return (
                       <div className="flex flex-col items-end gap-1">
@@ -248,6 +287,14 @@ export default function ProposalsManagementPage() {
                               title="Marcar como recusada"
                             >
                               <XCircle className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); updateProposalStatus(p.id, 'lost'); toast('Proposta marcada como perdida'); }}
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 rounded-lg transition-colors"
+                              title="Marcar como perdida (não adjudicada)"
+                            >
+                              <Minus className="w-3 h-3" />
                             </button>
                             {days !== null && days > 30 && (
                               <button
@@ -326,6 +373,9 @@ export default function ProposalsManagementPage() {
                 </div>
               </div>
             ))}
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       ) : (

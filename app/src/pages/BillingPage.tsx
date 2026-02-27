@@ -142,6 +142,20 @@ export default function BillingPage() {
   const [tab, setTab] = useState<Tab>('active');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<EditState | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    proposals.forEach((p) => {
+      const year = p.createdAt?.slice(0, 4);
+      if (year) years.add(year);
+      (p.paymentTranches || []).forEach((t) => {
+        const ty = t.invoiceDate?.slice(0, 4);
+        if (ty) years.add(ty);
+      });
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [proposals]);
 
   const filtered = useMemo(() => {
     const base = proposals.filter((p) => {
@@ -149,10 +163,15 @@ export default function BillingPage() {
       if (tab === 'done') return p.isBillingDone;
       return false;
     });
-    if (!search) return base;
+    const byYear = selectedYear === 'all' ? base : base.filter((p) => {
+      const propYear = p.createdAt?.slice(0, 4) === selectedYear;
+      const trancheYear = (p.paymentTranches || []).some((t) => t.invoiceDate?.slice(0, 4) === selectedYear);
+      return propYear || trancheYear;
+    });
+    if (!search) return byYear;
     const q = search.toLowerCase();
-    return base.filter((p) => p.clientName.toLowerCase().includes(q) || p.projectName?.toLowerCase().includes(q));
-  }, [proposals, tab, search]);
+    return byYear.filter((p) => p.clientName.toLowerCase().includes(q) || p.projectName?.toLowerCase().includes(q));
+  }, [proposals, tab, search, selectedYear]);
 
   const totals = useMemo(() => {
     const total = filtered.reduce((s, p) => s + (p.totalValue || 0), 0);
@@ -243,6 +262,25 @@ export default function BillingPage() {
             className="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary w-56" />
         </div>
       </div>
+
+      {/* Year Filter */}
+      {availableYears.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-500">Ano:</span>
+          <button
+            onClick={() => setSelectedYear('all')}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedYear === 'all' ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}>
+            Todos
+          </button>
+          {availableYears.map((year) => (
+            <button key={year}
+              onClick={() => setSelectedYear(year)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${selectedYear === year ? 'bg-primary text-white' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'}`}>
+              {year}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Legenda */}
       <div className="flex gap-4 text-xs text-slate-400">
