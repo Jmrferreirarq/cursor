@@ -13,6 +13,10 @@ export interface Project {
   address?: string;
   municipality?: string;
   projectType?: string;
+  processNumber?: string;
+  scope?: string;
+  camProcessNumber?: string;
+  pendingNote?: string;
 }
 
 export interface Client {
@@ -26,6 +30,8 @@ export interface Client {
   projects: string[];
   createdAt: string;
   notes?: string;
+  role?: string;
+  company?: string;
 }
 
 export interface Task {
@@ -133,6 +139,16 @@ export interface CalculatorState {
   moradiaAddonFixoLoteQty?: string;
 }
 
+export interface PaymentTranche {
+  label: string;
+  percentage: string;
+  value: number;
+  hasVat: boolean;
+  invoiceDate?: string;
+  status: 'pending' | 'invoiced' | 'paid';
+  notes?: string;
+}
+
 export interface Proposal {
   id: string;
   clientId: string;
@@ -146,16 +162,17 @@ export interface Proposal {
   createdAt: string;
   sentAt?: string;
   validUntil?: string;
-  // Campos adicionais para propostas da calculadora
-  reference?: string;           // FA-XXX
-  projectName?: string;         // Nome do projeto
-  location?: string;            // Local/Município
-  architectureValue?: number;   // Valor arquitetura (s/IVA)
-  specialtiesValue?: number;    // Valor especialidades (s/IVA)
-  extrasValue?: number;         // Valor extras (s/IVA)
-  area?: number;                // Área (m²)
-  proposalUrl?: string;         // Link da proposta
-  calculatorState?: CalculatorState; // Estado completo da calculadora
+  reference?: string;
+  projectName?: string;
+  location?: string;
+  architectureValue?: number;
+  specialtiesValue?: number;
+  extrasValue?: number;
+  area?: number;
+  proposalUrl?: string;
+  calculatorState?: CalculatorState;
+  paymentTranches?: PaymentTranche[];
+  isBillingDone?: boolean;
 }
 
 export interface ProposalPhase {
@@ -388,5 +405,46 @@ export interface PerformanceEntry {
   postId: string;
   recordedAt: string;
   metrics: PostMetrics;
+  notes?: string;
+}
+
+export interface Specialist {
+  id: string;
+  name: string;
+  specialty: string;
+  phone?: string;
+  email?: string;
+  priceUpTo300m2?: string;
+  fees?: string;
+  notes?: string;
+}
+
+export interface License {
+  id: string;
+  software: string;
+  registrationName: string;
+  licenseNumber: string;
+  computer?: string;
+  status: 'active' | 'expired' | 'unknown';
+  expiryDate?: string;
+  duration?: string;
+  value?: number;
+}
+
+export interface ConstructionVisit {
+  id: string;
+  clientId?: string;
+  clientName: string;
+  location: string;
+  visitDate: string;
+  distanceKm: number;
+  costPerKm: number;
+  durationHours: number;
+  costPerHour: number;
+  travelCost: number;
+  visitCost: number;
+  total: number;
+  invoiced: boolean;
+  invoiceRef?: string;
   notes?: string;
 }

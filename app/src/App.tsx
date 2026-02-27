@@ -47,6 +47,7 @@ const PropostaPublicPage = lazy(() => import('./pages/PropostaPublicPage'));
 const PropostaShortPage = lazy(() => import('./pages/PropostaShortPage'));
 const PortfolioPublicPage = lazy(() => import('./pages/PortfolioPublicPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const BillingPage = lazy(() => import('./pages/BillingPage'));
 const TrashPage = lazy(() => import('./pages/TrashPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
@@ -78,7 +79,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <PWAInstallBanner />
       <OfflineIndicator />
       <UpdateAvailableBanner />
-      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 lg:pb-8 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
+      <main className="w-full px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24 pb-28 lg:pb-24 max-w-[2400px] mx-auto min-h-[calc(100vh-4rem)]" data-allow-shifts>
         {children}
       </main>
       <BuildVersion />
@@ -126,6 +127,7 @@ function App() {
                 <Route path="/checklist" element={<ChecklistPage />} />
                 <Route path="/municipios" element={<MunicipiosPage />} />
                 <Route path="/proposals" element={<ProposalsManagementPage />} />
+                <Route path="/billing" element={<BillingPage />} />
                 <Route path="/media" element={<MediaHubPage />} />
                 <Route path="/library" element={<MaterialLibraryPage />} />
                 <Route path="/inbox" element={<StudioInboxPage />} />

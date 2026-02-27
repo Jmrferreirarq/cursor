@@ -8,6 +8,7 @@ import type {
   Client, Project, Proposal,
   MediaAsset, ContentPack, ContentPost,
   EditorialDNA, PublicationSlot, PerformanceEntry,
+  Specialist, License, ConstructionVisit,
 } from '@/types';
 
 export interface TrashEntry<T> {
@@ -28,6 +29,9 @@ export interface AppData {
   editorialDNA: EditorialDNA | null;
   slots: PublicationSlot[];
   performanceEntries: PerformanceEntry[];
+  specialists: Specialist[];
+  licenses: License[];
+  constructionVisits: ConstructionVisit[];
   /** Lixo — itens apagados, recuperáveis */
   trashAssets: TrashEntry<MediaAsset>[];
   trashPacks: TrashEntry<ContentPack>[];
@@ -45,6 +49,9 @@ export const EMPTY_DATA: AppData = {
   editorialDNA: null,
   slots: [],
   performanceEntries: [],
+  specialists: [],
+  licenses: [],
+  constructionVisits: [],
   trashAssets: [],
   trashPacks: [],
   trashPosts: [],

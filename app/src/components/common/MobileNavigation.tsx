@@ -15,7 +15,8 @@ import {
   Euro,
   Settings,
   ChevronRight,
-  Inbox
+  Inbox,
+  Receipt
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,6 +27,7 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { path: '/', label: 'Início', icon: Home },
+  { path: '/billing', label: 'Faturação', icon: Receipt },
   { path: '/projects', label: 'Projetos', icon: FolderKanban },
   { path: '/clients', label: 'Clientes', icon: Users },
   { path: '/calendar', label: 'Agenda', icon: Calendar },

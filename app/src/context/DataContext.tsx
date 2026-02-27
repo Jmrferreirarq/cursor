@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { Client, Project, Proposal, CalculatorState } from '@/types';
+import type { Client, Project, Proposal, CalculatorState, Specialist, License, ConstructionVisit } from '@/types';
 import { localStorageService } from '@/services/localStorage';
 import { isCloudConfigured, cloudLoad, cloudSave } from '@/services/supabaseSync';
 import { createChecklistForProject } from '@/lib/checklistAutoCreate';
@@ -42,6 +42,9 @@ interface DataContextType {
   clients: Client[];
   projects: Project[];
   proposals: Proposal[];
+  specialists: Specialist[];
+  licenses: License[];
+  constructionVisits: ConstructionVisit[];
   addClient: (client: Client) => void;
   updateClient: (id: string, patch: Partial<Client>) => void;
   deleteClient: (id: string) => void;
@@ -51,10 +54,20 @@ interface DataContextType {
   addProposal: (proposal: Proposal) => void;
   deleteProposal: (id: string) => void;
   updateProposalStatus: (id: string, status: Proposal['status']) => void;
+  updateProposal: (id: string, patch: Partial<Proposal>) => void;
   /** Aceita proposta e cria projeto ativo automaticamente */
   acceptProposal: (id: string) => void;
   findOrCreateClient: (input: ClientInput) => string;
   saveCalculatorProposal: (input: CalculatorProposalInput) => string;
+  addSpecialist: (specialist: Specialist) => void;
+  updateSpecialist: (id: string, patch: Partial<Specialist>) => void;
+  deleteSpecialist: (id: string) => void;
+  addLicense: (license: License) => void;
+  updateLicense: (id: string, patch: Partial<License>) => void;
+  deleteLicense: (id: string) => void;
+  addConstructionVisit: (visit: ConstructionVisit) => void;
+  updateConstructionVisit: (id: string, patch: Partial<ConstructionVisit>) => void;
+  deleteConstructionVisit: (id: string) => void;
   resetAllData: () => Promise<boolean>;
   exportToFile: () => void;
   importFromFile: (file: File) => Promise<{ ok: boolean; error?: string }>;
@@ -69,6 +82,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [clients, setClients] = useState<Client[]>(initialClients);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [licenses, setLicenses] = useState<License[]>([]);
+  const [constructionVisits, setConstructionVisits] = useState<ConstructionVisit[]>([]);
 
   const cloudSyncTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -86,6 +102,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             if (cloud.proposals?.length) {
               setProposals(cloud.proposals.map((p: Proposal) => ({ ...p, status: p.status || 'draft' })));
             }
+            if (cloud.specialists?.length) setSpecialists(cloud.specialists);
+            if (cloud.licenses?.length) setLicenses(cloud.licenses);
+            if (cloud.constructionVisits?.length) setConstructionVisits(cloud.constructionVisits);
             svc.save(cloud);
             loaded = true;
           }
@@ -99,6 +118,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           if (data.proposals.length) {
             setProposals(data.proposals.map((p: Proposal) => ({ ...p, status: p.status || 'draft' })));
           }
+          if (data.specialists.length) setSpecialists(data.specialists);
+          if (data.licenses.length) setLicenses(data.licenses);
+          if (data.constructionVisits.length) setConstructionVisits(data.constructionVisits);
         } catch { /* ignore */ }
       }
       if (!cancelled) setIsReady(true);
@@ -111,14 +133,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const existing = svc.load();
-      const merged = { ...existing, clients, projects, proposals };
+      const merged = { ...existing, clients, projects, proposals, specialists, licenses, constructionVisits };
       svc.save(merged);
       if (isCloudConfigured()) {
         clearTimeout(cloudSyncTimer.current);
         cloudSyncTimer.current = setTimeout(() => { cloudSave(merged); }, 2000);
       }
     } catch { /* quota exceeded */ }
-  }, [clients, projects, proposals]);
+  }, [clients, projects, proposals, specialists, licenses, constructionVisits]);
 
   const addClient = useCallback((client: Client) => {
     setClients((prev) => [client, ...prev]);
@@ -158,6 +180,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         ? { ...p, status, sentAt: status === 'sent' ? new Date().toISOString().slice(0, 10) : p.sentAt }
         : p
     ));
+  }, []);
+
+  const updateProposal = useCallback((id: string, patch: Partial<Proposal>) => {
+    setProposals((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
   }, []);
 
   const acceptProposal = useCallback((id: string) => {
@@ -307,13 +333,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setClients([]);
     setProjects([]);
     setProposals([]);
+    setSpecialists([]);
+    setLicenses([]);
+    setConstructionVisits([]);
     return true;
   }, []);
 
   const exportToFile = useCallback(() => {
     const existing = svc.load();
-    svc.exportToFile({ ...existing, clients, projects, proposals });
-  }, [clients, projects, proposals]);
+    svc.exportToFile({ ...existing, clients, projects, proposals, specialists, licenses, constructionVisits });
+  }, [clients, projects, proposals, specialists, licenses, constructionVisits]);
 
   const importFromFile = useCallback(async (file: File): Promise<{ ok: boolean; error?: string }> => {
     const result = await svc.importFromFile(file);
@@ -322,7 +351,46 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setClients(d.clients.length ? d.clients : initialClients);
     setProjects(d.projects.length ? d.projects : initialProjects);
     setProposals(d.proposals);
+    if (d.specialists?.length) setSpecialists(d.specialists);
+    if (d.licenses?.length) setLicenses(d.licenses);
+    if (d.constructionVisits?.length) setConstructionVisits(d.constructionVisits);
     return { ok: true };
+  }, []);
+
+  const addSpecialist = useCallback((specialist: Specialist) => {
+    setSpecialists((prev) => [specialist, ...prev]);
+  }, []);
+
+  const updateSpecialist = useCallback((id: string, patch: Partial<Specialist>) => {
+    setSpecialists((prev) => prev.map((s) => s.id === id ? { ...s, ...patch } : s));
+  }, []);
+
+  const deleteSpecialist = useCallback((id: string) => {
+    setSpecialists((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const addLicense = useCallback((license: License) => {
+    setLicenses((prev) => [license, ...prev]);
+  }, []);
+
+  const updateLicense = useCallback((id: string, patch: Partial<License>) => {
+    setLicenses((prev) => prev.map((l) => l.id === id ? { ...l, ...patch } : l));
+  }, []);
+
+  const deleteLicense = useCallback((id: string) => {
+    setLicenses((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
+  const addConstructionVisit = useCallback((visit: ConstructionVisit) => {
+    setConstructionVisits((prev) => [visit, ...prev]);
+  }, []);
+
+  const updateConstructionVisit = useCallback((id: string, patch: Partial<ConstructionVisit>) => {
+    setConstructionVisits((prev) => prev.map((v) => v.id === id ? { ...v, ...patch } : v));
+  }, []);
+
+  const deleteConstructionVisit = useCallback((id: string) => {
+    setConstructionVisits((prev) => prev.filter((v) => v.id !== id));
   }, []);
 
   const value = useMemo(() => ({
@@ -330,6 +398,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     clients,
     projects,
     proposals,
+    specialists,
+    licenses,
+    constructionVisits,
     addClient,
     updateClient,
     deleteClient,
@@ -339,13 +410,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addProposal,
     deleteProposal,
     updateProposalStatus,
+    updateProposal,
     acceptProposal,
     findOrCreateClient,
     saveCalculatorProposal,
+    addSpecialist,
+    updateSpecialist,
+    deleteSpecialist,
+    addLicense,
+    updateLicense,
+    deleteLicense,
+    addConstructionVisit,
+    updateConstructionVisit,
+    deleteConstructionVisit,
     resetAllData,
     exportToFile,
     importFromFile,
-  }), [isReady, clients, projects, proposals, addClient, updateClient, deleteClient, addProject, updateProject, deleteProject, addProposal, deleteProposal, updateProposalStatus, acceptProposal, findOrCreateClient, saveCalculatorProposal, resetAllData, exportToFile, importFromFile]);
+  }), [isReady, clients, projects, proposals, specialists, licenses, constructionVisits, addClient, updateClient, deleteClient, addProject, updateProject, deleteProject, addProposal, deleteProposal, updateProposalStatus, updateProposal, acceptProposal, findOrCreateClient, saveCalculatorProposal, addSpecialist, updateSpecialist, deleteSpecialist, addLicense, updateLicense, deleteLicense, addConstructionVisit, updateConstructionVisit, deleteConstructionVisit, resetAllData, exportToFile, importFromFile]);
 
   return (
     <DataContext.Provider value={value}>

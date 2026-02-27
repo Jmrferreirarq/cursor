@@ -28,6 +28,7 @@ import {
   Bot,
   ClipboardList,
   BookOpen,
+  Receipt,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -56,6 +57,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 const navEntries: NavEntry[] = [
   { path: '/', label: 'Início', icon: LayoutDashboard, exact: true },
   { path: '/proposals', label: 'Propostas', icon: FileText },
+  { path: '/billing', label: 'Faturação', icon: Receipt },
   { path: '/projects', label: 'Projectos', icon: FolderKanban },
   { path: '/clients', label: 'Clientes', icon: Users },
   { path: '/tasks', label: 'Tarefas', icon: CheckSquare },
