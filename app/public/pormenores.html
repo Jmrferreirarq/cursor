@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pormenores Construtivos — Mundo Interior | FERREIRA Arquitetos</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1a1a1a;--ink-l:#4a4a4a;--ink-f:#999;--bg:#fafaf8;--bg-w:#f5f3ef;--au:#c8a96e;--au-d:#8b7340;--cut:#2a2a2a}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+.mh{padding:36px 56px 28px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-end}
+.mh-t{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:10px;letter-spacing:6px;text-transform:uppercase;color:var(--ink-l)}
+.mh-t span{display:block;font-size:40px;letter-spacing:-1px;text-transform:none;color:var(--ink);line-height:1;margin-top:4px}
+.mh-m{text-align:right;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-f);line-height:1.9}
+.mh-m strong{color:var(--au-d);font-weight:500}
+/* Note banner */
+.nt{max-width:1400px;margin:0 auto;padding:20px 56px 0}
+.nt-b{padding:14px 20px;border:1px solid #e0ddd6;background:var(--bg-w);display:flex;gap:12px;align-items:flex-start}
+.nt-ico{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:var(--au-d);border:1px solid var(--au-d);width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:50%;margin-top:1px}
+.nt-tx{font-size:11px;font-weight:300;color:var(--ink-l);line-height:1.55}
+.nt-tx strong{font-weight:500;color:var(--ink)}
+/* Index */
+.ix{padding:20px 56px 16px;border-bottom:1px solid #e0ddd6;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.ix-l{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-f)}
+.ix-count{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:300;color:var(--ink)}
+.ix-r{display:flex;gap:5px;flex-wrap:wrap}
+.ix-chip{padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:400;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-f);cursor:pointer;border:1px solid #ddd;background:none;border-radius:0;transition:all .25s;white-space:nowrap}
+.ix-chip:hover{color:var(--ink);border-color:var(--ink)}
+.ix-chip.on{color:#fff;background:var(--ink);border-color:var(--ink)}
+/* Typology group */
+.tg{max-width:1400px;margin:0 auto;padding:56px 56px 20px}
+.tg-head{margin-bottom:44px;padding-bottom:24px;border-bottom:1px solid #e0ddd6;display:grid;grid-template-columns:56px 1fr;gap:18px;align-items:start}
+.tg-icon{width:48px;height:48px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center}
+.tg-icon svg{width:26px;height:26px}
+.tg-num{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--au-d);margin-bottom:2px}
+.tg-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:30px;color:var(--ink);letter-spacing:-.5px;line-height:1.1;margin-bottom:4px}
+.tg-sub{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:14px;color:var(--ink-l);margin-bottom:6px}
+.tg-desc{font-size:11.5px;font-weight:300;color:var(--ink-f);max-width:640px;line-height:1.65}
+.tg-sep{border:none;border-top:1px solid var(--ink);margin:10px 56px 0}
+/* Detail cards */
+.dg{display:grid;grid-template-columns:1fr;gap:68px;padding-bottom:36px}
+.dc{display:grid;grid-template-columns:1fr 310px;gap:40px;padding-bottom:60px;border-bottom:1px solid #eae7df}
+.dc:last-child{border-bottom:none;padding-bottom:16px}
+/* Drawing frame */
+.df{background:#fff;border:1px solid #e0ddd6;padding:20px;position:relative;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.df svg{width:100%;height:100%}
+/* Parametric container — fills the .df frame */
+.df>[id^="svg_"]{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.df>[id^="svg_"] svg{width:100%;height:100%}
+/* Parametric controls bar */
+.p-ctrl{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;padding:8px 0 4px;border-top:1px solid #eae7df;margin-top:8px}
+.p-ctrl .p-f{display:flex;flex-direction:column;gap:1px}
+.p-ctrl label{font-family:'JetBrains Mono',monospace;font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-f)}
+.p-ctrl input{font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 5px;border:1px solid #ddd;background:#fff;color:var(--ink);width:68px;text-align:center}
+.p-ctrl input:focus{outline:none;border-color:var(--au)}
+.p-ctrl .p-u{font-size:6.5px;color:var(--ink-f);text-align:center}
+.p-ctrl button{font-family:'DM Sans',sans-serif;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;padding:6px 14px;background:var(--ink);color:#fff;border:none;cursor:pointer;align-self:flex-end}
+.p-ctrl button:hover{opacity:.8}
+.p-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:1px;padding:2px 6px;background:var(--au);color:#fff;margin-left:6px;vertical-align:middle}
+.df-ref{position:absolute;top:10px;left:14px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:300;letter-spacing:2px;color:var(--ink-f)}
+.df-sc{position:absolute;bottom:10px;right:14px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:300;color:var(--ink-f)}
+.sb{position:absolute;bottom:10px;left:14px;display:flex;align-items:center;gap:3px}
+.sb-s{height:3px;width:22px}
+.sb-s:nth-child(odd){background:var(--ink)}
+.sb-s:nth-child(even){background:var(--bg);border:.4px solid var(--ink)}
+.sb-l{font-family:'JetBrains Mono',monospace;font-size:6.5px;color:var(--ink-f);margin-left:3px}
+/* Info panel */
+.di-ref{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:3px;color:var(--au-d);margin-bottom:4px}
+.di-t{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:21px;color:var(--ink);margin-bottom:2px;line-height:1.15}
+.di-st{font-family:'Cormorant Garamond',serif;font-weight:300;font-style:italic;font-size:13px;color:var(--ink-l);margin-bottom:14px}
+.lg-t{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-f);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #eae7df}
+.li{display:flex;align-items:flex-start;gap:9px;margin-bottom:7px}
+.li-n{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:400;color:var(--ink);min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:1px solid var(--ink);border-radius:50%;flex-shrink:0}
+.li-tx{font-size:11px;font-weight:300;color:var(--ink-l);line-height:1.4}
+.li-tx strong{font-weight:500;color:var(--ink);display:block;font-size:10px}
+.sp{margin-top:16px;padding-top:10px;border-top:1px solid #eae7df}
+.sp-t{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-f);margin-bottom:6px}
+.sp-r{display:flex;justify-content:space-between;padding:2.5px 0;font-size:10px;font-weight:300;color:var(--ink-l);border-bottom:1px dotted #eae7df}
+.sp-r span:last-child{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink)}
+.nm{margin-top:12px;display:flex;flex-wrap:wrap;gap:3px}
+.nm-t{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:7.5px;letter-spacing:1px;padding:2px 6px;border:1px solid #ddd;color:var(--ink-f)}
+/* SVG — Architectural line hierarchy (EN ISO 128) */
+svg .cl{stroke:var(--cut);stroke-width:2.8;fill:none;stroke-linecap:butt}              /* Cut line — heavy */
+svg .sl{stroke:var(--ink);stroke-width:1.5;fill:none;stroke-linecap:butt}              /* Section line — medium */
+svg .ml{stroke:var(--ink);stroke-width:.8;fill:none;stroke-linecap:butt}               /* Material/finish line */
+svg .ll{stroke:var(--ink-l);stroke-width:.5;fill:none;stroke-linecap:butt}             /* Light construction line */
+svg .hl{stroke:var(--ink-f);stroke-width:.35;fill:none}                                 /* Leader / helper line */
+svg .hd{stroke:var(--ink-l);stroke-width:.6;fill:none;stroke-dasharray:6,2.5;stroke-linecap:butt}  /* Hidden line — dashed */
+svg .dl{stroke:var(--ink-l);stroke-width:.35;fill:none;marker-start:url(#as);marker-end:url(#ae)}   /* Dimension line */
+svg .el{stroke:var(--ink-l);stroke-width:.25;fill:none}                                 /* Extension line (dim) */
+svg .dt{font-family:'JetBrains Mono',monospace;font-size:7.5px;fill:var(--ink)}
+svg .lt{font-family:'DM Sans',sans-serif;font-size:7px;fill:var(--ink-l)}
+svg .ln{font-family:'JetBrains Mono',monospace;font-size:7px;fill:var(--ink)}
+svg .it{font-family:'Cormorant Garamond',serif;font-size:9.5px;fill:var(--ink-f);font-style:italic}
+svg .nt-svg{font-family:'DM Sans',sans-serif;font-size:5.5px;fill:var(--ink-f);font-weight:300}  /* Notes on drawing */
+/* Footer */
+.ft{padding:28px 56px;border-top:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:center}
+.ft-l{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--ink)}
+.ft-l span{color:var(--au-d)}
+.ft-r{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-f)}
+@media(max-width:960px){
+.mh{padding:20px 24px 16px;flex-direction:column;align-items:flex-start;gap:12px}
+.mh-t span{font-size:28px}.mh-m{text-align:left}
+.ix{padding:14px 24px;flex-direction:column;align-items:flex-start}
+.nt{padding:16px 24px 0}
+.tg{padding:32px 24px 16px}.tg-head{grid-template-columns:1fr}.tg-icon{display:none}
+.dc{grid-template-columns:1fr;gap:20px}.tg-title{font-size:24px}
+}
+@media print{.ix{display:none}.dc{break-inside:avoid;page-break-inside:avoid}.df{border:.5pt solid #ccc}}
+</style>
+</head>
+<body>
+
+<!-- SVG DEFS — Material patterns (ref. EN ISO 128-50) -->
+<svg style="position:absolute;width:0;height:0"><defs>
+<!-- Dimension arrows — filled triangles -->
+<marker id="as" viewBox="0 0 8 6" refX="0" refY="3" markerWidth="5" markerHeight="4" orient="auto-start-reverse"><polygon points="8,0 0,3 8,6" fill="var(--ink-l)"/></marker>
+<marker id="ae" viewBox="0 0 8 6" refX="8" refY="3" markerWidth="5" markerHeight="4" orient="auto"><polygon points="0,0 8,3 0,6" fill="var(--ink-l)"/></marker>
+<!-- Section symbol circle -->
+<marker id="sc" viewBox="0 0 20 20" refX="10" refY="10" markerWidth="12" markerHeight="12"><circle cx="10" cy="10" r="8" fill="#fff" stroke="var(--ink)" stroke-width="1.5"/></marker>
+
+<!-- pc — Betão armado: diagonal hatch + dots (EN ISO concrete) -->
+<pattern id="pc" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect width="12" height="12" fill="#e6e3db"/>
+<line x1="0" y1="0" x2="0" y2="12" stroke="#bfbab0" stroke-width=".7"/>
+<circle cx="6" cy="3" r=".7" fill="#c8c3b8"/>
+<circle cx="3" cy="9" r=".5" fill="#d0cbc0"/>
+</pattern>
+
+<!-- pi — Lã mineral / Isolamento: zig-zag (EN ISO insulation) -->
+<pattern id="pi" width="14" height="10" patternUnits="userSpaceOnUse">
+<rect width="14" height="10" fill="#edeae4"/>
+<polyline points="0,5 3.5,1.5 7,5 10.5,8.5 14,5" fill="none" stroke="#b8b3a8" stroke-width=".7"/>
+</pattern>
+
+<!-- pg — Gesso cartonado: fine stipple -->
+<pattern id="pg" width="5" height="5" patternUnits="userSpaceOnUse">
+<rect width="5" height="5" fill="#f2f0ec"/>
+<circle cx="2.5" cy="2.5" r=".4" fill="#d8d4cc"/>
+</pattern>
+
+<!-- ph — Placa gesso H1 hidrófuga: green stipple -->
+<pattern id="ph" width="5" height="5" patternUnits="userSpaceOnUse">
+<rect width="5" height="5" fill="#e4ede4"/>
+<circle cx="2.5" cy="2.5" r=".4" fill="#a8c8a8"/>
+</pattern>
+
+<!-- pw — Madeira: grain lines (EN ISO wood) -->
+<pattern id="pw" width="22" height="7" patternUnits="userSpaceOnUse">
+<rect width="22" height="7" fill="#dcd2ba"/>
+<path d="M0,2.5Q5.5,1.5 11,2.5T22,2.5" fill="none" stroke="#c0b498" stroke-width=".5"/>
+<path d="M0,5.5Q5.5,4.5 11,5.5T22,5.5" fill="none" stroke="#c0b498" stroke-width=".35"/>
+</pattern>
+
+<!-- ps — Aço / Perfis metálicos: cross-hatch dense (EN ISO steel) -->
+<pattern id="ps" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+<rect width="5" height="5" fill="#ccc"/>
+<line x1="0" y1="0" x2="0" y2="5" stroke="#999" stroke-width=".5"/>
+<line x1="0" y1="0" x2="5" y2="0" stroke="#999" stroke-width=".3"/>
+</pattern>
+
+<!-- pb — Alvenaria existente: brick bond -->
+<pattern id="pb" width="18" height="12" patternUnits="userSpaceOnUse">
+<rect width="18" height="12" fill="#e5ddd0"/>
+<line x1="0" y1="6" x2="18" y2="6" stroke="#c2b8a8" stroke-width=".5"/>
+<line x1="9" y1="0" x2="9" y2="6" stroke="#c2b8a8" stroke-width=".5"/>
+<line x1="0" y1="6" x2="0" y2="12" stroke="#c2b8a8" stroke-width=".5"/>
+<line x1="18" y1="6" x2="18" y2="12" stroke="#c2b8a8" stroke-width=".5"/>
+</pattern>
+
+<!-- pm — Argamassa / Betonilha: scattered dots -->
+<pattern id="pm" width="6" height="6" patternUnits="userSpaceOnUse">
+<rect width="6" height="6" fill="#ddd8cc"/>
+<circle cx="1.5" cy="1.5" r=".5" fill="#c5c0b2"/>
+<circle cx="4.5" cy="4.5" r=".4" fill="#c5c0b2"/>
+<circle cx="4" cy="1" r=".3" fill="#ccc7bb"/>
+</pattern>
+
+<!-- pk — Cerâmico / Pedra: grid lines -->
+<pattern id="pk" width="12" height="12" patternUnits="userSpaceOnUse">
+<rect width="12" height="12" fill="#eae7df"/>
+<rect x=".5" y=".5" width="11" height="11" fill="#f0ede6" stroke="#d0cbc0" stroke-width=".4"/>
+</pattern>
+
+<!-- pr — Impermeabilização: diagonal dense -->
+<pattern id="pr" width="6" height="6" patternUnits="userSpaceOnUse">
+<rect width="6" height="6" fill="#dcd8ce"/>
+<line x1="0" y1="6" x2="6" y2="0" stroke="#b8b3a5" stroke-width=".6"/>
+<line x1="0" y1="3" x2="3" y2="0" stroke="#b8b3a5" stroke-width=".3"/>
+</pattern>
+
+<!-- pband — Banda resiliente: cross-hatch loose -->
+<pattern id="pband" width="4" height="4" patternUnits="userSpaceOnUse">
+<rect width="4" height="4" fill="#c8bfaa"/>
+<line x1="0" y1="4" x2="4" y2="0" stroke="#a09880" stroke-width=".5"/>
+</pattern>
+
+<!-- pseal — Selante: solid mastic -->
+<pattern id="pseal" width="4" height="4" patternUnits="userSpaceOnUse">
+<rect width="4" height="4" fill="#b8b0a0"/>
+</pattern>
+
+<!-- pcola — Cola de contacto: neutral fill -->
+<pattern id="pcola" width="4" height="4" patternUnits="userSpaceOnUse">
+<rect width="4" height="4" fill="#d4d0c6"/>
+</pattern>
+</defs></svg>
+
+<!-- MASTHEAD -->
+<header class="mh">
+<div><div class="mh-t">Pormenores Construtivos<span>Mundo Interior</span></div></div>
+<div class="mh-m"><strong>FERREIRA</strong> Arquitetos<br>Biblioteca Técnica — Edição 05<br>Fevereiro 2026</div>
+</header>
+
+<!-- TECHNICAL NOTE -->
+<div class="nt"><div class="nt-b">
+<span class="nt-ico">i</span>
+<div class="nt-tx"><strong>Nota Técnica —</strong> Todos os pormenores desta biblioteca representam <strong>uma placa de gesso cartonado (1×12.5 mm BA13) por face</strong> como solução base. Para requisitos superiores de resistência ao fogo, isolamento acústico ou resistência mecânica, existe a possibilidade de aplicar <strong>duas placas contra-fiadas (2×12.5 mm)</strong> por face, mantendo a mesma estrutura de suporte. Nesse caso, as espessuras totais dos sistemas aumentam em 12.5 mm por face adicional, devendo ser recalculadas as cotas indicadas. As fixações da segunda placa devem ser desfasadas ≥50 mm relativamente à primeira, e as juntas entre placas nunca devem coincidir (princípio da contra-fiação).</div>
+</div></div>
+
+<!-- INDEX -->
+<div class="ix">
+<div>
+<div class="ix-l">Catálogo de Pormenores</div>
+<div class="ix-count" id="cD">22 detalhes — 11 tipologias</div>
+</div>
+<div class="ix-r">
+<button class="ix-chip on" onclick="fT('all',this)">Todos</button>
+<button class="ix-chip" onclick="fT('A',this)">A Paredes</button>
+<button class="ix-chip" onclick="fT('B',this)">B Tetos</button>
+<button class="ix-chip" onclick="fT('C',this)">C Pavimentos</button>
+<button class="ix-chip" onclick="fT('D',this)">D Isolamento</button>
+<button class="ix-chip" onclick="fT('E',this)">E Carpintarias</button>
+<button class="ix-chip" onclick="fT('F',this)">F Revestimentos</button>
+<button class="ix-chip" onclick="fT('G',this)">G Instalações</button>
+<button class="ix-chip" onclick="fT('H',this)">H Juntas</button>
+<button class="ix-chip" onclick="fT('I',this)">I Escadas</button>
+<button class="ix-chip" onclick="fT('J',this)">J Guardas Int.</button>
+<button class="ix-chip" onclick="fT('K',this)">K Guardas Ext.</button>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     A — PAREDES DIVISÓRIAS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="A">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="2" width="18" height="20"/><line x1="12" y1="2" x2="12" y2="22"/></svg></div>
+<div>
+<div class="tg-num">Tipologia A</div>
+<h2 class="tg-title">Paredes Divisórias</h2>
+<p class="tg-sub">Sistemas em estrutura metálica com revestimento em gesso cartonado</p>
+<p class="tg-desc">Encontros, bases, topos e juntas de paredes interiores tipo Knauf/Gyptec/Pladur com montante C48 e 1×12.5 mm BA13 por face.</p>
+</div></div>
+<div class="dg">
+
+<!-- ============ A.01 — ZONA SECA ============ -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—A.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<div id="svg_A01"></div>
+</div>
+<div>
+<div class="di-ref">FA—A.01<span class="p-badge">PARAMÉTRICO</span></div>
+<h3 class="di-t">Base de Parede — Zona Seca</h3>
+<p class="di-st">Corte vertical — Encontro com pavimento acabado</p>
+<div class="p-ctrl" id="ctrl_A01">
+  <div class="p-f"><label>Placa gesso</label><input type="number" id="p_a01_placa" value="12.5" min="9.5" max="25" step="0.5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Montante</label><input type="number" id="p_a01_mont" value="48" min="36" max="90" step="2"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Lã mineral</label><input type="number" id="p_a01_la" value="40" min="30" max="80" step="5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Rodapé H</label><input type="number" id="p_a01_rodH" value="80" min="40" max="120" step="5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Rodapé D</label><input type="number" id="p_a01_rodD" value="12" min="8" max="20" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Revestimento</label><input type="number" id="p_a01_rev" value="12" min="6" max="25" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Betonilha</label><input type="number" id="p_a01_bet" value="20" min="10" max="40" step="5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Cola</label><input type="number" id="p_a01_cola" value="8" min="3" max="15" step="1"><span class="p-u">mm</span></div>
+  <button onclick="generateA01()">Regenerar</button>
+</div>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Placa gesso BA13 standard</strong>1×12.5 mm por face</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Montante C48</strong>C 48/35, aço galv. e=0.6 mm</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Lã mineral</strong>40 mm, ρ≥40 kg/m³</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Guia U inferior</strong>U 48/30 — fix. buchas passo máx. 600 mm</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Banda resiliente</strong>Contínua sob guia U — não preencher c/ argamassa</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Rodapé MDF lacado</strong>80×12 mm, fixação oculta</span></div>
+<div class="li"><span class="li-n">7</span><span class="li-tx"><strong>Selante elástico</strong>Perimetral na base; acabamento acrílico se necessário</span></div>
+<div class="li"><span class="li-n">8</span><span class="li-tx"><strong>Revestimento + cola</strong>Genérico ~12 mm + cola/argamassa ~8 mm</span></div>
+<div class="li"><span class="li-n">9</span><span class="li-tx"><strong>Betonilha</strong>Regularização ~20 mm</span></div>
+<div class="li"><span class="li-n">10</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="sp" id="specs_A01"><div class="sp-t">Especificações</div>
+<div class="sp-r"><span>Espessura parede</span><span>80 mm</span></div>
+<div class="sp-r"><span>Altura máx. (e=0.6)</span><span>3.00 m</span></div>
+<div class="sp-r"><span>Fix. guia U</span><span>Buchas ∅6 / 600 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14195</span><span class="nm-t">EN 13162</span></div>
+</div>
+</article>
+
+<!-- ============ A.02 — ZONA HÚMIDA ============ -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—A.02</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 400">
+<!-- ===== LAJE ESTRUTURAL ===== -->
+<rect x="30" y="278" width="440" height="90" fill="url(#pc)"/>
+<line x1="30" y1="278" x2="470" y2="278" class="cl"/>
+<line x1="30" y1="368" x2="470" y2="368" class="sl"/>
+
+<!-- ===== BETONILHA ===== -->
+<rect x="30" y="258" width="440" height="20" fill="url(#pm)"/>
+<line x1="30" y1="258" x2="470" y2="258" class="ml"/>
+
+<!-- ===== REVESTIMENTO GENÉRICO + COLA ===== -->
+<rect x="30" y="250" width="440" height="8" fill="#d8d4ca" opacity=".5"/>
+<rect x="30" y="238" width="130" height="12" fill="url(#pk)"/>
+<rect x="162" y="238" width="12" height="12" fill="url(#pk)"/>
+<rect x="256" y="238" width="12" height="12" fill="url(#pk)"/>
+<rect x="270" y="238" width="100" height="12" fill="url(#pk)"/>
+<rect x="372" y="238" width="98" height="12" fill="url(#pk)"/>
+<line x1="30" y1="238" x2="162" y2="238" class="ml"/>
+<line x1="270" y1="238" x2="470" y2="238" class="ml"/>
+<line x1="30" y1="250" x2="162" y2="250" class="ml"/>
+<line x1="270" y1="250" x2="470" y2="250" class="ml"/>
+
+<!-- ===== BANDA RESILIENTE sob guia ===== -->
+<rect x="183" y="253" width="62" height="5" fill="#c8bfaa"/>
+<line x1="183" y1="253" x2="245" y2="253" class="ml"/>
+<line x1="183" y1="258" x2="245" y2="258" class="ml"/>
+<line x1="186" y1="258" x2="190" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="192" y1="258" x2="196" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="198" y1="258" x2="202" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="204" y1="258" x2="208" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="210" y1="258" x2="214" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="216" y1="258" x2="220" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="222" y1="258" x2="226" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="228" y1="258" x2="232" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="234" y1="258" x2="238" y2="253" stroke="#a09880" stroke-width=".4"/>
+<line x1="240" y1="258" x2="244" y2="253" stroke="#a09880" stroke-width=".4"/>
+
+<!-- ===== GUIA U INFERIOR ===== -->
+<rect x="183" y="238" width="62" height="15" fill="url(#ps)"/>
+<line x1="183" y1="238" x2="245" y2="238" class="sl"/>
+<line x1="183" y1="253" x2="245" y2="253" class="sl"/>
+<line x1="183" y1="238" x2="183" y2="253" class="sl"/>
+<line x1="245" y1="238" x2="245" y2="253" class="sl"/>
+<circle cx="200" cy="258" r="1.5" fill="var(--ink)" opacity=".5"/>
+<circle cx="228" cy="258" r="1.5" fill="var(--ink)" opacity=".5"/>
+
+<!-- ===== MONTANTE C48 ===== -->
+<line x1="192" y1="50" x2="192" y2="238" class="sl"/>
+<line x1="236" y1="50" x2="236" y2="238" class="sl"/>
+<line x1="192" y1="50" x2="236" y2="50" class="sl"/>
+
+<!-- ===== LÃ MINERAL ===== -->
+<rect x="192" y="50" width="44" height="188" fill="url(#pi)" opacity=".45"/>
+
+<!-- ===== PLACA GESSO ESQUERDA — BA13 standard (lado seco) ===== -->
+<rect x="168" y="44" width="16" height="196" fill="url(#pg)"/>
+<line x1="168" y1="44" x2="168" y2="240" class="cl"/>
+<line x1="184" y1="44" x2="184" y2="240" class="ml"/>
+<line x1="168" y1="44" x2="184" y2="44" class="ml"/>
+<!-- Placa toca o revestimento (zona seca, sem folga) -->
+<line x1="168" y1="240" x2="184" y2="240" class="ml"/>
+
+<!-- ===== PLACA GESSO DIREITA — H1 hidrófuga (lado húmido) ===== -->
+<!-- Cor verde para H1 -->
+<rect x="244" y="44" width="16" height="194" fill="#c8dcc8" opacity=".6"/>
+<line x1="244" y1="44" x2="244" y2="238" class="ml"/>
+<line x1="260" y1="44" x2="260" y2="238" class="cl"/>
+<line x1="244" y1="44" x2="260" y2="44" class="ml"/>
+<!-- FOLGA 10 mm — placa elevada acima do pavimento -->
+<line x1="244" y1="238" x2="260" y2="238" class="ml"/>
+<!-- Indicação da folga -->
+<line x1="264" y1="238" x2="264" y2="250" class="hl" stroke-dasharray="1.5,1"/>
+<text x="268" y="246" class="dt" font-size="5">↕ 10</text>
+<text x="268" y="252" class="dt" font-size="4.5" fill="var(--ink-f)">folga</text>
+<!-- Marcação "H1" na placa -->
+<text x="252" y="80" class="dt" text-anchor="middle" font-size="6" fill="#4a8a4a" font-weight="500">H1</text>
+
+<!-- ===== SELANTE ELÁSTICO resistente à humidade ===== -->
+<path d="M170,240 Q172,244 175,244 Q177,245 175,241" fill="#5a8a8a" opacity=".6"/>
+<path d="M258,237 Q256,242 253,242 Q251,243 253,238" fill="#5a8a8a" opacity=".6"/>
+
+<!-- ===== RODAPÉ — material compatível com humidade ===== -->
+<!-- Lado seco: MDF lacado -->
+<rect x="150" y="210" width="18" height="30" fill="url(#pw)"/>
+<line x1="150" y1="210" x2="168" y2="210" class="ml"/>
+<line x1="150" y1="240" x2="168" y2="240" class="ml"/>
+<line x1="150" y1="210" x2="150" y2="240" class="ml"/>
+<!-- Lado húmido: cerâmico/PVC (padrão diferente) -->
+<rect x="260" y="210" width="18" height="28" fill="url(#pk)" opacity=".7"/>
+<line x1="260" y1="210" x2="278" y2="210" class="ml"/>
+<line x1="260" y1="238" x2="278" y2="238" class="ml"/>
+<line x1="278" y1="210" x2="278" y2="238" class="ml"/>
+
+<!-- ===== COTAS ===== -->
+<line x1="168" y1="30" x2="168" y2="38" class="hl"/>
+<line x1="260" y1="30" x2="260" y2="38" class="hl"/>
+<line x1="168" y1="34" x2="260" y2="34" class="dl"/>
+<text x="214" y="28" class="dt" text-anchor="middle">80 mm</text>
+
+<line x1="475" y1="238" x2="485" y2="238" class="hl"/>
+<line x1="475" y1="250" x2="485" y2="250" class="hl"/>
+<line x1="475" y1="258" x2="485" y2="258" class="hl"/>
+<line x1="475" y1="278" x2="485" y2="278" class="hl"/>
+<line x1="482" y1="238" x2="482" y2="250" class="hl"/>
+<line x1="482" y1="250" x2="482" y2="258" class="hl"/>
+<line x1="482" y1="258" x2="482" y2="278" class="hl"/>
+<text x="490" y="246" class="dt" font-size="5.5">rev. 12</text>
+<text x="490" y="256" class="dt" font-size="5.5">cola 8</text>
+<text x="490" y="270" class="dt" font-size="5.5">bet. 20</text>
+
+<!-- Indicação dos lados -->
+<text x="120" y="52" class="it" font-size="8">zona seca</text>
+<text x="290" y="52" class="it" font-size="8" fill="#4a8a4a">zona húmida</text>
+
+<!-- ===== LABELS ===== -->
+<line x1="176" y1="120" x2="100" y2="100" class="hl"/>
+<circle cx="92" cy="96" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="92" y="99.5" class="ln" text-anchor="middle">1</text>
+<line x1="252" y1="120" x2="330" y2="100" class="hl"/>
+<circle cx="338" cy="96" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="338" y="99.5" class="ln" text-anchor="middle">2</text>
+<circle cx="214" cy="110" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="214" y="113.5" class="ln" text-anchor="middle">3</text>
+<circle cx="214" cy="160" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="214" y="163.5" class="ln" text-anchor="middle">4</text>
+<line x1="214" y1="245" x2="310" y2="230" class="hl"/>
+<circle cx="318" cy="227" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="318" y="230.5" class="ln" text-anchor="middle">5</text>
+<line x1="214" y1="255" x2="310" y2="268" class="hl"/>
+<circle cx="318" cy="272" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="318" y="275.5" class="ln" text-anchor="middle">6</text>
+<line x1="253" y1="240" x2="340" y2="300" class="hl"/>
+<circle cx="347" cy="304" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="347" y="307.5" class="ln" text-anchor="middle">7</text>
+<line x1="269" y1="224" x2="340" y2="196" class="hl"/>
+<circle cx="348" cy="192" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="348" y="195.5" class="ln" text-anchor="middle">8</text>
+<line x1="159" y1="225" x2="100" y2="200" class="hl"/>
+<circle cx="92" cy="196" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="92" y="199.5" class="ln" text-anchor="middle">9</text>
+<circle cx="380" cy="320" r="7" fill="none" stroke="var(--ink)" stroke-width=".6"/><text x="380" y="323.5" class="ln" text-anchor="middle">10</text>
+
+<!-- ===== NOTAS NO DESENHO ===== -->
+<text x="30" y="385" class="lt" font-size="5.5" fill="var(--ink-f)">① Placa H1 (hidrófuga) na face do compartimento húmido; standard na face seca.</text>
+<text x="30" y="393" class="lt" font-size="5.5" fill="var(--ink-f)">② Folga inferior placa H1: 10 mm acima do pavimento acabado. Selante elástico resistente à humidade.</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—A.02</div>
+<h3 class="di-t">Base de Parede — Zona Húmida</h3>
+<p class="di-st">Corte vertical — Encontro com pavimento (humidade ocasional)</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Placa gesso BA13 standard</strong>1×12.5 mm — face seca</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Placa gesso H1 hidrófuga</strong>1×12.5 mm — face húmida</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Montante C48</strong>C 48/35, aço galv. e=0.6 mm</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Lã mineral</strong>40 mm, ρ≥40 kg/m³</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Guia U inferior</strong>U 48/30 — fix. buchas passo máx. 600 mm</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Banda resiliente</strong>Contínua sob guia U — sem argamassa</span></div>
+<div class="li"><span class="li-n">7</span><span class="li-tx"><strong>Selante elástico hidrófugo</strong>Resistente à humidade, perimetral</span></div>
+<div class="li"><span class="li-n">8</span><span class="li-tx"><strong>Rodapé zona húmida</strong>Cerâmico, PVC ou hidrófugo conforme zona</span></div>
+<div class="li"><span class="li-n">9</span><span class="li-tx"><strong>Rodapé MDF lacado</strong>80×12 mm — face seca</span></div>
+<div class="li"><span class="li-n">10</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="sp"><div class="sp-t">Especificações</div>
+<div class="sp-r"><span>Espessura parede</span><span>80 mm</span></div>
+<div class="sp-r"><span>Folga placa H1</span><span>10 mm do pavimento</span></div>
+<div class="sp-r"><span>Placa H1</span><span>Obrigatória lado húmido</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14195</span><span class="nm-t">EN 13162</span></div>
+</div>
+</article>
+
+<!-- A.03 TOPO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—A.03</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje superior -->
+<rect x="40" y="40" width="420" height="60" fill="url(#pc)"/>
+<line x1="40" y1="100" x2="460" y2="100" class="cl"/>
+<line x1="40" y1="40" x2="460" y2="40" class="sl"/>
+<!-- Guia U superior -->
+<rect x="190" y="100" width="48" height="10" fill="url(#ps)"/>
+<line x1="190" y1="100" x2="238" y2="100" class="sl"/>
+<line x1="190" y1="110" x2="238" y2="110" class="sl"/>
+<line x1="190" y1="100" x2="190" y2="110" class="sl"/>
+<line x1="238" y1="100" x2="238" y2="110" class="sl"/>
+<!-- Banda acústica entre guia e laje -->
+<rect x="190" y="97" width="48" height="3" fill="#e0dcd4" opacity=".8"/>
+<!-- Montante -->
+<line x1="198" y1="110" x2="198" y2="330" class="sl"/>
+<line x1="230" y1="110" x2="230" y2="330" class="sl"/>
+<!-- Lã mineral -->
+<rect x="198" y="110" width="32" height="220" fill="url(#pi)" opacity=".5"/>
+<!-- Placa ESQUERDA 1×12.5 — NÃO toca a laje -->
+<rect x="174" y="112" width="16" height="218" fill="url(#pg)"/>
+<line x1="174" y1="112" x2="174" y2="330" class="cl"/>
+<line x1="190" y1="112" x2="190" y2="330" class="ml"/>
+<!-- Placa DIREITA 1×12.5 — NÃO toca a laje -->
+<rect x="238" y="112" width="16" height="218" fill="url(#pg)"/>
+<line x1="238" y1="112" x2="238" y2="330" class="ml"/>
+<line x1="254" y1="112" x2="254" y2="330" class="cl"/>
+<!-- Junta livre ~10mm -->
+<rect x="170" y="100" width="88" height="12" fill="#fff" stroke="none"/>
+<!-- Selante topo -->
+<ellipse cx="178" cy="111" rx="3" ry="1.5" fill="#d8d4ca" opacity=".6"/>
+<ellipse cx="250" cy="111" rx="3" ry="1.5" fill="#d8d4ca" opacity=".6"/>
+<!-- Cota junta -->
+<line x1="160" y1="100" x2="160" y2="112" class="hl"/>
+<text x="150" y="108" class="dt" text-anchor="end">~10</text>
+<text x="150" y="100" class="lt" text-anchor="end" font-style="italic" font-size="6">junta livre</text>
+<!-- Labels -->
+<circle cx="214" cy="70" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="214" y="73" class="ln" text-anchor="middle">1</text>
+<circle cx="214" cy="105" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="214" y="108" class="ln" text-anchor="middle">2</text>
+<circle cx="182" cy="220" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="182" y="223" class="ln" text-anchor="middle">3</text>
+<circle cx="214" cy="220" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="214" y="223" class="ln" text-anchor="middle">4</text>
+<line x1="178" y1="111" x2="100" y2="140" class="hl"/>
+<circle cx="93" cy="143" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="93" y="146" class="ln" text-anchor="middle">5</text>
+<line x1="214" y1="97" x2="340" y2="130" class="hl"/>
+<circle cx="347" cy="133" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="347" y="136" class="ln" text-anchor="middle">6</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—A.03</div>
+<h3 class="di-t">Topo de Parede Divisória</h3>
+<p class="di-st">Corte vertical — Encontro com laje superior</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Guia U superior</strong>U 48/30 fixada à laje</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm — não contacta a laje</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Montante + Lã mineral</strong>C48 + 40 mm mineral</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Selante acrílico pintável</strong>Junta flexível ~10 mm</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Banda acústica</strong>Resiliente guia/laje</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Junta livre topo</span><span>~10 mm</span></div>
+<div class="sp-r"><span>Fixação guia</span><span>Bucha ∅6 / 600 mm</span></div>
+<div class="sp-r"><span>Selante</span><span>Acrílico pintável</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14195</span><span class="nm-t">EN 13964</span></div>
+</div>
+</article>
+
+<!-- A.04 ENCONTRO EXISTENTE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—A.04</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Parede existente (vertical no plano) -->
+<rect x="40" y="60" width="140" height="260" fill="url(#pb)"/>
+<line x1="40" y1="60" x2="40" y2="320" class="sl"/>
+<line x1="180" y1="60" x2="180" y2="320" class="cl"/>
+<!-- Reboco existente -->
+<rect x="180" y="60" width="10" height="260" fill="url(#pm)"/>
+<line x1="190" y1="60" x2="190" y2="320" class="ml"/>
+<!-- Selante + banda acústica -->
+<rect x="190" y="60" width="4" height="260" fill="#e0dcd4" opacity=".5"/>
+<!-- Guia vertical (rail) -->
+<rect x="194" y="60" width="5" height="260" fill="url(#ps)" opacity=".6"/>
+<!-- Nova parede: montante + lã (horizontal no plano) -->
+<rect x="199" y="134" width="231" height="114" fill="url(#pi)" opacity=".5"/>
+<line x1="199" y1="134" x2="430" y2="134" class="sl"/>
+<line x1="199" y1="248" x2="430" y2="248" class="sl"/>
+<!-- Montantes na nova parede (indicados a tracejado) -->
+<line x1="199" y1="134" x2="199" y2="248" class="ll" stroke-dasharray="4,3"/>
+<line x1="260" y1="134" x2="260" y2="248" class="ll" stroke-dasharray="4,3"/>
+<line x1="360" y1="134" x2="360" y2="248" class="ll" stroke-dasharray="4,3"/>
+<!-- Placa gesso CIMA 1×12.5 -->
+<rect x="199" y="118" width="231" height="16" fill="url(#pg)"/>
+<line x1="199" y1="118" x2="430" y2="118" class="cl"/>
+<line x1="199" y1="134" x2="430" y2="134" class="ml"/>
+<!-- Placa gesso BAIXO 1×12.5 -->
+<rect x="199" y="248" width="231" height="16" fill="url(#pg)"/>
+<line x1="199" y1="248" x2="430" y2="248" class="ml"/>
+<line x1="199" y1="264" x2="430" y2="264" class="cl"/>
+<!-- Cotas -->
+<line x1="40" y1="48" x2="180" y2="48" class="dl"/>
+<text x="110" y="42" class="dt" text-anchor="middle">~200 exist.</text>
+<line x1="440" y1="118" x2="440" y2="264" class="dl"/>
+<text x="452" y="193" class="dt">80</text>
+<!-- Labels -->
+<circle cx="110" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="110" y="193" class="ln" text-anchor="middle">1</text>
+<circle cx="185" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="185" y="193" class="ln" text-anchor="middle">2</text>
+<circle cx="320" cy="126" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="320" y="129" class="ln" text-anchor="middle">3</text>
+<circle cx="320" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="320" y="193" class="ln" text-anchor="middle">4</text>
+<line x1="194" y1="190" x2="250" y2="280" class="hl"/>
+<circle cx="253" cy="286" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="253" y="289" class="ln" text-anchor="middle">5</text>
+<text x="420" y="310" class="it">corte em planta</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—A.04</div>
+<h3 class="di-t">Encontro com Parede Existente</h3>
+<p class="di-st">Corte em planta — Ligação perpendicular</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Alvenaria existente</strong>Tijolo ~200 mm rebocado</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Reboco existente</strong>~10 mm argamassa</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm por face</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Montante + Lã mineral</strong>C48 + 40 mm</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Selante + Banda acústica</strong>Junta perimetral elástica</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Fixação à parede</span><span>Bucha ∅8 mec.</span></div>
+<div class="sp-r"><span>Junta perimetral</span><span>5–10 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14195</span><span class="nm-t">RRAE</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     B — TETOS FALSOS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="B">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="2" y1="6" x2="22" y2="6"/><line x1="6" y1="2" x2="6" y2="6"/><line x1="18" y1="2" x2="18" y2="6"/><rect x="2" y="14" width="20" height="2"/><line x1="6" y1="6" x2="6" y2="14"/><line x1="18" y1="6" x2="18" y2="14"/></svg></div>
+<div>
+<div class="tg-num">Tipologia B</div>
+<h2 class="tg-title">Tetos Falsos</h2>
+<p class="tg-sub">Sistemas suspensos e autoportantes em gesso cartonado</p>
+<p class="tg-desc">Suspensão, encontro parede/teto, sancas de iluminação indireta e reforços. 1×12.5 mm BA13 como solução base.</p>
+</div></div>
+<div class="dg">
+
+<!-- B.01 SUSPENSÃO CORRENTE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—B.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje -->
+<rect x="40" y="30" width="420" height="50" fill="url(#pc)"/>
+<line x1="40" y1="80" x2="460" y2="80" class="cl"/>
+<line x1="40" y1="30" x2="460" y2="30" class="sl"/>
+<!-- Pendurais -->
+<line x1="150" y1="80" x2="150" y2="190" stroke="var(--ink)" stroke-width=".8"/>
+<rect x="146" y="78" width="8" height="5" fill="url(#ps)"/>
+<line x1="350" y1="80" x2="350" y2="190" stroke="var(--ink)" stroke-width=".8"/>
+<rect x="346" y="78" width="8" height="5" fill="url(#ps)"/>
+<!-- Perfil primário F47 -->
+<rect x="100" y="190" width="300" height="7" fill="url(#ps)"/>
+<line x1="100" y1="190" x2="400" y2="190" class="sl"/>
+<line x1="100" y1="197" x2="400" y2="197" class="sl"/>
+<!-- Perfil secundário CD60 (perpendicular — indicado) -->
+<rect x="200" y="197" width="100" height="5" fill="url(#ps)" opacity=".6"/>
+<line x1="200" y1="197" x2="300" y2="197" class="ml"/>
+<line x1="200" y1="202" x2="300" y2="202" class="ml"/>
+<!-- Placa gesso 1×12.5 -->
+<rect x="80" y="210" width="340" height="16" fill="url(#pg)"/>
+<line x1="80" y1="210" x2="420" y2="210" class="ml"/>
+<line x1="80" y1="226" x2="420" y2="226" class="cl"/>
+<!-- Texto plenum -->
+<text x="250" y="150" class="it" text-anchor="middle">plenum</text>
+<!-- Cotas -->
+<line x1="55" y1="80" x2="55" y2="210" class="dl"/>
+<text x="42" y="150" class="dt" text-anchor="end" transform="rotate(-90,42,150)">≥ 120</text>
+<line x1="430" y1="210" x2="450" y2="210" class="hl"/>
+<line x1="430" y1="226" x2="450" y2="226" class="hl"/>
+<line x1="445" y1="210" x2="445" y2="226" class="dl"/>
+<text x="458" y="220" class="dt">12.5</text>
+<line x1="150" y1="244" x2="350" y2="244" class="dl"/>
+<text x="250" y="256" class="dt" text-anchor="middle">≤ 1200</text>
+<!-- Labels -->
+<circle cx="150" cy="68" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="150" y="71" class="ln" text-anchor="middle">1</text>
+<circle cx="250" cy="140" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="143" class="ln" text-anchor="middle">2</text>
+<circle cx="250" cy="194" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="197" class="ln" text-anchor="middle">3</text>
+<circle cx="250" cy="200" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="203" class="ln" text-anchor="middle">4</text>
+<circle cx="250" cy="220" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="223" class="ln" text-anchor="middle">5</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—B.01</div>
+<h3 class="di-t">Teto Falso — Suspensão Corrente</h3>
+<p class="di-st">Corte vertical — Perfilaria dupla suspensa</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Pendural + bucha</strong>Tirante ∅6, bucha metálica</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Conector articulado</strong>Clip de ajuste de nível</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Perfil primário F47</strong>F 47/17 aço galv.</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Perfil secundário CD60</strong>CD 60/27, cavalete</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Placa BA13</strong>1×12.5 mm, parafuso autoroscante</span></div>
+<div class="sp"><div class="sp-t">Desempenho</div>
+<div class="sp-r"><span>Plenum mínimo</span><span>120 mm</span></div>
+<div class="sp-r"><span>Espaç. pendurais</span><span>≤ 1200 mm</span></div>
+<div class="sp-r"><span>Espaç. CD60</span><span>≤ 500 mm</span></div>
+<div class="sp-r"><span>Carga admissível</span><span>≤ 15 kg/m²</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 13964</span><span class="nm-t">EN 520</span><span class="nm-t">EN 14195</span></div>
+</div>
+</article>
+
+<!-- B.02 SANCA ILUMINAÇÃO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—B.02</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje -->
+<rect x="40" y="30" width="420" height="45" fill="url(#pc)"/>
+<line x1="40" y1="75" x2="460" y2="75" class="cl"/>
+<line x1="40" y1="30" x2="460" y2="30" class="sl"/>
+<!-- Parede esquerda -->
+<rect x="40" y="75" width="28" height="270" fill="url(#pb)"/>
+<line x1="68" y1="75" x2="68" y2="345" class="cl"/>
+<rect x="68" y="75" width="8" height="270" fill="url(#pm)"/>
+<line x1="76" y1="75" x2="76" y2="345" class="ml"/>
+
+<!-- Teto falso corrente (da direita) — desde a descida até ao limite -->
+<rect x="220" y="180" width="240" height="16" fill="url(#pg)"/>
+<line x1="220" y1="180" x2="460" y2="180" class="ml"/>
+<line x1="220" y1="196" x2="460" y2="196" class="cl"/>
+
+<!-- Aba horizontal sanca — vai da parede até ao bordo da descida -->
+<rect x="76" y="116" width="128" height="16" fill="url(#pg)"/>
+<line x1="76" y1="116" x2="204" y2="116" class="cl"/>
+<line x1="76" y1="132" x2="204" y2="132" class="ml"/>
+
+<!-- Descida vertical sanca — conecta aba com teto corrente -->
+<!-- Estende até y=196 para ligar ao fundo do teto corrente -->
+<rect x="204" y="116" width="16" height="80" fill="url(#pg)"/>
+<line x1="204" y1="132" x2="204" y2="196" class="ml"/>
+<line x1="220" y1="116" x2="220" y2="180" class="cl"/>
+
+<!-- Canto superior exterior — L contínuo aba+descida -->
+<line x1="204" y1="116" x2="220" y2="116" class="cl"/>
+<!-- Canto inferior exterior — fecho do L descida→teto -->
+<line x1="204" y1="196" x2="220" y2="196" class="cl"/>
+
+<!-- Perfilaria — suspensão da aba à laje -->
+<rect x="80" y="106" width="5" height="10" fill="url(#ps)"/>
+<rect x="150" y="106" width="5" height="10" fill="url(#ps)"/>
+<line x1="82.5" y1="75" x2="82.5" y2="106" stroke="var(--ink)" stroke-width=".8"/>
+<line x1="152.5" y1="75" x2="152.5" y2="106" stroke="var(--ink)" stroke-width=".8"/>
+
+<!-- Perfil de canto — cantoneira L no encontro aba/descida -->
+<rect x="200" y="132" width="4" height="4" fill="url(#ps)"/>
+
+<!-- Perfil LED — montado na face interior da descida, perto do fundo -->
+<rect x="196" y="186" width="6" height="4" fill="#ffd700" opacity=".7" rx="1"/>
+<!-- Raios de luz — projectam para baixo/esquerda a partir do LED -->
+<line x1="199" y1="190" x2="140" y2="250" stroke="#e8c840" stroke-width=".3" opacity=".4"/>
+<line x1="199" y1="190" x2="160" y2="260" stroke="#e8c840" stroke-width=".3" opacity=".3"/>
+<line x1="199" y1="190" x2="120" y2="240" stroke="#e8c840" stroke-width=".3" opacity=".3"/>
+<text x="140" y="272" class="it" text-anchor="middle">iluminação indireta</text>
+
+<!-- Cotas — abertura da sanca -->
+<line x1="76" y1="330" x2="204" y2="330" class="dl"/>
+<text x="140" y="342" class="dt" text-anchor="middle">≥ 120</text>
+
+<!-- Labels -->
+<line x1="140" y1="124" x2="140" y2="108" class="hl"/>
+<circle cx="140" cy="101" r="6" fill="#fff" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="104" class="ln" text-anchor="middle">1</text>
+<line x1="212" y1="150" x2="240" y2="140" class="hl"/>
+<circle cx="248" cy="137" r="6" fill="#fff" stroke="var(--ink)" stroke-width=".5"/><text x="248" y="140" class="ln" text-anchor="middle">2</text>
+<line x1="340" y1="188" x2="340" y2="210" class="hl"/>
+<circle cx="340" cy="218" r="6" fill="#fff" stroke="var(--ink)" stroke-width=".5"/><text x="340" y="221" class="ln" text-anchor="middle">3</text>
+<line x1="196" y1="188" x2="172" y2="195" class="hl"/>
+<circle cx="164" cy="198" r="6" fill="#fff" stroke="var(--ink)" stroke-width=".5"/><text x="164" y="201" class="ln" text-anchor="middle">4</text>
+<line x1="120" y1="106" x2="120" y2="90" class="hl"/>
+<circle cx="120" cy="83" r="6" fill="#fff" stroke="var(--ink)" stroke-width=".5"/><text x="120" y="86" class="ln" text-anchor="middle">5</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—B.02</div>
+<h3 class="di-t">Sanca de Iluminação Indireta</h3>
+<p class="di-st">Corte vertical — Desnível com fita LED</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Aba horizontal sanca</strong>BA13, largura ≥120 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Descida vertical</strong>BA13, altura variável</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Teto falso corrente</strong>1×12.5 mm suspenso</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Fita LED</strong>Perfil alu + 24V CRI≥90</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Perfilaria + pendurais</strong>CD60 + tirante ∅6</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Abertura sanca</span><span>≥ 120 mm</span></div>
+<div class="sp-r"><span>Recuo LED</span><span>~30 mm do bordo</span></div>
+<div class="sp-r"><span>Temp. cor típica</span><span>3000 K</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 13964</span><span class="nm-t">EN 60598</span><span class="nm-t">EN 520</span></div>
+</div>
+</article>
+
+<!-- B.03 ENCONTRO TETO/PAREDE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—B.03</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Parede vertical -->
+<rect x="60" y="40" width="16" height="300" fill="url(#pg)"/>
+<line x1="60" y1="40" x2="60" y2="340" class="cl"/>
+<line x1="76" y1="40" x2="76" y2="340" class="ml"/>
+<rect x="76" y="40" width="36" height="300" fill="url(#pi)" opacity=".3"/>
+<rect x="112" y="40" width="16" height="300" fill="url(#pg)"/>
+<line x1="112" y1="40" x2="112" y2="340" class="ml"/>
+<line x1="128" y1="40" x2="128" y2="340" class="cl"/>
+<!-- Perfil angular no encontro -->
+<rect x="128" y="176" width="8" height="5" fill="url(#ps)"/>
+<!-- Teto falso horizontal -->
+<rect x="128" y="180" width="332" height="16" fill="url(#pg)"/>
+<line x1="128" y1="180" x2="460" y2="180" class="ml"/>
+<line x1="128" y1="196" x2="460" y2="196" class="cl"/>
+<!-- Junta perimetral -->
+<rect x="126" y="176" width="4" height="4" fill="#fff"/>
+<!-- Selante -->
+<ellipse cx="130" cy="178" rx="2" ry="1.5" fill="#d8d4ca" opacity=".7"/>
+<!-- Labels -->
+<circle cx="94" cy="120" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="94" y="123" class="ln" text-anchor="middle">1</text>
+<circle cx="300" cy="188" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="300" y="191" class="ln" text-anchor="middle">2</text>
+<line x1="130" y1="178" x2="200" y2="140" class="hl"/>
+<circle cx="207" cy="137" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="207" y="140" class="ln" text-anchor="middle">3</text>
+<circle cx="136" cy="178" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="136" y="181" class="ln" text-anchor="middle">4</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—B.03</div>
+<h3 class="di-t">Encontro Teto / Parede</h3>
+<p class="di-st">Corte vertical — Junta perimetral de teto falso</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Parede divisória</strong>C48 + 1×12.5 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Teto falso</strong>1×12.5 mm BA13</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Selante acrílico</strong>Junta flexível perimetral</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Perfil angular</strong>Cantoneira de remate</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Junta perimetral</span><span>~5 mm</span></div>
+<div class="sp-r"><span>Teto NÃO fixa à parede</span><span>Movimento livre</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 13964</span><span class="nm-t">EN 520</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     C — PAVIMENTOS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="C">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="16" width="20" height="4"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="8" y1="12" x2="8" y2="16"/><line x1="14" y1="12" x2="14" y2="16"/></svg></div>
+<div>
+<div class="tg-num">Tipologia C</div>
+<h2 class="tg-title">Pavimentos</h2>
+<p class="tg-sub">Transições, rodapés e sistemas de regularização</p>
+<p class="tg-desc">Transições entre materiais, rodapé embutido com shadow gap e encontro pavimento/divisória.</p>
+</div></div>
+<div class="dg">
+
+<!-- C.01 TRANSIÇÃO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—C.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje -->
+<rect x="40" y="240" width="420" height="95" fill="url(#pc)"/>
+<line x1="40" y1="240" x2="460" y2="240" class="cl"/>
+<line x1="40" y1="335" x2="460" y2="335" class="sl"/>
+<!-- Betonilha -->
+<rect x="40" y="215" width="420" height="25" fill="url(#pm)"/>
+<line x1="40" y1="215" x2="460" y2="215" class="ml"/>
+<!-- Cola cerâmico -->
+<rect x="40" y="210" width="210" height="5" fill="#d8d4ca"/>
+<!-- Cerâmico lado esquerdo -->
+<rect x="40" y="198" width="68" height="12" fill="url(#pk)"/>
+<rect x="110" y="198" width="68" height="12" fill="url(#pk)"/>
+<rect x="180" y="198" width="68" height="12" fill="url(#pk)"/>
+<line x1="40" y1="198" x2="248" y2="198" class="ml"/>
+<line x1="40" y1="210" x2="248" y2="210" class="ml"/>
+<line x1="108" y1="198" x2="108" y2="210" class="hl"/>
+<line x1="178" y1="198" x2="178" y2="210" class="hl"/>
+<!-- Perfil transição -->
+<rect x="246" y="194" width="8" height="21" rx="1" fill="url(#ps)"/>
+<line x1="246" y1="194" x2="254" y2="194" class="sl"/>
+<!-- Madeira lado direito -->
+<rect x="254" y="196" width="206" height="14" fill="url(#pw)"/>
+<line x1="254" y1="196" x2="460" y2="196" class="ml"/>
+<line x1="254" y1="210" x2="460" y2="210" class="ml"/>
+<line x1="330" y1="196" x2="330" y2="210" class="hl"/>
+<line x1="400" y1="196" x2="400" y2="210" class="hl"/>
+<!-- NPA -->
+<line x1="40" y1="196" x2="460" y2="196" class="hl" stroke-dasharray="8,4"/>
+<text x="462" y="193" class="lt" font-style="italic" font-size="6">NPA ±0.00</text>
+<!-- Cotas -->
+<line x1="30" y1="198" x2="30" y2="210" class="dl"/>
+<text x="18" y="206" class="dt" text-anchor="end">12</text>
+<line x1="468" y1="196" x2="468" y2="210" class="dl"/>
+<text x="480" y="206" class="dt">14</text>
+<!-- Labels -->
+<circle cx="140" cy="204" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="207" class="ln" text-anchor="middle">1</text>
+<circle cx="370" cy="203" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="370" y="206" class="ln" text-anchor="middle">2</text>
+<circle cx="250" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="183" class="ln" text-anchor="middle">3</text>
+<circle cx="250" cy="228" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="231" class="ln" text-anchor="middle">4</text>
+<circle cx="140" cy="212" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="215" class="ln" text-anchor="middle">5</text>
+<circle cx="250" cy="270" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="273" class="ln" text-anchor="middle">6</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—C.01</div>
+<h3 class="di-t">Transição Cerâmico — Madeira</h3>
+<p class="di-st">Corte vertical — Perfil T de nivelamento</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Grés porcelânico</strong>600×600×12 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Soalho multicamada</strong>Carvalho 14 mm (3 nobre)</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Perfil transição alumínio</strong>Anodizado, perfil T</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Betonilha</strong>25 mm mín. regularização</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Cola cimentícia C2TE</strong>~5 mm</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>NPA</span><span>±0.00</span></div>
+<div class="sp-r"><span>Desnível máx.</span><span>≤ 2 mm</span></div>
+<div class="sp-r"><span>Junta perim. madeira</span><span>8–10 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 14411</span><span class="nm-t">EN 12004</span><span class="nm-t">EN 13756</span></div>
+</div>
+</article>
+
+<!-- C.02 RODAPÉ EMBUTIDO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—C.02</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Parede -->
+<rect x="60" y="40" width="16" height="300" fill="url(#pg)"/>
+<line x1="60" y1="40" x2="60" y2="340" class="cl"/>
+<line x1="76" y1="40" x2="76" y2="340" class="ml"/>
+<rect x="76" y="40" width="36" height="300" fill="url(#pi)" opacity=".3"/>
+<rect x="112" y="40" width="16" height="300" fill="url(#pg)"/>
+<line x1="112" y1="40" x2="112" y2="340" class="ml"/>
+<line x1="128" y1="40" x2="128" y2="340" class="cl"/>
+<!-- Recesso para rodapé -->
+<rect x="128" y="222" width="18" height="80" fill="#fff"/>
+<line x1="128" y1="222" x2="146" y2="222" class="ml"/>
+<line x1="146" y1="222" x2="146" y2="302" class="ml"/>
+<!-- Shadow gap -->
+<rect x="128" y="218" width="18" height="4" fill="#e8e5de"/>
+<!-- Perfil alumínio -->
+<rect x="130" y="226" width="14" height="72" fill="url(#ps)" opacity=".4"/>
+<line x1="130" y1="226" x2="144" y2="226" class="ll"/>
+<line x1="130" y1="298" x2="144" y2="298" class="ll"/>
+<line x1="130" y1="226" x2="130" y2="298" class="ll"/>
+<line x1="144" y1="226" x2="144" y2="298" class="ll"/>
+<!-- Pavimento -->
+<rect x="128" y="302" width="332" height="12" fill="url(#pk)"/>
+<line x1="128" y1="302" x2="460" y2="302" class="ml"/>
+<line x1="128" y1="314" x2="460" y2="314" class="ml"/>
+<rect x="128" y="314" width="332" height="5" fill="#d8d4ca"/>
+<rect x="128" y="319" width="332" height="21" fill="url(#pm)"/>
+<line x1="128" y1="340" x2="460" y2="340" class="sl"/>
+<!-- Parede continuação superior -->
+<line x1="128" y1="40" x2="128" y2="218" class="cl"/>
+<!-- Cotas -->
+<line x1="156" y1="222" x2="156" y2="302" class="dl"/>
+<text x="168" y="264" class="dt">80</text>
+<line x1="152" y1="218" x2="152" y2="222" class="hl"/>
+<text x="164" y="222" class="dt">4</text>
+<text x="164" y="214" class="lt" font-style="italic" font-size="6">shadow gap</text>
+<!-- Labels -->
+<circle cx="94" cy="160" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="94" y="163" class="ln" text-anchor="middle">1</text>
+<circle cx="137" cy="262" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="137" y="265" class="ln" text-anchor="middle">2</text>
+<circle cx="137" cy="220" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="137" y="223" class="ln" text-anchor="middle">3</text>
+<circle cx="300" cy="308" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="300" y="311" class="ln" text-anchor="middle">4</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—C.02</div>
+<h3 class="di-t">Rodapé Embutido</h3>
+<p class="di-st">Corte vertical — Encastrado com shadow gap</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Parede divisória</strong>C48 + 1×12.5 mm por face</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Perfil alumínio rodapé</strong>Anodizado 80×14 mm, fix. oculta</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Shadow gap</strong>Junta aberta 4 mm no topo</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Pavimento cerâmico</strong>Grés + cola + betonilha</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Altura rodapé</span><span>80 mm</span></div>
+<div class="sp-r"><span>Prof. recesso</span><span>18 mm</span></div>
+<div class="sp-r"><span>Shadow gap</span><span>4 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14411</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     D — ISOLAMENTO
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="D">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="20"/><path d="M6,2 L6,22 M10,2 L10,22 M14,2 L14,22 M18,2 L18,22" stroke-dasharray="2,2"/></svg></div>
+<div>
+<div class="tg-num">Tipologia D</div>
+<h2 class="tg-title">Isolamento Térmico e Acústico</h2>
+<p class="tg-sub">Contra-fachadas, pontes térmicas e isolamento acústico de pavimentos</p>
+<p class="tg-desc">Reabilitação térmica e acústica pelo interior, encapsulamento de pontes térmicas e sistema de piso flutuante.</p>
+</div></div>
+<div class="dg">
+
+<!-- D.01 CONTRA-FACHADA -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—D.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Alvenaria existente -->
+<rect x="40" y="30" width="100" height="310" fill="url(#pb)"/>
+<line x1="40" y1="30" x2="40" y2="340" class="sl"/>
+<line x1="140" y1="30" x2="140" y2="340" class="cl"/>
+<!-- Reboco ext -->
+<rect x="28" y="30" width="12" height="310" fill="url(#pm)"/>
+<line x1="28" y1="30" x2="28" y2="340" class="ml"/>
+<!-- Reboco int -->
+<rect x="140" y="30" width="8" height="310" fill="url(#pm)"/>
+<line x1="148" y1="30" x2="148" y2="340" class="ll"/>
+<!-- Caixa-de-ar -->
+<rect x="148" y="30" width="12" height="310" fill="#fff"/>
+<!-- Isolamento -->
+<rect x="160" y="30" width="56" height="310" fill="url(#pi)"/>
+<line x1="160" y1="30" x2="160" y2="340" class="ml"/>
+<line x1="216" y1="30" x2="216" y2="340" class="ml"/>
+<!-- Perfil ómega -->
+<rect x="216" y="90" width="16" height="5" fill="url(#ps)"/>
+<rect x="216" y="190" width="16" height="5" fill="url(#ps)"/>
+<rect x="216" y="280" width="16" height="5" fill="url(#ps)"/>
+<!-- Placa gesso 1×12.5 -->
+<rect x="232" y="30" width="16" height="310" fill="url(#pg)"/>
+<line x1="232" y1="30" x2="232" y2="340" class="ml"/>
+<line x1="248" y1="30" x2="248" y2="340" class="cl"/>
+<!-- Cotas -->
+<line x1="148" y1="18" x2="248" y2="18" class="dl"/>
+<text x="198" y="12" class="dt" text-anchor="middle">~100</text>
+<line x1="160" y1="352" x2="216" y2="352" class="dl"/>
+<text x="188" y="364" class="dt" text-anchor="middle">56</text>
+<!-- Lados -->
+<text x="24" y="20" class="it">ext.</text>
+<text x="268" y="185" class="it">int.</text>
+<!-- Labels -->
+<circle cx="90" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="90" y="188" class="ln" text-anchor="middle">1</text>
+<circle cx="144" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="144" y="188" class="ln" text-anchor="middle">2</text>
+<circle cx="154" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="154" y="188" class="ln" text-anchor="middle">3</text>
+<circle cx="188" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="188" y="188" class="ln" text-anchor="middle">4</text>
+<circle cx="224" cy="192" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="224" y="195" class="ln" text-anchor="middle">5</text>
+<circle cx="240" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="240" y="188" class="ln" text-anchor="middle">6</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—D.01</div>
+<h3 class="di-t">Contra-fachada Interior</h3>
+<p class="di-st">Corte horizontal — Isolamento térmico pelo interior</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Alvenaria existente</strong>Tijolo duplo + reboco ext.</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Reboco interior</strong>~8 mm argamassa</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Caixa-de-ar</strong>~12 mm</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Isolamento XPS</strong>56 mm, λ≤0.034 W/(m·K)</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Perfil ómega</strong>Aço galv., fixação mecânica</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm</span></div>
+<div class="sp"><div class="sp-t">Desempenho Térmico</div>
+<div class="sp-r"><span>U antes</span><span>~1.60 W/(m²·K)</span></div>
+<div class="sp-r"><span>U após</span><span>~0.48 W/(m²·K)</span></div>
+<div class="sp-r"><span>Redução</span><span>~70%</span></div>
+<div class="sp-r"><span>Espessura sistema</span><span>~100 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">REH</span><span class="nm-t">EN 13163</span><span class="nm-t">EN 520</span><span class="nm-t">SCE</span></div>
+</div>
+</article>
+
+<!-- D.02 PONTE TÉRMICA PILAR -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—D.02</span><span class="df-sc">1:10</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 10 — 20 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Pilar betão -->
+<rect x="185" y="105" width="80" height="180" fill="url(#pc)"/>
+<line x1="185" y1="105" x2="265" y2="105" class="cl"/>
+<line x1="185" y1="285" x2="265" y2="285" class="cl"/>
+<line x1="185" y1="105" x2="185" y2="285" class="cl"/>
+<line x1="265" y1="105" x2="265" y2="285" class="cl"/>
+<!-- Armaduras -->
+<circle cx="197" cy="117" r="3" fill="var(--ink-l)"/>
+<circle cx="253" cy="117" r="3" fill="var(--ink-l)"/>
+<circle cx="197" cy="273" r="3" fill="var(--ink-l)"/>
+<circle cx="253" cy="273" r="3" fill="var(--ink-l)"/>
+<!-- Isolamento envolvente -->
+<rect x="155" y="80" width="30" height="230" fill="url(#pi)"/>
+<line x1="155" y1="80" x2="155" y2="310" class="ml"/>
+<line x1="185" y1="80" x2="185" y2="310" class="ml"/>
+<rect x="265" y="80" width="30" height="230" fill="url(#pi)"/>
+<line x1="265" y1="80" x2="265" y2="310" class="ml"/>
+<line x1="295" y1="80" x2="295" y2="310" class="ml"/>
+<rect x="155" y="80" width="140" height="25" fill="url(#pi)"/>
+<line x1="155" y1="80" x2="295" y2="80" class="ml"/>
+<line x1="155" y1="105" x2="295" y2="105" class="ml"/>
+<!-- Gesso 1×12.5 -->
+<rect x="139" y="70" width="16" height="250" fill="url(#pg)"/>
+<line x1="139" y1="70" x2="139" y2="320" class="cl"/>
+<line x1="155" y1="70" x2="155" y2="320" class="ml"/>
+<rect x="295" y="70" width="16" height="250" fill="url(#pg)"/>
+<line x1="295" y1="70" x2="295" y2="320" class="ml"/>
+<line x1="311" y1="70" x2="311" y2="320" class="cl"/>
+<rect x="139" y="70" width="172" height="16" fill="url(#pg)"/>
+<line x1="139" y1="70" x2="311" y2="70" class="cl"/>
+<line x1="139" y1="86" x2="311" y2="86" class="ml"/>
+<!-- Alvenaria adjacente -->
+<rect x="40" y="140" width="99" height="110" fill="url(#pb)"/>
+<line x1="40" y1="140" x2="139" y2="140" class="sl"/>
+<line x1="40" y1="250" x2="139" y2="250" class="sl"/>
+<rect x="311" y="140" width="99" height="110" fill="url(#pb)"/>
+<line x1="311" y1="140" x2="410" y2="140" class="sl"/>
+<line x1="311" y1="250" x2="410" y2="250" class="sl"/>
+<!-- Labels -->
+<circle cx="225" cy="195" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="225" y="198" class="ln" text-anchor="middle">1</text>
+<circle cx="170" cy="195" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="170" y="198" class="ln" text-anchor="middle">2</text>
+<circle cx="147" cy="195" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="147" y="198" class="ln" text-anchor="middle">3</text>
+<circle cx="80" cy="195" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="80" y="198" class="ln" text-anchor="middle">4</text>
+<text x="225" y="345" class="it" text-anchor="middle">corte em planta</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—D.02</div>
+<h3 class="di-t">Ponte Térmica — Pilar</h3>
+<p class="di-st">Corte em planta — Encapsulamento contínuo</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Pilar betão armado</strong>Secção variável</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Isolamento envolvente</strong>XPS 30 mm mín. contínuo</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Alvenaria adjacente</strong>Parede existente</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Continuidade isolamento</span><span>Obrigatória</span></div>
+<div class="sp-r"><span>Sobreposição</span><span>≥ 100 mm</span></div>
+<div class="sp-r"><span>ψ reduzido</span><span>≤ 0.50 W/(m·K)</span></div>
+</div>
+<div class="nm"><span class="nm-t">REH</span><span class="nm-t">EN 13163</span><span class="nm-t">EN ISO 10211</span></div>
+</div>
+</article>
+
+<!-- D.03 PISO FLUTUANTE ACÚSTICO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—D.03</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Parede lateral (para mostrar remate) -->
+<rect x="30" y="80" width="16" height="260" fill="url(#pg)"/>
+<line x1="30" y1="80" x2="30" y2="340" class="cl"/>
+<line x1="46" y1="80" x2="46" y2="340" class="ml"/>
+<!-- Faixa resiliente perimetral — entre parede e piso flutuante -->
+<rect x="46" y="197" width="8" height="63" fill="url(#pi)" opacity=".8"/>
+<line x1="46" y1="197" x2="54" y2="197" class="ll"/>
+<line x1="54" y1="197" x2="54" y2="260" class="ll"/>
+<!-- Laje -->
+<rect x="46" y="260" width="414" height="80" fill="url(#pc)"/>
+<line x1="46" y1="260" x2="460" y2="260" class="cl"/>
+<line x1="46" y1="340" x2="460" y2="340" class="sl"/>
+<!-- Manta resiliente — NÃO toca a parede -->
+<rect x="54" y="244" width="406" height="16" fill="url(#pi)" opacity=".6"/>
+<line x1="54" y1="244" x2="460" y2="244" class="ml"/>
+<!-- Betonilha flutuante — NÃO toca a parede -->
+<rect x="54" y="214" width="406" height="30" fill="url(#pm)"/>
+<line x1="54" y1="214" x2="460" y2="214" class="ml"/>
+<!-- Cola -->
+<rect x="54" y="209" width="406" height="5" fill="#d8d4ca" opacity=".6"/>
+<!-- Cerâmico — NÃO toca a parede -->
+<rect x="54" y="197" width="68" height="12" fill="url(#pk)"/>
+<rect x="124" y="197" width="68" height="12" fill="url(#pk)"/>
+<rect x="194" y="197" width="68" height="12" fill="url(#pk)"/>
+<rect x="264" y="197" width="68" height="12" fill="url(#pk)"/>
+<rect x="334" y="197" width="68" height="12" fill="url(#pk)"/>
+<rect x="404" y="197" width="56" height="12" fill="url(#pk)"/>
+<line x1="54" y1="197" x2="460" y2="197" class="ml"/>
+<line x1="54" y1="209" x2="460" y2="209" class="ml"/>
+<!-- Cotas -->
+<line x1="470" y1="197" x2="470" y2="260" class="dl"/>
+<text x="482" y="232" class="dt">~63</text>
+<line x1="470" y1="244" x2="486" y2="244" class="hl"/>
+<text x="488" y="256" class="dt" font-size="5.5">manta 16</text>
+<text x="488" y="224" class="dt" font-size="5.5">bet. 30</text>
+<!-- Labels -->
+<circle cx="250" cy="203" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="206" class="ln" text-anchor="middle">1</text>
+<circle cx="250" cy="228" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="231" class="ln" text-anchor="middle">2</text>
+<circle cx="250" cy="252" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="255" class="ln" text-anchor="middle">3</text>
+<circle cx="250" cy="300" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="303" class="ln" text-anchor="middle">4</text>
+<line x1="50" y1="230" x2="80" y2="280" class="hl"/>
+<circle cx="86" cy="286" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="86" y="289" class="ln" text-anchor="middle">5</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—D.03</div>
+<h3 class="di-t">Piso Flutuante Acústico</h3>
+<p class="di-st">Corte vertical — Betonilha sobre manta resiliente</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Pavimento cerâmico</strong>12 mm + cola 5 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Betonilha flutuante</strong>30 mm mín., armada c/ malha</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Manta resiliente</strong>Polietileno 16 mm, ρ=30 kg/m³</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Faixa perimetral</strong>Resiliente, dessolidarização</span></div>
+<div class="sp"><div class="sp-t">Desempenho</div>
+<div class="sp-r"><span>ΔLw</span><span>≥ 22 dB</span></div>
+<div class="sp-r"><span>L'nT,w resultante</span><span>≤ 60 dB</span></div>
+<div class="sp-r"><span>Espessura total</span><span>~63 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">RRAE</span><span class="nm-t">EN 29052-1</span><span class="nm-t">EN 13163</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     E — CARPINTARIAS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="E">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="17" cy="12" r="1.5"/></svg></div>
+<div>
+<div class="tg-num">Tipologia E</div>
+<h2 class="tg-title">Carpintarias Interiores</h2>
+<p class="tg-sub">Aros de porta, portas de correr embutidas e peitoris</p>
+<p class="tg-desc">Integração de carpintarias em divisórias de gesso cartonado com montante reforçado e sistemas de embutir.</p>
+</div></div>
+<div class="dg">
+
+<!-- E.01 ARO PORTA -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—E.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Placa esquerda exterior -->
+<rect x="70" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="70" y1="40" x2="70" y2="335" class="cl"/>
+<line x1="86" y1="40" x2="86" y2="335" class="ml"/>
+<!-- Montante duplo esquerdo -->
+<rect x="86" y="40" width="12" height="295" fill="url(#ps)" opacity=".6"/>
+<rect x="98" y="40" width="36" height="295" fill="url(#pi)" opacity=".3"/>
+<rect x="126" y="40" width="12" height="295" fill="url(#ps)" opacity=".6"/>
+<!-- Montante duplo direito -->
+<rect x="330" y="40" width="12" height="295" fill="url(#ps)" opacity=".6"/>
+<rect x="342" y="40" width="20" height="295" fill="url(#pi)" opacity=".3"/>
+<rect x="362" y="40" width="12" height="295" fill="url(#ps)" opacity=".6"/>
+<!-- Placa direita exterior -->
+<rect x="374" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="374" y1="40" x2="374" y2="335" class="ml"/>
+<line x1="390" y1="40" x2="390" y2="335" class="cl"/>
+<!-- Abertura -->
+<rect x="138" y="40" width="192" height="295" fill="#fff"/>
+<line x1="138" y1="40" x2="138" y2="335" class="cl"/>
+<line x1="330" y1="40" x2="330" y2="335" class="cl"/>
+<!-- Aro MDF -->
+<rect x="138" y="55" width="16" height="250" fill="url(#pw)"/>
+<line x1="154" y1="55" x2="154" y2="305" class="ml"/>
+<rect x="314" y="55" width="16" height="250" fill="url(#pw)"/>
+<line x1="314" y1="55" x2="314" y2="305" class="ml"/>
+<!-- Guarnição/alizare -->
+<rect x="54" y="50" width="16" height="260" fill="url(#pw)"/>
+<line x1="54" y1="50" x2="70" y2="50" class="ml"/>
+<line x1="54" y1="310" x2="70" y2="310" class="ml"/>
+<line x1="54" y1="50" x2="54" y2="310" class="ml"/>
+<rect x="390" y="50" width="16" height="260" fill="url(#pw)"/>
+<line x1="390" y1="50" x2="406" y2="50" class="ml"/>
+<line x1="390" y1="310" x2="406" y2="310" class="ml"/>
+<line x1="406" y1="50" x2="406" y2="310" class="ml"/>
+<!-- Folha de porta (indicada com arco) -->
+<rect x="158" y="55" width="40" height="250" fill="none" stroke="var(--ink-l)" stroke-width=".5" stroke-dasharray="6,3"/>
+<path d="M158,305 Q158,180 270,180" fill="none" class="hl" stroke-dasharray="4,3"/>
+<!-- Cotas -->
+<line x1="138" y1="325" x2="330" y2="325" class="dl"/>
+<text x="234" y="340" class="dt" text-anchor="middle">vão ≥ 800</text>
+<!-- Labels -->
+<circle cx="78" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="78" y="183" class="ln" text-anchor="middle">1</text>
+<circle cx="106" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="106" y="183" class="ln" text-anchor="middle">2</text>
+<circle cx="146" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="146" y="183" class="ln" text-anchor="middle">3</text>
+<circle cx="62" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="62" y="183" class="ln" text-anchor="middle">4</text>
+<circle cx="190" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="190" y="183" class="ln" text-anchor="middle">5</text>
+<text x="234" y="32" class="it" text-anchor="middle">corte em planta — aro tipo</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—E.01</div>
+<h3 class="di-t">Aro de Porta Interior</h3>
+<p class="di-st">Corte em planta — Aro envolvente</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm por face</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Montante reforçado</strong>Duplo costas c/ costas</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Aro MDF hidrófugo</strong>Lacado, fixação oculta</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Guarnição</strong>MDF 70×12 mm, encaixe</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Folha de porta</strong>Alveolar 40 mm, lacada</span></div>
+<div class="sp"><div class="sp-t">Especificações</div>
+<div class="sp-r"><span>Vão livre</span><span>≥ 800×2100</span></div>
+<div class="sp-r"><span>Dobradiças</span><span>3× invisíveis</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 14351-2</span><span class="nm-t">EN 14195</span><span class="nm-t">EN 1634</span></div>
+</div>
+</article>
+
+<!-- E.02 PORTA CORRER -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—E.02</span><span class="df-sc">1:10</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 10 — 20 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Contra-parede (bolsa) — placa superior -->
+<rect x="40" y="108" width="195" height="16" fill="url(#pg)"/>
+<line x1="40" y1="108" x2="235" y2="108" class="cl"/>
+<line x1="40" y1="124" x2="235" y2="124" class="ml"/>
+<!-- Contra-parede — placa inferior -->
+<rect x="40" y="240" width="195" height="16" fill="url(#pg)"/>
+<line x1="40" y1="240" x2="235" y2="240" class="ml"/>
+<line x1="40" y1="256" x2="235" y2="256" class="cl"/>
+<!-- Cavidade -->
+<rect x="50" y="124" width="180" height="116" fill="#fff"/>
+<!-- Calha -->
+<rect x="60" y="178" width="170" height="5" fill="url(#ps)"/>
+<line x1="60" y1="178" x2="230" y2="178" class="ml"/>
+<line x1="60" y1="183" x2="230" y2="183" class="ml"/>
+<!-- Folha (dentro da bolsa) -->
+<rect x="70" y="148" width="150" height="4" fill="url(#pw)" opacity=".5"/>
+<line x1="70" y1="148" x2="220" y2="148" class="ll" stroke-dasharray="6,3"/>
+<line x1="70" y1="152" x2="220" y2="152" class="ll" stroke-dasharray="6,3"/>
+<!-- Abertura — placa superior -->
+<rect x="235" y="108" width="180" height="16" fill="url(#pg)"/>
+<line x1="235" y1="108" x2="415" y2="108" class="cl"/>
+<!-- Abertura — placa inferior -->
+<rect x="235" y="240" width="180" height="16" fill="url(#pg)"/>
+<line x1="235" y1="256" x2="415" y2="256" class="cl"/>
+<!-- Vão aberto -->
+<rect x="235" y="124" width="140" height="116" fill="#fff"/>
+<!-- Montantes ombreira -->
+<rect x="231" y="104" width="8" height="160" fill="url(#ps)" opacity=".5"/>
+<rect x="371" y="104" width="8" height="160" fill="url(#ps)" opacity=".5"/>
+<!-- Seta curso -->
+<line x1="180" y1="180" x2="310" y2="180" stroke="var(--ink)" stroke-width=".8" marker-end="url(#ae)"/>
+<text x="245" y="172" class="it" text-anchor="middle">curso</text>
+<!-- Cotas -->
+<line x1="235" y1="272" x2="375" y2="272" class="dl"/>
+<text x="305" y="284" class="dt" text-anchor="middle">vão ≥ 800</text>
+<line x1="50" y1="96" x2="230" y2="96" class="dl"/>
+<text x="140" y="88" class="dt" text-anchor="middle">bolsa ≥ vão + 100</text>
+<!-- Labels -->
+<circle cx="140" cy="150" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="153" class="ln" text-anchor="middle">1</text>
+<circle cx="140" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="183" class="ln" text-anchor="middle">2</text>
+<circle cx="140" cy="116" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="140" y="119" class="ln" text-anchor="middle">3</text>
+<circle cx="305" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="305" y="183" class="ln" text-anchor="middle">4</text>
+<circle cx="235" cy="182" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="235" y="185" class="ln" text-anchor="middle">5</text>
+<text x="300" y="56" class="it" text-anchor="middle">corte em planta — porta embutida</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—E.02</div>
+<h3 class="di-t">Porta de Correr Embutida</h3>
+<p class="di-st">Corte em planta — Sistema tipo Eclisse</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Folha de porta</strong>44 mm, lacada</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Calha superior</strong>Alumínio, rolamentos</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Contra-parede</strong>Caixilho metálico + 1×12.5</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Vão livre</strong>Abertura de passagem</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Montante ombreira</strong>Reforçado</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Vão livre</span><span>≥ 800 mm</span></div>
+<div class="sp-r"><span>Bolsa</span><span>≥ vão + 100 mm</span></div>
+<div class="sp-r"><span>Espessura total</span><span>~125 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 14351-2</span><span class="nm-t">EN 14195</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     F — REVESTIMENTOS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="F">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="20" height="20"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="2" y1="14" x2="22" y2="14"/><line x1="8" y1="2" x2="8" y2="8"/><line x1="14" y1="8" x2="14" y2="14"/></svg></div>
+<div>
+<div class="tg-num">Tipologia F</div>
+<h2 class="tg-title">Revestimentos</h2>
+<p class="tg-sub">Cerâmicos sobre gesso hidrófugo e painéis decorativos</p>
+<p class="tg-desc">Aplicação de revestimentos interiores em instalações sanitárias e zonas técnicas com placa tipo H1.</p>
+</div></div>
+<div class="dg">
+
+<!-- F.01 CERÂMICO I.S. -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—F.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Placa lado seco -->
+<rect x="120" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="120" y1="40" x2="120" y2="335" class="cl"/>
+<line x1="136" y1="40" x2="136" y2="335" class="ml"/>
+<!-- Montante + lã -->
+<rect x="136" y="40" width="36" height="295" fill="url(#pi)" opacity=".4"/>
+<line x1="136" y1="40" x2="136" y2="335" class="sl"/>
+<line x1="172" y1="40" x2="172" y2="335" class="sl"/>
+<line x1="140" y1="40" x2="140" y2="335" class="ll"/>
+<line x1="168" y1="40" x2="168" y2="335" class="ll"/>
+<!-- Placa hidrófuga 1×12.5 -->
+<rect x="172" y="40" width="16" height="295" fill="#d8e8d8" opacity=".5"/>
+<line x1="172" y1="40" x2="172" y2="335" class="ml"/>
+<line x1="188" y1="40" x2="188" y2="335" class="cl"/>
+<!-- Impermeabilização -->
+<line x1="188" y1="40" x2="188" y2="335" stroke="#4a90c8" stroke-width="1.5" stroke-dasharray="4,2"/>
+<!-- Cola -->
+<rect x="191" y="40" width="5" height="295" fill="url(#pm)"/>
+<line x1="191" y1="40" x2="191" y2="335" class="ll"/>
+<line x1="196" y1="40" x2="196" y2="335" class="ll"/>
+<!-- Azulejo -->
+<rect x="196" y="40" width="10" height="58" fill="url(#pk)"/>
+<rect x="196" y="100" width="10" height="58" fill="url(#pk)"/>
+<rect x="196" y="160" width="10" height="58" fill="url(#pk)"/>
+<rect x="196" y="220" width="10" height="58" fill="url(#pk)"/>
+<rect x="196" y="280" width="10" height="55" fill="url(#pk)"/>
+<line x1="196" y1="40" x2="206" y2="40" class="ml"/>
+<line x1="196" y1="335" x2="206" y2="335" class="ml"/>
+<line x1="206" y1="40" x2="206" y2="335" class="ml"/>
+<line x1="196" y1="40" x2="196" y2="335" class="ml"/>
+<line x1="196" y1="98" x2="206" y2="98" class="hl"/>
+<line x1="196" y1="158" x2="206" y2="158" class="hl"/>
+<line x1="196" y1="218" x2="206" y2="218" class="hl"/>
+<line x1="196" y1="278" x2="206" y2="278" class="hl"/>
+<!-- Cotas -->
+<line x1="120" y1="28" x2="206" y2="28" class="dl"/>
+<text x="163" y="22" class="dt" text-anchor="middle">~86</text>
+<!-- Labels -->
+<circle cx="128" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="128" y="193" class="ln" text-anchor="middle">1</text>
+<circle cx="154" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="154" y="193" class="ln" text-anchor="middle">2</text>
+<circle cx="180" cy="190" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="180" y="193" class="ln" text-anchor="middle">3</text>
+<line x1="188" y1="190" x2="250" y2="160" class="hl"/>
+<circle cx="257" cy="157" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="257" y="160" class="ln" text-anchor="middle">4</text>
+<circle cx="194" cy="240" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="194" y="243" class="ln" text-anchor="middle">5</text>
+<circle cx="201" cy="130" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="201" y="133" class="ln" text-anchor="middle">6</text>
+<text x="100" y="352" class="it">corte horizontal — I.S.</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—F.01</div>
+<h3 class="di-t">Revestimento Cerâmico em I.S.</h3>
+<p class="di-st">Corte horizontal — Sobre gesso hidrófugo</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Placa gesso standard</strong>1×12.5 mm (lado seco)</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Montante C48 + lã mineral</strong>Estrutura + isolamento</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Placa gesso hidrófugo</strong>1×12.5 mm tipo H1</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Impermeabilização</strong>Membrana líquida zonas molhadas</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Cola C2TE</strong>~5 mm (EN 12004)</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Azulejo</strong>600×600×10 mm, junta 2 mm</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Espessura total</span><span>~86 mm</span></div>
+<div class="sp-r"><span>Placa H1</span><span>Obrigatória em I.S.</span></div>
+<div class="sp-r"><span>Impermeab.</span><span>Até 1.80 m mín.</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 520</span><span class="nm-t">EN 14411</span><span class="nm-t">EN 12004</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     G — INSTALAÇÕES
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="G">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="8" r="3"/><line x1="12" y1="11" x2="12" y2="22"/><line x1="8" y1="16" x2="16" y2="16"/></svg></div>
+<div>
+<div class="tg-num">Tipologia G</div>
+<h2 class="tg-title">Instalações Embutidas</h2>
+<p class="tg-sub">Redes eléctricas e hidrosanitárias em paredes de gesso</p>
+<p class="tg-desc">Caixas de aparelhagem, passagem de tubagens e reforços para fixação de equipamentos pesados.</p>
+</div></div>
+<div class="dg">
+
+<!-- G.01 CAIXA ELÉCTRICA -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—G.01</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Placa esquerda -->
+<rect x="100" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="100" y1="40" x2="100" y2="335" class="cl"/>
+<line x1="116" y1="40" x2="116" y2="335" class="ml"/>
+<!-- Cavidade -->
+<rect x="116" y="40" width="80" height="295" fill="#fff"/>
+<line x1="116" y1="40" x2="116" y2="335" class="sl"/>
+<line x1="196" y1="40" x2="196" y2="335" class="sl"/>
+<!-- Montantes -->
+<rect x="116" y="40" width="5" height="295" fill="url(#ps)" opacity=".4"/>
+<rect x="191" y="40" width="5" height="295" fill="url(#ps)" opacity=".4"/>
+<!-- Placa direita -->
+<rect x="196" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="196" y1="40" x2="196" y2="335" class="ml"/>
+<line x1="212" y1="40" x2="212" y2="335" class="cl"/>
+<!-- Caixa eléctrica -->
+<rect x="102" y="155" width="14" height="60" fill="#fff" stroke="var(--ink)" stroke-width="1" rx="2"/>
+<!-- Tubo corrugado -->
+<line x1="109" y1="40" x2="109" y2="155" stroke="var(--ink-l)" stroke-width="2" stroke-dasharray="5,3"/>
+<line x1="109" y1="215" x2="109" y2="335" stroke="var(--ink-l)" stroke-width="2" stroke-dasharray="5,3"/>
+<!-- Cabo -->
+<path d="M109,70 L109,155" stroke="#c8a96e" stroke-width=".8"/>
+<!-- Espelho -->
+<rect x="96" y="163" width="4" height="44" fill="url(#ps)"/>
+<!-- Labels -->
+<circle cx="109" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="109" y="188" class="ln" text-anchor="middle">1</text>
+<circle cx="109" cy="100" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="109" y="103" class="ln" text-anchor="middle">2</text>
+<circle cx="108" cy="220" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="108" y="223" class="ln" text-anchor="middle">3</text>
+<circle cx="98" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="98" y="188" class="ln" text-anchor="middle">4</text>
+<circle cx="156" cy="185" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="156" y="188" class="ln" text-anchor="middle">5</text>
+<!-- Cotas -->
+<line x1="80" y1="155" x2="80" y2="215" class="dl"/>
+<text x="68" y="188" class="dt" text-anchor="end">60</text>
+<text x="260" y="340" class="it">corte vertical — tomada</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—G.01</div>
+<h3 class="di-t">Caixa Eléctrica em Parede</h3>
+<p class="di-st">Corte vertical — Tomada/interruptor</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Caixa aparelhagem</strong>∅68 mm, fixação por garras</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Tubo corrugado</strong>∅20 mm na cavidade</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Placa gesso BA13</strong>1×12.5 mm — furo c/ serra</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Espelho/mecanismo</strong>Aparelhagem encastrar</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Cavidade parede</strong>Passagem de cabos</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Alt. tomada</span><span>300 mm (NPA)</span></div>
+<div class="sp-r"><span>Alt. interruptor</span><span>1100 mm (NPA)</span></div>
+<div class="sp-r"><span>Costas-c/-costas</span><span>Desf. ≥ 400 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">RTIEBT</span><span class="nm-t">EN 60670</span><span class="nm-t">EN 520</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     H — JUNTAS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="H">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="12" y1="2" x2="12" y2="22" stroke-dasharray="3,3"/><rect x="2" y="6" width="8" height="12"/><rect x="14" y="6" width="8" height="12"/></svg></div>
+<div>
+<div class="tg-num">Tipologia H</div>
+<h2 class="tg-title">Juntas e Remates</h2>
+<p class="tg-sub">Juntas de dilatação, cantos e transições entre sistemas</p>
+<p class="tg-desc">Juntas de dilatação em tetos e paredes, tratamento de cantos interiores e exteriores.</p>
+</div></div>
+<div class="dg">
+
+<!-- H.01 JUNTA TETO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—H.01</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje -->
+<rect x="40" y="40" width="420" height="40" fill="url(#pc)"/>
+<line x1="40" y1="80" x2="460" y2="80" class="cl"/>
+<!-- Teto esquerdo -->
+<rect x="40" y="160" width="190" height="16" fill="url(#pg)"/>
+<line x1="40" y1="160" x2="230" y2="160" class="ml"/>
+<line x1="40" y1="176" x2="230" y2="176" class="cl"/>
+<!-- Teto direito -->
+<rect x="270" y="160" width="190" height="16" fill="url(#pg)"/>
+<line x1="270" y1="160" x2="460" y2="160" class="ml"/>
+<line x1="270" y1="176" x2="460" y2="176" class="cl"/>
+<!-- Cantoneiras bordo -->
+<rect x="226" y="152" width="4" height="24" fill="url(#ps)"/>
+<rect x="270" y="152" width="4" height="24" fill="url(#ps)"/>
+<!-- Tapa-juntas -->
+<rect x="218" y="174" width="64" height="4" fill="url(#ps)" rx="1"/>
+<line x1="218" y1="174" x2="282" y2="174" class="ml"/>
+<line x1="218" y1="178" x2="282" y2="178" class="ml"/>
+<!-- Pendurais -->
+<line x1="180" y1="80" x2="180" y2="160" stroke="var(--ink)" stroke-width=".8"/>
+<rect x="176" y="78" width="8" height="4" fill="url(#ps)"/>
+<line x1="320" y1="80" x2="320" y2="160" stroke="var(--ink)" stroke-width=".8"/>
+<rect x="316" y="78" width="8" height="4" fill="url(#ps)"/>
+<!-- Cotas -->
+<line x1="230" y1="196" x2="270" y2="196" class="dl"/>
+<text x="250" y="210" class="dt" text-anchor="middle">≥ 10</text>
+<!-- Labels -->
+<circle cx="150" cy="168" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="150" y="171" class="ln" text-anchor="middle">1</text>
+<circle cx="250" cy="155" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="158" class="ln" text-anchor="middle">2</text>
+<circle cx="228" cy="164" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="228" y="167" class="ln" text-anchor="middle">3</text>
+<circle cx="250" cy="176" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="250" y="179" class="ln" text-anchor="middle">4</text>
+<circle cx="180" cy="120" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="180" y="123" class="ln" text-anchor="middle">5</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—H.01</div>
+<h3 class="di-t">Junta de Dilatação — Teto</h3>
+<p class="di-st">Corte vertical — Interrupção em teto falso</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Teto falso</strong>1×12.5 mm — interrompido</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Junta aberta</strong>≥ 10 mm entre placas</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Cantoneira bordo</strong>Alumínio L de remate</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Tapa-juntas</strong>Perfil decorativo amovível</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Suspensão independente</strong>Pendural cada lado</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Largura junta</span><span>≥ 10 mm</span></div>
+<div class="sp-r"><span>Coincide c/ junta estrut.</span><span>Obrigatório</span></div>
+</div>
+<div class="nm"><span class="nm-t">EN 13964</span><span class="nm-t">EN 520</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     I — ESCADAS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="I">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2,22 L2,16 L8,16 L8,10 L14,10 L14,4 L22,4"/></svg></div>
+<div>
+<div class="tg-num">Tipologia I</div>
+<h2 class="tg-title">Escadas Interiores</h2>
+<p class="tg-sub">Remate de degraus, soleiras e narizes de escada</p>
+<p class="tg-desc">Pormenores de acabamento de escadas interiores revestidas a madeira ou pedra, incluindo narizes anti-derrapantes e remates com paredes.</p>
+</div></div>
+<div class="dg">
+
+<!-- I.01 NARIZ DE DEGRAU — REWRITE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—I.01</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<div id="svg_I01"></div>
+</div>
+<div>
+<div class="di-ref">FA—I.01<span class="p-badge">PARAMÉTRICO</span></div>
+<h3 class="di-t">Nariz de Degrau</h3>
+<p class="di-st">Corte vertical — Revestimento em madeira colada</p>
+<div class="p-ctrl" id="ctrl_I01">
+  <div class="p-f"><label>Cobertor</label><input type="number" id="p_i01_C" value="290" min="240" max="340" step="5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Espelho</label><input type="number" id="p_i01_E" value="175" min="150" max="200" step="5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Esp. cobertor</label><input type="number" id="p_i01_Mh" value="12" min="8" max="25" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Esp. espelho</label><input type="number" id="p_i01_Mv" value="7" min="5" max="15" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Nariz</label><input type="number" id="p_i01_N" value="25" min="15" max="40" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Raio</label><input type="number" id="p_i01_R" value="5" min="3" max="12" step="1"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Cola</label><input type="number" id="p_i01_G" value="3" min="1" max="6" step="0.5"><span class="p-u">mm</span></div>
+  <div class="p-f"><label>Anti-derrap.</label><input type="number" id="p_i01_A" value="20" min="0" max="30" step="1"><span class="p-u">mm (0=sem)</span></div>
+  <button onclick="generateI01()">Regenerar</button>
+</div>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Cobertor madeira maciça</strong>Carvalho 12 mm, colado à face horizontal</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Nariz arredondado</strong>R≥5 mm, avanço 25 mm além do espelho</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Espelho madeira</strong>Carvalho 7 mm, colado à face vertical</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Perfil anti-derrapante</strong>Alumínio 20×3 mm encastrado (opcional)</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Betão estrutural</strong>Escada maciça em dente de serra</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Cola de contacto</strong>Adesivo flexível ~3 mm</span></div>
+<div class="sp" id="specs_I01"><div class="sp-t">Geometria</div>
+<div class="sp-r"><span>Cobertor (C)</span><span>290 mm</span></div>
+<div class="sp-r"><span>Espelho (E)</span><span>175 mm</span></div>
+<div class="sp-r"><span>Blondel 2E+C</span><span>640 mm ✓</span></div>
+<div class="sp-r"><span>Nariz</span><span>25 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">RGEU Art.65º</span><span class="nm-t">EN 13756</span><span class="nm-t">Blondel</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/></div>
+
+<!-- ═══════════════════════════════════════
+     J — GUARDAS
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="J">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="4" y1="4" x2="4" y2="20"/><line x1="20" y1="4" x2="20" y2="20"/><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
+<div>
+<div class="tg-num">Tipologia J</div>
+<h2 class="tg-title">Guardas e Corrimãos — Interiores</h2>
+<p class="tg-sub">Fixação de guardas e corrimãos em espaços interiores</p>
+<p class="tg-desc">Sistemas de fixação de guardas em vãos interiores (mezaninos, galerias) e corrimãos de escada, incluindo reforços em parede de gesso cartonado, fixação à laje e guarda em vidro com perfil U. Altura mínima interior ≥ 900 mm (RGEU).</p>
+</div></div>
+<div class="dg">
+
+<!-- J.01 CORRIMÃO PAREDE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—J.01</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Parede -->
+<rect x="60" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="60" y1="40" x2="60" y2="335" class="cl"/>
+<line x1="76" y1="40" x2="76" y2="335" class="ml"/>
+<rect x="76" y="40" width="36" height="295" fill="url(#pi)" opacity=".3"/>
+<!-- Montante reforçado na zona do suporte -->
+<rect x="76" y="140" width="5" height="80" fill="url(#ps)"/>
+<rect x="107" y="140" width="5" height="80" fill="url(#ps)"/>
+<!-- Reforço interior (tábua de madeira ou chapa) -->
+<rect x="81" y="150" width="26" height="60" fill="url(#pw)" opacity=".5"/>
+<line x1="81" y1="150" x2="107" y2="150" class="ll"/><line x1="81" y1="210" x2="107" y2="210" class="ll"/>
+<rect x="112" y="40" width="16" height="295" fill="url(#pg)"/>
+<line x1="112" y1="40" x2="112" y2="335" class="ml"/>
+<line x1="128" y1="40" x2="128" y2="335" class="cl"/>
+<!-- Suporte corrimão (platina) -->
+<rect x="128" y="172" width="16" height="16" fill="url(#ps)"/>
+<line x1="128" y1="172" x2="144" y2="172" class="sl"/>
+<line x1="128" y1="188" x2="144" y2="188" class="sl"/>
+<line x1="128" y1="172" x2="128" y2="188" class="sl"/>
+<line x1="144" y1="172" x2="144" y2="188" class="sl"/>
+<!-- Parafuso travessante -->
+<line x1="128" y1="180" x2="81" y2="180" stroke="var(--ink)" stroke-width=".8" stroke-dasharray="2,1.5"/>
+<circle cx="136" cy="176" r="1.5" fill="var(--ink)"/>
+<circle cx="136" cy="184" r="1.5" fill="var(--ink)"/>
+<!-- Braço do corrimão -->
+<rect x="144" y="175" width="40" height="6" fill="url(#ps)"/>
+<line x1="144" y1="175" x2="184" y2="175" class="ml"/>
+<line x1="144" y1="181" x2="184" y2="181" class="ml"/>
+<!-- Corrimão circular -->
+<circle cx="196" cy="178" r="16" fill="url(#pw)" stroke="var(--ink)" stroke-width="1"/>
+<!-- Cotas -->
+<line x1="45" y1="335" x2="45" y2="180" class="dl"/>
+<text x="32" y="260" class="dt" text-anchor="end" transform="rotate(-90,32,260)">900–1000</text>
+<!-- Labels -->
+<circle cx="94" cy="130" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="94" y="133" class="ln" text-anchor="middle">1</text>
+<circle cx="94" cy="180" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="94" y="183" class="ln" text-anchor="middle">2</text>
+<circle cx="136" cy="160" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="136" y="163" class="ln" text-anchor="middle">3</text>
+<circle cx="164" cy="178" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="164" y="181" class="ln" text-anchor="middle">4</text>
+<circle cx="196" cy="178" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="196" y="181" class="ln" text-anchor="middle">5</text>
+<text x="300" y="340" class="it">corte horizontal — corrimão em parede</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—J.01</div>
+<h3 class="di-t">Corrimão Fixo a Parede</h3>
+<p class="di-st">Corte horizontal — Fixação com reforço interior</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Parede divisória</strong>C48 + 1×12.5 mm por face</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Reforço interior</strong>Tábua madeira 18 mm ou chapa 2 mm</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Platina fixação</strong>Aço inox, parafuso travessante</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Braço suporte</strong>Aço inox, L=150–200 mm</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Corrimão</strong>∅40–50 mm, madeira maciça</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Altura (NPA)</span><span>900–1000 mm</span></div>
+<div class="sp-r"><span>Carga horizontal</span><span>≥ 0.5 kN/m</span></div>
+<div class="sp-r"><span>Espaçamento fixações</span><span>≤ 1000 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">RGEU Art.65º</span><span class="nm-t">EN 1991-1-1</span><span class="nm-t">EN 520</span></div>
+</div>
+</article>
+
+<!-- J.02 GUARDA EM LAJE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—J.02</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 375">
+<!-- Laje -->
+<rect x="40" y="230" width="260" height="60" fill="url(#pc)"/>
+<line x1="40" y1="230" x2="300" y2="230" class="cl"/>
+<line x1="40" y1="290" x2="300" y2="290" class="cl"/>
+<line x1="300" y1="230" x2="300" y2="290" class="cl"/>
+<!-- Betonilha + pavimento em cima -->
+<rect x="40" y="218" width="260" height="12" fill="url(#pm)"/>
+<line x1="40" y1="218" x2="300" y2="218" class="ml"/>
+<rect x="40" y="206" width="260" height="12" fill="url(#pk)"/>
+<line x1="40" y1="206" x2="300" y2="206" class="ml"/>
+<!-- Chapa base (platina na laje) -->
+<rect x="265" y="218" width="30" height="12" fill="url(#ps)"/>
+<line x1="265" y1="218" x2="295" y2="218" class="sl"/>
+<line x1="265" y1="230" x2="295" y2="230" class="sl"/>
+<!-- Varões de ancoragem (vão para dentro da laje) -->
+<line x1="275" y1="230" x2="275" y2="260" stroke="var(--ink)" stroke-width="1.5"/>
+<line x1="285" y1="230" x2="285" y2="260" stroke="var(--ink)" stroke-width="1.5"/>
+<!-- Montante vertical da guarda -->
+<rect x="276" y="60" width="8" height="158" fill="url(#ps)"/>
+<line x1="276" y1="60" x2="284" y2="60" class="sl"/>
+<line x1="276" y1="218" x2="284" y2="218" class="sl"/>
+<line x1="276" y1="60" x2="276" y2="218" class="sl"/>
+<line x1="284" y1="60" x2="284" y2="218" class="sl"/>
+<!-- Corrimão topo -->
+<rect x="266" y="52" width="28" height="8" fill="url(#ps)" rx="2"/>
+<line x1="266" y1="52" x2="294" y2="52" class="sl"/>
+<line x1="266" y1="60" x2="294" y2="60" class="sl"/>
+<!-- Travessas horizontais -->
+<rect x="276" y="110" width="60" height="4" fill="url(#ps)" opacity=".6"/>
+<rect x="276" y="160" width="60" height="4" fill="url(#ps)" opacity=".6"/>
+<!-- Cotas -->
+<line x1="260" y1="52" x2="260" y2="206" class="dl"/>
+<text x="248" y="132" class="dt" text-anchor="end" transform="rotate(-90,248,132)">≥ 900</text>
+<!-- Vazio do lado direito -->
+<text x="380" y="180" class="it" text-anchor="middle">vazio</text>
+<!-- Labels -->
+<circle cx="280" cy="56" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="280" y="59" class="ln" text-anchor="middle">1</text>
+<circle cx="280" cy="140" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="280" y="143" class="ln" text-anchor="middle">2</text>
+<circle cx="280" cy="224" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="280" y="227" class="ln" text-anchor="middle">3</text>
+<circle cx="280" cy="250" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="280" y="253" class="ln" text-anchor="middle">4</text>
+<circle cx="180" cy="260" r="6" fill="none" stroke="var(--ink)" stroke-width=".5"/><text x="180" y="263" class="ln" text-anchor="middle">5</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—J.02</div>
+<h3 class="di-t">Guarda Metálica em Laje</h3>
+<p class="di-st">Corte vertical — Fixação lateral ao bordo de laje</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Corrimão</strong>Tubo aço inox ∅42×2 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Montante vertical</strong>Tubo 40×40×2 mm inox</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Platina base</strong>Chapa inox 10 mm, 4 fixações</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Ancoragem química</strong>Varão roscado M10 + resina</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Laje estrutural</strong>Betão armado</span></div>
+<div class="sp"><div class="sp-t">Notas</div>
+<div class="sp-r"><span>Altura mín. (NPA)</span><span>≥ 900 mm</span></div>
+<div class="sp-r"><span>Carga horizontal</span><span>≥ 0.5 kN/m</span></div>
+<div class="sp-r"><span>Espaç. balaústres</span><span>≤ 110 mm</span></div>
+<div class="sp-r"><span>Espaç. montantes</span><span>≤ 1200 mm</span></div>
+</div>
+<div class="nm"><span class="nm-t">RGEU Art.65º</span><span class="nm-t">EN 1991-1-1</span><span class="nm-t">EN 1090</span></div>
+</div>
+</article>
+
+<!-- J.03 GUARDA VIDRO INTERIOR — PERFIL U NO PAVIMENTO -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—J.03</span><span class="df-sc">1:2</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 2 — 4 cm</span></div>
+<svg viewBox="0 0 500 420">
+<!-- ===== LAJE ESTRUTURAL ===== -->
+<rect x="40" y="270" width="420" height="80" fill="url(#pc)"/>
+<line x1="40" y1="270" x2="460" y2="270" class="cl"/>
+<line x1="40" y1="350" x2="460" y2="350" class="sl"/>
+
+<!-- ===== BETONILHA ===== -->
+<rect x="40" y="250" width="420" height="20" fill="url(#pm)"/>
+<line x1="40" y1="250" x2="460" y2="250" class="ml"/>
+
+<!-- ===== REVESTIMENTO PAVIMENTO (pedra/cerâmica) ===== -->
+<rect x="40" y="238" width="160" height="12" fill="url(#pk)"/>
+<line x1="40" y1="238" x2="200" y2="238" class="ml"/>
+<line x1="40" y1="250" x2="200" y2="250" class="ml"/>
+<line x1="120" y1="238" x2="120" y2="250" class="hl"/>
+
+<rect x="300" y="238" width="160" height="12" fill="url(#pk)"/>
+<line x1="300" y1="238" x2="460" y2="238" class="ml"/>
+<line x1="300" y1="250" x2="460" y2="250" class="ml"/>
+<line x1="380" y1="238" x2="380" y2="250" class="hl"/>
+
+<!-- ===== PERFIL U ALUMÍNIO — embutido no pavimento ===== -->
+<!-- Encastrado desde o topo do revestimento até dentro da betonilha -->
+<!-- Perfil: largura ext ~50 mm, profundidade ~100 mm, paredes 4 mm -->
+<rect x="220" y="166" width="4" height="84" fill="url(#ps)"/>
+<line x1="220" y1="166" x2="220" y2="250" class="sl"/>
+<line x1="224" y1="202" x2="224" y2="250" class="sl"/>
+
+<rect x="276" y="166" width="4" height="84" fill="url(#ps)"/>
+<line x1="276" y1="202" x2="276" y2="250" class="sl"/>
+<line x1="280" y1="166" x2="280" y2="250" class="sl"/>
+
+<!-- Base do perfil U -->
+<rect x="220" y="246" width="60" height="4" fill="url(#ps)"/>
+<line x1="220" y1="246" x2="280" y2="246" class="sl"/>
+<line x1="220" y1="250" x2="280" y2="250" class="sl"/>
+
+<!-- Abas superiores do perfil (lábio) -->
+<rect x="218" y="166" width="6" height="3" fill="url(#ps)"/>
+<rect x="276" y="166" width="6" height="3" fill="url(#ps)"/>
+<line x1="218" y1="166" x2="224" y2="166" class="sl"/>
+<line x1="276" y1="166" x2="282" y2="166" class="sl"/>
+
+<!-- ===== FIXAÇÃO do perfil U à laje ===== -->
+<line x1="235" y1="250" x2="235" y2="264" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2,1.5"/>
+<circle cx="235" cy="264" r="2" fill="none" stroke="var(--ink)" stroke-width=".6"/>
+<line x1="265" y1="250" x2="265" y2="264" stroke="var(--ink)" stroke-width="1" stroke-dasharray="2,1.5"/>
+<circle cx="265" cy="264" r="2" fill="none" stroke="var(--ink)" stroke-width=".6"/>
+
+<!-- ===== CALÇOS NEOPRENE na base do vidro ===== -->
+<rect x="230" y="236" width="8" height="10" fill="#555" opacity=".5" rx="1"/>
+<rect x="262" y="236" width="8" height="10" fill="#555" opacity=".5" rx="1"/>
+
+<!-- ===== VIDRO LAMINADO 10+10 mm ===== -->
+<!-- Painel: espessura total ~21 mm (10+1PVB+10), representado como 20px à escala 1:2 -->
+<rect x="236" y="30" width="10" height="206" fill="#d4e8f0" opacity=".35"/>
+<rect x="246" y="30" width="1" height="206" fill="#fff" opacity=".5"/>
+<rect x="247" y="30" width="10" height="206" fill="#d4e8f0" opacity=".35"/>
+
+<!-- Vidro — outlines -->
+<line x1="236" y1="30" x2="236" y2="236" class="ml" stroke="#7baec0"/>
+<line x1="257" y1="30" x2="257" y2="236" class="ml" stroke="#7baec0"/>
+<line x1="236" y1="30" x2="257" y2="30" class="ml" stroke="#7baec0"/>
+
+<!-- ===== SELANTE ESTRUTURAL (entre vidro e perfil U) ===== -->
+<rect x="224" y="170" width="12" height="66" fill="url(#pseal)" opacity=".5"/>
+<rect x="257" y="170" width="19" height="66" fill="url(#pseal)" opacity=".5"/>
+
+<!-- ===== CORRIMÃO INOX ∅42 (opcional — no topo) ===== -->
+<circle cx="247" cy="20" r="10" fill="none" stroke="var(--ink)" stroke-width="1.2"/>
+<circle cx="247" cy="20" r="8" fill="#e8e8e8" opacity=".4"/>
+
+<!-- ===== VAZIO (lado direito) ===== -->
+<text x="390" y="140" class="it" text-anchor="middle">vazio</text>
+
+<!-- ===== DIMENSIONING ===== -->
+<!-- Altura total: ≥ 900 mm -->
+<line x1="192" y1="20" x2="192" y2="238" class="dl"/>
+<line x1="188" y1="20" x2="196" y2="20" class="el"/>
+<line x1="188" y1="238" x2="196" y2="238" class="el"/>
+<text x="178" y="130" class="dt" text-anchor="end" transform="rotate(-90,178,130)">≥ 900</text>
+
+<!-- Vidro espessura -->
+<line x1="236" y1="90" x2="210" y2="78" class="el"/>
+<line x1="257" y1="90" x2="282" y2="78" class="el"/>
+<text x="247" y="72" class="dt" text-anchor="middle" font-size="6">10+10</text>
+
+<!-- Profundidade do perfil U -->
+<line x1="284" y1="166" x2="290" y2="166" class="el"/>
+<line x1="284" y1="250" x2="290" y2="250" class="el"/>
+<line x1="287" y1="166" x2="287" y2="250" class="dl"/>
+<text x="294" y="210" class="dt" font-size="5.5">~100</text>
+
+<!-- Largura do perfil U -->
+<line x1="220" y1="256" x2="220" y2="262" class="el"/>
+<line x1="280" y1="256" x2="280" y2="262" class="el"/>
+<line x1="220" y1="259" x2="280" y2="259" class="dl"/>
+<text x="250" y="270" class="dt" text-anchor="middle" font-size="5.5">50</text>
+
+<!-- ===== LABELS ===== -->
+<line x1="247" y1="130" x2="340" y2="110" class="hl"/>
+<circle cx="348" cy="107" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="110.5" class="ln" text-anchor="middle">1</text>
+
+<line x1="250" y1="166" x2="340" y2="160" class="hl"/>
+<circle cx="348" cy="157" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="160.5" class="ln" text-anchor="middle">2</text>
+
+<line x1="250" y1="210" x2="340" y2="210" class="hl"/>
+<circle cx="348" cy="207" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="210.5" class="ln" text-anchor="middle">3</text>
+
+<line x1="245" y1="240" x2="340" y2="248" class="hl"/>
+<circle cx="348" cy="251" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="254.5" class="ln" text-anchor="middle">4</text>
+
+<line x1="247" y1="20" x2="340" y2="44" class="hl"/>
+<circle cx="348" cy="47" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="50.5" class="ln" text-anchor="middle">5</text>
+
+<line x1="250" y1="264" x2="340" y2="300" class="hl"/>
+<circle cx="348" cy="303" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="306.5" class="ln" text-anchor="middle">6</text>
+
+<!-- ===== NOTES ===== -->
+<line x1="40" y1="390" x2="460" y2="390" stroke="var(--ink-f)" stroke-width=".2"/>
+<text x="40" y="400" class="nt-svg">① Vidro laminado obrigatório (retenção de fragmentos). Temperado+laminado em alturas &gt; 1.5 m.</text>
+<text x="40" y="409" class="nt-svg">② Perfil U fixado à laje com buchas químicas M10 / passo máx. 400 mm.</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—J.03</div>
+<h3 class="di-t">Guarda em Vidro — Perfil U no Pavimento</h3>
+<p class="di-st">Corte vertical — Fixação encastrada com canal de alumínio</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Vidro laminado</strong>10+10 mm (PVB 0.76), temperado-laminado</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Perfil U alumínio</strong>50×100 mm, anodizado ou lacado</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Selante estrutural</strong>Silicone MS ou poliuretano, ambos os lados</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Calços neoprene</strong>Apoio base, dureza Shore A 70–80</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Corrimão inox</strong>∅42×2 mm (opcional em alt. ≤ 900 mm)</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Fixação química</strong>Varão roscado M10 + resina epóxi</span></div>
+<div class="sp"><div class="sp-t">Especificações</div>
+<div class="sp-r"><span>Altura mín. (NPA)</span><span>≥ 900 mm</span></div>
+<div class="sp-r"><span>Carga horizontal</span><span>≥ 0.5 kN/m (resid.)</span></div>
+<div class="sp-r"><span>Vidro</span><span>10+10 laminado (PVB)</span></div>
+<div class="sp-r"><span>Encastramento</span><span>≥ 80 mm no canal</span></div>
+</div>
+<div class="nm"><span class="nm-t">NP 4491</span><span class="nm-t">EN 12150</span><span class="nm-t">EN 14449</span><span class="nm-t">EN 1991-1-1</span></div>
+</div>
+</article>
+
+</div></section><hr class="tg-sep"/>
+</div>
+
+<!-- ═══════════════════════════════════════
+     K — GUARDAS EXTERIORES
+     ═══════════════════════════════════════ -->
+<div class="typ" data-typ="K">
+<section class="tg"><div class="tg-head">
+<div class="tg-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="4" y1="4" x2="4" y2="20"/><line x1="20" y1="4" x2="20" y2="20"/><line x1="4" y1="4" x2="20" y2="4"/><line x1="12" y1="4" x2="12" y2="20"/><circle cx="12" cy="12" r="3"/></svg></div>
+<div>
+<div class="tg-num">Tipologia K</div>
+<h2 class="tg-title">Guardas Exteriores</h2>
+<p class="tg-sub">Guardas de protecção em varandas, terraços e fachadas</p>
+<p class="tg-desc">Sistemas de protecção contra quedas em espaços exteriores. Altura mínima ≥ 1100 mm (NP 4491). Materiais resistentes à intempérie: aço inox, alumínio lacado, vidro laminado. Impermeabilização obrigatória na base.</p>
+</div></div>
+<div class="dg">
+
+<!-- K.01 GUARDA METÁLICA VARANDA — FIXAÇÃO LATERAL LAJE -->
+<article class="dc">
+<div class="df"><span class="df-ref">FA—K.01</span><span class="df-sc">1:5</span>
+<div class="sb"><div class="sb-s"></div><div class="sb-s"></div><div class="sb-s"></div><span class="sb-l">0 — 5 — 10 cm</span></div>
+<svg viewBox="0 0 500 400">
+<!-- ===== LAJE VARANDA ===== -->
+<rect x="40" y="230" width="230" height="55" fill="url(#pc)"/>
+<line x1="40" y1="230" x2="270" y2="230" class="cl"/>
+<line x1="40" y1="285" x2="270" y2="285" class="cl"/>
+<line x1="270" y1="230" x2="270" y2="285" class="cl"/>
+
+<!-- Betonilha + pendente -->
+<rect x="40" y="218" width="230" height="12" fill="url(#pm)"/>
+<line x1="40" y1="218" x2="270" y2="218" class="ml"/>
+
+<!-- Impermeabilização (membrana) -->
+<line x1="40" y1="216" x2="270" y2="216" stroke="var(--cut)" stroke-width="1.5" stroke-dasharray="6,2"/>
+
+<!-- Revestimento exterior (cerâmica ou pedra) -->
+<rect x="40" y="204" width="230" height="12" fill="url(#pk)"/>
+<line x1="40" y1="204" x2="270" y2="204" class="ml"/>
+<line x1="40" y1="216" x2="270" y2="216" class="ml"/>
+<line x1="130" y1="204" x2="130" y2="216" class="hl"/>
+
+<!-- ===== PLATINA LATERAL (fixada ao bordo da laje) ===== -->
+<rect x="270" y="234" width="10" height="46" fill="url(#ps)"/>
+<line x1="270" y1="234" x2="280" y2="234" class="sl"/>
+<line x1="270" y1="280" x2="280" y2="280" class="sl"/>
+<line x1="280" y1="234" x2="280" y2="280" class="sl"/>
+
+<!-- Ancoragem química (varões à laje) -->
+<line x1="270" y1="245" x2="248" y2="245" stroke="var(--ink)" stroke-width="1.5"/>
+<circle cx="248" cy="245" r="2" fill="none" stroke="var(--ink)" stroke-width=".6"/>
+<line x1="270" y1="268" x2="248" y2="268" stroke="var(--ink)" stroke-width="1.5"/>
+<circle cx="248" cy="268" r="2" fill="none" stroke="var(--ink)" stroke-width=".6"/>
+
+<!-- ===== MONTANTE VERTICAL ===== -->
+<rect x="274" y="52" width="6" height="182" fill="url(#ps)"/>
+<line x1="274" y1="52" x2="274" y2="234" class="sl"/>
+<line x1="280" y1="52" x2="280" y2="234" class="sl"/>
+
+<!-- ===== CORRIMÃO TOPO ===== -->
+<rect x="264" y="42" width="26" height="10" fill="url(#ps)" rx="2"/>
+<line x1="264" y1="42" x2="290" y2="42" class="sl"/>
+<line x1="264" y1="52" x2="290" y2="52" class="sl"/>
+
+<!-- ===== TRAVESSAS HORIZONTAIS (preenchimento) ===== -->
+<rect x="280" y="100" width="55" height="3" fill="url(#ps)" opacity=".6"/>
+<rect x="280" y="140" width="55" height="3" fill="url(#ps)" opacity=".6"/>
+<rect x="280" y="180" width="55" height="3" fill="url(#ps)" opacity=".6"/>
+<!-- Indicação espaçamento máx. 110 mm -->
+<line x1="340" y1="100" x2="340" y2="140" class="dl"/>
+<text x="350" y="122" class="dt" font-size="5">≤ 110</text>
+
+<!-- ===== PINGADEIRA (bordo da laje) ===== -->
+<path d="M270,285 L270,292 L264,296 L264,285 Z" fill="#b0b0b0"/>
+<line x1="270" y1="285" x2="270" y2="292" class="ll"/>
+<line x1="264" y1="285" x2="264" y2="296" class="ll"/>
+
+<!-- ===== SELANTE na base da platina ===== -->
+<rect x="270" y="280" width="10" height="3" fill="url(#pseal)" rx="1"/>
+
+<!-- ===== VAZIO ===== -->
+<text x="380" y="180" class="it" text-anchor="middle">exterior</text>
+
+<!-- ===== DIMENSIONING ===== -->
+<!-- Altura ≥ 1100 mm -->
+<line x1="252" y1="42" x2="252" y2="204" class="dl"/>
+<line x1="248" y1="42" x2="256" y2="42" class="el"/>
+<line x1="248" y1="204" x2="256" y2="204" class="el"/>
+<text x="240" y="124" class="dt" text-anchor="end" transform="rotate(-90,240,124)">≥ 1100</text>
+
+<!-- Laje espessura -->
+<line x1="36" y1="230" x2="28" y2="230" class="el"/>
+<line x1="36" y1="285" x2="28" y2="285" class="el"/>
+<line x1="32" y1="230" x2="32" y2="285" class="dl"/>
+<text x="20" y="260" class="dt" text-anchor="end" font-size="5.5">200</text>
+
+<!-- ===== LABELS ===== -->
+<line x1="277" y1="47" x2="340" y2="32" class="hl"/>
+<circle cx="348" cy="29" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="32.5" class="ln" text-anchor="middle">1</text>
+
+<line x1="277" y1="140" x2="360" y2="80" class="hl"/>
+<circle cx="368" cy="77" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="368" y="80.5" class="ln" text-anchor="middle">2</text>
+
+<line x1="275" y1="257" x2="340" y2="257" class="hl"/>
+<circle cx="348" cy="254" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="257.5" class="ln" text-anchor="middle">3</text>
+
+<line x1="258" y1="257" x2="340" y2="300" class="hl"/>
+<circle cx="348" cy="303" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="348" y="306.5" class="ln" text-anchor="middle">4</text>
+
+<circle cx="267" cy="291" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="267" y="294.5" class="ln" text-anchor="middle">5</text>
+
+<circle cx="100" cy="260" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="100" y="263.5" class="ln" text-anchor="middle">6</text>
+
+<line x1="150" y1="216" x2="100" y2="216" class="hl"/>
+<circle cx="92" cy="216" r="7.5" fill="#fff" stroke="var(--ink)" stroke-width=".7"/><text x="92" y="219.5" class="ln" text-anchor="middle">7</text>
+
+<!-- ===== NOTES ===== -->
+<line x1="40" y1="365" x2="460" y2="365" stroke="var(--ink-f)" stroke-width=".2"/>
+<text x="40" y="375" class="nt-svg">① Altura NPA ≥ 1100 mm (NP 4491). Sem horizontais escaláveis abaixo de 450 mm.</text>
+<text x="40" y="384" class="nt-svg">② Platina: aço inox AISI 316 em ambiente marítimo; AISI 304 em ambiente urbano.</text>
+<text x="40" y="393" class="nt-svg">③ Impermeabilização contínua sob revestimento — não perfurar a membrana.</text>
+</svg>
+</div>
+<div>
+<div class="di-ref">FA—K.01</div>
+<h3 class="di-t">Guarda Metálica Varanda — Fixação Lateral</h3>
+<p class="di-st">Corte vertical — Fixação ao bordo lateral da laje</p>
+<div class="lg-t">Legenda</div>
+<div class="li"><span class="li-n">1</span><span class="li-tx"><strong>Corrimão</strong>Tubo aço inox ∅42×2 mm</span></div>
+<div class="li"><span class="li-n">2</span><span class="li-tx"><strong>Montante + travessas</strong>Tubo 40×40×2 mm, espaç. travessas ≤ 110 mm</span></div>
+<div class="li"><span class="li-n">3</span><span class="li-tx"><strong>Platina lateral</strong>Chapa inox 10 mm soldada ao montante</span></div>
+<div class="li"><span class="li-n">4</span><span class="li-tx"><strong>Ancoragem química</strong>Varão M12 + resina epóxi, prof. ≥ 80 mm</span></div>
+<div class="li"><span class="li-n">5</span><span class="li-tx"><strong>Pingadeira</strong>Remate inferior laje com gota</span></div>
+<div class="li"><span class="li-n">6</span><span class="li-tx"><strong>Laje + betonilha</strong>Betão armado 200 mm + reg. 40 mm</span></div>
+<div class="li"><span class="li-n">7</span><span class="li-tx"><strong>Impermeabilização</strong>Membrana contínua sob revestimento</span></div>
+<div class="sp"><div class="sp-t">Especificações</div>
+<div class="sp-r"><span>Altura mín. (NPA)</span><span>≥ 1100 mm</span></div>
+<div class="sp-r"><span>Carga horizontal</span><span>≥ 1.0 kN/m</span></div>
+<div class="sp-r"><span>Espaç. barras</span><span>≤ 110 mm</span></div>
+<div class="sp-r"><span>Material</span><span>AISI 304 / 316</span></div>
+</div>
+<div class="nm"><span class="nm-t">NP 4491</span><span class="nm-t">EN 1991-1-1</span><span class="nm-t">EN 1090</span><span class="nm-t">EN ISO 12944</span></div>
+</div>
+</article>
+
+</div></section>
+</div>
+
+<!-- FOOTER -->
+<footer class="ft">
+<div class="ft-l"><span>FERREIRA</span> Arquitetos — Pormenores Construtivos</div>
+<div class="ft-r">Biblioteca Técnica v5.0 — Ed. 05 — Fev. 2026 — Uso interno</div>
+</footer>
+
+<script>
+function fT(t,b){
+document.querySelectorAll('.ix-chip').forEach(c=>c.classList.remove('on'));
+b.classList.add('on');
+let n=0,g=0;
+document.querySelectorAll('.typ').forEach(el=>{
+if(t==='all'||el.dataset.typ===t){el.style.display='';n+=el.querySelectorAll('.dc').length;g++}
+else{el.style.display='none'}
+});
+if(t==='all'){n=document.querySelectorAll('.dc').length;g=document.querySelectorAll('.typ').length}
+document.getElementById('cD').textContent=n+' detalhes — '+g+' tipologia'+(g>1?'s':'');
+}
+
+// ═══════════════════════════════════════════════════════════
+// PARAMETRIC ENGINE — FA—A.01 Base de Parede, Zona Seca
+// ═══════════════════════════════════════════════════════════
+//
+// v2 LAYER ORDER (back → front):
+//   1. Section cut symbol
+//   2. Laje fill → exposed lines
+//   3. Betonilha fill + line
+//   4. Cola fill
+//   5. Revestimento fills + own outlines
+//   6. Banda resiliente fill + lines
+//   7. Guia U fill + own outlines
+//   8. Montante C48 fill + own outlines
+//   9. Lã mineral fill
+//  10. Placa gesso fills + own outlines (CUT lines here)
+//  11. Selante fills
+//  12. Rodapé fills + own outlines
+//  13. Dimensions
+//  14. Labels + leaders
+//  15. Notes
+
+function generateA01(){
+  const NS='http://www.w3.org/2000/svg';
+  function el(tag,a){const e=document.createElementNS(NS,tag);if(a)Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v)));return e}
+  function tx(tag,a,t){const e=el(tag,a);e.textContent=t;return e}
+  function f(v){return(+v).toFixed(1)}
+  function grp(id){return el('g',{id})}
+
+  // ── Read parameters from inputs (mm) ──
+  function pv(id,def){const e=document.getElementById(id);return e?+e.value:def}
+  const P={
+    placa:  pv('p_a01_placa',12.5),
+    mont:   pv('p_a01_mont',48),
+    la:     pv('p_a01_la',40),
+    rodH:   pv('p_a01_rodH',80),
+    rodD:   pv('p_a01_rodD',12),
+    rev:    pv('p_a01_rev',12),
+    bet:    pv('p_a01_bet',20),
+    cola:   pv('p_a01_cola',8)
+  };
+
+  // Fixed constants (mm)
+  const steelT=0.6, guiaH=30, bandaH=5, selanteS=4, lajeH=84;
+  const flange=22; // C-stud flange width (half-side)
+
+  // Clear container
+  const container=document.getElementById('svg_A01');
+  container.innerHTML='';
+
+  // ── ViewBox and layout ──
+  const vW=500, vH=420;
+  const L=42, R=472;
+
+  // ── Scale: fit wall comfortably ──
+  // Total wall = placa + gap(8) + mont + gap(8) + placa
+  const wallTotal=P.placa*2+P.mont+16; // gaps between placa inner face and stud flanges
+  // We want the wall centred at x=250, and about 92px wide at default
+  // Scale factor: 92px / 80mm default = 1.15 px/mm
+  const Sx=1.15;
+
+  // Wall axis
+  const ax=250;
+  // Montante cavity
+  const halfMont=P.mont/2*Sx;
+  const mL=ax-flange*Sx, mR=ax+flange*Sx; // flange tips
+  // Placa faces: outer and inner
+  const pLi=ax-halfMont-4; // left inner (4px gap from montante edge)
+  const pLo=pLi-P.placa*Sx;
+  const pRi=ax+halfMont+4;
+  const pRo=pRi+P.placa*Sx;
+
+  // Floor layer stack (from bottom up)
+  const lajeTop=290;
+  const lajeBot=lajeTop+lajeH;
+  const btTop=lajeTop-P.bet*Sx;
+  const colaTop=btTop-P.cola*Sx;
+  const revTop=colaTop-P.rev*Sx;
+  const floorY=revTop; // finished floor level
+
+  // Wall vertical extent
+  const wallTop=46;
+  const wallBot=revTop+P.rev*Sx; // bottom of placa = top of cola layer
+
+  // Guia U
+  const guiaBot=btTop; // sits on betonilha
+  const guiaSoulY=guiaBot-steelT*Sx;
+  const guiaFlangeTop=guiaBot-guiaH*Sx;
+
+  // Banda resiliente
+  const bandaBot=guiaBot;
+  const bandaTop=guiaSoulY;
+  const bL=ax-halfMont-6, bR=ax+halfMont+6;
+
+  // Rodapé
+  const rpH=P.rodH*Sx;
+  const rpD=P.rodD*Sx;
+  const rpBot=wallBot; // flush with floor
+  const rpTop=rpBot-rpH;
+
+  const svg=el('svg',{viewBox:`0 0 ${vW} ${vH}`,xmlns:NS});
+
+  // Local defs (arrow markers)
+  const defs=el('defs',{});
+  const m1=el('marker',{id:'as_a01',viewBox:'0 0 8 6',refX:0,refY:3,markerWidth:5,markerHeight:4,orient:'auto-start-reverse'});
+  m1.appendChild(el('polygon',{points:'8,0 0,3 8,6',fill:'var(--ink-l)'}));defs.appendChild(m1);
+  const m2=el('marker',{id:'ae_a01',viewBox:'0 0 8 6',refX:8,refY:3,markerWidth:5,markerHeight:4,orient:'auto'});
+  m2.appendChild(el('polygon',{points:'0,0 8,3 0,6',fill:'var(--ink-l)'}));defs.appendChild(m2);
+  svg.appendChild(defs);
+  const dlA='stroke:var(--ink-l);stroke-width:.35;fill:none;marker-start:url(#as_a01);marker-end:url(#ae_a01)';
+
+  // ── LAYER 1: Section cut symbol ──
+  const gSym=grp('a01-sym');
+  gSym.appendChild(el('circle',{cx:26,cy:200,r:10,fill:'#fff',stroke:'var(--cut)','stroke-width':'1.8'}));
+  gSym.appendChild(tx('text',{x:26,y:204,'text-anchor':'middle','font-family':"'JetBrains Mono',monospace",'font-size':'10','font-weight':'500',fill:'var(--cut)'},'1'));
+  gSym.appendChild(el('line',{x1:26,y1:210,x2:26,y2:260,stroke:'var(--cut)','stroke-width':'1.2'}));
+  gSym.appendChild(el('polygon',{points:'22,258 26,268 30,258',fill:'var(--cut)'}));
+  svg.appendChild(gSym);
+
+  // ── LAYER 2: Laje estrutural ──
+  const gLaje=grp('a01-laje');
+  gLaje.appendChild(el('rect',{x:L,y:f(lajeTop),width:R-L,height:f(lajeBot-lajeTop),fill:'url(#pc)'}));
+  gLaje.appendChild(el('line',{x1:L,y1:f(lajeTop),x2:R,y2:f(lajeTop),class:'cl'}));
+  gLaje.appendChild(el('line',{x1:L,y1:f(lajeBot),x2:R,y2:f(lajeBot),class:'sl'}));
+  svg.appendChild(gLaje);
+
+  // ── LAYER 3: Betonilha ──
+  const gBet=grp('a01-bet');
+  gBet.appendChild(el('rect',{x:L,y:f(btTop),width:R-L,height:f(lajeTop-btTop),fill:'url(#pm)'}));
+  gBet.appendChild(el('line',{x1:L,y1:f(btTop),x2:R,y2:f(btTop),class:'ml'}));
+  svg.appendChild(gBet);
+
+  // ── LAYER 4: Cola ──
+  const gCola=grp('a01-cola');
+  gCola.appendChild(el('rect',{x:L,y:f(colaTop),width:R-L,height:f(btTop-colaTop),fill:'#d4d0c6',opacity:'.6'}));
+  svg.appendChild(gCola);
+
+  // ── LAYER 5: Revestimento ──
+  const gRev=grp('a01-rev');
+  const revH=P.rev*Sx;
+  // Left tiles
+  const tileLR=pLo-4; // tiles stop before placa
+  gRev.appendChild(el('rect',{x:L,y:f(revTop),width:f(tileLR-L),height:f(revH),fill:'url(#pk)'}));
+  gRev.appendChild(el('line',{x1:L,y1:f(revTop),x2:f(tileLR),y2:f(revTop),class:'ml'}));
+  gRev.appendChild(el('line',{x1:L,y1:f(revTop+revH),x2:f(tileLR),y2:f(revTop+revH),class:'ml'}));
+  // Tile joints (every ~70px)
+  for(let tx2=L+70;tx2<tileLR;tx2+=76){
+    gRev.appendChild(el('line',{x1:f(tx2),y1:f(revTop),x2:f(tx2),y2:f(revTop+revH),class:'hl'}));
+  }
+  // Right tiles
+  const tileRL=pRo+4;
+  gRev.appendChild(el('rect',{x:f(tileRL),y:f(revTop),width:f(R-tileRL),height:f(revH),fill:'url(#pk)'}));
+  gRev.appendChild(el('line',{x1:f(tileRL),y1:f(revTop),x2:R,y2:f(revTop),class:'ml'}));
+  gRev.appendChild(el('line',{x1:f(tileRL),y1:f(revTop+revH),x2:R,y2:f(revTop+revH),class:'ml'}));
+  for(let tx2=tileRL+70;tx2<R;tx2+=76){
+    gRev.appendChild(el('line',{x1:f(tx2),y1:f(revTop),x2:f(tx2),y2:f(revTop+revH),class:'hl'}));
+  }
+  svg.appendChild(gRev);
+
+  // ── LAYER 6: Banda resiliente ──
+  const gBanda=grp('a01-banda');
+  gBanda.appendChild(el('rect',{x:f(bL),y:f(bandaTop),width:f(bR-bL),height:f(bandaH*Sx),fill:'url(#pband)'}));
+  gBanda.appendChild(el('line',{x1:f(bL),y1:f(bandaTop),x2:f(bR),y2:f(bandaTop),class:'ll'}));
+  gBanda.appendChild(el('line',{x1:f(bL),y1:f(bandaBot),x2:f(bR),y2:f(bandaBot),class:'ll'}));
+  svg.appendChild(gBanda);
+
+  // ── LAYER 7: Guia U inferior ──
+  const gGuia=grp('a01-guia');
+  const stPx=steelT*Sx;
+  // Soul (alma horizontal)
+  gGuia.appendChild(el('rect',{x:f(bL),y:f(guiaSoulY),width:f(bR-bL),height:f(stPx),fill:'#b0b0b0'}));
+  gGuia.appendChild(el('line',{x1:f(bL),y1:f(guiaSoulY),x2:f(bR),y2:f(guiaSoulY),class:'sl'}));
+  // Left flange
+  gGuia.appendChild(el('rect',{x:f(bL),y:f(guiaFlangeTop),width:f(stPx),height:f(guiaBot-guiaFlangeTop),fill:'#b0b0b0'}));
+  gGuia.appendChild(el('line',{x1:f(bL),y1:f(guiaFlangeTop),x2:f(bL),y2:f(guiaSoulY),class:'sl'}));
+  // Right flange
+  gGuia.appendChild(el('rect',{x:f(bR-stPx),y:f(guiaFlangeTop),width:f(stPx),height:f(guiaBot-guiaFlangeTop),fill:'#b0b0b0'}));
+  gGuia.appendChild(el('line',{x1:f(bR),y1:f(guiaFlangeTop),x2:f(bR),y2:f(guiaSoulY),class:'sl'}));
+  // Fixações (buchas)
+  [ax-10,ax+10].forEach(bx=>{
+    gGuia.appendChild(el('line',{x1:f(bx),y1:f(btTop),x2:f(bx),y2:f(btTop+8),stroke:'var(--ink-l)','stroke-width':'.5','stroke-dasharray':'1.5,1'}));
+    gGuia.appendChild(el('circle',{cx:f(bx),cy:f(btTop+8),r:2,fill:'none',stroke:'var(--ink-l)','stroke-width':'.5'}));
+  });
+  svg.appendChild(gGuia);
+
+  // ── LAYER 8: Montante C48 ──
+  const gMont=grp('a01-mont');
+  const montTopY=wallTop+6;
+  const montBotY=guiaFlangeTop;
+  // Alma vertical (web)
+  gMont.appendChild(el('rect',{x:f(ax-stPx/2),y:f(montTopY),width:f(stPx),height:f(montBotY-montTopY),fill:'#b0b0b0'}));
+  gMont.appendChild(el('line',{x1:f(ax),y1:f(montTopY),x2:f(ax),y2:f(montBotY),class:'sl'}));
+  // Flanges inferior
+  gMont.appendChild(el('rect',{x:f(mL),y:f(montBotY-stPx),width:f(mR-mL),height:f(stPx),fill:'#b0b0b0'}));
+  gMont.appendChild(el('line',{x1:f(mL),y1:f(montBotY),x2:f(mR),y2:f(montBotY),class:'sl'}));
+  // Flanges superior
+  gMont.appendChild(el('rect',{x:f(mL),y:f(montTopY),width:f(mR-mL),height:f(stPx),fill:'#b0b0b0'}));
+  gMont.appendChild(el('line',{x1:f(mL),y1:f(montTopY),x2:f(mR),y2:f(montTopY),class:'sl'}));
+  // Bordos reentrantes
+  const reent=8;
+  gMont.appendChild(el('line',{x1:f(mL),y1:f(montTopY),x2:f(mL),y2:f(montTopY+reent),class:'ml'}));
+  gMont.appendChild(el('line',{x1:f(mL),y1:f(montBotY-reent),x2:f(mL),y2:f(montBotY),class:'ml'}));
+  gMont.appendChild(el('line',{x1:f(mR),y1:f(montTopY),x2:f(mR),y2:f(montTopY+reent),class:'ml'}));
+  gMont.appendChild(el('line',{x1:f(mR),y1:f(montBotY-reent),x2:f(mR),y2:f(montBotY),class:'ml'}));
+  svg.appendChild(gMont);
+
+  // ── LAYER 9: Lã mineral ──
+  const gLa=grp('a01-la');
+  const laW=P.la*Sx;
+  // Centre the insulation in the cavity
+  const laL=ax-laW/2;
+  gLa.appendChild(el('rect',{x:f(laL),y:f(montTopY+4),width:f(laW),height:f(montBotY-montTopY-8),fill:'url(#pi)',opacity:'.5'}));
+  svg.appendChild(gLa);
+
+  // ── LAYER 10: Placas gesso (fill + OWN cut lines) ──
+  const gPlacas=grp('a01-placas');
+  const placaH=wallBot-wallTop;
+  // LEFT
+  gPlacas.appendChild(el('rect',{x:f(pLo),y:f(wallTop),width:f(pLi-pLo),height:f(placaH),fill:'url(#pg)'}));
+  gPlacas.appendChild(el('line',{x1:f(pLo),y1:f(wallTop),x2:f(pLo),y2:f(wallBot),class:'cl'}));     // outer = CUT
+  gPlacas.appendChild(el('line',{x1:f(pLi),y1:f(wallTop),x2:f(pLi),y2:f(wallBot),class:'ml'}));
+  gPlacas.appendChild(el('line',{x1:f(pLo),y1:f(wallTop),x2:f(pLi),y2:f(wallTop),class:'ml'}));
+  gPlacas.appendChild(el('line',{x1:f(pLo),y1:f(wallBot),x2:f(pLi),y2:f(wallBot),class:'ml'}));
+  // RIGHT
+  gPlacas.appendChild(el('rect',{x:f(pRi),y:f(wallTop),width:f(pRo-pRi),height:f(placaH),fill:'url(#pg)'}));
+  gPlacas.appendChild(el('line',{x1:f(pRi),y1:f(wallTop),x2:f(pRi),y2:f(wallBot),class:'ml'}));
+  gPlacas.appendChild(el('line',{x1:f(pRo),y1:f(wallTop),x2:f(pRo),y2:f(wallBot),class:'cl'}));     // outer = CUT
+  gPlacas.appendChild(el('line',{x1:f(pRi),y1:f(wallTop),x2:f(pRo),y2:f(wallTop),class:'ml'}));
+  gPlacas.appendChild(el('line',{x1:f(pRi),y1:f(wallBot),x2:f(pRo),y2:f(wallBot),class:'ml'}));
+  svg.appendChild(gPlacas);
+
+  // ── LAYER 11: Selante elástico ──
+  const gSeal=grp('a01-seal');
+  const ss=selanteS*Sx;
+  gSeal.appendChild(el('rect',{x:f(pLo),y:f(wallBot-ss),width:f(ss),height:f(ss),fill:'url(#pseal)',rx:'1'}));
+  gSeal.appendChild(el('rect',{x:f(pRo-ss),y:f(wallBot-ss),width:f(ss),height:f(ss),fill:'url(#pseal)',rx:'1'}));
+  svg.appendChild(gSeal);
+
+  // ── LAYER 12: Rodapé MDF ──
+  const gRodape=grp('a01-rodape');
+  // Left
+  gRodape.appendChild(el('rect',{x:f(pLo-rpD),y:f(rpTop),width:f(rpD),height:f(rpBot-rpTop),fill:'url(#pw)'}));
+  gRodape.appendChild(el('line',{x1:f(pLo-rpD),y1:f(rpTop),x2:f(pLo),y2:f(rpTop),class:'ml'}));
+  gRodape.appendChild(el('line',{x1:f(pLo-rpD),y1:f(rpBot),x2:f(pLo),y2:f(rpBot),class:'ml'}));
+  gRodape.appendChild(el('line',{x1:f(pLo-rpD),y1:f(rpTop),x2:f(pLo-rpD),y2:f(rpBot),class:'ml'}));
+  // Right
+  gRodape.appendChild(el('rect',{x:f(pRo),y:f(rpTop),width:f(rpD),height:f(rpBot-rpTop),fill:'url(#pw)'}));
+  gRodape.appendChild(el('line',{x1:f(pRo),y1:f(rpTop),x2:f(pRo+rpD),y2:f(rpTop),class:'ml'}));
+  gRodape.appendChild(el('line',{x1:f(pRo),y1:f(rpBot),x2:f(pRo+rpD),y2:f(rpBot),class:'ml'}));
+  gRodape.appendChild(el('line',{x1:f(pRo+rpD),y1:f(rpTop),x2:f(pRo+rpD),y2:f(rpBot),class:'ml'}));
+  svg.appendChild(gRodape);
+
+  // ── LAYER 13: Dimensions ──
+  const gDim=grp('a01-dims');
+  function dimLine(x1,y1,x2,y2){return el('line',{x1:f(x1),y1:f(y1),x2:f(x2),y2:f(y2),style:dlA})}
+  function extLine(x1,y1,x2,y2){return el('line',{x1:f(x1),y1:f(y1),x2:f(x2),y2:f(y2),class:'el'})}
+  // Overall wall width
+  const wallW=Math.round((pRo-pLo)/Sx); // back to mm
+  gDim.appendChild(extLine(pLo,32,pLo,40));
+  gDim.appendChild(extLine(pRo,32,pRo,40));
+  gDim.appendChild(dimLine(pLo,36,pRo,36));
+  gDim.appendChild(tx('text',{x:f((pLo+pRo)/2),y:30,class:'dt','text-anchor':'middle'},String(wallW)));
+  // Placa esq
+  gDim.appendChild(extLine(pLo,64,pLo,72));
+  gDim.appendChild(extLine(pLi,64,pLi,72));
+  gDim.appendChild(dimLine(pLo,68,pLi,68));
+  gDim.appendChild(tx('text',{x:f(pLo-20),y:71,class:'dt','text-anchor':'end','font-size':'6'},String(P.placa)));
+  // Cavity
+  gDim.appendChild(extLine(mL,64,mL,72));
+  gDim.appendChild(extLine(mR,64,mR,72));
+  gDim.appendChild(dimLine(mL,68,mR,68));
+  gDim.appendChild(tx('text',{x:f(ax),y:78,class:'dt','text-anchor':'middle','font-size':'6'},String(P.mont)));
+  // Floor layers at right
+  [[revTop,revTop+revH,String(P.rev)],[revTop+revH,btTop,String(P.cola)],[btTop,lajeTop,String(P.bet)]].forEach(([y1,y2,lbl])=>{
+    gDim.appendChild(extLine(R+4,y1,R+12,y1));
+    gDim.appendChild(extLine(R+4,y2,R+12,y2));
+    gDim.appendChild(dimLine(R+8,y1,R+8,y2));
+    gDim.appendChild(tx('text',{x:f(R+16),y:f((y1+y2)/2+3),class:'dt','font-size':'5.5'},lbl));
+  });
+  svg.appendChild(gDim);
+
+  // ── LAYER 14: Labels ──
+  const gLbl=grp('a01-labels');
+  function label(cx,cy,n){
+    const g=grp('a01-lb'+n);
+    g.appendChild(el('circle',{cx:f(cx),cy:f(cy),r:7.5,fill:'#fff',stroke:'var(--ink)','stroke-width':'.7'}));
+    g.appendChild(tx('text',{x:f(cx),y:f(cy+3.5),'text-anchor':'middle',class:'ln'},String(n)));
+    return g;
+  }
+  function leader(x1,y1,cx,cy,n){
+    const g=grp('a01-ld'+n);
+    g.appendChild(el('line',{x1:f(x1),y1:f(y1),x2:f(cx),y2:f(cy),class:'hl'}));
+    g.appendChild(label(cx,cy,n));
+    return g;
+  }
+  const midPlacaL=(pLo+pLi)/2;
+  gLbl.appendChild(leader(midPlacaL,130, 72,104, 1));   // Placa gesso
+  gLbl.appendChild(leader(ax,100, 340,82, 2));           // Montante
+  gLbl.appendChild(leader(ax,150, 340,136, 3));          // Lã mineral
+  gLbl.appendChild(leader(ax,guiaSoulY, 340,guiaSoulY-20, 4));  // Guia U
+  gLbl.appendChild(leader(ax,bandaTop+2, 340,bandaTop+35, 5));  // Banda
+  gLbl.appendChild(leader(pLo-rpD/2,rpTop+rpH/3, 72,rpTop-10, 6)); // Rodapé
+  gLbl.appendChild(leader(pLo+2,wallBot, 72,wallBot+24, 7));  // Selante
+  gLbl.appendChild(label(380,revTop+revH/2, 8));         // Revestimento
+  gLbl.appendChild(label(380,btTop+(lajeTop-btTop)/2, 9)); // Betonilha
+  gLbl.appendChild(label(380,lajeTop+42, 10));           // Laje
+  svg.appendChild(gLbl);
+
+  // ── LAYER 15: Notes ──
+  const gNotes=grp('a01-notes');
+  gNotes.appendChild(el('line',{x1:L,y1:392,x2:R,y2:392,stroke:'var(--ink-f)','stroke-width':'.2'}));
+  gNotes.appendChild(tx('text',{x:L,y:402,class:'nt-svg'},'① Banda resiliente contínua sob guia U — não preencher com argamassa sob a guia.'));
+  gNotes.appendChild(tx('text',{x:L,y:411,class:'nt-svg'},'② Fixação guia U à laje: buchas/parafusos adequados; passo máx. 600 mm e a 150 mm das extremidades.'));
+  svg.appendChild(gNotes);
+
+  // Inject
+  container.appendChild(svg);
+
+  // Update specs panel
+  const spRows=document.querySelectorAll('#specs_A01 .sp-r span:last-child');
+  if(spRows.length>=1){
+    spRows[0].textContent=wallW+' mm';
+  }
+}
+// Initial render
+generateA01();
+
+// ═══════════════════════════════════════════════════════════
+// PARAMETRIC ENGINE — FA—I.01 Nariz de Degrau
+// ═══════════════════════════════════════════════════════════
+//
+// v2 LAYER ORDER (back → front):
+//   1. Concrete fill
+//   2. Concrete exposed outlines (soffit only — tread/riser faces covered by wood)
+//   3. Glue fills
+//   4. Wood fills + own outlines (tread, nosing, riser)
+//   5. Steel (anti-slip)
+//   6. Dimensions
+//   7. Labels + leaders
+//   8. Notes
+
+function generateI01(){
+  const NS='http://www.w3.org/2000/svg';
+  function el(tag,a){const e=document.createElementNS(NS,tag);if(a)Object.entries(a).forEach(([k,v])=>e.setAttribute(k,String(v)));return e}
+  function tx(tag,a,t){const e=el(tag,a);e.textContent=t;return e}
+  function f(v){return(+v).toFixed(1)}
+  function grp(id){return el('g',{id})}
+
+  // ── Parameters (mm) — read from inputs if available ──
+  function pv(id,def){const el=document.getElementById(id);return el?+el.value:def}
+  const P={C:pv('p_i01_C',290), E:pv('p_i01_E',175), Mh:pv('p_i01_Mh',12), Mv:pv('p_i01_Mv',7), N:pv('p_i01_N',25), R:pv('p_i01_R',5), G:pv('p_i01_G',3), A:pv('p_i01_A',20)};
+
+  // Clear previous SVG
+  const container=document.getElementById('svg_I01');
+  container.innerHTML='';
+
+  // ── Scale ──
+  const S=0.75;
+  const c=P.C*S, e=P.E*S, mh=P.Mh*S, mv=P.Mv*S, n=P.N*S, r=P.R*S, g=P.G*S, a=P.A*S;
+  const ah=3*S;
+
+  // ── Layout ──
+  const ML=55, MT=45, MR=70, MB=55;
+  const steps=[{x:0,y:0},{x:c,y:e},{x:2*c,y:2*e}];
+  const soffitD=50;
+  const dW=3*c, dH=2*e+soffitD;
+  const vW=ML+dW+MR, vH=MT+dH+MB;
+  const ox=ML, oy=MT;
+
+  // Concrete polygon
+  const cp=[
+    [ox,oy],[ox+c,oy],[ox+c,oy+e],[ox+2*c,oy+e],
+    [ox+2*c,oy+2*e],[ox+3*c,oy+2*e],
+    [ox+3*c,oy+2*e+soffitD],[ox,oy+2*e+soffitD]
+  ];
+
+  function tread(i){
+    const sx=ox+steps[i].x, sy=oy+steps[i].y;
+    const topY=sy-g-mh;
+    const botY=sy-g;
+    const leftX=i===0?sx:sx-mv;
+    const rightX=sx+c+n;
+    return {topY,botY,leftX,rightX,concL:sx,concR:sx+c};
+  }
+  function riser(i){
+    const faceX=ox+steps[i].x+c;
+    const wR=faceX-g;
+    const wL=wR-mv;
+    const tUp=tread(i);
+    const tLow=tread(i+1);
+    return {wL,wR,topY:tUp.botY,botY:tLow.topY,faceX};
+  }
+
+  const svg=el('svg',{viewBox:`0 0 ${f(vW)} ${f(vH)}`,xmlns:NS});
+
+  // Local defs (arrow markers)
+  const defs=el('defs',{});
+  const m1=el('marker',{id:'as_i01',viewBox:'0 0 8 6',refX:0,refY:3,markerWidth:5,markerHeight:4,orient:'auto-start-reverse'});
+  m1.appendChild(el('polygon',{points:'8,0 0,3 8,6',fill:'var(--ink-l)'}));defs.appendChild(m1);
+  const m2=el('marker',{id:'ae_i01',viewBox:'0 0 8 6',refX:8,refY:3,markerWidth:5,markerHeight:4,orient:'auto'});
+  m2.appendChild(el('polygon',{points:'0,0 8,3 0,6',fill:'var(--ink-l)'}));defs.appendChild(m2);
+  svg.appendChild(defs);
+  const dlS='stroke:var(--ink-l);stroke-width:.35;fill:none;marker-start:url(#as_i01);marker-end:url(#ae_i01)';
+
+  // ── LAYER 1: Concrete fill ──
+  const gCF=grp('i01-conc-fill');
+  gCF.appendChild(el('polygon',{points:cp.map(p=>p.map(v=>f(v)).join(',')).join(' '),fill:'url(#pc)'}));
+  svg.appendChild(gCF);
+
+  // ── LAYER 2: Concrete exposed outlines ──
+  const gCL=grp('i01-conc-lines');
+  // Soffit edges (always exposed)
+  gCL.appendChild(el('line',{x1:f(ox),y1:f(oy+2*e+soffitD),x2:f(ox+3*c),y2:f(oy+2*e+soffitD),class:'ll'}));
+  gCL.appendChild(el('line',{x1:f(ox),y1:f(oy),x2:f(ox),y2:f(oy+2*e+soffitD),class:'ll'}));
+  gCL.appendChild(el('line',{x1:f(ox+3*c),y1:f(oy+2*e),x2:f(ox+3*c),y2:f(oy+2*e+soffitD),class:'ll'}));
+  // Ghost step profile (behind wood, very faint)
+  for(let i=0;i<3;i++){
+    const sx=ox+steps[i].x, sy=oy+steps[i].y;
+    gCL.appendChild(el('line',{x1:f(sx),y1:f(sy),x2:f(sx+c),y2:f(sy),class:'ll',opacity:'.3'}));
+    if(i<2) gCL.appendChild(el('line',{x1:f(sx+c),y1:f(sy),x2:f(sx+c),y2:f(oy+steps[i+1].y),class:'ll',opacity:'.3'}));
+  }
+  svg.appendChild(gCL);
+
+  // ── LAYER 3: Glue ──
+  const gGlue=grp('i01-glue');
+  for(let i=0;i<3;i++){
+    const t=tread(i);
+    gGlue.appendChild(el('rect',{x:f(t.concL),y:f(t.botY),width:f(t.concR-t.concL),height:f(g),fill:'url(#pcola)',opacity:'.55'}));
+    if(i<2){
+      const ri=riser(i);
+      gGlue.appendChild(el('rect',{x:f(ri.wR),y:f(ri.topY),width:f(g),height:f(ri.botY-ri.topY),fill:'url(#pcola)',opacity:'.45'}));
+    }
+  }
+  svg.appendChild(gGlue);
+
+  // ── LAYER 4: Wood fills + own outlines ──
+  const gW=grp('i01-wood');
+  for(let i=0;i<3;i++){
+    const t=tread(i);
+    const treadBodyEnd=t.rightX-r;
+    // Tread body
+    gW.appendChild(el('rect',{x:f(t.leftX),y:f(t.topY),width:f(treadBodyEnd-t.leftX),height:f(mh),fill:'url(#pw)'}));
+    // Nosing piece
+    const nd=`M${f(treadBodyEnd)},${f(t.topY)} L${f(treadBodyEnd)},${f(t.topY+mh)} L${f(t.rightX)},${f(t.topY+mh)} L${f(t.rightX)},${f(t.topY+r)} A${f(r)},${f(r)} 0 0 0 ${f(t.rightX-r)},${f(t.topY)} Z`;
+    gW.appendChild(el('path',{d:nd,fill:'url(#pw)'}));
+    // Tread outlines
+    gW.appendChild(el('line',{x1:f(t.leftX),y1:f(t.topY),x2:f(treadBodyEnd),y2:f(t.topY),class:'sl'}));
+    gW.appendChild(el('path',{d:`M${f(treadBodyEnd)},${f(t.topY)} A${f(r)},${f(r)} 0 0 1 ${f(t.rightX)},${f(t.topY+r)}`,fill:'none',stroke:'var(--ink)','stroke-width':'1.2'}));
+    gW.appendChild(el('line',{x1:f(t.rightX),y1:f(t.topY+r),x2:f(t.rightX),y2:f(t.topY+mh),class:'ml'}));
+    gW.appendChild(el('line',{x1:f(t.leftX),y1:f(t.topY+mh),x2:f(t.rightX),y2:f(t.topY+mh),class:'ll',opacity:'.35'}));
+    if(i===0) gW.appendChild(el('line',{x1:f(t.leftX),y1:f(t.topY),x2:f(t.leftX),y2:f(t.topY+mh),class:'ml'}));
+    // Riser
+    if(i<2){
+      const ri=riser(i);
+      gW.appendChild(el('rect',{x:f(ri.wL),y:f(ri.topY),width:f(mv),height:f(ri.botY-ri.topY),fill:'url(#pw)'}));
+      gW.appendChild(el('line',{x1:f(ri.wL),y1:f(ri.topY),x2:f(ri.wL),y2:f(ri.botY),class:'sl'}));
+      gW.appendChild(el('line',{x1:f(ri.wR),y1:f(ri.topY),x2:f(ri.wR),y2:f(ri.botY),class:'ll',opacity:'.2'}));
+      gW.appendChild(el('line',{x1:f(ri.wL),y1:f(ri.topY),x2:f(ri.wR),y2:f(ri.topY),class:'ll',opacity:'.25'}));
+      gW.appendChild(el('line',{x1:f(ri.wL),y1:f(ri.botY),x2:f(ri.wR),y2:f(ri.botY),class:'ll',opacity:'.25'}));
+    }
+  }
+  svg.appendChild(gW);
+
+  // ── LAYER 5: Steel (anti-slip) ──
+  const gSt=grp('i01-steel');
+  if(a>0){
+    const t1=tread(1);
+    const asx=t1.rightX-n+2;
+    gSt.appendChild(el('rect',{x:f(asx),y:f(t1.topY-ah),width:f(a),height:f(ah),fill:'url(#ps)',rx:'.3'}));
+    gSt.appendChild(el('line',{x1:f(asx),y1:f(t1.topY-ah),x2:f(asx+a),y2:f(t1.topY-ah),class:'ll'}));
+  }
+  svg.appendChild(gSt);
+
+  // ── LAYER 6: Dimensions ──
+  const gD=grp('i01-dims');
+  const t0=tread(0), t1=tread(1), t2=tread(2);
+  const r0=riser(0);
+  function dimL(x1,y1,x2,y2){return el('line',{x1:f(x1),y1:f(y1),x2:f(x2),y2:f(y2),style:dlS})}
+  function extL(x1,y1,x2,y2){return el('line',{x1:f(x1),y1:f(y1),x2:f(x2),y2:f(y2),class:'el'})}
+  // Espelho
+  gD.appendChild(extL(ox+3*c+16,t0.topY,ox+3*c+24,t0.topY));
+  gD.appendChild(extL(ox+3*c+16,t1.topY,ox+3*c+24,t1.topY));
+  gD.appendChild(dimL(ox+3*c+20,t0.topY,ox+3*c+20,t1.topY));
+  gD.appendChild(tx('text',{x:f(ox+3*c+28),y:f((t0.topY+t1.topY)/2+3),class:'dt','text-anchor':'start','font-size':'7'},'esp '+P.E));
+  // Cobertor
+  gD.appendChild(extL(ox+c,t1.topY+mh+g+12,ox+c,t1.topY+mh+g+20));
+  gD.appendChild(extL(ox+2*c,t1.topY+mh+g+12,ox+2*c,t1.topY+mh+g+20));
+  gD.appendChild(dimL(ox+c,t1.topY+mh+g+16,ox+2*c,t1.topY+mh+g+16));
+  gD.appendChild(tx('text',{x:f(ox+1.5*c),y:f(t1.topY+mh+g+28),class:'dt','text-anchor':'middle','font-size':'7'},'cobertor '+P.C));
+  // Nariz
+  gD.appendChild(extL(ox+2*c,oy+e+8,ox+2*c,oy+e+14));
+  gD.appendChild(extL(t1.rightX,oy+e+8,t1.rightX,oy+e+14));
+  gD.appendChild(dimL(ox+2*c,oy+e+11,t1.rightX,oy+e+11));
+  gD.appendChild(tx('text',{x:f((ox+2*c+t1.rightX)/2),y:f(oy+e+22),class:'dt','text-anchor':'middle','font-size':'6'},String(P.N)));
+  // Wood tread thickness
+  gD.appendChild(extL(t1.leftX-8,t1.topY,t1.leftX-14,t1.topY));
+  gD.appendChild(extL(t1.leftX-8,t1.topY+mh,t1.leftX-14,t1.topY+mh));
+  gD.appendChild(dimL(t1.leftX-11,t1.topY,t1.leftX-11,t1.topY+mh));
+  gD.appendChild(tx('text',{x:f(t1.leftX-18),y:f(t1.topY+mh/2+3),class:'dt','text-anchor':'end','font-size':'6'},String(P.Mh)));
+  // Wood riser thickness
+  gD.appendChild(extL(r0.wL,r0.topY-6,r0.wL,r0.topY-12));
+  gD.appendChild(extL(r0.wR,r0.topY-6,r0.wR,r0.topY-12));
+  gD.appendChild(dimL(r0.wL,r0.topY-9,r0.wR,r0.topY-9));
+  gD.appendChild(tx('text',{x:f((r0.wL+r0.wR)/2),y:f(r0.topY-15),class:'dt','text-anchor':'middle','font-size':'6'},String(P.Mv)));
+  svg.appendChild(gD);
+
+  // ── LAYER 7: Labels ──
+  const gLb=grp('i01-labels');
+  function lbl(cx,cy,n){
+    const g=grp('i01-lb'+n);
+    g.appendChild(el('circle',{cx:f(cx),cy:f(cy),r:7.5,fill:'#fff',stroke:'var(--ink)','stroke-width':'.7'}));
+    g.appendChild(tx('text',{x:f(cx),y:f(cy+3.5),'text-anchor':'middle',class:'ln'},String(n)));
+    return g;
+  }
+  function ldr(x1,y1,cx,cy,n){
+    const g=grp('i01-ld'+n);
+    g.appendChild(el('line',{x1:f(x1),y1:f(y1),x2:f(cx),y2:f(cy),class:'hl'}));
+    g.appendChild(lbl(cx,cy,n));
+    return g;
+  }
+  const midTX=ox+c+c/2;
+  gLb.appendChild(ldr(midTX,t1.topY+mh+2,midTX,t1.topY+mh+28,1));
+  gLb.appendChild(ldr(t1.rightX-2,t1.topY+r+4,t1.rightX+28,t1.topY+38,2));
+  gLb.appendChild(ldr(r0.wL-2,(r0.topY+r0.botY)/2,r0.wL-35,(r0.topY+r0.botY)/2-8,3));
+  if(a>0){
+    const asx=t1.rightX-n+2+a/2;
+    gLb.appendChild(ldr(asx,t1.topY-ah-2,asx+30,t1.topY-ah-22,4));
+  }
+  gLb.appendChild(lbl(ox+c+c/2,oy+e+30,5));
+  gLb.appendChild(ldr(ox+c+15,t1.botY+g/2,ox+c-18,t1.botY+28,6));
+  svg.appendChild(gLb);
+
+  // ── LAYER 8: Notes ──
+  const gN=grp('i01-notes');
+  const ny=vH-20;
+  gN.appendChild(el('line',{x1:f(ox),y1:f(ny-12),x2:f(ox+3*c),y2:f(ny-12),stroke:'var(--ink-f)','stroke-width':'.2'}));
+  gN.appendChild(tx('text',{x:f(ox+1.5*c),y:f(ny-2),class:'it','text-anchor':'middle','font-size':'8'},'corte vertical — nariz de degrau'));
+  const bv=2*P.E+P.C, bok=bv>=600&&bv<=640;
+  gN.appendChild(tx('text',{x:f(ox+1.5*c),y:f(ny+10),class:'nt-svg','text-anchor':'middle'},
+    '2\u00D7'+P.E+' + '+P.C+' = '+bv+' mm (Blondel 600\u2013640 '+(bok?'\u2713':'\u2717')+')'));
+  // Direction arrow
+  gN.appendChild(el('line',{x1:f(ox+10),y1:f(oy-20),x2:f(ox+c-10),y2:f(oy-20),stroke:'var(--ink-f)','stroke-width':'.6'}));
+  gN.appendChild(el('polygon',{points:`${f(ox+10)},${f(oy-23)} ${f(ox+10)},${f(oy-17)} ${f(ox+2)},${f(oy-20)}`,fill:'var(--ink-f)'}));
+  gN.appendChild(tx('text',{x:f(ox+c/2),y:f(oy-26),class:'dt','text-anchor':'middle','font-size':'6.5',fill:'var(--ink-f)'},'subida'));
+  svg.appendChild(gN);
+
+  // Inject
+  container.appendChild(svg);
+
+  // Update specs in info panel
+  const spRows=document.querySelectorAll('#specs_I01 .sp-r span:last-child');
+  if(spRows.length>=4){
+    spRows[0].textContent=P.C+' mm';
+    spRows[1].textContent=P.E+' mm';
+    const bv=2*P.E+P.C;
+    spRows[2].textContent=bv+' mm '+(bv>=600&&bv<=640?'✓':'✗');
+    spRows[3].textContent=P.N+' mm';
+  }
+}
+// Initial render
+generateI01();
+</script>
+</body>
+</html>

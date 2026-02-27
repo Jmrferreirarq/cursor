@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html><head><title>Injetar Proposta Joel Oliveira</title></head>
+<body style="font-family:system-ui;padding:40px;background:#0a0a0a;color:#e5e5e5">
+<h1>Injetar: Joel Oliveira — Moradia Unifamiliar</h1>
+<p>Clica no botão para criar o cliente, proposta e projeto.</p>
+<button id="btn" style="padding:12px 24px;background:#0d9488;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer">
+  Criar Cliente + Proposta + Projeto
+</button>
+<pre id="log" style="margin-top:20px;color:#a3a3a3"></pre>
+<script>
+document.getElementById('btn').onclick = function() {
+  const log = document.getElementById('log');
+  const KEY = 'fa360_data';
+  
+  try {
+    const raw = localStorage.getItem(KEY);
+    const data = raw ? JSON.parse(raw) : { clients:[], projects:[], proposals:[] };
+    
+    const clientId = 'cli-joel-' + Date.now();
+    const proposalId = 'prop-joel-' + Date.now();
+    const projectId = 'proj-joel-' + Date.now();
+    
+    // 1. Criar cliente
+    if (!data.clients) data.clients = [];
+    const existingClient = data.clients.find(c => c.name.toLowerCase().includes('joel oliveira'));
+    const cId = existingClient ? existingClient.id : clientId;
+    
+    if (!existingClient) {
+      data.clients.unshift({
+        id: clientId,
+        name: 'Joel Oliveira',
+        email: '',
+        phone: '',
+        address: '',
+        municipality: 'Câmara Ílhavo',
+        projects: [projectId],
+        createdAt: '2025-11-28',
+      });
+      log.textContent += '✅ Cliente "Joel Oliveira" criado\n';
+    } else {
+      existingClient.projects = [...(existingClient.projects||[]), projectId];
+      log.textContent += '⚠️ Cliente já existe, projeto associado\n';
+    }
+    
+    // 2. Criar proposta (aceite)
+    if (!data.proposals) data.proposals = [];
+    data.proposals.unshift({
+      id: proposalId,
+      clientId: cId,
+      clientName: 'Joel Oliveira',
+      projectType: 'reabilitacao',
+      projectName: 'Moradia Unifamiliar — Reformulação',
+      phases: [],
+      totalValue: 6400,
+      vatRate: 23,
+      totalWithVat: 7872,
+      status: 'accepted',
+      createdAt: '2025-11-28',
+      sentAt: '2025-11-28',
+      reference: '99_2025',
+      location: 'Câmara Ílhavo',
+      area: 100,
+      architectureValue: 3400,
+      specialtiesValue: 3000,
+      extrasValue: 0,
+    });
+    log.textContent += '✅ Proposta 99_2025 criada (status: aceite)\n';
+    
+    // 3. Criar projeto (ativo)
+    if (!data.projects) data.projects = [];
+    data.projects.unshift({
+      id: projectId,
+      name: 'Moradia Unifamiliar Joel Oliveira — Reformulação',
+      client: 'Joel Oliveira',
+      status: 'active',
+      phase: 'Estudo Prévio',
+      budget: 6400,
+      startDate: '2025-11-28',
+      deadline: '2026-11-28',
+      hoursLogged: 0,
+      team: [],
+      address: 'Ílhavo',
+      municipality: 'Câmara Ílhavo',
+      projectType: 'reabilitacao',
+    });
+    log.textContent += '✅ Projeto criado (status: ativo, fase: Estudo Prévio)\n';
+    
+    // 4. Criar checklist
+    const CHK_KEY = 'fa360_checklists';
+    const chkRaw = localStorage.getItem(CHK_KEY);
+    const checklists = chkRaw ? JSON.parse(chkRaw) : [];
+    checklists.unshift({
+      id: 'chk-joel-' + Date.now(),
+      nome: 'Moradia Unifamiliar Joel Oliveira — Reformulação',
+      tipologia: 'reabilitacao',
+      projectId: projectId,
+      criadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString(),
+      items: {},
+      notas: {},
+    });
+    localStorage.setItem(CHK_KEY, JSON.stringify(checklists));
+    log.textContent += '✅ Checklist de conformidade criada (Reabilitação)\n';
+    
+    // Guardar
+    localStorage.setItem(KEY, JSON.stringify(data));
+    log.textContent += '\n🎉 Tudo criado! Volta à plataforma e faz refresh (F5).\n';
+    log.textContent += '→ https://cursor-blond-two.vercel.app/clients\n';
+    
+    document.getElementById('btn').disabled = true;
+    document.getElementById('btn').textContent = 'Feito!';
+  } catch(e) {
+    log.textContent += '❌ Erro: ' + e.message + '\n';
+  }
+};
+</script>
+</body></html>
