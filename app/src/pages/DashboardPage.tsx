@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Plus, Image, ListTodo, Calendar, BarChart3, FileText, ArrowRight } from 'lucide-react';
+import { Sparkles, Plus, Image, ListTodo, Calendar, BarChart3, FileText, ArrowRight, Euro, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
@@ -62,12 +62,48 @@ export default function DashboardPage() {
     return { leads, negotiation, closed, potentialValue };
   }, [projects]);
 
-  const cashflowStats = useMemo(() => {
-    const activeValue = projects
-      .filter((p) => p.status === 'active')
-      .reduce((sum, p) => sum + p.budget, 0);
-    return { netAmount: activeValue, overdueAmount: 0, next7DaysAmount: 0 };
-  }, [projects]);
+  // KPIs de faturação reais baseados nas tranches das propostas
+  const billingKPIs = useMemo(() => {
+    let totalReceived = 0;
+    let totalInvoiced = 0;
+    let totalPending = 0;
+    let totalContracts = 0;
+
+    proposals.forEach((p) => {
+      const tranches = p.paymentTranches || [];
+      if (tranches.length === 0) return;
+      totalContracts++;
+      tranches.forEach((t) => {
+        if (t.status === 'paid') totalReceived += t.value;
+        else if (t.status === 'invoiced') totalInvoiced += t.value;
+        else totalPending += t.value;
+      });
+    });
+
+    const totalProposals = proposals.length;
+    const won = proposals.filter((p) => p.status === 'accepted').length;
+    const lost = proposals.filter((p) => p.status === 'lost' || p.status === 'rejected').length;
+    const pending = proposals.filter((p) => p.status === 'sent' || p.status === 'draft').length;
+    const conversionRate = totalProposals > 0 ? Math.round((won / totalProposals) * 100) : 0;
+
+    return {
+      totalReceived,
+      totalInvoiced,
+      totalPending,
+      totalContracts,
+      totalProposals,
+      won,
+      lost,
+      pending,
+      conversionRate,
+    };
+  }, [proposals]);
+
+  const cashflowStats = useMemo(() => ({
+    netAmount: billingKPIs.totalReceived,
+    overdueAmount: billingKPIs.totalPending,
+    next7DaysAmount: billingKPIs.totalInvoiced,
+  }), [billingKPIs]);
 
   return (
     <div className="space-y-6">
@@ -186,6 +222,85 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
+      </motion.div>
+
+      {/* Billing KPI Strip */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+      >
+        {[
+          {
+            label: 'Recebido',
+            value: billingKPIs.totalReceived > 0
+              ? billingKPIs.totalReceived.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+              : '—',
+            icon: CheckCircle,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+            onClick: () => navigate('/billing'),
+          },
+          {
+            label: 'Faturado',
+            value: billingKPIs.totalInvoiced > 0
+              ? billingKPIs.totalInvoiced.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+              : '—',
+            icon: FileText,
+            color: 'text-amber-400',
+            bg: 'bg-amber-500/10',
+            onClick: () => navigate('/billing'),
+          },
+          {
+            label: 'Pendente',
+            value: billingKPIs.totalPending > 0
+              ? billingKPIs.totalPending.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+              : '—',
+            icon: Clock,
+            color: 'text-slate-400',
+            bg: 'bg-slate-500/10',
+            onClick: () => navigate('/billing'),
+          },
+          {
+            label: 'Propostas',
+            value: String(billingKPIs.totalProposals),
+            icon: FileText,
+            color: 'text-blue-400',
+            bg: 'bg-blue-500/10',
+            onClick: () => navigate('/proposals'),
+          },
+          {
+            label: 'Ganhas',
+            value: String(billingKPIs.won),
+            icon: CheckCircle,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+            onClick: () => navigate('/proposals'),
+          },
+          {
+            label: 'Taxa de sucesso',
+            value: `${billingKPIs.conversionRate}%`,
+            icon: TrendingUp,
+            color: billingKPIs.conversionRate >= 50 ? 'text-emerald-400' : billingKPIs.conversionRate >= 25 ? 'text-amber-400' : 'text-slate-400',
+            bg: 'bg-primary/10',
+            onClick: () => navigate('/proposals'),
+          },
+        ].map(({ label, value, icon: Icon, color, bg, onClick }) => (
+          <button
+            key={label}
+            onClick={onClick}
+            className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border hover:border-primary/40 transition-all text-left group"
+          >
+            <div className={`w-8 h-8 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+              <Icon className={`w-4 h-4 ${color}`} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{label}</p>
+              <p className={`text-base font-bold ${color}`}>{value}</p>
+            </div>
+          </button>
+        ))}
       </motion.div>
 
       {/* KPI Grid */}
