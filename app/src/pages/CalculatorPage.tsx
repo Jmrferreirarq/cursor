@@ -26,6 +26,7 @@ import { addToProposalHistory } from '../lib/proposalHistory';
 import { ProposalPreviewPaginated } from '../components/proposals/ProposalPreviewPaginated';
 import { ProposalHistoryModal } from '../components/proposals/ProposalHistoryModal';
 import { IchpopCalculatorCard } from '../components/calculators/IchpopCalculatorCard';
+import { CronogramaCalculator } from '../components/calculators/CronogramaCalculator';
 import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
@@ -76,6 +77,12 @@ const calculators = [
     name: 'Avaliação Imobiliária',
     description: 'Valor de mercado por localização',
     icon: Home,
+  },
+  {
+    id: 'cronograma',
+    name: 'Cronograma de Projeto',
+    description: 'Datas estimadas por fase a partir da adjudicação',
+    icon: TrendingUp,
   },
 ];
 
@@ -5171,18 +5178,22 @@ export default function CalculatorPage() {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
 
-      {!activeCalculator && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12 text-muted-foreground"
-        >
-          <Calculator className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>Selecione uma calculadora acima para começar</p>
-        </motion.div>
-      )}
+        {activeCalculator === 'cronograma' && (
+          <CronogramaCalculator />
+        )}
+
+        {!activeCalculator && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12 text-muted-foreground"
+          >
+            <Calculator className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <p>Selecione uma calculadora acima para começar</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
 
     {/* Modal de Propostas Guardadas */}
