@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FolderKanban, Plus, Search, Calendar, Users, Euro, ArrowUpRight, LayoutGrid, List } from 'lucide-react';
-import type { Project } from '@/types';
+import { FolderKanban, Plus, Search, Calendar, Users, Euro, ArrowUpRight, LayoutGrid, List, Download, TrendingUp } from 'lucide-react';
+import type { Project, Proposal } from '@/types';
 import NewProjectDialog from '@/components/projects/NewProjectDialog';
 import { useData } from '@/context/DataContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -29,7 +29,7 @@ const statusFilters = [
 
 export default function ProjectsPage() {
   const navigate = useNavigate();
-  const { isReady, projects, addProject, clients } = useData();
+  const { isReady, projects, addProject, clients, proposals } = useData();
   const { language } = useLanguage();
   const p = (key: string) => t(`projectsPage.${key}`, language);
 
@@ -60,6 +60,44 @@ export default function ProjectsPage() {
     });
     return counts;
   }, [projects]);
+
+  // Faturado por projeto (match por nome de cliente)
+  const billedByProject = useMemo(() => {
+    const map: Record<string, number> = {};
+    projects.forEach((proj) => {
+      const matching = proposals.filter(
+        (pr) => pr.clientName.toLowerCase() === proj.client.toLowerCase()
+      );
+      const billed = matching.reduce((sum, pr) => {
+        return sum + (pr.paymentTranches ?? []).filter((t) => t.status === 'paid').reduce((s, t) => s + t.value, 0);
+      }, 0);
+      map[proj.id] = billed;
+    });
+    return map;
+  }, [projects, proposals]);
+
+  const handleExportCSV = () => {
+    const rows = [['Nome', 'Cliente', 'Estado', 'Fase', 'Orçamento', 'Recebido', 'Prazo']];
+    filteredProjects.forEach((proj) => {
+      rows.push([
+        proj.name,
+        proj.client,
+        statusConfig[proj.status].label,
+        proj.phase || '',
+        proj.budget.toFixed(2),
+        (billedByProject[proj.id] || 0).toFixed(2),
+        proj.deadline ? new Date(proj.deadline).toLocaleDateString('pt-PT') : '',
+      ]);
+    });
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `projetos_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Separar projeto destacado
   const featuredProject = viewMode === 'cards' ? filteredProjects.find(p => p.status === 'active') || filteredProjects[0] : null;
@@ -94,13 +132,22 @@ export default function ProjectsPage() {
             {projects.length} {p('count')} • {statusCounts['active'] || 0} {p('active')}
           </p>
         </div>
-        <button
-          onClick={() => setNewProjectOpen(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{p('newProject')}</span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExportCSV}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-muted border border-border rounded-xl font-medium hover:bg-muted/80 transition-colors w-fit text-sm"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Exportar CSV</span>
+          </button>
+          <button
+            onClick={() => setNewProjectOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors w-fit"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{p('newProject')}</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Search + View Toggle */}
@@ -226,12 +273,12 @@ export default function ProjectsPage() {
                         <p className="text-xl font-bold">{formatCurrency(featuredProject.budget)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Prazo</p>
-                        <p className="text-xl font-bold">{featuredProject.deadline ? new Date(featuredProject.deadline).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) : '—'}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Recebido</p>
+                        <p className="text-xl font-bold text-success">{formatCurrency(billedByProject[featuredProject.id] || 0)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Horas</p>
-                        <p className="text-xl font-bold">{featuredProject.hoursLogged}h</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Prazo</p>
+                        <p className="text-xl font-bold">{featuredProject.deadline ? new Date(featuredProject.deadline).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short' }) : '—'}</p>
                       </div>
                     </div>
 
@@ -274,6 +321,7 @@ export default function ProjectsPage() {
                   key={project.id} 
                   project={project} 
                   index={index + 2}
+                  billed={billedByProject[project.id] || 0}
                   onClick={() => navigate(`/projects/${project.id}`)}
                 />
               ))}
@@ -296,6 +344,7 @@ export default function ProjectsPage() {
                 <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Projeto</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Estado</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Prazo</th>
+                <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Recebido</th>
                 <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Orçamento</th>
               </tr>
             </thead>
@@ -326,6 +375,20 @@ export default function ProjectsPage() {
                       <Calendar className="w-4 h-4" />
                       {project.deadline ? new Date(project.deadline).toLocaleDateString('pt-PT') : '—'}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-right hidden lg:table-cell">
+                    {(() => {
+                      const billed = billedByProject[project.id] || 0;
+                      const pct = project.budget > 0 ? Math.min(100, (billed / project.budget) * 100) : 0;
+                      return (
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm font-medium text-success">{formatCurrency(billed)}</span>
+                          <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-success rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className="font-semibold">{formatCurrency(project.budget)}</span>
@@ -378,11 +441,13 @@ function ProjectCard({
   project, 
   index, 
   compact = false,
+  billed = 0,
   onClick 
 }: { 
   project: Project; 
   index: number;
   compact?: boolean;
+  billed?: number;
   onClick: () => void;
 }) {
   const formatCurrency = (value: number) => {
@@ -393,6 +458,8 @@ function ProjectCard({
       maximumFractionDigits: 0,
     }).format(value);
   };
+
+  const billedPct = project.budget > 0 ? Math.min(100, (billed / project.budget) * 100) : 0;
 
   return (
     <motion.article
@@ -430,6 +497,17 @@ function ProjectCard({
           </div>
           <span className="font-semibold">{formatCurrency(project.budget)}</span>
         </div>
+        {!compact && billed > 0 && (
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground flex items-center gap-1"><TrendingUp className="w-3 h-3" />Recebido</span>
+              <span className="text-success font-medium">{formatCurrency(billed)} <span className="text-muted-foreground">({billedPct.toFixed(0)}%)</span></span>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-success rounded-full transition-all" style={{ width: `${billedPct}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Team - only on non-compact */}

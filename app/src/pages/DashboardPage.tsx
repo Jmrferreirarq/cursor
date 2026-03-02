@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Plus, Image, ListTodo, Calendar, BarChart3, FileText, ArrowRight, Euro, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTime } from '@/context/TimeContext';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
@@ -104,6 +105,31 @@ export default function DashboardPage() {
     overdueAmount: billingKPIs.totalPending,
     next7DaysAmount: billingKPIs.totalInvoiced,
   }), [billingKPIs]);
+
+  const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const monthlyBillingData = useMemo(() => {
+    const now = new Date();
+    const result = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      let paid = 0;
+      let invoiced = 0;
+      proposals.forEach((p) => {
+        (p.paymentTranches ?? []).forEach((t) => {
+          const date = t.invoiceDate || p.createdAt || '';
+          if (date.startsWith(key)) {
+            if (t.status === 'paid') paid += t.value;
+            else if (t.status === 'invoiced') invoiced += t.value;
+          }
+        });
+      });
+      result.push({ month: MONTHS_PT[d.getMonth()], paid, invoiced });
+    }
+    return result;
+  }, [proposals]);
+
+  const hasMonthlyData = monthlyBillingData.some((d) => d.paid > 0 || d.invoiced > 0);
 
   return (
     <div className="space-y-6">
@@ -326,6 +352,51 @@ export default function DashboardPage() {
         />
         <NeuralLinkCard isOnline={false} message="Conexão Sheets pendente" delay={5} />
       </div>
+
+      {/* Monthly Billing Chart */}
+      {hasMonthlyData && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="bg-card border border-border rounded-xl p-5"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Evolução Mensal de Faturação
+            </h2>
+            <button onClick={() => navigate('/financial')} className="text-xs text-primary hover:underline flex items-center gap-1">
+              Ver detalhe <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyBillingData}>
+                <defs>
+                  <linearGradient id="dashPaidGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="dashInvoicedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#60a5fa" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(v) => v >= 1000 ? `€${v / 1000}k` : `€${v}`} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
+                  formatter={(value: number) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(value)}
+                />
+                <Area type="monotone" dataKey="paid" stroke="hsl(var(--success))" fill="url(#dashPaidGrad)" name="Recebido" />
+                <Area type="monotone" dataKey="invoiced" stroke="#60a5fa" fill="url(#dashInvoicedGrad)" name="Faturado" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+      )}
 
       {/* Production Hours & Active Projects */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
