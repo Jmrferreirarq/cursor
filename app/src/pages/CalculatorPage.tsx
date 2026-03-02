@@ -1040,6 +1040,22 @@ export default function CalculatorPage() {
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
   const [showProposalsList, setShowProposalsList] = useState(false);
 
+  type Cenario = {
+    id: string;
+    label: string;
+    tipologia: string;
+    modo: string;
+    area: string;
+    valorObra: string;
+    complexidade: string;
+    valorArq: number;
+    valorEsp: number;
+    valorExtras: number;
+    totalSemIVA: number;
+    totalComIVA: number;
+  };
+  const [cenarios, setCenarios] = useState<Cenario[]>([]);
+
   // Honorários
   const [honorMode, setHonorMode] = useState<'area' | 'pct'>('area');
   const [area, setArea] = useState('');
@@ -4826,6 +4842,108 @@ export default function CalculatorPage() {
               <p className="text-xs text-muted-foreground">
                 Referência orientativa. Tabelas OA não são vinculativas.
               </p>
+
+              {/* Simulador de Cenários */}
+              <div className="border border-border rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Comparador de Cenários</p>
+                  <div className="flex gap-2">
+                    {cenarios.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setCenarios([])}
+                        className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        Limpar todos
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      disabled={cenarios.length >= 3 || totalComIVA <= 0}
+                      onClick={() => {
+                        const tipNome = TIPOLOGIAS_HONORARIOS.find((tp) => tp.id === projectType)?.name ?? projectType;
+                        const complexLabel: Record<string, string> = { low: 'Simples', medium: 'Média', high: 'Complexa' };
+                        const novoCenario: Cenario = {
+                          id: Date.now().toString(),
+                          label: `Cenário ${cenarios.length + 1}`,
+                          tipologia: tipNome,
+                          modo: honorMode === 'area' ? `${area} m²` : `${valorObra}€ obra`,
+                          area,
+                          valorObra,
+                          complexidade: complexLabel[complexity ?? ''] ?? complexity ?? '',
+                          valorArq,
+                          valorEsp,
+                          valorExtras,
+                          totalSemIVA,
+                          totalComIVA,
+                        };
+                        setCenarios((prev) => [...prev, novoCenario]);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary border border-primary/30 rounded-lg text-xs font-medium hover:bg-primary/20 transition-colors disabled:opacity-40"
+                    >
+                      + Guardar cenário atual
+                    </button>
+                  </div>
+                </div>
+
+                {cenarios.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-2">Guarda até 3 cenários para comparar lado a lado.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left pb-2 pr-3 text-muted-foreground font-normal">Campo</th>
+                          {cenarios.map((c) => (
+                            <th key={c.id} className="text-left pb-2 px-2 min-w-[120px]">
+                              <div className="flex items-center gap-1">
+                                <input
+                                  value={c.label}
+                                  onChange={(e) => setCenarios((prev) => prev.map((x) => x.id === c.id ? { ...x, label: e.target.value } : x))}
+                                  className="bg-transparent font-semibold w-full focus:outline-none border-b border-transparent focus:border-primary"
+                                />
+                                <button onClick={() => setCenarios((prev) => prev.filter((x) => x.id !== c.id))} className="text-muted-foreground hover:text-destructive shrink-0">×</button>
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="space-y-1">
+                        {[
+                          { key: 'tipologia', label: 'Tipologia' },
+                          { key: 'modo', label: 'Modo / Área' },
+                          { key: 'complexidade', label: 'Complexidade' },
+                          { key: 'valorArq', label: 'Honorários Arq.', isMoney: true },
+                          { key: 'valorEsp', label: 'Especialidades', isMoney: true },
+                          { key: 'valorExtras', label: 'Extras', isMoney: true },
+                          { key: 'totalSemIVA', label: 'Total s/ IVA', isMoney: true },
+                          { key: 'totalComIVA', label: 'Total c/ IVA', isMoney: true, highlight: true },
+                        ].map(({ key, label, isMoney, highlight }) => (
+                          <tr key={key} className={`border-b border-border/50 ${highlight ? 'font-semibold' : ''}`}>
+                            <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">{label}</td>
+                            {cenarios.map((c) => {
+                              const val = c[key as keyof Cenario];
+                              const display = isMoney && typeof val === 'number' ? `${val.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €` : String(val);
+                              const isMax = isMoney && cenarios.length > 1 && typeof val === 'number' && val === Math.max(...cenarios.map((x) => x[key as keyof Cenario] as number));
+                              const isMin = isMoney && cenarios.length > 1 && typeof val === 'number' && val === Math.min(...cenarios.map((x) => x[key as keyof Cenario] as number)) && val < (Math.max(...cenarios.map((x) => x[key as keyof Cenario] as number)));
+                              return (
+                                <td key={c.id} className={`py-1.5 px-2 ${highlight ? 'text-primary' : ''} ${isMax && highlight ? 'text-amber-400' : ''} ${isMin && highlight ? 'text-emerald-400' : ''}`}>
+                                  {display}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {cenarios.length > 1 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        <span className="text-emerald-400">Verde</span> = mais barato · <span className="text-amber-400">Amarelo</span> = mais caro
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="mt-6 space-y-4">
                 <p className="text-sm font-medium">Previsualização da proposta (folhas A4)</p>
