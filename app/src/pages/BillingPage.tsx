@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Euro, Search, CheckCircle2, Clock, AlertCircle, TrendingUp, FileText, Plus } from 'lucide-react';
+import { Euro, Search, CheckCircle2, Clock, AlertCircle, TrendingUp, FileText, Plus, Download } from 'lucide-react';
 import { useData } from '@/context/DataContext';
 import type { Proposal, PaymentTranche } from '@/types';
 
@@ -206,6 +206,38 @@ export default function BillingPage() {
 
   const editingProposal = editing ? proposals.find((p) => p.id === editing.proposalId) : null;
 
+  function exportCsv() {
+    const rows = [
+      ['Cliente', 'Projeto', 'Total (€)', 'Recebido (€)', 'Faturado (€)', 'Pendente (€)', 'Progresso (%)', 'Estado'],
+      ...filtered.map((p) => {
+        const tranches = p.paymentTranches || [];
+        const pago = tranches.filter((t) => t.status === 'paid').reduce((s, t) => s + t.value, 0);
+        const faturado = tranches.filter((t) => t.status === 'invoiced').reduce((s, t) => s + t.value, 0);
+        const total = p.totalValue || 0;
+        const pendente = total - pago - faturado;
+        const progresso = total > 0 ? Math.round((pago / total) * 100) : 0;
+        return [
+          p.clientName,
+          p.projectName || '',
+          total.toFixed(2).replace('.', ','),
+          pago.toFixed(2).replace('.', ','),
+          faturado.toFixed(2).replace('.', ','),
+          pendente.toFixed(2).replace('.', ','),
+          progresso + '%',
+          p.isBillingDone ? 'Concluído' : 'Em curso',
+        ];
+      }),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `faturacao_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   if (!isReady) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
@@ -215,7 +247,7 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Euro className="w-6 h-6 text-primary" />
@@ -223,6 +255,15 @@ export default function BillingPage() {
           </h1>
           <p className="text-slate-400 text-sm mt-0.5">Gestão de pagamentos e tranches por cliente</p>
         </div>
+        {filtered.length > 0 && (
+          <button
+            onClick={exportCsv}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm text-slate-300 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Exportar CSV
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -348,7 +389,20 @@ export default function BillingPage() {
                     transition={{ delay: idx * 0.02 }}
                     className={`border-b border-white/5 hover:bg-white/5 transition-colors ${rowBg}`}>
                     <td className="px-3 py-2 sticky left-0 bg-inherit font-medium text-white whitespace-nowrap">
-                      {proposal.clientName}
+                      <div>{proposal.clientName}</div>
+                      {proposal.totalValue > 0 && (() => {
+                        const pctPaid = Math.round((received / proposal.totalValue) * 100);
+                        const pctInv = Math.round(((tranches.filter((t) => t.status === 'invoiced').reduce((s, t) => s + t.value, 0)) / proposal.totalValue) * 100);
+                        return (
+                          <div className="mt-1 w-24">
+                            <div className="h-1 rounded-full bg-white/10 overflow-hidden flex">
+                              <div className="h-full bg-emerald-500 transition-all" style={{ width: `${pctPaid}%` }} />
+                              <div className="h-full bg-amber-500 transition-all" style={{ width: `${pctInv}%` }} />
+                            </div>
+                            <span className="text-[10px] text-slate-500">{pctPaid}% recebido</span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-2 py-2 text-right font-mono text-slate-300 whitespace-nowrap">
                       {proposal.totalValue ? proposal.totalValue.toLocaleString('pt-PT', { minimumFractionDigits: 2 }) : '—'}
