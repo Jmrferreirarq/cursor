@@ -30,6 +30,7 @@ import { CronogramaCalculator } from '../components/calculators/CronogramaCalcul
 import { ConversorAreasCalculator } from '../components/calculators/ConversorAreasCalculator';
 import { CustoConstrucaoCalculator } from '../components/calculators/CustoConstrucaoCalculator';
 import { AvaliacaoImobiliariaCalculator } from '../components/calculators/AvaliacaoImobiliariaCalculator';
+import { RentabilidadeCalculator } from '../components/calculators/RentabilidadeCalculator';
 import { ICHPOP_PHASES } from '../data/calculatorConstants';
 import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
@@ -86,6 +87,12 @@ const calculators = [
     name: 'Cronograma de Projeto',
     description: 'Datas estimadas por fase a partir da adjudicação',
     icon: TrendingUp,
+  },
+  {
+    id: 'rentabilidade',
+    name: 'Rentabilidade',
+    description: 'Margem real: honorários vs. custo interno estimado',
+    icon: Euro,
   },
 ];
 
@@ -5102,6 +5109,8 @@ export default function CalculatorPage() {
         {activeCalculator === 'imovel' && <AvaliacaoImobiliariaCalculator />}
 
         {activeCalculator === 'cronograma' && <CronogramaCalculator />}
+
+        {activeCalculator === 'rentabilidade' && <RentabilidadeCalculator />}
 
 
         {!activeCalculator && (
