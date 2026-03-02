@@ -30,10 +30,10 @@ export default function ClientsPage() {
   const enrichedClients = useMemo(() => {
     return filteredClients.map((client) => {
       const nameLC = client.name.toLowerCase();
-      const clientProjects = projects.filter((p) => 
+      const clientProjects = projects.filter((p) =>
         p.client.toLowerCase() === nameLC
       );
-      const activeProjects = clientProjects.filter((p) => 
+      const activeProjects = clientProjects.filter((p) =>
         ['active', 'negotiation'].includes(p.status)
       );
       const projectValue = clientProjects.reduce((sum, p) => sum + p.budget, 0);
@@ -42,13 +42,25 @@ export default function ClientsPage() {
       );
       const proposalValue = clientProposals.reduce((sum, p) => sum + p.totalValue, 0);
       const totalValue = projectValue || proposalValue;
-      
+
+      // Faturação real a partir das tranches
+      const billingReceived = clientProposals.reduce((sum, p) => {
+        return sum + (p.paymentTranches || []).filter((t) => t.status === 'paid').reduce((s, t) => s + t.value, 0);
+      }, 0);
+      const billingPending = clientProposals.reduce((sum, p) => {
+        return sum + (p.paymentTranches || []).filter((t) => t.status !== 'paid').reduce((s, t) => s + t.value, 0);
+      }, 0);
+      const wonProposals = clientProposals.filter((p) => p.status === 'accepted').length;
+
       return {
         ...client,
         projectCount: clientProjects.length,
         activeProjectCount: activeProjects.length,
         proposalCount: clientProposals.length,
+        wonProposals,
         totalValue,
+        billingReceived,
+        billingPending,
       };
     });
   }, [filteredClients, projects, proposals]);
@@ -279,6 +291,8 @@ export default function ClientsPage() {
                 <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden md:table-cell">Contacto</th>
                 <th className="text-left px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Localização</th>
                 <th className="text-center px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Projetos</th>
+                <th className="text-center px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Propostas</th>
+                <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden lg:table-cell">Recebido</th>
                 <th className="text-right px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide hidden sm:table-cell">Desde</th>
               </tr>
             </thead>
@@ -333,6 +347,23 @@ export default function ClientsPage() {
                         <span className="text-xs text-emerald-400">({client.activeProjectCount} ativos)</span>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 text-center hidden sm:table-cell">
+                    <div className="text-sm">
+                      <span className="font-medium">{client.proposalCount}</span>
+                      {client.wonProposals > 0 && (
+                        <span className="ml-1 text-xs text-emerald-400">({client.wonProposals} adj.)</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right hidden lg:table-cell">
+                    {client.billingReceived > 0 ? (
+                      <span className="text-sm font-medium text-emerald-400">
+                        {client.billingReceived.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right text-sm text-muted-foreground hidden sm:table-cell">
                     {new Date(client.createdAt).toLocaleDateString('pt-PT')}
