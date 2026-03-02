@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Plus, Calculator, Sparkles, Trash2, ExternalLink, Copy, Check, PenLine, Send, Clock, CheckCircle2, XCircle, AlertTriangle, BarChart3, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Search, Filter, Download, X } from 'lucide-react';
 import { compareProposals, type ProposalComparison } from '@/lib/proposalComparison';
 import { toast } from 'sonner';
 
@@ -66,6 +66,46 @@ export default function ProposalsManagementPage() {
   const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
   const comparison = showComparison ? compareProposals(proposals) : null;
 
+  // Filtros avançados
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterYear, setFilterYear] = useState('all');
+  const [filterMinValue, setFilterMinValue] = useState('');
+  const [filterMaxValue, setFilterMaxValue] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Anos disponíveis para filtro
+  const availableYears = useMemo(() => {
+    const years = [...new Set(proposals.map((p) => p.createdAt?.slice(0, 4)).filter(Boolean))];
+    return years.sort((a, b) => b!.localeCompare(a!)) as string[];
+  }, [proposals]);
+
+  // Exportar CSV
+  const exportCsv = () => {
+    const rows = [
+      ['Referência', 'Cliente', 'Projeto', 'Tipologia', 'Estado', 'Total c/IVA (€)', 'Data', 'Localização'],
+      ...filteredProposals.map((p) => [
+        p.reference || '',
+        p.clientName,
+        p.projectName || '',
+        projectTypes[p.projectType || ''] || p.projectType || '',
+        getStatus(p),
+        (p.totalValue || 0).toFixed(2).replace('.', ','),
+        p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-PT') : '',
+        p.location || '',
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `propostas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado');
+  };
+
   const toggleYear = (year: string) => {
     setCollapsedYears(prev => {
       const next = new Set(prev);
@@ -74,14 +114,35 @@ export default function ProposalsManagementPage() {
     });
   };
 
+  // Propostas filtradas
+  const filteredProposals = useMemo(() => {
+    const minVal = parseFloat(filterMinValue) || 0;
+    const maxVal = parseFloat(filterMaxValue) || Infinity;
+    return proposals.filter((p) => {
+      if (filterStatus !== 'all' && getStatus(p) !== filterStatus) return false;
+      if (filterYear !== 'all' && p.createdAt?.slice(0, 4) !== filterYear) return false;
+      const val = p.totalValue || 0;
+      if (val < minVal || val > maxVal) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !p.clientName.toLowerCase().includes(q) &&
+          !(p.projectName || '').toLowerCase().includes(q) &&
+          !(p.reference || '').toLowerCase().includes(q)
+        ) return false;
+      }
+      return true;
+    });
+  }, [proposals, filterStatus, filterYear, filterMinValue, filterMaxValue, search]);
+
   const proposalsByYear = useMemo(() => {
     const groups: Record<string, typeof proposals> = {};
-    proposals.forEach(p => {
+    filteredProposals.forEach(p => {
       const year = p.createdAt?.slice(0, 4) || 'Sem data';
       (groups[year] = groups[year] || []).push(p);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [proposals]);
+  }, [filteredProposals]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-PT', {
@@ -157,14 +218,100 @@ export default function ProposalsManagementPage() {
           transition={{ delay: 0.1 }}
           className="bg-card border border-border rounded-xl overflow-hidden"
         >
-          <div className="px-5 py-4 border-b border-border bg-muted/30">
-            <h3 className="font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Propostas Guardadas
-              <span className="ml-2 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
-                {proposals.length}
-              </span>
-            </h3>
+          <div className="px-5 py-4 border-b border-border bg-muted/30 space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary" />
+                Propostas Guardadas
+                <span className="ml-2 px-2 py-0.5 text-xs bg-primary/10 text-primary rounded-full">
+                  {filteredProposals.length}{filteredProposals.length !== proposals.length && `/${proposals.length}`}
+                </span>
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters((v) => !v)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border transition-colors ${showFilters ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/40'}`}
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                  Filtros
+                </button>
+                <button
+                  onClick={exportCsv}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border border-border text-muted-foreground hover:border-primary/40 transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  CSV
+                </button>
+              </div>
+            </div>
+
+            {/* Search + filters */}
+            <div className="flex gap-2 flex-wrap">
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Pesquisar cliente, projeto, referência..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                />
+                {search && (
+                  <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {showFilters && (
+              <div className="flex gap-2 flex-wrap pt-1 border-t border-border">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-3 py-1.5 text-xs bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                >
+                  <option value="all">Estado: Todos</option>
+                  <option value="draft">Rascunho</option>
+                  <option value="sent">Enviada</option>
+                  <option value="accepted">Adjudicada</option>
+                  <option value="rejected">Recusada</option>
+                  <option value="lost">Perdida</option>
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(e.target.value)}
+                  className="px-3 py-1.5 text-xs bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                >
+                  <option value="all">Ano: Todos</option>
+                  {availableYears.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={filterMinValue}
+                  onChange={(e) => setFilterMinValue(e.target.value)}
+                  placeholder="Valor mín. (€)"
+                  className="w-28 px-3 py-1.5 text-xs bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                />
+                <input
+                  type="number"
+                  value={filterMaxValue}
+                  onChange={(e) => setFilterMaxValue(e.target.value)}
+                  placeholder="Valor máx. (€)"
+                  className="w-28 px-3 py-1.5 text-xs bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
+                />
+                {(filterStatus !== 'all' || filterYear !== 'all' || filterMinValue || filterMaxValue) && (
+                  <button
+                    onClick={() => { setFilterStatus('all'); setFilterYear('all'); setFilterMinValue(''); setFilterMaxValue(''); }}
+                    className="px-3 py-1.5 text-xs text-destructive border border-destructive/30 rounded-lg hover:bg-destructive/10 transition-colors"
+                  >
+                    Limpar filtros
+                  </button>
+                )}
+              </div>
+            )}
           </div>
           <div className="divide-y divide-border">
             {proposalsByYear.map(([year, yearProposals]) => {
