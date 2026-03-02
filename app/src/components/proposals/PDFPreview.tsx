@@ -1,6 +1,24 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X, Download, Printer, FileText, Calendar, User, MapPin, Euro, CheckCircle } from 'lucide-react';
+import { TIPOLOGIA_DIPLOMAS } from '@/data/tipologias';
+import { legislacao } from '@/data/legislacao';
+
+const PROJECT_TYPE_TO_TIP: Record<string, string> = {
+  habitacao_unifamiliar: 'moradia_isolada', habitacao_moradia: 'moradia_isolada',
+  moradia_geminada: 'moradia_geminada', moradia_banda: 'moradia_banda',
+  habitacao_multifamiliar: 'multifamiliar', habitacao_coletiva: 'multifamiliar',
+  habitacao_apartamento: 'multifamiliar',
+  comercio_servicos: 'comercio_servicos', comercio: 'comercio_servicos',
+  escritorio: 'comercio_servicos', restaurante: 'comercio_servicos', clinica: 'comercio_servicos',
+  hotel: 'turismo', praia_apm: 'turismo', praia_aps: 'turismo', praia_apc: 'turismo',
+  armazem_comercial: 'industrial', industrial: 'industrial', industria: 'industrial',
+  logistica: 'industrial', laboratorio: 'industrial', equipamentos: 'equipamento',
+  reabilitacao: 'reabilitacao', reabilitacao_integral: 'reabilitacao',
+  restauro: 'reabilitacao', interiores: 'reabilitacao', anexo: 'reabilitacao',
+  urbanismo: 'loteamento', loteamento_urbano: 'loteamento',
+  loteamento_industrial: 'loteamento', destaque_parcela: 'loteamento', reparcelamento: 'loteamento',
+};
 
 interface ProposalPhase {
   id: string;
@@ -49,6 +67,15 @@ export default function PDFPreview({
   proposalDate,
   validUntil,
 }: PDFPreviewProps) {
+  const tipId = PROJECT_TYPE_TO_TIP[projectType];
+  const legalDiplomas = tipId
+    ? (TIPOLOGIA_DIPLOMAS[tipId] ?? [])
+        .filter((d) => d.relevancia === 'obrigatorio')
+        .slice(0, 6)
+        .map((d) => ({ ...d, leg: legislacao.find((l) => l.id === d.diplomaId) }))
+        .filter((d) => d.leg)
+    : [];
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-PT', {
       style: 'currency',
@@ -232,6 +259,32 @@ export default function PDFPreview({
                 <p>• Esta proposta é válida por 30 dias</p>
               </div>
             </div>
+
+            {/* Legal Framework */}
+            {legalDiplomas.length > 0 && (
+              <div className="p-12 border-t border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                  Enquadramento Legal
+                </h2>
+                <p className="text-xs text-gray-500 mb-4">
+                  Os serviços propostos enquadram-se na seguinte legislação de referência para a tipologia em causa:
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {legalDiplomas.map((d) => (
+                    <div key={d.diplomaId} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 shrink-0" />
+                      <div>
+                        <span className="text-xs font-semibold text-gray-700">{d.leg!.sigla}</span>
+                        <span className="text-xs text-gray-500 ml-1">— {d.leg!.titulo}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-gray-400 mt-3">
+                  Esta listagem é indicativa. O enquadramento legal definitivo depende das condições específicas do terreno, município e programa do projeto.
+                </p>
+              </div>
+            )}
 
             {/* Footer */}
             <div className="p-12 border-t border-gray-200 bg-gray-50">

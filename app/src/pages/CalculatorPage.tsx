@@ -18,6 +18,7 @@ import {
   History,
   X,
   Trash2,
+  ShieldCheck,
 } from 'lucide-react';
 import { encodeProposalPayload, savePayloadLocally, formatCurrency as formatCurrencyPayload, type ProposalPayload } from '../lib/proposalPayload';
 import { generateProposalPdf } from '../lib/generateProposalPdf';
@@ -3729,6 +3730,63 @@ export default function CalculatorPage() {
                       ))}
                   </select>
                 </div>
+                {/* Legislação rápida para a tipologia selecionada */}
+                {projectType && (() => {
+                  const PROJECT_TYPE_TO_TIP: Record<string, string> = {
+                    habitacao_unifamiliar: 'moradia_isolada', habitacao_moradia: 'moradia_isolada',
+                    moradia_geminada: 'moradia_geminada', moradia_banda: 'moradia_banda',
+                    habitacao_multifamiliar: 'multifamiliar', habitacao_coletiva: 'multifamiliar',
+                    habitacao_apartamento: 'multifamiliar',
+                    comercio_servicos: 'comercio_servicos', comercio: 'comercio_servicos',
+                    escritorio: 'comercio_servicos', restaurante: 'comercio_servicos', clinica: 'comercio_servicos',
+                    hotel: 'turismo', praia_apm: 'turismo', praia_aps: 'turismo', praia_apc: 'turismo',
+                    armazem_comercial: 'industrial', industrial: 'industrial', industria: 'industrial',
+                    logistica: 'industrial', laboratorio: 'industrial',
+                    equipamentos: 'equipamento',
+                    reabilitacao: 'reabilitacao', reabilitacao_integral: 'reabilitacao',
+                    restauro: 'reabilitacao', interiores: 'reabilitacao', anexo: 'reabilitacao',
+                    urbanismo: 'loteamento', loteamento_urbano: 'loteamento',
+                    loteamento_industrial: 'loteamento', destaque_parcela: 'loteamento', reparcelamento: 'loteamento',
+                  };
+                  const tipId = PROJECT_TYPE_TO_TIP[projectType];
+                  const dips = tipId ? (TIPOLOGIA_DIPLOMAS[tipId] ?? []) : [];
+                  const obrig = dips.filter((d) => d.relevancia === 'obrigatorio');
+                  const novidades = dips.filter((d) => {
+                    const leg = LEGISLACAO_DB.find((l) => l.id === d.diplomaId);
+                    return leg?.novidade;
+                  });
+                  if (!tipId || obrig.length === 0) return null;
+                  return (
+                    <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold">Legislação obrigatória para esta tipologia</span>
+                        {novidades.length > 0 && (
+                          <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400">⚠ {novidades.length} nov. 2024/25</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {obrig.map((d) => {
+                          const leg = LEGISLACAO_DB.find((l) => l.id === d.diplomaId);
+                          return (
+                            <span key={d.diplomaId} className={`px-2 py-1 rounded text-xs font-medium bg-red-500/15 text-red-400 border border-red-500/20 ${leg?.novidade ? 'ring-1 ring-amber-500/50' : ''}`}>
+                              {leg?.sigla ?? d.diplomaId}{leg?.novidade ? ' ★' : ''}
+                            </span>
+                          );
+                        })}
+                        {dips.filter((d) => d.relevancia === 'frequente').map((d) => {
+                          const leg = LEGISLACAO_DB.find((l) => l.id === d.diplomaId);
+                          return (
+                            <span key={d.diplomaId} className="px-2 py-1 rounded text-xs font-medium bg-amber-500/15 text-amber-400 border border-amber-500/20">
+                              {leg?.sigla ?? d.diplomaId}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Vermelho = obrigatório · Amarelo = frequente · ★ = alterado/novo 2024-25</p>
+                    </div>
+                  );
+                })()}
                 <div>
                   <label className="block text-sm font-medium mb-2">Complexidade</label>
                   <select

@@ -2,11 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, FolderKanban, Calendar, Euro, MapPin, Clock,
-  FileText, ClipboardCheck, Edit3, Check, X, User,
+  FileText, ClipboardCheck, Edit3, Check, X, User, ShieldCheck,
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '@/context/DataContext';
 import { getChecklistForProject } from '@/lib/checklistAutoCreate';
+import LegalConformidadePanel from '@/components/projects/LegalConformidadePanel';
 import type { Project } from '@/types';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -40,6 +41,7 @@ export default function ProjectDetailsPage() {
 
   const [editingPhase, setEditingPhase] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'legal'>('overview');
 
   if (!project) {
     return (
@@ -181,6 +183,47 @@ export default function ProjectDetailsPage() {
 
       {/* Phase Progress */}
       <motion.div
+        initial={{ opacity: 0, y: 0 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14 }}
+        className="flex gap-1 p-1 bg-muted rounded-xl w-fit"
+      >
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'overview' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <FolderKanban className="w-4 h-4" />
+          Visão Geral
+        </button>
+        <button
+          onClick={() => setActiveTab('legal')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'legal' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          Conformidade Legal
+          {project.projectType && (
+            <span className="w-2 h-2 rounded-full bg-primary" />
+          )}
+        </button>
+      </motion.div>
+
+      {/* Tab: Legal */}
+      {activeTab === 'legal' && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <LegalConformidadePanel
+            projectType={project.projectType}
+            phase={project.phase}
+            municipality={project.municipality}
+          />
+        </motion.div>
+      )}
+
+      {/* Tab: Overview */}
+      {activeTab === 'overview' && (
+        <>
+
+      {/* Phase Progress */}
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
@@ -305,6 +348,8 @@ export default function ProjectDetailsPage() {
           </div>
         )}
       </motion.div>
+        </>
+      )}
     </div>
   );
 }
