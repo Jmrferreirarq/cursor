@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, ExternalLink, Trash2, Clock, AlertCircle, Check } from 'lucide-react';
+import { X, Copy, ExternalLink, Trash2, Clock, AlertCircle, Check, Download, BarChart2 } from 'lucide-react';
 import { 
   loadProposalHistory, 
   removeFromProposalHistory, 
@@ -18,7 +18,49 @@ interface ProposalHistoryModalProps {
 export function ProposalHistoryModal({ isOpen, onClose }: ProposalHistoryModalProps) {
   const [history, setHistory] = useState<ProposalHistoryItem[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showStats, setShowStats] = useState(false);
 
+  const stats = useMemo(() => {
+    if (history.length === 0) return null;
+    const total = history.reduce((s, h) => s + h.totalWithVat, 0);
+    const avg = total / history.length;
+    const max = Math.max(...history.map((h) => h.totalWithVat));
+    const min = Math.min(...history.map((h) => h.totalWithVat));
+    const byType: Record<string, { count: number; total: number }> = {};
+    history.forEach((h) => {
+      const k = h.projectType || 'Outro';
+      if (!byType[k]) byType[k] = { count: 0, total: 0 };
+      byType[k].count++;
+      byType[k].total += h.totalWithVat;
+    });
+    return { total, avg, max, min, byType };
+  }, [history]);
+
+  const exportCsv = () => {
+    const rows = [
+      ['Referência', 'Cliente', 'Projeto', 'Tipologia', 'Localização', 'Total s/IVA (€)', 'Total c/IVA (€)', 'Data', 'Link'],
+      ...history.map((h) => [
+        h.reference,
+        h.clientName,
+        h.projectName,
+        h.projectType || '',
+        h.location || '',
+        h.totalValue.toFixed(2).replace('.', ','),
+        h.totalWithVat.toFixed(2).replace('.', ','),
+        new Date(h.createdAt).toLocaleDateString('pt-PT'),
+        getBestLink(h) || '',
+      ]),
+    ];
+    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `propostas_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado');
+  };
   // Carregar histórico quando abre
   useEffect(() => {
     if (isOpen) {
@@ -106,15 +148,88 @@ export function ProposalHistoryModal({ isOpen, onClose }: ProposalHistoryModalPr
               <h2 className="text-xl font-bold text-white">Histórico de Propostas</h2>
               <p className="text-sm text-zinc-400 mt-1">
                 {history.length} proposta{history.length !== 1 ? 's' : ''} guardada{history.length !== 1 ? 's' : ''}
+                {stats && (
+                  <span className="ml-2 text-emerald-400">
+                    · Total: {formatCurrency(stats.total)}
+                  </span>
+                )}
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
+            <div className="flex items-center gap-2">
+              {history.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setShowStats((v) => !v)}
+                    className={`p-2 rounded-lg transition-colors ${showStats ? 'bg-primary/20 text-primary' : 'hover:bg-zinc-800 text-zinc-400'}`}
+                    title="Estatísticas"
+                  >
+                    <BarChart2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={exportCsv}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors"
+                    title="Exportar CSV"
+                  >
+                    <Download className="w-4 h-4" />
+                    CSV
+                  </button>
+                </>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
           </div>
+
+          {/* Stats panel */}
+          <AnimatePresence>
+            {showStats && stats && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden border-b border-zinc-800"
+              >
+                <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 bg-zinc-800/30">
+                  <div className="bg-zinc-800/60 rounded-xl p-3">
+                    <p className="text-xs text-zinc-500 mb-1">Total faturado</p>
+                    <p className="text-lg font-bold text-emerald-400">{formatCurrency(stats.total)}</p>
+                  </div>
+                  <div className="bg-zinc-800/60 rounded-xl p-3">
+                    <p className="text-xs text-zinc-500 mb-1">Proposta média</p>
+                    <p className="text-lg font-bold text-white">{formatCurrency(stats.avg)}</p>
+                  </div>
+                  <div className="bg-zinc-800/60 rounded-xl p-3">
+                    <p className="text-xs text-zinc-500 mb-1">Maior proposta</p>
+                    <p className="text-lg font-bold text-white">{formatCurrency(stats.max)}</p>
+                  </div>
+                  <div className="bg-zinc-800/60 rounded-xl p-3">
+                    <p className="text-xs text-zinc-500 mb-1">Menor proposta</p>
+                    <p className="text-lg font-bold text-white">{formatCurrency(stats.min)}</p>
+                  </div>
+                  {Object.keys(stats.byType).length > 1 && (
+                    <div className="col-span-2 sm:col-span-4 bg-zinc-800/60 rounded-xl p-3">
+                      <p className="text-xs text-zinc-500 mb-2">Por tipologia</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(stats.byType).map(([type, data]) => (
+                          <span key={type} className="px-2 py-1 bg-zinc-700 rounded-lg text-xs">
+                            <span className="text-zinc-300">{type}</span>
+                            <span className="text-zinc-500 mx-1">·</span>
+                            <span className="text-emerald-400">{data.count}×</span>
+                            <span className="text-zinc-500 mx-1">·</span>
+                            <span className="text-white">{formatCurrency(data.total)}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-4">
