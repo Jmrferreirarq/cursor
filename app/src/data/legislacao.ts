@@ -1823,10 +1823,10 @@ export const legislacao: Diploma[] = [
       'Consulta de Planos de Urbanização e Pormenor',
     ],
     artigosChave: [
-      { artigo: 'SNIT', descricao: 'Plataforma: https://snit.dgterritorio.gov.pt/' },
+      { artigo: 'SNIG/Geoportal DGT', descricao: 'Plataforma: https://snig.dgterritorio.gov.pt/geoportal/' },
       { artigo: 'e-Urbanismo', descricao: 'Plataforma municipal: consultar no site da câmara' },
     ],
-    linkDRE: 'https://snit.dgterritorio.gov.pt/',
+    linkDRE: 'https://snig.dgterritorio.gov.pt/geoportal/',
     estado: 'vigente' as const,
     tags: ['PDM', 'SNIT', 'plano director', 'municipal', 'parâmetros', 'classificação', 'solo'],
   },
@@ -2821,5 +2821,203 @@ export const legislacao: Diploma[] = [
     linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/268-1994-228054',
     estado: 'vigente',
     tags: ['propriedade horizontal', 'condomínio', 'fracção', 'partes comuns', 'obras', 'título constitutivo'],
+  },
+
+  // --- CERTIFICAÇÃO ENERGÉTICA ---
+  {
+    id: 'dl-118-2013',
+    sigla: 'DL 118/2013',
+    titulo: 'Sistema de Certificação Energética dos Edifícios (SCE)',
+    diploma: 'Decreto-Lei n.º 118/2013, de 20 de agosto (republicado pelo DL 194/2015)',
+    categoria: 'edificacoes',
+    subcategoria: 'Certificação energética',
+    resumo: 'Aprova o Sistema de Certificação Energética dos Edifícios (SCE), o Regulamento de Desempenho Energético dos Edifícios de Habitação (REH) e o Regulamento de Desempenho Energético dos Edifícios de Comércio e Serviços (RECS). Obriga à emissão de certificado energético em todos os edifícios novos, sujeitos a grande reabilitação ou em comercialização.',
+    aplicacao: [
+      'Certificado energético obrigatório em construção nova',
+      'Certificado obrigatório em grande reabilitação (>25% da envolvente)',
+      'Certificado exigido em venda ou arrendamento de imóveis',
+      'Classes energéticas de A+ a F',
+      'Requisitos mínimos de desempenho para novas licenças',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 2.º', descricao: 'Âmbito de aplicação do SCE' },
+      { artigo: 'Art. 4.º', descricao: 'Obrigatoriedade do certificado energético' },
+      { artigo: 'Art. 15.º', descricao: 'Pré-certificado em fase de projecto' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/118-2013-499671',
+    estado: 'vigente',
+    tags: ['certificação energética', 'SCE', 'REH', 'RECS', 'eficiência energética', 'certificado', 'classe energética'],
+  },
+
+  // --- RUÍDO E ACÚSTICA ---
+  {
+    id: 'dl-9-2007',
+    sigla: 'DL 9/2007',
+    titulo: 'Regulamento Geral do Ruído',
+    diploma: 'Decreto-Lei n.º 9/2007, de 17 de janeiro',
+    categoria: 'edificacoes',
+    subcategoria: 'Acústica',
+    resumo: 'Aprova o Regulamento Geral do Ruído (RGR). Estabelece o regime de prevenção e controlo da poluição sonora, protegendo a saúde humana e o bem-estar das populações. Define zonas sensíveis e mistas, limites de exposição ao ruído e requisitos para actividades ruidosas.',
+    aplicacao: [
+      'Condicionante em projectos próximos de fontes de ruído (estradas, ferrovias)',
+      'Estudos acústicos exigíveis em áreas sensíveis',
+      'Limitações horárias para obras (actividades ruidosas temporárias)',
+      'Coordenação com RRAE para requisitos acústicos do edifício',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 11.º', descricao: 'Zonas sensíveis — limites de exposição' },
+      { artigo: 'Art. 14.º', descricao: 'Actividades ruidosas temporárias (obras)' },
+      { artigo: 'Art. 13.º', descricao: 'Zonas mistas — limites' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/9-2007-519784',
+    estado: 'vigente',
+    tags: ['ruído', 'acústica', 'zonas sensíveis', 'poluição sonora', 'actividades ruidosas', 'RGR'],
+  },
+
+  // --- REABILITAÇÃO URBANA ---
+  {
+    id: 'dl-307-2009',
+    sigla: 'DL 307/2009',
+    titulo: 'Regime Jurídico da Reabilitação Urbana (RJRU)',
+    diploma: 'Decreto-Lei n.º 307/2009, de 23 de outubro (alterado pela Lei 32/2012 e DL 136/2014)',
+    categoria: 'urbanismo',
+    subcategoria: 'Reabilitação urbana',
+    resumo: 'Estabelece o regime jurídico da reabilitação urbana em áreas de reabilitação urbana (ARU). Define instrumentos de execução, poderes expropriativos e regimes de isenção fiscal. Cria as Sociedades de Reabilitação Urbana (SRU) e define procedimentos simplificados para obras em edifícios antigos.',
+    aplicacao: [
+      'Obras em ARU — procedimento simplificado',
+      'Isenções fiscais (IMI, IMT) em zonas de reabilitação',
+      'Obras de conservação coercivas',
+      'Constituição e competências das SRU',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 14.º', descricao: 'Delimitação de ARU — efeitos' },
+      { artigo: 'Art. 55.º', descricao: 'Obras de reabilitação — regime simplificado' },
+      { artigo: 'Art. 47.º', descricao: 'Execução sistemática vs. assistemática' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/307-2009-491273',
+    estado: 'vigente',
+    tags: ['reabilitação urbana', 'ARU', 'SRU', 'edifícios antigos', 'isenção fiscal', 'RJRU'],
+  },
+
+  // --- LICENCIAMENTO INDUSTRIAL / ARMAZÉNS ---
+  {
+    id: 'dl-169-2012',
+    sigla: 'DL 169/2012',
+    titulo: 'Sistema de Indústria Responsável (SIR)',
+    diploma: 'Decreto-Lei n.º 169/2012, de 1 de agosto (alterado pelo DL 73/2015)',
+    categoria: 'edificacoes',
+    subcategoria: 'Industrial',
+    resumo: 'Aprova o Sistema de Indústria Responsável (SIR), que regula o exercício da actividade industrial. Define procedimentos de licenciamento industrial, requisitos de localização, condicionantes ambientais e regras de segurança para instalações industriais de tipo 1, 2 e 3.',
+    aplicacao: [
+      'Licenciamento de indústrias — tipo 1, 2 e 3',
+      'Localização de instalações industriais em PDM',
+      'Requisitos de acessos, estacionamento e áreas de serviço',
+      'Condicionantes ambientais e de segurança contra incêndio',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 3.º', descricao: 'Classificação de estabelecimentos industriais' },
+      { artigo: 'Art. 14.º', descricao: 'Requisitos de localização' },
+      { artigo: 'Art. 30.º', descricao: 'Procedimento de licenciamento industrial' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/decreto-lei/169-2012-174750',
+    estado: 'vigente',
+    tags: ['indústria', 'SIR', 'licenciamento industrial', 'armazém', 'instalações industriais', 'localização'],
+  },
+
+  // --- ESPAÇOS DE SAÚDE ---
+  {
+    id: 'portaria-82-2014',
+    sigla: 'Portaria 82/2014',
+    titulo: 'Requisitos e Condições de Instalação de Estabelecimentos de Saúde',
+    diploma: 'Portaria n.º 82/2014, de 10 de abril',
+    categoria: 'edificacoes',
+    subcategoria: 'Saúde',
+    resumo: 'Define os requisitos e condições de instalação, organização e funcionamento dos estabelecimentos de prestação de cuidados de saúde (clínicas, consultórios, centros de saúde privados). Estabelece áreas mínimas, equipamentos obrigatórios e condições de higiene e segurança.',
+    aplicacao: [
+      'Áreas mínimas de salas de espera, gabinetes e instalações sanitárias',
+      'Requisitos de ventilação e iluminação em espaços de saúde',
+      'Acessibilidades obrigatórias (DL 163/2006)',
+      'Separação de circuitos limpos e sujos',
+    ],
+    artigosChave: [
+      { artigo: 'Anexo I', descricao: 'Requisitos gerais de instalação' },
+      { artigo: 'Anexo II', descricao: 'Áreas mínimas por tipo de espaço' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/portaria/82-2014-25325790',
+    estado: 'vigente',
+    tags: ['saúde', 'clínica', 'consultório', 'estabelecimento de saúde', 'áreas mínimas', 'higiene'],
+  },
+
+  // --- ESTABELECIMENTOS DE ENSINO ---
+  {
+    id: 'dec-norm-1-jb-2016',
+    sigla: 'Despacho 7503-B/2016',
+    titulo: 'Programa de Instalações e Equipamentos para Estabelecimentos de Ensino',
+    diploma: 'Despacho n.º 7503-B/2016, de 7 de junho (MEC)',
+    categoria: 'edificacoes',
+    subcategoria: 'Educação',
+    resumo: 'Estabelece o Programa de Instalações e Equipamentos para os Estabelecimentos de Educação Pré-Escolar e do 1.º ao 3.º Ciclo do Ensino Básico e Ensino Secundário. Define áreas, capacidades, requisitos de conforto e acessibilidade para espaços educativos.',
+    aplicacao: [
+      'Dimensionamento de salas de aula, refeitórios e espaços desportivos',
+      'Requisitos acústicos e de iluminação natural em salas de aula',
+      'Áreas de recreio cobertas e descobertas por aluno',
+      'Acessibilidades e percursos seguros para crianças',
+    ],
+    artigosChave: [
+      { artigo: 'Cap. 3', descricao: 'Programa de necessidades — áreas por ciclo de ensino' },
+      { artigo: 'Cap. 5', descricao: 'Conforto ambiental — acústica e iluminação' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/despacho/7503-B-2016-74666374',
+    estado: 'vigente',
+    tags: ['ensino', 'escola', 'educação', 'salas de aula', 'pré-escolar', 'áreas mínimas', 'estabelecimentos escolares'],
+  },
+
+  // --- CONTROLO PRÉVIO DE OPERAÇÕES URBANÍSTICAS (RJUE actualização) ---
+  {
+    id: 'lei-79-2017',
+    sigla: 'Lei 79/2017',
+    titulo: 'Simplificação do Licenciamento Urbanístico — Alteração ao RJUE',
+    diploma: 'Lei n.º 79/2017, de 18 de agosto',
+    categoria: 'urbanismo',
+    subcategoria: 'Licenciamento',
+    resumo: 'Altera o RJUE introduzindo importantes simplificações: alarga o regime de comunicação prévia a mais obras, elimina a exigência de licença para determinadas alterações de utilização, e cria o conceito de "edificação de uso especial" para equipamentos públicos. Reforça a responsabilização dos técnicos.',
+    aplicacao: [
+      'Ampliação do âmbito da comunicação prévia',
+      'Dispensa de controlo prévio para mais obras de conservação',
+      'Alteração de utilização sem obras — regime simplificado',
+      'Responsabilidade técnica reforçada (director de obra)',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 4.º', descricao: 'Obras sujeitas a comunicação prévia — novo âmbito' },
+      { artigo: 'Art. 6.º', descricao: 'Obras dispensadas de controlo prévio' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/79-2017-108009104',
+    estado: 'vigente',
+    tags: ['RJUE', 'simplificação', 'comunicação prévia', 'licenciamento', 'alteração utilização', 'dispensa'],
+  },
+
+  // --- ESTATUTO DA ORDEM DOS ARQUITECTOS ---
+  {
+    id: 'lei-31-2009',
+    sigla: 'Lei 31/2009',
+    titulo: 'Qualificações Profissionais de Arquitecto e Engenheiro',
+    diploma: 'Lei n.º 31/2009, de 3 de julho (alterada pela Lei 40/2015)',
+    categoria: 'gestao',
+    subcategoria: 'Exercício profissional',
+    resumo: 'Aprova o regime jurídico que estabelece as qualificações profissionais exigíveis aos técnicos responsáveis pela elaboração e subscrição de projectos, pela fiscalização de obras e pela direcção de obras. Define competências específicas de arquitectos, engenheiros e técnicos de engenharia por tipo e dimensão de obra.',
+    aplicacao: [
+      'Autoria de projecto de arquitectura — exclusiva de arquitecto inscrito na OA',
+      'Coordenação de projecto — requisitos de habilitação',
+      'Direcção de obra — responsabilidades e incompatibilidades',
+      'Fiscalização — habilitações exigíveis',
+    ],
+    artigosChave: [
+      { artigo: 'Art. 9.º', descricao: 'Competências exclusivas do arquitecto' },
+      { artigo: 'Art. 10.º', descricao: 'Competências do engenheiro civil' },
+      { artigo: 'Art. 14.º', descricao: 'Director de obra — responsabilidades' },
+    ],
+    linkDRE: 'https://dre.pt/dre/detalhe/lei/31-2009-491861',
+    estado: 'vigente',
+    tags: ['arquitecto', 'Ordem dos Arquitectos', 'qualificações profissionais', 'director de obra', 'autoria projecto', 'competências'],
   },
 ];

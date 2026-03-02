@@ -221,9 +221,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -384,9 +394,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -547,9 +567,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -735,9 +765,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -923,9 +963,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -1091,6 +1141,16 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Define qualificação profissional exigível para subscrição de projectos',
     },
     {
+      diplomaId: 'portaria-82-2014',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos de clínicas e consultórios — áreas mínimas e requisitos de funcionamento',
+    },
+    {
+      diplomaId: 'dec-norm-1-jb-2016',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos de estabelecimentos de ensino — programa de instalações e áreas mínimas',
+    },
+    {
       diplomaId: 'dl-273-2003',
       relevancia: 'obrigatorio',
       nota: 'Regulamenta requisitos de segurança estrutural e estabilidade',
@@ -1119,6 +1179,11 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       diplomaId: 'en-1998',
       relevancia: 'obrigatorio',
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
+    },
+    {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
     },
     {
       diplomaId: 'dl-118-2013-solar',
@@ -1259,6 +1324,11 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Define qualificação profissional exigível para subscrição de projectos',
     },
     {
+      diplomaId: 'dl-169-2012',
+      relevancia: 'obrigatorio',
+      nota: 'Licenciamento industrial obrigatório (SIR tipo 1, 2 ou 3) — requisitos de localização e segurança',
+    },
+    {
       diplomaId: 'dl-273-2003',
       relevancia: 'obrigatorio',
       nota: 'Regulamenta requisitos de segurança estrutural e estabilidade',
@@ -1289,9 +1359,19 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
     },
     {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
+    },
+    {
       diplomaId: 'dl-118-2013-solar',
       relevancia: 'obrigatorio',
       nota: 'Obriga à instalação de sistemas solares térmicos ou fotovoltaicos em edifícios novos',
+    },
+    {
+      diplomaId: 'dl-9-2007',
+      relevancia: 'condicional',
+      nota: 'Aplicável em projectos próximos de fontes de ruído (estradas, ferrovias, actividade industrial)',
     },
     {
       diplomaId: 'portaria-73-2024',
@@ -1432,6 +1512,16 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       nota: 'Define qualificação profissional exigível para subscrição de projectos',
     },
     {
+      diplomaId: 'lei-79-2017',
+      relevancia: 'frequente',
+      nota: 'Simplificação do licenciamento — alarga comunicação prévia e dispensa licença para mais obras',
+    },
+    {
+      diplomaId: 'dl-307-2009',
+      relevancia: 'obrigatorio',
+      nota: 'Define regime jurídico da reabilitação urbana em ARU — procedimentos simplificados e isenções fiscais',
+    },
+    {
       diplomaId: 'dl-273-2003',
       relevancia: 'obrigatorio',
       nota: 'Regulamenta requisitos de segurança estrutural e estabilidade',
@@ -1460,6 +1550,11 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       diplomaId: 'en-1998',
       relevancia: 'obrigatorio',
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
+    },
+    {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
     },
     {
       diplomaId: 'dl-118-2013-solar',
@@ -1563,6 +1658,11 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       diplomaId: 'ited',
       relevancia: 'obrigatorio',
       nota: 'Obrigatório para infraestruturas de telecomunicações em urbanizações (ITUR)',
+    },
+    {
+      diplomaId: 'lei-79-2017',
+      relevancia: 'frequente',
+      nota: 'Simplificação do licenciamento — alarga comunicação prévia e dispensa licença para mais obras',
     },
   ],
 
@@ -1731,6 +1831,11 @@ export const TIPOLOGIA_DIPLOMAS: Record<string, TipologiaDiploma[]> = {
       diplomaId: 'en-1998',
       relevancia: 'obrigatorio',
       nota: 'Obrigatório para verificação de segurança sísmica em zonas de risco',
+    },
+    {
+      diplomaId: 'dl-118-2013',
+      relevancia: 'obrigatorio',
+      nota: 'Certificação energética obrigatória (SCE/REH) — pré-certificado em fase de projecto',
     },
     {
       diplomaId: 'dl-118-2013-solar',
