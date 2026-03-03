@@ -152,6 +152,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const deleteClient = useCallback((id: string) => {
     setClients((prev) => prev.filter((c) => c.id !== id));
+    setProjects((prev) => prev.filter((p) => p.clientId !== id));
+    setProposals((prev) => prev.filter((p) => p.clientId !== id));
   }, []);
 
   const addProject = useCallback((project: Project) => {

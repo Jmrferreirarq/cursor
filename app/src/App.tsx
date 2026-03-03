@@ -10,12 +10,11 @@ import { PresentationProvider } from './context/PresentationContext';
 import { useRemoveOverlays } from './hooks/useRemoveOverlays';
 import Navbar from './components/common/Navbar';
 import CommandBar from './components/common/CommandBar';
-import { UpdateBanner } from './components/common/UpdateBanner';
+import { PWAInstallBanner, OfflineIndicator, UpdateAvailableBanner } from './components/common/PWAInstallBanner';
+import BuildVersion from './components/common/BuildVersion';
 import GlobalUtilities from './components/common/GlobalUtilities';
 import { PresentationOverlay, PresentationButton } from './components/common/PresentationOverlay';
 import MobileNavigation from './components/common/MobileNavigation';
-import { PWAInstallBanner, OfflineIndicator, UpdateAvailableBanner } from './components/common/PWAInstallBanner';
-import BuildVersion from './components/common/BuildVersion';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Lazy-loaded pages — each page is only downloaded when the user navigates to it
@@ -156,7 +155,6 @@ function App() {
           </TimeProvider>
         </LanguageProvider>
       </ThemeProvider>
-      <UpdateBanner />
       </MediaProvider>
       </StudioProvider>
     </DataProvider>
