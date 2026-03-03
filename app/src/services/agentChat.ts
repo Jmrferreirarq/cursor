@@ -596,11 +596,19 @@ REGRAS CRÍTICAS:
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const doFetch = () => fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
       body: JSON.stringify({ model: 'gpt-4o', messages, max_tokens: 2000, temperature: 0.7 }),
     });
+
+    let response = await doFetch();
+
+    // Retry automático em caso de rate limit (429) — espera 5s e tenta novamente
+    if (response.status === 429) {
+      await new Promise(r => setTimeout(r, 5000));
+      response = await doFetch();
+    }
 
     if (!response.ok) throw new Error(`API ${response.status}`);
     const data = await response.json();

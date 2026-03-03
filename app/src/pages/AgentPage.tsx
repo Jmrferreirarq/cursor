@@ -35,11 +35,13 @@ type Tab = 'chat' | 'dashboard';
 
 // ── Fallback parser: extrai dados de proposta do texto do PDF ──
 function extractProposalFromPdfText(text: string, fileName: string) {
-  if (!text || text.length < 50) return null;
+  if (!text || text.length < 20) return null;
 
-  // Detetar se é uma proposta
-  const isProposal = /proposta|honorários|honorarios|prestação de serviços|cotação/i.test(text);
-  if (!isProposal) return null;
+  // Detetar se é uma proposta — aceita se o texto tem conteúdo financeiro OU se o nome do ficheiro tem padrão de proposta
+  const fileHasPattern = /\d{2,3}[_/]\d{2,4}/.test(fileName);
+  const isProposal = /proposta|honorários|honorarios|prestação de serviços|cotação|orçamento/i.test(text)
+    || /€|\beur\b|\d+[.,]\d{2}/i.test(text)
+    || fileHasPattern;
 
   // Extrair referência/número
   let reference = '';
@@ -60,12 +62,22 @@ function extractProposalFromPdfText(text: string, fileName: string) {
     if (textYearMatch) year = textYearMatch[1];
   }
 
-  // Extrair cliente
+  // Extrair cliente — primeiro do texto, depois do nome do ficheiro
   let clientName = '';
   const clientMatch =
     text.match(/cliente[:\s]+([^\n]+)/i) ||
     text.match(/exmo[s]?\.\s*(?:sr[s]?\.|sra\.?)?\s*([^\n,]+)/i);
   if (clientMatch) clientName = clientMatch[1].trim().replace(/\s+/g, ' ');
+
+  // Fallback: extrair cliente do nome do ficheiro (ex: "22_23 . Matsuri - Esplanada.pdf" → "Matsuri")
+  if (!clientName) {
+    const fileNameBase = fileName.replace(/\.pdf$/i, '');
+    // Padrão: "NUM_ANO . NomeCliente - NomeProjeto" ou "NUM_ANO . NomeCliente"
+    const fileClientMatch = fileNameBase.match(/\d+[_/]\d+\s*[.\-–]\s*([^.\-–]+?)(?:\s*[.\-–]\s*(.+))?$/);
+    if (fileClientMatch) {
+      clientName = fileClientMatch[1].trim();
+    }
+  }
 
   // Extrair valor total
   let totalValue = 0;
@@ -93,6 +105,13 @@ function extractProposalFromPdfText(text: string, fileName: string) {
     text.match(/obra[:\s]+([^\n]+)/i) ||
     text.match(/local[:\s]+([^\n]+)/i);
   if (projMatch) projectName = projMatch[1].trim().replace(/\s+/g, ' ');
+
+  // Fallback: extrair nome do projeto do ficheiro (ex: "22_23 . Matsuri - Esplanada" → "Esplanada")
+  if (!projectName) {
+    const fileNameBase = fileName.replace(/\.pdf$/i, '');
+    const fileProjMatch = fileNameBase.match(/\d+[_/]\d+\s*[.\-–]\s*[^.\-–]+\s*[.\-–]\s*(.+)$/);
+    if (fileProjMatch) projectName = fileProjMatch[1].trim();
+  }
   if (!projectName) projectName = `${projectType} — ${clientName || 'Cliente'}`;
 
   if (!clientName && !reference && totalValue === 0) return null;
