@@ -156,6 +156,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const addProject = useCallback((project: Project) => {
     setProjects((prev) => [project, ...prev]);
+    // Ligar projeto ao cliente
+    if (project.clientId) {
+      setClients((prev) => prev.map((c) => {
+        if (c.id !== project.clientId) return c;
+        if (c.projects.includes(project.id)) return c;
+        return { ...c, projects: [...c.projects, project.id] };
+      }));
+    }
   }, []);
 
   const updateProject = useCallback((id: string, patch: Partial<Project>) => {
@@ -163,7 +171,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteProject = useCallback((id: string) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    setProjects((prev) => {
+      const proj = prev.find((p) => p.id === id);
+      if (proj?.clientId) {
+        setClients((clients) => clients.map((c) =>
+          c.id === proj.clientId
+            ? { ...c, projects: c.projects.filter((pid) => pid !== id) }
+            : c
+        ));
+      }
+      return prev.filter((p) => p.id !== id);
+    });
   }, []);
 
   const addProposal = useCallback((proposal: Proposal) => {
@@ -171,7 +189,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteProposal = useCallback((id: string) => {
-    setProposals((prev) => prev.filter((p) => p.id !== id));
+    setProposals((prev) => {
+      const prop = prev.find((p) => p.id === id);
+      if (prop?.clientId) {
+        setClients((clients) => clients.map((c) =>
+          c.id === prop.clientId
+            ? { ...c, proposalIds: (c.proposalIds ?? []).filter((pid) => pid !== id) }
+            : c
+        ));
+      }
+      return prev.filter((p) => p.id !== id);
+    });
   }, []);
 
   const updateProposalStatus = useCallback((id: string, status: Proposal['status']) => {
@@ -197,6 +225,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       id: projectId,
       name: proposal.projectName || `Projeto ${proposal.clientName}`,
       client: proposal.clientName,
+      clientId: proposal.clientId,
       status: 'active',
       phase: 'Estudo Prévio',
       budget: proposal.totalValue,
@@ -207,14 +236,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       address: proposal.location || '',
       municipality: proposal.location || '',
       projectType: proposal.projectType,
+      proposalIds: [id],
+      ...(proposal.paymentTranches?.length ? { paymentTranches: proposal.paymentTranches } : {}),
     };
     setProjects((prev) => [newProject, ...prev]);
 
-    setClients((prev) => prev.map((c) =>
-      c.id === proposal.clientId && !c.projects.includes(projectId)
-        ? { ...c, projects: [...c.projects, projectId] }
-        : c
-    ));
+    setClients((prev) => prev.map((c) => {
+      if (c.id !== proposal.clientId) return c;
+      const projects = c.projects.includes(projectId) ? c.projects : [...c.projects, projectId];
+      const proposalIds = (c.proposalIds ?? []).includes(id) ? (c.proposalIds ?? []) : [...(c.proposalIds ?? []), id];
+      return { ...c, projects, proposalIds };
+    }));
 
     createChecklistForProject(
       projectId,
@@ -319,12 +351,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     
     setProposals((prev) => [newProposal, ...prev]);
     
-    // 4. Adicionar referência da proposta ao cliente (se não existir)
-    setClients((prev) => prev.map((c) => 
-      c.id === clientId && !c.projects.includes(proposalId)
-        ? { ...c, projects: [...c.projects, proposalId] }
-        : c
-    ));
+    // 4. Adicionar referência da proposta ao cliente (em proposalIds, não em projects)
+    setClients((prev) => prev.map((c) => {
+      if (c.id !== clientId) return c;
+      const proposalIds = (c.proposalIds ?? []).includes(proposalId)
+        ? (c.proposalIds ?? [])
+        : [...(c.proposalIds ?? []), proposalId];
+      return { ...c, proposalIds };
+    }));
     
     return proposalId;
   }, [findOrCreateClient, proposals]);

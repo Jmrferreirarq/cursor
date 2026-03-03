@@ -33,10 +33,17 @@ export default function ProjectDetailsPage() {
   const { projects, proposals, updateProject } = useData();
 
   const project = useMemo(() => projects.find((p) => p.id === id), [projects, id]);
-  const linkedProposals = useMemo(
-    () => proposals.filter((p) => p.clientName === project?.client),
-    [proposals, project],
-  );
+  const linkedProposals = useMemo(() => {
+    if (!project) return [];
+    // Preferir proposalIds armazenados; fallback por clientId ou nome
+    if (project.proposalIds?.length) {
+      return proposals.filter((p) => project.proposalIds!.includes(p.id));
+    }
+    if (project.clientId) {
+      return proposals.filter((p) => p.clientId === project.clientId);
+    }
+    return proposals.filter((p) => p.clientName === project.client);
+  }, [proposals, project]);
   const checklist = useMemo(() => id ? getChecklistForProject(id) : null, [id]);
 
   const [editingPhase, setEditingPhase] = useState(false);

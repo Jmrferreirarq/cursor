@@ -2,6 +2,7 @@ export interface Project {
   id: string;
   name: string;
   client: string;
+  clientId?: string;
   status: 'lead' | 'negotiation' | 'active' | 'paused' | 'completed' | 'cancelled';
   phase: string;
   startDate: string;
@@ -17,6 +18,10 @@ export interface Project {
   scope?: string;
   camProcessNumber?: string;
   pendingNote?: string;
+  /** IDs das propostas associadas a este projeto */
+  proposalIds?: string[];
+  /** Tranches de pagamento migradas da proposta aceite */
+  paymentTranches?: PaymentTranche[];
 }
 
 export interface Client {
@@ -27,7 +32,10 @@ export interface Client {
   address?: string;
   municipality?: string;
   nif?: string;
+  /** IDs de projetos associados */
   projects: string[];
+  /** IDs de propostas associadas (separado de projects) */
+  proposalIds?: string[];
   createdAt: string;
   notes?: string;
   role?: string;

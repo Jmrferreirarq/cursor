@@ -61,13 +61,15 @@ export default function ProjectsPage() {
     return counts;
   }, [projects]);
 
-  // Faturado por projeto (match por nome de cliente)
+  // Faturado por projeto (preferir clientId; fallback por nome)
   const billedByProject = useMemo(() => {
     const map: Record<string, number> = {};
     projects.forEach((proj) => {
-      const matching = proposals.filter(
-        (pr) => pr.clientName.toLowerCase() === proj.client.toLowerCase()
-      );
+      const matching = proposals.filter((pr) => {
+        if (proj.proposalIds?.length) return proj.proposalIds.includes(pr.id);
+        if (proj.clientId && pr.clientId) return pr.clientId === proj.clientId;
+        return pr.clientName.toLowerCase() === proj.client.toLowerCase();
+      });
       const billed = matching.reduce((sum, pr) => {
         return sum + (pr.paymentTranches ?? []).filter((t) => t.status === 'paid').reduce((s, t) => s + t.value, 0);
       }, 0);

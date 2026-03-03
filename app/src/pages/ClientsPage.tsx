@@ -31,14 +31,14 @@ export default function ClientsPage() {
     return filteredClients.map((client) => {
       const nameLC = client.name.toLowerCase();
       const clientProjects = projects.filter((p) =>
-        p.client.toLowerCase() === nameLC
+        p.clientId ? p.clientId === client.id : p.client.toLowerCase() === nameLC
       );
       const activeProjects = clientProjects.filter((p) =>
         ['active', 'negotiation'].includes(p.status)
       );
       const projectValue = clientProjects.reduce((sum, p) => sum + p.budget, 0);
       const clientProposals = proposals.filter((p) =>
-        p.clientName.toLowerCase() === nameLC
+        p.clientId ? p.clientId === client.id : p.clientName.toLowerCase() === nameLC
       );
       const proposalValue = clientProposals.reduce((sum, p) => sum + p.totalValue, 0);
       const totalValue = projectValue || proposalValue;

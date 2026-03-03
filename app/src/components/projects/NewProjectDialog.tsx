@@ -82,6 +82,7 @@ export default function NewProjectDialog({
       id: `project-${Date.now()}`,
       name: form.name.trim(),
       client: client.name,
+      clientId: client.id,
       status: form.status,
       phase: form.phase,
       startDate: form.startDate,
@@ -92,6 +93,7 @@ export default function NewProjectDialog({
       address: form.address.trim() || undefined,
       municipality: form.municipality.trim() || undefined,
       description: form.description.trim() || undefined,
+      proposalIds: [],
     };
 
     onSuccess(newProject);

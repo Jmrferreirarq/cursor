@@ -47,9 +47,80 @@ function stripVideoSrc(assets: { src?: string; thumbnail?: string; type?: string
 function migrate(data: AppData): AppData {
   const version = data._version ?? 0;
   if (version >= DATA_VERSION) return data;
-  // Future migrations go here:
-  // if (version < 2) { /* migrate v1 → v2 */ }
-  return { ...data, _version: DATA_VERSION };
+
+  let result = { ...data };
+
+  // v1 → v2: adicionar clientId aos projetos (ligando por nome ao cliente),
+  // separar proposalIds de projectIds no cliente, e copiar paymentTranches aceites para o projeto
+  if (version < 2) {
+    const clients = result.clients ?? [];
+    const proposals = result.proposals ?? [];
+
+    // Construir mapa clientName → clientId (case-insensitive)
+    const clientByName = new Map<string, string>();
+    for (const c of clients) {
+      clientByName.set(c.name.trim().toLowerCase(), c.id);
+    }
+
+    // Construir mapa clientId → proposalIds
+    const proposalsByClient = new Map<string, string[]>();
+    for (const p of proposals) {
+      if (p.clientId) {
+        const arr = proposalsByClient.get(p.clientId) ?? [];
+        arr.push(p.id);
+        proposalsByClient.set(p.clientId, arr);
+      }
+    }
+
+    // Construir mapa proposalId → paymentTranches (para propostas aceites)
+    const tranchesByProposal = new Map<string, typeof proposals[0]['paymentTranches']>();
+    for (const p of proposals) {
+      if (p.status === 'accepted' && p.paymentTranches?.length) {
+        tranchesByProposal.set(p.id, p.paymentTranches);
+      }
+    }
+
+    // Construir mapa projectName+clientName → proposalId (para ligar projetos criados via acceptProposal)
+    const proposalByProjectKey = new Map<string, string>();
+    for (const p of proposals) {
+      if (p.status === 'accepted' && p.projectName) {
+        const key = `${p.projectName.trim().toLowerCase()}|${p.clientName.trim().toLowerCase()}`;
+        proposalByProjectKey.set(key, p.id);
+      }
+    }
+
+    // Migrar projetos
+    result.projects = (result.projects ?? []).map((proj) => {
+      const clientName = (proj.client ?? '').trim().toLowerCase();
+      const clientId = proj.clientId ?? clientByName.get(clientName);
+      const projKey = `${proj.name.trim().toLowerCase()}|${clientName}`;
+      const linkedProposalId = proposalByProjectKey.get(projKey);
+      const proposalIds = proj.proposalIds ?? (linkedProposalId ? [linkedProposalId] : []);
+      const paymentTranches = proj.paymentTranches
+        ?? (linkedProposalId ? tranchesByProposal.get(linkedProposalId) : undefined);
+
+      return {
+        ...proj,
+        clientId: clientId ?? proj.clientId,
+        proposalIds,
+        ...(paymentTranches ? { paymentTranches } : {}),
+      };
+    });
+
+    // Migrar clientes: separar proposals de projects no array projects[]
+    result.clients = (result.clients ?? []).map((c) => {
+      const allLinked = c.projects ?? [];
+      const clientProposalIds = proposalsByClient.get(c.id) ?? [];
+      const projectIds = allLinked.filter((id) => !clientProposalIds.includes(id));
+      return {
+        ...c,
+        projects: projectIds,
+        proposalIds: Array.from(new Set([...(c.proposalIds ?? []), ...clientProposalIds])),
+      };
+    });
+  }
+
+  return { ...result, _version: DATA_VERSION };
 }
 
 export const localStorageService: IStorageService = {
@@ -100,7 +171,7 @@ export const localStorageService: IStorageService = {
     try {
       const text = await file.text();
       const raw = JSON.parse(text) as Partial<AppData>;
-      const data = merge(raw);
+      const data = migrate(merge(raw));
       return { ok: true, data };
     } catch (e) {
       return { ok: false, error: String(e) };

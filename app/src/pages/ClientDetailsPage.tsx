@@ -30,14 +30,18 @@ export default function ClientDetailsPage() {
 
   const clientProjects = useMemo(() => {
     if (!client) return [];
-    const nameLC = client.name.toLowerCase();
-    return projects.filter((p) => p.client.toLowerCase() === nameLC);
+    // Preferir ligação por clientId; fallback por nome para dados migrados
+    return projects.filter((p) =>
+      p.clientId ? p.clientId === client.id : p.client.toLowerCase() === client.name.toLowerCase()
+    );
   }, [client, projects]);
 
   const clientProposals = useMemo(() => {
     if (!client) return [];
-    const nameLC = client.name.toLowerCase();
-    return proposals.filter((p) => p.clientName.toLowerCase() === nameLC);
+    // Preferir ligação por clientId; fallback por nome para dados migrados
+    return proposals.filter((p) =>
+      p.clientId ? p.clientId === client.id : p.clientName.toLowerCase() === client.name.toLowerCase()
+    );
   }, [client, proposals]);
 
   const totalValue = useMemo(() => {
