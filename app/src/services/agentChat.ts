@@ -564,6 +564,7 @@ REGRAS CRÍTICAS:
 - Usa os dados reais fornecidos (IDs, nomes, valores) — nunca inventes dados
 - Sê direto e conciso; usa markdown
 - OBRIGATÓRIO: Quando recebes um PDF que é uma proposta de arquitetura, DEVES incluir SEMPRE e IMEDIATAMENTE o bloco [AGENT_ACTIONS] com a action create_proposal NO FINAL da resposta. NÃO digas apenas "vou importar" — inclui o bloco de ações com os dados extraídos do PDF. Se não incluíres o bloco, a importação NÃO acontece.
+- NOME DO CLIENTE: O nome do ficheiro PDF segue o padrão "NUM_ANO . NomeCliente - Local.pdf". O NomeCliente do ficheiro É o nome do cliente a usar no campo clientName. NÃO uses o nome do requerente interno do PDF — usa SEMPRE o nome do ficheiro como fonte primária para clientName. Ex: "26_23 . João Silva - Vagos.pdf" → clientName: "João Silva", projectName: "Vagos".
 - Proactivamente alerta para follow-ups, pagamentos em falta, projetos parados
 - Podes incluir múltiplas ações no mesmo bloco
 - Remove o bloco [AGENT_ACTIONS] do texto visível (é processado automaticamente)

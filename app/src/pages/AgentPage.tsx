@@ -129,6 +129,22 @@ function extractProposalFromPdfText(text: string, fileName: string) {
   };
 }
 
+// Extrai clientName e projectName do nome do ficheiro seguindo o padrão do atelier:
+// "NUM_ANO . NomeCliente - NomeProjeto.pdf" ou "NUM/ANO . NomeCliente - Local.pdf"
+function extractNamesFromFileName(fileName: string): { clientName: string; projectName: string } | null {
+  const base = fileName.replace(/\.pdf$/i, '').trim();
+  // Padrão: qualquer coisa com número seguido de separador e nome
+  const match = base.match(/^\d+[_/]\d+\s*[.\-–·]\s*(.+)$/);
+  if (!match) return null;
+  const rest = match[1].trim(); // "NomeCliente - NomeProjeto" ou "NomeCliente"
+  // Separar cliente de projeto (separador: " - ", " – ", " · ")
+  const sepMatch = rest.match(/^(.+?)\s*[\-–·]\s*(.+)$/);
+  if (sepMatch) {
+    return { clientName: sepMatch[1].trim(), projectName: sepMatch[2].trim() };
+  }
+  return { clientName: rest, projectName: '' };
+}
+
 export default function AgentPage() {
   const navigate = useNavigate();
   const { clients, projects, proposals, addClient, addProject, addProposal, acceptProposal, updateProposalStatus } = useData();
@@ -243,6 +259,27 @@ export default function AgentPage() {
         // Single file — original flow
         const response = await processMessage(messageText, appData, messages, true, attachments[0]);
         let responseActions = response.actions;
+
+        // Override clientName nas actions create_proposal com o nome do ficheiro (padrão NUM_ANO . Cliente - Local)
+        if (attachments[0]?.type === 'pdf') {
+          const fileOverride = extractNamesFromFileName(attachments[0].fileName);
+          if (fileOverride && responseActions) {
+            responseActions = responseActions.map(a => {
+              if (a.type === 'create_proposal' && a.data && fileOverride.clientName) {
+                return {
+                  ...a,
+                  label: `Importar Proposta — ${fileOverride.clientName}`,
+                  data: {
+                    ...a.data,
+                    clientName: fileOverride.clientName,
+                    ...(fileOverride.projectName && !a.data.projectName ? { projectName: fileOverride.projectName } : {}),
+                  },
+                };
+              }
+              return a;
+            });
+          }
+        }
 
         // Fallback: se foi enviado um PDF mas a IA não retornou create_proposal, adicionar botão de importação
         if (
