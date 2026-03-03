@@ -14,6 +14,7 @@ import { hasApiKey, suggestFeedMix, feedMixToPosts } from '@/services/ai';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { imageUrlToPngBlob } from '@/lib/clipboardImage';
 import { PublishPanel } from '@/components/media/PublishPanel';
+import { PostPreviewSheet } from '@/components/media/PostPreviewSheet';
 import type { ContentPost, PostStatus, ContentChannel } from '@/types';
 
 function buildFullPost(copy: string, hashtags: string[], cta: string): string {
@@ -286,39 +287,71 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
                 <div
                   key={post.id}
                   onClick={() => setPreviewPost(post)}
-                  className="bg-background border border-border rounded-xl p-3 space-y-2 group cursor-pointer hover:border-primary/30 transition-colors"
+                  className="bg-background border border-border rounded-xl overflow-hidden group cursor-pointer hover:border-primary/30 hover:shadow-sm transition-all"
                 >
                   {/* Thumbnail */}
                   {asset?.thumbnail || asset?.src ? (
-                    <div className="w-full aspect-video rounded-lg overflow-hidden bg-muted">
-                      <img src={asset.thumbnail || asset.src} alt="" className="w-full h-full object-cover" />
+                    <div className="w-full aspect-video overflow-hidden bg-muted relative">
+                      <img src={asset.thumbnail || asset.src} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      {/* Published badge overlay */}
+                      {(post.publishedNetworks?.length ?? 0) > 0 && (
+                        <div className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-black/60 backdrop-blur-sm text-[9px] text-white font-medium">
+                          {post.publishedNetworks!.length}/9 publicados
+                        </div>
+                      )}
                     </div>
                   ) : null}
-                  {/* Channel + Format */}
-                  <div className="flex items-center gap-2">
-                    <ChIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{post.channel}</span>
-                    <span className="text-xs text-muted-foreground">· {post.format}</span>
-                  </div>
-                  {/* Copy preview */}
-                  <p className="text-xs text-foreground line-clamp-2">{post.copyPt || post.copyEn || 'Sem copy'}</p>
-                  {/* Date */}
-                  {post.scheduledDate && <p className="text-[10px] text-muted-foreground">{new Date(post.scheduledDate).toLocaleDateString('pt-PT')}</p>}
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => setPublishPost(post)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20"
-                      title="Publicar nas redes"
-                    >
-                      <Send className="w-3 h-3" /> Publicar
-                    </button>
-                    {nextStatus && (
-                      <button onClick={() => movePost(post.id, nextStatus)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-[10px] font-medium hover:bg-muted/80">
-                        Avançar
-                      </button>
+
+                  <div className="p-3 space-y-2">
+                    {/* Channel + Format + published dots */}
+                    <div className="flex items-center gap-1.5">
+                      <ChIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground truncate">{post.channel}</span>
+                      <span className="text-xs text-muted-foreground">· {post.format}</span>
+                      {(post.publishedNetworks?.length ?? 0) > 0 && (
+                        <span className="ml-auto flex -space-x-0.5">
+                          {post.publishedNetworks!.slice(0, 4).map((ch) => (
+                            <span key={ch} className="w-3 h-3 rounded-full bg-emerald-500 border border-background" title={ch} />
+                          ))}
+                          {post.publishedNetworks!.length > 4 && (
+                            <span className="w-3 h-3 rounded-full bg-emerald-500/50 border border-background text-[6px] text-white flex items-center justify-center">+{post.publishedNetworks!.length - 4}</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Copy preview */}
+                    <p className="text-xs text-foreground line-clamp-2 leading-relaxed">{post.copyPt || post.copyEn || 'Sem copy'}</p>
+
+                    {/* Hashtags preview */}
+                    {post.hashtags?.length ? (
+                      <p className="text-[10px] text-primary/60 line-clamp-1">
+                        {post.hashtags.slice(0, 4).map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ')}
+                        {post.hashtags.length > 4 && ` +${post.hashtags.length - 4}`}
+                      </p>
+                    ) : null}
+
+                    {/* Date */}
+                    {post.scheduledDate && (
+                      <p className="text-[10px] text-muted-foreground">📅 {new Date(post.scheduledDate).toLocaleDateString('pt-PT')}</p>
                     )}
-                    <button onClick={() => deletePost(post.id)} className="p-1 rounded-md hover:bg-destructive/10 text-destructive"><Trash2 className="w-3 h-3" /></button>
+
+                    {/* Actions — revealed on hover */}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pt-0.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setPublishPost(post)}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20"
+                        title="Publicar nas redes"
+                      >
+                        <Send className="w-3 h-3" /> Publicar
+                      </button>
+                      {nextStatus && (
+                        <button onClick={() => movePost(post.id, nextStatus)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-[10px] font-medium hover:bg-muted/80">
+                          Avançar
+                        </button>
+                      )}
+                      <button onClick={() => deletePost(post.id)} className="p-1 rounded-md hover:bg-destructive/10 text-destructive ml-auto"><Trash2 className="w-3 h-3" /></button>
+                    </div>
                   </div>
                 </div>
               );
@@ -329,120 +362,38 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
     </div>
 
     <Sheet open={!!previewPost} onOpenChange={(open) => !open && setPreviewPost(null)}>
-      <SheetContent side="right" className="w-full max-w-md overflow-y-auto">
+      <SheetContent side="right" className="w-full max-w-lg overflow-y-auto p-0">
         {previewPost && (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Preview do post</h3>
-            {previewAsset && (previewAsset.thumbnail || previewAsset.src) && (
-              <div className="aspect-video rounded-xl overflow-hidden bg-muted">
-                <img src={previewAsset.thumbnail || previewAsset.src} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Copy PT</p>
-              <p className="text-sm whitespace-pre-wrap">{previewPost.copyPt || '—'}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Copy EN</p>
-              <p className="text-sm whitespace-pre-wrap">{previewPost.copyEn || '—'}</p>
-            </div>
-            {previewPost.hashtags?.length ? (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">Hashtags</p>
-                <p className="text-sm">{previewPost.hashtags.join(' ')}</p>
-              </div>
-            ) : null}
-            {previewPost.cta ? (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">CTA</p>
-                <p className="text-sm">{previewPost.cta}</p>
-              </div>
-            ) : null}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                onClick={() => { setPreviewPost(null); setPublishPost(previewPost); }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 w-full justify-center"
-              >
-                <Send className="w-4 h-4" /> Publicar nas Redes
-              </button>
-              <button
-                onClick={async () => {
-                  const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
-                  const fullEn = buildFullPost(previewPost.copyEn || '', previewPost.hashtags || [], previewPost.cta || '');
-                  const fullText = `——— PT ———\n${fullPt}\n\n——— EN ———\n${fullEn}`;
-                  const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
-                  try {
-                    if (imgSrc) {
-                      const html = `<div style="font-family:sans-serif;max-width:600px">
-                        <img src="${imgSrc}" alt="" style="max-width:100%;height:auto;border-radius:8px;display:block;margin-bottom:16px" />
-                        <div style="margin-bottom:16px"><strong style="color:#666;font-size:11px">PT</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullPt)}</p></div>
-                        <div><strong style="color:#666;font-size:11px">EN</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullEn)}</p></div>
-                      </div>`;
-                      await navigator.clipboard.write([
-                        new ClipboardItem({
-                          'text/plain': new Blob([fullText], { type: 'text/plain' }),
-                          'text/html': new Blob([html], { type: 'text/html' }),
-                        }),
-                      ]);
-                      toast.success('Texto PT + EN copiado — cola em Word, Notion ou na legenda do WhatsApp');
-                    } else {
-                      await navigator.clipboard.writeText(fullText);
-                      toast.success('Post completo (PT + EN) copiado');
-                    }
-                  } catch {
-                    await navigator.clipboard.writeText(fullText);
-                    toast.success('Texto copiado');
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20"
-              >
-                <Copy className="w-4 h-4" /> Copiar post completo
-              </button>
-              <button
-                onClick={async () => {
-                  const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
-                  if (!imgSrc) {
-                    toast.error('Sem imagem');
-                    return;
-                  }
-                  try {
-                    const imageBlob = await imageUrlToPngBlob(imgSrc);
-                    if (imageBlob) {
-                      await navigator.clipboard.write([new ClipboardItem({ 'image/png': imageBlob })]);
-                      toast.success('Imagem copiada — cola no WhatsApp, depois cola o texto');
-                    } else {
-                      toast.error('Não foi possível copiar a imagem');
-                    }
-                  } catch {
-                    toast.error('Não foi possível copiar a imagem');
-                  }
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
-              >
-                <Image className="w-4 h-4" /> Copiar imagem
-              </button>
-              <button
-                onClick={() => {
-                  const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
-                  navigator.clipboard.writeText(fullPt);
-                  toast.success('Copy PT copiado');
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
-              >
-                <Copy className="w-4 h-4" /> Copiar PT
-              </button>
-              <button
-                onClick={() => {
-                  const fullEn = buildFullPost(previewPost.copyEn || '', previewPost.hashtags || [], previewPost.cta || '');
-                  navigator.clipboard.writeText(fullEn);
-                  toast.success('Copy EN copiado');
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted"
-              >
-                <Copy className="w-4 h-4" /> Copiar EN
-              </button>
-            </div>
-          </div>
+          <PostPreviewSheet
+            post={previewPost}
+            asset={previewAsset ?? null}
+            onPublish={() => { setPreviewPost(null); setPublishPost(previewPost); }}
+            onCopyFull={async () => {
+              const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
+              const fullEn = buildFullPost(previewPost.copyEn || '', previewPost.hashtags || [], previewPost.cta || '');
+              const fullText = `——— PT ———\n${fullPt}\n\n——— EN ———\n${fullEn}`;
+              const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
+              try {
+                if (imgSrc) {
+                  const html = `<div style="font-family:sans-serif;max-width:600px"><img src="${imgSrc}" alt="" style="max-width:100%;height:auto;border-radius:8px;display:block;margin-bottom:16px" /><div style="margin-bottom:16px"><strong style="color:#666;font-size:11px">PT</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullPt)}</p></div><div><strong style="color:#666;font-size:11px">EN</strong><p style="white-space:pre-wrap;margin:4px 0 0;font-size:14px">${escapeHtml(fullEn)}</p></div></div>`;
+                  await navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([fullText], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })]);
+                  toast.success('Texto PT + EN copiado');
+                } else {
+                  await navigator.clipboard.writeText(fullText);
+                  toast.success('Post completo copiado');
+                }
+              } catch { await navigator.clipboard.writeText(fullText); toast.success('Texto copiado'); }
+            }}
+            onCopyImage={async () => {
+              const imgSrc = previewAsset?.thumbnail || previewAsset?.src;
+              if (!imgSrc) { toast.error('Sem imagem'); return; }
+              try {
+                const imageBlob = await imageUrlToPngBlob(imgSrc);
+                if (imageBlob) { await navigator.clipboard.write([new ClipboardItem({ 'image/png': imageBlob })]); toast.success('Imagem copiada'); }
+                else toast.error('Não foi possível copiar a imagem');
+              } catch { toast.error('Não foi possível copiar a imagem'); }
+            }}
+          />
         )}
       </SheetContent>
     </Sheet>
