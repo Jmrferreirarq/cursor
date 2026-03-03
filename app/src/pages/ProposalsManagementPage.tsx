@@ -63,7 +63,7 @@ export default function ProposalsManagementPage() {
   const { proposals, deleteProposal, updateProposalStatus, acceptProposal } = useData();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
-  const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
+  const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set(['2022', '2023', '2024', '2025', '2026']));
   const comparison = showComparison ? compareProposals(proposals) : null;
 
   // Filtros avançados
