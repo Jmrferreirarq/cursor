@@ -74,9 +74,11 @@ export default function ProposalsManagementPage() {
   const [filterMaxValue, setFilterMaxValue] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Anos disponíveis para filtro
+  // Anos disponíveis para filtro — usa o ano da referência (ex: "97/2022") se disponível
   const availableYears = useMemo(() => {
-    const years = [...new Set(proposals.map((p) => p.createdAt?.slice(0, 4)).filter(Boolean))];
+    const years = [...new Set(proposals.map((p) => {
+      return p.reference?.match(/\/(\d{4})$/)?.[1] || p.createdAt?.slice(0, 4);
+    }).filter(Boolean))];
     return years.sort((a, b) => b!.localeCompare(a!)) as string[];
   }, [proposals]);
 
@@ -120,7 +122,11 @@ export default function ProposalsManagementPage() {
     const maxVal = parseFloat(filterMaxValue) || Infinity;
     return proposals.filter((p) => {
       if (filterStatus !== 'all' && getStatus(p) !== filterStatus) return false;
-      if (filterYear !== 'all' && p.createdAt?.slice(0, 4) !== filterYear) return false;
+      if (filterYear !== 'all') {
+        const refYear = p.reference?.match(/\/(\d{4})$/)?.[1];
+        const propYear = refYear || p.createdAt?.slice(0, 4);
+        if (propYear !== filterYear) return false;
+      }
       const val = p.totalValue || 0;
       if (val < minVal || val > maxVal) return false;
       if (search) {
@@ -138,7 +144,10 @@ export default function ProposalsManagementPage() {
   const proposalsByYear = useMemo(() => {
     const groups: Record<string, typeof proposals> = {};
     filteredProposals.forEach(p => {
-      const year = p.createdAt?.slice(0, 4) || 'Sem data';
+      // Extrair ano da referência (ex: "97/2022" → "2022")
+      // Fallback para o ano de createdAt se a referência não tiver ano
+      const refYear = p.reference?.match(/\/(\d{4})$/)?.[1];
+      const year = refYear || p.createdAt?.slice(0, 4) || 'Sem data';
       (groups[year] = groups[year] || []).push(p);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
