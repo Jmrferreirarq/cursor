@@ -559,14 +559,15 @@ REGRAS PARA O CAMPO "year" e "reference":
 {"actions":[{"type":"navigate","label":"Ver Propostas","payload":"/proposals"}]}
 [/AGENT_ACTIONS]
 
-REGRAS:
+REGRAS CRÍTICAS:
 - Responde SEMPRE em português (PT-PT)
 - Usa os dados reais fornecidos (IDs, nomes, valores) — nunca inventes dados
 - Sê direto e conciso; usa markdown
-- Para PDFs de propostas, SEMPRE extrai os dados e inclui bloco create_proposal
+- OBRIGATÓRIO: Quando recebes um PDF que é uma proposta de arquitetura, DEVES incluir SEMPRE e IMEDIATAMENTE o bloco [AGENT_ACTIONS] com a action create_proposal NO FINAL da resposta. NÃO digas apenas "vou importar" — inclui o bloco de ações com os dados extraídos do PDF. Se não incluíres o bloco, a importação NÃO acontece.
 - Proactivamente alerta para follow-ups, pagamentos em falta, projetos parados
 - Podes incluir múltiplas ações no mesmo bloco
-- Remove o bloco [AGENT_ACTIONS] do texto visível (é processado automaticamente)`;
+- Remove o bloco [AGENT_ACTIONS] do texto visível (é processado automaticamente)
+- EXEMPLO OBRIGATÓRIO ao processar PDF: depois de descrever o PDF, SEMPRE termina com o bloco [AGENT_ACTIONS] com os dados reais extraídos.`;
 
   let fullUserMessage = userMessage;
   if (attachment) {

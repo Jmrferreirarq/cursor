@@ -33,6 +33,83 @@ const CATEGORY_LABELS: Record<string, string> = {
 // ── Tab type ──
 type Tab = 'chat' | 'dashboard';
 
+// ── Fallback parser: extrai dados de proposta do texto do PDF ──
+function extractProposalFromPdfText(text: string, fileName: string) {
+  if (!text || text.length < 50) return null;
+
+  // Detetar se é uma proposta
+  const isProposal = /proposta|honorários|honorarios|prestação de serviços|cotação/i.test(text);
+  if (!isProposal) return null;
+
+  // Extrair referência/número
+  let reference = '';
+  const refMatch =
+    text.match(/n[uú]mero\s*(?:da\s*)?proposta[:\s]+([^\n]+)/i) ||
+    text.match(/proposta\s*n[oº°]?\s*[:\s]*([^\n]+)/i) ||
+    text.match(/ref(?:erência)?[:\s]+([^\n]+)/i);
+  if (refMatch) reference = refMatch[1].trim().replace(/\s+/g, ' ');
+
+  // Extrair ano do nome do ficheiro ou texto
+  let year = '';
+  const fileYearMatch = fileName.match(/[_/](\d{2})(?!\d)/) || fileName.match(/(20\d{2})/);
+  if (fileYearMatch) {
+    const raw = fileYearMatch[1];
+    year = raw.length === 2 ? `20${raw}` : raw;
+  } else {
+    const textYearMatch = text.match(/(20\d{2})/);
+    if (textYearMatch) year = textYearMatch[1];
+  }
+
+  // Extrair cliente
+  let clientName = '';
+  const clientMatch =
+    text.match(/cliente[:\s]+([^\n]+)/i) ||
+    text.match(/exmo[s]?\.\s*(?:sr[s]?\.|sra\.?)?\s*([^\n,]+)/i);
+  if (clientMatch) clientName = clientMatch[1].trim().replace(/\s+/g, ' ');
+
+  // Extrair valor total
+  let totalValue = 0;
+  const valueMatches = text.matchAll(/(\d[\d.,]+)\s*€/g);
+  const values: number[] = [];
+  for (const m of valueMatches) {
+    const v = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+    if (!isNaN(v) && v > 100) values.push(v);
+  }
+  if (values.length > 0) totalValue = Math.max(...values);
+
+  // Extrair tipo de projeto
+  let projectType = 'Habitação';
+  if (/stand|exposição|comercial/i.test(text)) projectType = 'Comercial';
+  else if (/moradia/i.test(text)) projectType = 'Habitação';
+  else if (/legaliz/i.test(text)) projectType = 'Legalização';
+  else if (/interiores/i.test(text)) projectType = 'Interiores';
+  else if (/reabilita/i.test(text)) projectType = 'Reabilitação';
+  else if (/urbaniz|loteamento/i.test(text)) projectType = 'Urbanismo';
+
+  // Extrair nome do projeto
+  let projectName = '';
+  const projMatch =
+    text.match(/projeto[:\s]+([^\n]+)/i) ||
+    text.match(/obra[:\s]+([^\n]+)/i) ||
+    text.match(/local[:\s]+([^\n]+)/i);
+  if (projMatch) projectName = projMatch[1].trim().replace(/\s+/g, ' ');
+  if (!projectName) projectName = `${projectType} — ${clientName || 'Cliente'}`;
+
+  if (!clientName && !reference && totalValue === 0) return null;
+
+  return {
+    clientName: clientName || 'Cliente',
+    projectName: projectName || projectType,
+    projectType,
+    reference: reference || (year ? `${year}` : ''),
+    year: year || new Date().getFullYear().toString(),
+    totalValue,
+    vatRate: 23,
+    status: 'sent',
+    phases: [{ id: 'p1', name: 'Honorários', value: totalValue, description: '', selected: true }],
+  };
+}
+
 export default function AgentPage() {
   const navigate = useNavigate();
   const { clients, projects, proposals, addClient, addProject, addProposal, acceptProposal, updateProposalStatus } = useData();
@@ -146,7 +223,27 @@ export default function AgentPage() {
       if (attachments.length <= 1) {
         // Single file — original flow
         const response = await processMessage(messageText, appData, messages, true, attachments[0]);
-        setMessages(prev => [...prev, createMessage('agent', response.content, response.actions)]);
+        let responseActions = response.actions;
+
+        // Fallback: se foi enviado um PDF mas a IA não retornou create_proposal, adicionar botão de importação
+        if (
+          attachments[0]?.type === 'pdf' &&
+          !responseActions?.some(a => a.type === 'create_proposal')
+        ) {
+          const proposalData = extractProposalFromPdfText(attachments[0].extractedText || '', attachments[0].fileName);
+          if (proposalData) {
+            const fallbackAction: ChatAction = {
+              id: `import-fallback-${Date.now()}`,
+              label: `Importar Proposta — ${proposalData.clientName}`,
+              type: 'create_proposal',
+              payload: 'create_proposal',
+              data: proposalData as Record<string, unknown>,
+            };
+            responseActions = [...(responseActions || []), fallbackAction];
+          }
+        }
+
+        setMessages(prev => [...prev, createMessage('agent', response.content, responseActions)]);
       } else {
         // Multiple files — process sequentially
         const introMsg = createMessage('agent', `A processar **${attachments.length} ficheiros**...`);
