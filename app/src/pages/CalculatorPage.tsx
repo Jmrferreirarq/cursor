@@ -5026,15 +5026,47 @@ export default function CalculatorPage() {
                   <span className="text-muted-foreground">Honorários de arquitetura</span>
                   <span className="font-semibold">{formatCurrency(valorArq)}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Especialidades</span>
-                  <span className="font-semibold">{formatCurrency(valorEsp)}</span>
-                </div>
-                {honorPoolTotal > 0 && (
-                  <div className="flex justify-between items-center text-cyan-400">
-                    <span className="text-muted-foreground text-cyan-400">Piscina ({honorPool === 'overflow' ? 'Overflow' : 'Skimmer'} {honorPoolSize === 'small' ? 'Pequena' : honorPoolSize === 'large' ? 'Grande' : 'Média'})</span>
-                    <span className="font-semibold">{formatCurrency(honorPoolTotal)}</span>
+                {/* Especialidades — listagem individual */}
+                {valorEsp > 0 && (() => {
+                  const espIds = (TIPOLOGIA_ESPECIALIDADES[projectType] ?? []) as string[];
+                  const rows = espIds
+                    .map(id => ({ id, esp: ESPECIALIDADES.find(e => e.id === id), val: parseFloat(especialidadesValores[id] || '0') || 0 }))
+                    .filter(r => r.esp && r.val > 0);
+                  return (
+                    <>
+                      {rows.map(r => (
+                        <div key={r.id} className="flex justify-between items-center pl-3 text-sm">
+                          <span className="text-muted-foreground">{r.esp!.name}</span>
+                          <span className="font-medium">{formatCurrency(r.val)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center border-t border-border/40 pt-1">
+                        <span className="text-muted-foreground text-sm font-medium">Total especialidades</span>
+                        <span className="font-semibold">{formatCurrency(valorEsp)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+                {valorEsp === 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Especialidades</span>
+                    <span className="font-semibold text-muted-foreground/60">—</span>
                   </div>
+                )}
+                {/* Piscina — listagem individual */}
+                {honorPoolTotal > 0 && honorPoolBreakdown && (
+                  <>
+                    {honorPoolBreakdown.map(r => (
+                      <div key={r.id} className="flex justify-between items-center pl-3 text-sm text-cyan-400/80">
+                        <span>{r.nome}</span>
+                        <span className="font-medium">{formatCurrency(r.valor)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center border-t border-cyan-500/20 pt-1 text-cyan-400">
+                      <span className="text-sm font-medium">Total piscina ({honorPool === 'overflow' ? 'Overflow' : 'Skimmer'} {honorPoolSize === 'small' ? 'Pequena' : honorPoolSize === 'large' ? 'Grande' : 'Média'})</span>
+                      <span className="font-semibold">{formatCurrency(honorPoolTotal)}</span>
+                    </div>
+                  </>
                 )}
                 {descontoAtivo && descontoValorCalc > 0 && (
                   <>
