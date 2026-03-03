@@ -9,7 +9,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import {
   LayoutGrid, Table2, List, Zap, Sparkles, AlertTriangle,
-  Star, Calendar, Loader2, Plus, GripVertical, Pencil, Copy, Trash2,
+  Star, Calendar, Loader2, Plus, GripVertical, Pencil, Copy, Trash2, Send,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
@@ -20,6 +20,7 @@ import {
   generateQueueItems,
 } from '@/services/contentQueue';
 import type { ContentPost, PostStatus, PostWeight, ContentChannel } from '@/types';
+import { PublishPanel } from '@/components/media/PublishPanel';
 
 type ViewMode = 'kanban' | 'table' | 'list';
 type StatusFilter = 'all' | 'rascunho' | 'agendado' | 'publicado' | 'arquivado';
@@ -56,6 +57,7 @@ export default function ContentQueuePage() {
   const [scheduling, setScheduling] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
+  const [publishPost, setPublishPost] = useState<ContentPost | null>(null);
 
   // ── Computed ──
 
@@ -266,6 +268,14 @@ export default function ContentQueuePage() {
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => setPublishPost(post)}
+            className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded text-[10px] font-medium transition-colors"
+            title="Publicar nas redes"
+          >
+            <Send className="w-3 h-3" />
+            Publicar
+          </button>
           {validNext.map((ns) => {
             const col = QUEUE_COLUMNS.find((c) => c.id === ns);
             return (
@@ -392,6 +402,7 @@ export default function ContentQueuePage() {
                       onDuplicate={handleDuplicate}
                       onDelete={deletePost}
                       onMoveToPublished={handleMoveToPublished}
+                      onPublish={setPublishPost}
                       getValidTransitions={getValidTransitions}
                     />
                   ))}
@@ -520,6 +531,19 @@ export default function ContentQueuePage() {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {publishPost && (
+          <PublishPanel
+            post={publishPost}
+            onClose={() => setPublishPost(null)}
+            onUpdate={(patch) => {
+              updatePost(publishPost.id, patch);
+              setPublishPost((prev) => prev ? { ...prev, ...patch } : null);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -534,6 +558,7 @@ function SortableQueueItem({
   onDuplicate,
   onDelete,
   onMoveToPublished,
+  onPublish,
   getValidTransitions,
 }: {
   post: ContentPost;
@@ -545,6 +570,7 @@ function SortableQueueItem({
   onDuplicate: (post: ContentPost) => void;
   onDelete: (id: string) => void;
   onMoveToPublished: (id: string) => void;
+  onPublish: (post: ContentPost) => void;
   getValidTransitions: (status: PostStatus) => PostStatus[];
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: post.id });
@@ -591,6 +617,9 @@ function SortableQueueItem({
       )}
       {pillar && <span className="px-2 py-0.5 bg-muted rounded text-[10px]">{pillar.name}</span>}
       <div className="flex items-center gap-1">
+        <button onClick={() => onPublish(post)} className="p-2 rounded-lg hover:bg-primary/10 text-primary" title="Publicar nas redes">
+          <Send className="w-4 h-4" />
+        </button>
         {validNext.includes('published') && (
           <button onClick={() => onMoveToPublished(post.id)} className="p-2 rounded-lg hover:bg-muted" title="Mover para Publicado">
             <Star className="w-4 h-4" />

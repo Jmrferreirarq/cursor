@@ -122,6 +122,18 @@ function migrate(data: AppData): AppData {
     });
   }
 
+  // v2 → v3: populate networkCaptions from copyPt for existing posts
+  if (version < 3) {
+    const ALL_CHANNELS = ['ig-feed', 'ig-reels', 'ig-stories', 'ig-carrossel', 'linkedin', 'tiktok', 'pinterest', 'youtube', 'threads'] as const;
+    result.contentPosts = (result.contentPosts ?? []).map((post) => {
+      if (post.networkCaptions) return post;
+      const base = post.copyPt || post.copyEn || '';
+      const networkCaptions: Record<string, string> = {};
+      for (const ch of ALL_CHANNELS) networkCaptions[ch] = base;
+      return { ...post, networkCaptions, publishedNetworks: post.publishedNetworks ?? [] };
+    });
+  }
+
   return { ...result, _version: DATA_VERSION };
 }
 

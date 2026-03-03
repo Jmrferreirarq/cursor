@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Image, Video, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -227,6 +227,8 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
 
   if (!open) return null;
 
+  const previews = files.map((f) => ({ name: f.name, url: URL.createObjectURL(f), isVideo: f.type.startsWith('video/') }));
+
   return (
     <AnimatePresence>
       <motion.div
@@ -269,12 +271,28 @@ export default function MediaUploadDialog({ open, onClose }: Props) {
                 className="hidden"
               />
               {files.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-primary">
-                    {files[0].type.startsWith('video') ? <Video className="w-8 h-8" /> : <Image className="w-8 h-8" />}
+                <div>
+                  <p className="font-medium mb-3">{files.length} ficheiro{files.length > 1 ? 's' : ''} selecionado{files.length > 1 ? 's' : ''}</p>
+                  <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                    {previews.map((p, i) => (
+                      <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted border border-border">
+                        {p.isVideo ? (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Video className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setFiles((prev) => prev.filter((_, idx) => idx !== i)); }}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 rounded-full flex items-center justify-center text-white hover:bg-black/80"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <p className="font-medium">{files.length} ficheiro{files.length > 1 ? 's' : ''} selecionado{files.length > 1 ? 's' : ''}</p>
-                  <p className="text-sm text-muted-foreground">{files.map((f) => f.name).join(', ')}</p>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">Clica para adicionar mais</p>
                 </div>
               ) : (
                 <div className="space-y-2">

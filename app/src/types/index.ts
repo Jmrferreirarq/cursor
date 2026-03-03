@@ -409,6 +409,10 @@ export interface ContentPost {
   isBuffer?: boolean;          // emergency buffer post (pre-approved light)
   measuredAt?: string;         // when metrics were recorded
   topPerformer?: boolean;      // engagement above threshold
+
+  // ── Multi-network publish fields ──
+  networkCaptions?: Partial<Record<ContentChannel, string>>;  // caption per network
+  publishedNetworks?: ContentChannel[];                        // networks already published
 }
 
 export interface EditorialPillar {

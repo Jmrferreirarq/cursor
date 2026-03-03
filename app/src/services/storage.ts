@@ -17,7 +17,7 @@ export interface TrashEntry<T> {
   deletedAt: string;
 }
 
-export const DATA_VERSION = 2;
+export const DATA_VERSION = 3;
 
 export interface AppData {
   _version?: number;
