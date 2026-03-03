@@ -2048,16 +2048,19 @@ export default function CalculatorPage() {
   const moradiaAddonTotal = moradiaAddonCalc?.totalAddon ?? 0;
   const lotAddonsPoolTotal = isLoteamento ? calcularAddonsPool().total : 0;
   // Piscina no calculador principal
-  const honorPoolTotal = (() => {
-    if (honorPool === 'nenhuma') return 0;
-    const base = (CATALOGO_ADDONS.pool_arch_lic?.valor ?? 650)
-      + (CATALOGO_ADDONS.pool_eng_lic?.valor ?? 1050)
-      + (CATALOGO_ADDONS.pool_elec_lic?.valor ?? 450)
-      + (CATALOGO_ADDONS.pool_coord_lic?.valor ?? 175);
+  const honorPoolBreakdown = (() => {
+    if (honorPool === 'nenhuma') return null;
     const sizeMult = honorPoolSize === 'small' ? 0.85 : honorPoolSize === 'large' ? 1.35 : 1.0;
     const typeMult = honorPool === 'overflow' ? 1.2 : 1.0;
-    return Math.round(base * sizeMult * typeMult / 50) * 50;
+    const round = (v: number) => Math.round(v * sizeMult * typeMult / 25) * 25;
+    return [
+      { id: 'pool_arch',  nome: 'Arquitetura piscina',             valor: round(CATALOGO_ADDONS.pool_arch_lic?.valor ?? 650) },
+      { id: 'pool_eng',   nome: 'Estruturas + hidráulica piscina', valor: round(CATALOGO_ADDONS.pool_eng_lic?.valor ?? 1050) },
+      { id: 'pool_elec',  nome: 'Inst. elétricas / IEBT piscina',  valor: round(CATALOGO_ADDONS.pool_elec_lic?.valor ?? 450) },
+      { id: 'pool_coord', nome: 'Coordenação piscina',             valor: round(CATALOGO_ADDONS.pool_coord_lic?.valor ?? 175) },
+    ];
   })();
+  const honorPoolTotal = honorPoolBreakdown ? honorPoolBreakdown.reduce((s, r) => s + r.valor, 0) : 0;
   const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal + lotAddonsPoolTotal + honorPoolTotal;
   // Desconto comercial: aplica-se sobre serviços (arq + esp + moradia addon), NÃO sobre despesas reembolsáveis
   const descontoValorCalc = descontoAtivo && descontoTipo ? Math.round(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100) : 0;
@@ -3919,7 +3922,7 @@ export default function CalculatorPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-sm font-semibold text-cyan-400">Licenciamento de piscina</span>
-                        <p className="text-xs text-muted-foreground mt-0.5">Inclui: Arq. + Estruturas/Hid. + IEBT + Coordenação</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Projetos de especialidades para licenciamento de piscina</p>
                       </div>
                       <select
                         value={honorPool}
@@ -3931,24 +3934,44 @@ export default function CalculatorPage() {
                         <option value="overflow">Overflow (grelha perimetral)</option>
                       </select>
                     </div>
-                    {honorPool !== 'nenhuma' && (
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground">Dimensão:</span>
-                        {(['small', 'medium', 'large'] as const).map((s) => (
-                          <label key={s} className="flex items-center gap-1.5 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="honorPoolSize"
-                              value={s}
-                              checked={honorPoolSize === s}
-                              onChange={() => setHonorPoolSize(s)}
-                              className="accent-cyan-500"
-                            />
-                            <span className="text-xs">{s === 'small' ? 'Pequena (<15m²)' : s === 'medium' ? 'Média (15–30m²)' : 'Grande (>30m²)'}</span>
-                          </label>
-                        ))}
-                        <span className="ml-auto text-sm font-semibold text-cyan-400">{honorPoolTotal.toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €</span>
-                      </div>
+
+                    {honorPool !== 'nenhuma' && honorPoolBreakdown && (
+                      <>
+                        {/* Seletor de dimensão */}
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-xs text-muted-foreground">Dimensão da piscina:</span>
+                          {(['small', 'medium', 'large'] as const).map((s) => (
+                            <label key={s} className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="honorPoolSize"
+                                value={s}
+                                checked={honorPoolSize === s}
+                                onChange={() => setHonorPoolSize(s)}
+                                className="accent-cyan-500"
+                              />
+                              <span className="text-xs">
+                                {s === 'small' ? 'Pequena (<15m²)' : s === 'medium' ? 'Média (15–30m²)' : 'Grande (>30m²)'}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+
+                        {/* Especialidades da piscina — breakdown individual */}
+                        <div className="mt-2 space-y-1.5 border-t border-cyan-500/20 pt-3">
+                          <p className="text-xs font-medium text-cyan-400 mb-2">Especialidades incluídas:</p>
+                          {honorPoolBreakdown.map((item) => (
+                            <div key={item.id} className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">{item.nome}</span>
+                              <span className="font-semibold tabular-nums">{formatCurrency(item.valor)}</span>
+                            </div>
+                          ))}
+                          <div className="flex justify-between items-center pt-2 border-t border-cyan-500/20 text-cyan-400 font-semibold">
+                            <span className="text-sm">Total piscina</span>
+                            <span>{formatCurrency(honorPoolTotal)}</span>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
