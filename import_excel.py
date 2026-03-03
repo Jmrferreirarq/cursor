@@ -143,7 +143,8 @@ def import_projects(df: pd.DataFrame) -> list:
     return projects
 
 
-def import_proposals(df: pd.DataFrame, done: bool = False) -> list:
+def import_proposals(df: pd.DataFrame, done: bool = False, sheet_year: str = "") -> list:
+    import re as _re
     proposals = []
 
     # Calcular percentagens por linha (a partir da coluna Proporção)
@@ -158,6 +159,27 @@ def import_proposals(df: pd.DataFrame, done: bool = False) -> list:
         client = safe_str(row.get("Cliente", ""))
         if not client:
             continue
+
+        # Reference number — try several common column names
+        raw_ref = safe_str(row.get("Nº", row.get("N.º", row.get("Num", row.get("Referência", row.get("Ref", ""))))))
+
+        # Extract year from reference or fall back to sheet_year
+        year_in_ref = _re.search(r'(20\d{2})', raw_ref)
+        extracted_year = year_in_ref.group(1) if year_in_ref else sheet_year
+
+        if raw_ref:
+            # If no year embedded yet and we know the sheet year, append it
+            if extracted_year and '/' not in raw_ref and not _re.search(r'20\d{2}', raw_ref):
+                reference = f"{raw_ref}/{extracted_year}"
+            else:
+                reference = raw_ref
+        elif extracted_year:
+            reference = f"{i + 1}/{extracted_year}"
+        else:
+            reference = ""
+
+        created_year = extracted_year or str(date.today().year)
+        created_at = f"{created_year}-01-01T00:00:00"
         cotação = safe_float(row.get("Cotação", 0))
         proporção = safe_str(row.get("Proporção", ""))
         pcts = get_pcts(proporção)
@@ -217,7 +239,8 @@ def import_proposals(df: pd.DataFrame, done: bool = False) -> list:
             "vatRate": 23,
             "totalWithVat": round(cotação * 1.23, 2),
             "status": status,
-            "createdAt": date.today().isoformat(),
+            "createdAt": created_at,
+            "reference": reference,
             "projectName": f"Projeto {client}",
             "paymentTranches": tranches,
             "isBillingDone": done,
@@ -316,11 +339,32 @@ def main():
     print(f"A ler {args.xls}...")
     sheets = pd.read_excel(args.xls, sheet_name=None, engine="xlrd")
 
+    # Try to detect year from sheet name (e.g. "FA_2023", "2022")
+    import re as _re_main
+
+    def year_from_sheet(name: str) -> str:
+        m = _re_main.search(r'(20\d{2})', name)
+        return m.group(1) if m else ""
+
     clients = import_clients(sheets.get("Contactos", pd.DataFrame()))
     projects = import_projects(sheets.get("Jé", pd.DataFrame()))
-    proposals_active = import_proposals(sheets.get("FA", pd.DataFrame()), done=False)
-    proposals_done = import_proposals(sheets.get("FA_Done", pd.DataFrame()), done=True)
-    proposals_esp = import_proposals(sheets.get("FA ESP", pd.DataFrame()), done=True)
+
+    all_proposals = []
+    # Process every sheet — active, done, esp
+    sheet_map = {
+        "FA": False,
+        "FA_Done": True,
+        "FA ESP": True,
+    }
+    for sheet_name, is_done in sheet_map.items():
+        df = sheets.get(sheet_name, pd.DataFrame())
+        if not df.empty:
+            sy = year_from_sheet(sheet_name)
+            all_proposals += import_proposals(df, done=is_done, sheet_year=sy)
+
+    proposals_active = [p for p in all_proposals if not p.get("isBillingDone")]
+    proposals_done   = [p for p in all_proposals if p.get("isBillingDone")]
+    proposals_esp    = []  # already merged above
     proposals = proposals_active + proposals_done + proposals_esp
     specialists = import_specialists(sheets.get("ESPECIALIDADES", pd.DataFrame()))
     licenses = import_licenses(sheets.get("Licenças", pd.DataFrame()))

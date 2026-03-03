@@ -74,12 +74,23 @@ export default function ProposalsManagementPage() {
   const [filterMaxValue, setFilterMaxValue] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Anos disponíveis para filtro — usa o ano da referência (ex: "97/2022") se disponível
+  // Extrai o ano de uma proposta — tenta referência, depois projectName, depois createdAt
+  const getProposalYear = (p: typeof proposals[0]): string => {
+    const yearRegex = /(20\d{2})/;
+    return (
+      yearRegex.exec(p.reference ?? '')?.[1] ||
+      yearRegex.exec(p.projectName ?? '')?.[1] ||
+      p.createdAt?.slice(0, 4) ||
+      'Sem data'
+    );
+  };
+
+  // Anos disponíveis — sempre inclui 2022-2026, mais quaisquer outros anos presentes
   const availableYears = useMemo(() => {
-    const years = [...new Set(proposals.map((p) => {
-      return p.reference?.match(/\/(\d{4})/)?.[1] || p.createdAt?.slice(0, 4);
-    }).filter(Boolean))];
-    return years.sort((a, b) => b!.localeCompare(a!)) as string[];
+    const fromData = new Set(proposals.map((p) => getProposalYear(p)).filter((y) => y !== 'Sem data'));
+    const defaultRange = ['2022', '2023', '2024', '2025', '2026'];
+    const allYears = [...new Set([...defaultRange, ...fromData])];
+    return allYears.sort((a, b) => b.localeCompare(a));
   }, [proposals]);
 
   // Exportar CSV
@@ -123,9 +134,7 @@ export default function ProposalsManagementPage() {
     return proposals.filter((p) => {
       if (filterStatus !== 'all' && getStatus(p) !== filterStatus) return false;
       if (filterYear !== 'all') {
-        const refYear = p.reference?.match(/\/(\d{4})/)?.[1];
-        const propYear = refYear || p.createdAt?.slice(0, 4);
-        if (propYear !== filterYear) return false;
+        if (getProposalYear(p) !== filterYear) return false;
       }
       const val = p.totalValue || 0;
       if (val < minVal || val > maxVal) return false;
@@ -146,8 +155,7 @@ export default function ProposalsManagementPage() {
     filteredProposals.forEach(p => {
       // Extrair ano da referência (ex: "97/2022" → "2022")
       // Fallback para o ano de createdAt se a referência não tiver ano
-      const refYear = p.reference?.match(/\/(\d{4})/)?.[1];
-      const year = refYear || p.createdAt?.slice(0, 4) || 'Sem data';
+      const year = getProposalYear(p);
       (groups[year] = groups[year] || []).push(p);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
