@@ -467,6 +467,14 @@ const TIPOLOGIA_ESPECIALIDADES: Record<string, string[]> = {
   praia_ab: ['estruturas', 'coord_especialidades'],
   praia_ar: ['estruturas', 'eletrico', 'coord_especialidades'],
   praia_ec: ['estruturas', 'aguas_esgotos', 'eletrico', 'scie', 'coord_especialidades'],
+  // Legalização — especialidades do projeto retroativo (levantamento + telas finais)
+  legalizacao_moradia: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'coord_especialidades'],
+  legalizacao_edificio: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'acustica', 'coord_especialidades'],
+  legalizacao_comercio: ['estruturas', 'aguas_esgotos', 'eletrico', 'termico', 'scie', 'coord_especialidades'],
+  legalizacao_industria: ['estruturas', 'aguas_esgotos', 'eletrico', 'avac', 'termico', 'scie', 'coord_especialidades'],
+  legalizacao_ampliacao: ['estruturas', 'aguas_esgotos', 'eletrico', 'coord_especialidades'],
+  // Legalização piscina — NP EN 60364-7-702 exige projeto elétrico (ligação equipotencial + IEBT)
+  legalizacao_piscina: ['estruturas', 'aguas_esgotos', 'eletrico', 'coord_especialidades'],
 };
 
 // ── Desconto comercial: tipos, defaults, ranges, textos ──
@@ -684,11 +692,13 @@ const EXTERNAL_WORKS_LEVELS = {
 const CATALOGO_ADDONS: Record<string, { nome: string; valor: number }> = {
   // Licenciamento
   pool_arch_lic:   { nome: 'Arquitetura piscina (lic.)', valor: 650 },
-  pool_eng_lic:    { nome: 'Estruturas+hidraulica piscina (lic.)', valor: 1050 },
+  pool_eng_lic:    { nome: 'Estruturas + hidráulica piscina (lic.)', valor: 1050 },
+  pool_elec_lic:   { nome: 'Inst. elétricas piscina / IEBT (lic.)', valor: 450 },
   pool_coord_lic:  { nome: 'Coordenacao piscina (lic.)', valor: 175 },
   // Execucao
   pool_arch_exec:  { nome: 'Arquitetura piscina (exec.)', valor: 1050 },
-  pool_eng_exec:   { nome: 'Estruturas+hidraulica piscina (exec.)', valor: 1650 },
+  pool_eng_exec:   { nome: 'Estruturas + hidráulica piscina (exec.)', valor: 1650 },
+  pool_elec_exec:  { nome: 'Inst. elétricas piscina / IEBT (exec.)', valor: 700 },
   pool_coord_exec: { nome: 'Coordenacao piscina (exec.)', valor: 250 },
   // Cave (quando rampas/contencoes complexas)
   basement_arch:   { nome: 'Arquitetura cave (rampas/org.)', valor: 600 },
@@ -1391,7 +1401,7 @@ export default function CalculatorPage() {
     const addonIds: string[] = [];
     // Licenciamento
     if (fasesIncluidas.has('lot_projeto') || fasesIncluidas.has('lot_notificacoes')) {
-      addonIds.push('pool_arch_lic', 'pool_eng_lic', 'pool_coord_lic');
+      addonIds.push('pool_arch_lic', 'pool_eng_lic', 'pool_elec_lic', 'pool_coord_lic');
     }
     const poolFactor = POOL_OPTIONS[lotPool].factor;
     const items = addonIds.map(id => {
