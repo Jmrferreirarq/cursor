@@ -14,6 +14,7 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { useStudio } from '@/context/StudioContext';
 
 const websiteData = [
   { month: 'Jan', visits: 1200, leads: 45 },
@@ -24,11 +25,11 @@ const websiteData = [
   { month: 'Jun', visits: 2400, leads: 112 },
 ];
 
-const PRESENCA_DIGITAL = [
-  { id: 'ig', name: 'Instagram', url: 'https://instagram.com/ferreirarquitetos', icon: Instagram, color: 'bg-pink-500/20 text-pink-400' },
-  { id: 'pin', name: 'Pinterest', url: 'https://pinterest.com/ferreirarquitetos', icon: Share2, color: 'bg-red-500/20 text-red-400' },
-  { id: 'li', name: 'LinkedIn', url: 'https://www.linkedin.com/company/ferreiraarquitetos/', icon: Linkedin, color: 'bg-blue-500/20 text-blue-400' },
-  { id: 'be', name: 'Behance', url: 'https://behance.net/ferreirarquitetos', icon: Image, color: 'bg-cyan-500/20 text-cyan-400' },
+const PRESENCA_DIGITAL_BASE = [
+  { id: 'ig', name: 'Instagram', socialKey: 'instagram' as const, icon: Instagram, color: 'bg-pink-500/20 text-pink-400' },
+  { id: 'pin', name: 'Pinterest', socialKey: 'pinterest' as const, icon: Share2, color: 'bg-red-500/20 text-red-400' },
+  { id: 'li', name: 'LinkedIn', socialKey: 'linkedinCompany' as const, icon: Linkedin, color: 'bg-blue-500/20 text-blue-400' },
+  { id: 'be', name: 'Behance', socialKey: 'behance' as const, icon: Image, color: 'bg-cyan-500/20 text-cyan-400' },
 ];
 
 const CONTENT_FACTORY_LINKS = [
@@ -57,7 +58,13 @@ const socialPosts = [
 
 export default function MarketingPage() {
   const navigate = useNavigate();
+  const { profile: studioProfile } = useStudio();
   const [metas, setMetas] = useState(MOCK_METAS);
+
+  const PRESENCA_DIGITAL = PRESENCA_DIGITAL_BASE.map((item) => ({
+    ...item,
+    url: studioProfile.social[item.socialKey] || '#',
+  }));
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const toggleMeta = (id: string) => {

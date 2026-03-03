@@ -6,6 +6,8 @@ import { formatCurrency } from '../../lib/proposalPayload';
 import { PROPOSAL_PALETTE } from '../../lib/proposalPalette';
 import { t, type Lang } from '../../locales';
 import type { ProposalPayload } from '../../lib/proposalPayload';
+import type { StudioProfile } from '@/types';
+import { DEFAULT_STUDIO_PROFILE } from '@/types';
 import { getPhasesByCategory, getCostsByTypology, calculateConstructionEstimate } from '../../data/constructionGuide';
 import { CompanySnapshot } from '../branding/CompanySnapshot';
 import { municipios, EQUIPAMENTOS_DEFAULTS } from '../../data/municipios';
@@ -21,15 +23,15 @@ const fs = (n: number) => Math.round(n * FONT_SCALE);
 export interface ProposalDocumentProps {
   payload: ProposalPayload;
   lang: Lang;
-  /** Classes adicionais para o contentor (ex: para PDF) */
   className?: string;
-  /** Estilos inline adicionais */
   style?: React.CSSProperties;
-  /** Offset para preview paginado (px) - desloca o conteúdo para mostrar página N */
   clipOffset?: number;
+  /** Perfil do estúdio para o CompanySnapshot e rodapé */
+  studioProfile?: StudioProfile;
 }
 
-export function ProposalDocument({ payload: p, lang, className = '', style, clipOffset = 0 }: ProposalDocumentProps) {
+export function ProposalDocument({ payload: p, lang, className = '', style, clipOffset = 0, studioProfile }: ProposalDocumentProps) {
+  const studio = studioProfile ?? DEFAULT_STUDIO_PROFILE;
   const { branding } = p;
 
   return (
@@ -2107,7 +2109,7 @@ export function ProposalDocument({ payload: p, lang, className = '', style, clip
             <p style={{ fontSize: fs(9), fontWeight: 600, color: C.cinzaMarca, margin: '0 0 3mm 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {lang === 'en' ? 'About Us' : 'Sobre Nós'}
             </p>
-            <CompanySnapshot variant="full" lang={lang} forPrint={true} />
+            <CompanySnapshot variant="full" lang={lang} forPrint={true} profile={studio} />
           </div>
 
           {/* Espaçador flexível para empurrar assinaturas para baixo */}

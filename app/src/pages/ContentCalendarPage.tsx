@@ -4,33 +4,25 @@ import { motion } from 'framer-motion';
 import { parseISO } from 'date-fns';
 import {
   Calendar, ChevronLeft, ChevronRight, Star, AlertTriangle,
-  ArrowRight, Zap, Loader2,
+  ArrowRight, Zap, Loader2, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMedia } from '@/context/MediaContext';
 import { useData } from '@/context/DataContext';
+import { useStudio } from '@/context/StudioContext';
 import { validateCalendar, autoSchedule } from '@/services/contentQueue';
-import type { ContentPost } from '@/types';
+import { getChannelShort, getChannelDotColor, getChannelUrl } from '@/lib/channelConfig';
+import type { ContentPost, ContentChannel } from '@/types';
 
 type ViewMode = 'week' | 'month';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-const CHANNEL_SHORT: Record<string, string> = {
-  'ig-feed': 'IG', 'ig-reels': 'Reels', 'ig-stories': 'Stories',
-  'ig-carrossel': 'Carrossel', 'linkedin': 'LI', 'tiktok': 'TT',
-  'pinterest': 'Pin', 'youtube': 'YT', 'threads': 'Thrd',
-};
-
-const CHANNEL_DOT_COLOR: Record<string, string> = {
-  'ig-feed': 'bg-orange-500', 'ig-reels': 'bg-orange-500', 'ig-stories': 'bg-orange-500', 'ig-carrossel': 'bg-orange-500',
-  'tiktok': 'bg-zinc-900', 'pinterest': 'bg-red-500', 'linkedin': 'bg-blue-600', 'youtube': 'bg-red-600', 'threads': 'bg-zinc-700',
-};
-
 export default function ContentCalendarPage() {
   const navigate = useNavigate();
   const { posts, updatePost, assets, editorialDNA, slots } = useMedia();
   const { projects } = useData();
+  const { profile: studioProfile } = useStudio();
 
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -149,7 +141,7 @@ export default function ContentCalendarPage() {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1">
-              <span className="text-[10px] font-medium truncate">{CHANNEL_SHORT[post.channel] || post.channel}</span>
+              <span className="text-[10px] font-medium truncate">{getChannelShort(post.channel as ContentChannel) || post.channel}</span>
               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${weight === 'heavy' ? 'bg-red-500' : 'bg-emerald-500'}`} />
             </div>
             {!compact && (
@@ -199,7 +191,7 @@ export default function ContentCalendarPage() {
             {!isWeekView && channels.length > 0 && (
               <div className="flex gap-0.5">
                 {channels.slice(0, 3).map((ch) => (
-                  <span key={ch} className={`w-1.5 h-1.5 rounded-full ${CHANNEL_DOT_COLOR[ch] || 'bg-muted-foreground'}`} title={CHANNEL_SHORT[ch]} />
+                  <span key={ch} className={`w-1.5 h-1.5 rounded-full ${getChannelDotColor(ch as ContentChannel) || 'bg-muted-foreground'}`} title={getChannelShort(ch as ContentChannel)} />
                 ))}
               </div>
             )}
@@ -212,7 +204,7 @@ export default function ContentCalendarPage() {
         {/* Slot info */}
         {slot && isWeekView && (
           <div className="text-[9px] text-muted-foreground mb-2 px-1.5 py-0.5 bg-muted/50 rounded">
-            {slot.label} · {slot.channels.map((c) => CHANNEL_SHORT[c]).join(', ')}
+            {slot.label} · {slot.channels.map((c) => getChannelShort(c as ContentChannel)).join(', ')}
           </div>
         )}
 

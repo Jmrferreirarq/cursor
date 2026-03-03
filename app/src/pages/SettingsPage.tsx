@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw, Download, Upload, Database, Cloud, CloudOff } from 'lucide-react';
+import { Settings, Trash2, Image, Users, AlertTriangle, Sparkles, Key, RotateCcw, Download, Upload, Database, Cloud, CloudOff, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useData } from '@/context/DataContext';
 import { useMedia } from '@/context/MediaContext';
@@ -10,6 +10,7 @@ import { t } from '@/locales';
 import { hasApiKey } from '@/services/ai';
 import { isCloudConfigured } from '@/services/supabaseSync';
 import AISettingsDialog from '@/components/media/AISettingsDialog';
+import StudioProfileSection from '@/components/settings/StudioProfileSection';
 const STORAGE_KEY = 'fa360_data';
 
 export default function SettingsPage() {
@@ -78,6 +79,27 @@ export default function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight">{s('title')}</h1>
         <p className="text-muted-foreground mt-1">{s('subtitle')}</p>
       </motion.div>
+
+      {/* Perfil do Estúdio */}
+      <motion.section
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.04 }}
+        className="bg-card border border-border rounded-xl overflow-hidden"
+      >
+        <div className="p-5 border-b border-border">
+          <h2 className="font-semibold flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            Perfil do Estúdio
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Dados da empresa, contactos e redes sociais — usados nas propostas e no dashboard
+          </p>
+        </div>
+        <div className="p-5">
+          <StudioProfileSection />
+        </div>
+      </motion.section>
 
       {/* AI Copilot */}
       <motion.section

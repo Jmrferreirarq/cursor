@@ -5,6 +5,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { TimeProvider } from './context/TimeContext';
 import { DataProvider } from './context/DataContext';
 import { MediaProvider } from './context/MediaContext';
+import { StudioProvider } from './context/StudioContext';
 import { PresentationProvider } from './context/PresentationContext';
 import { useRemoveOverlays } from './hooks/useRemoveOverlays';
 import Navbar from './components/common/Navbar';
@@ -92,6 +93,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <DataProvider>
+      <StudioProvider>
       <MediaProvider>
       <ThemeProvider>
         <LanguageProvider>
@@ -154,6 +156,7 @@ function App() {
         </LanguageProvider>
       </ThemeProvider>
       </MediaProvider>
+      </StudioProvider>
     </DataProvider>
   );
 }

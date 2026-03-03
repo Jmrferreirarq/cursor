@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-// react-dom: apenas usado para ProposalDocument (importação mantida para compatibilidade)
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStudio } from '../context/StudioContext';
 import {
   Calculator,
   ArrowRightLeft,
@@ -1046,6 +1046,7 @@ const AREA_TO_M2: Record<string, number> = {
 export default function CalculatorPage() {
   const { language } = useLanguage();
   const lang = language;
+  const { profile: studioProfile } = useStudio();
   const location = useLocation();
   const { saveCalculatorProposal, deleteProposal, proposals } = useData();
   const [activeCalculator, setActiveCalculator] = useState<string | null>(null);
@@ -5017,7 +5018,7 @@ export default function CalculatorPage() {
                 <p className="text-sm font-medium">Previsualização da proposta (folhas A4)</p>
                 <div className="flex justify-center overflow-x-auto overflow-y-auto py-4 max-h-[calc(100vh-16rem)]" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
                   <div className="relative">
-                    {previewPayload && <ProposalPreviewPaginated ref={previewRef} payload={previewPayload} lang={lang} />}
+                    {previewPayload && <ProposalPreviewPaginated ref={previewRef} payload={previewPayload} lang={lang} studioProfile={studioProfile} />}
                   </div>
                 </div>
                 <div className="flex flex-col gap-3">

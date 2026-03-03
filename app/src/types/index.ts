@@ -1,3 +1,57 @@
+export interface StudioSocialLinks {
+  website?: string;
+  linkedinPersonal?: string;
+  linkedinCompany?: string;
+  instagram?: string;
+  facebook?: string;
+  threads?: string;
+  behance?: string;
+  pinterest?: string;
+  youtube?: string;
+  tiktok?: string;
+}
+
+export interface StudioProfile {
+  name: string;
+  founderName: string;
+  founderTitle?: string;
+  oasrn?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  municipality?: string;
+  nif?: string;
+  website?: string;
+  social: StudioSocialLinks;
+  tagline?: string;
+  bio?: string;
+}
+
+export const DEFAULT_STUDIO_PROFILE: StudioProfile = {
+  name: 'Ferreirarquitetos',
+  founderName: 'José Ferreira',
+  founderTitle: 'Arquiteto',
+  oasrn: '',
+  email: '',
+  phone: '',
+  address: '',
+  municipality: 'Aveiro',
+  nif: '',
+  website: 'https://ferreira-arquitetos.pt/',
+  social: {
+    website: 'https://ferreira-arquitetos.pt/',
+    linkedinPersonal: 'https://www.linkedin.com/in/jose-ferreira-rebelo-2ab7601a/',
+    linkedinCompany: 'https://www.linkedin.com/company/ferreiraarquitetos/',
+    instagram: 'https://www.instagram.com/ferreirarquitetos/',
+    facebook: 'https://www.facebook.com/ferreiraarquitetos/',
+    threads: 'https://www.threads.com/@ferreirarquitetos',
+    behance: 'https://www.behance.net/maisfab',
+    pinterest: 'https://pt.pinterest.com/jmferreirarq/',
+  },
+  tagline: 'Arquitetura · Interiores · Urbanismo',
+  bio: 'Estúdio de arquitetura sediado em Aveiro, fundado em 2017. Especializados em habitação, reabilitação e espaços comerciais.',
+};
+
 export interface Project {
   id: string;
   name: string;

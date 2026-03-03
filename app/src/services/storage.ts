@@ -8,8 +8,9 @@ import type {
   Client, Project, Proposal,
   MediaAsset, ContentPack, ContentPost,
   EditorialDNA, PublicationSlot, PerformanceEntry,
-  Specialist, License, ConstructionVisit,
+  Specialist, License, ConstructionVisit, StudioProfile,
 } from '@/types';
+import { DEFAULT_STUDIO_PROFILE } from '@/types';
 
 export interface TrashEntry<T> {
   item: T;
@@ -32,6 +33,7 @@ export interface AppData {
   specialists: Specialist[];
   licenses: License[];
   constructionVisits: ConstructionVisit[];
+  studioProfile: StudioProfile;
   /** Lixo — itens apagados, recuperáveis */
   trashAssets: TrashEntry<MediaAsset>[];
   trashPacks: TrashEntry<ContentPack>[];
@@ -52,6 +54,7 @@ export const EMPTY_DATA: AppData = {
   specialists: [],
   licenses: [],
   constructionVisits: [],
+  studioProfile: DEFAULT_STUDIO_PROFILE,
   trashAssets: [],
   trashPacks: [],
   trashPosts: [],

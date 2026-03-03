@@ -6,14 +6,16 @@ import { forwardRef } from 'react';
 import { ProposalDocument } from './ProposalDocument';
 import type { ProposalPayload } from '../../lib/proposalPayload';
 import type { Lang } from '../../lib/proposalPayload';
+import type { StudioProfile } from '@/types';
 
 export interface ProposalPreviewPaginatedProps {
   payload: ProposalPayload | null;
   lang: Lang;
+  studioProfile?: StudioProfile;
 }
 
 export const ProposalPreviewPaginated = forwardRef<HTMLDivElement, ProposalPreviewPaginatedProps>(
-  function ProposalPreviewPaginated({ payload, lang }, ref) {
+  function ProposalPreviewPaginated({ payload, lang, studioProfile }, ref) {
   if (!payload) return null;
 
   return (
@@ -35,7 +37,7 @@ export const ProposalPreviewPaginated = forwardRef<HTMLDivElement, ProposalPrevi
         backgroundRepeat: 'repeat-y',
       }}
     >
-      <ProposalDocument payload={payload} lang={lang} />
+      <ProposalDocument payload={payload} lang={lang} studioProfile={studioProfile} />
     </div>
   );
 });

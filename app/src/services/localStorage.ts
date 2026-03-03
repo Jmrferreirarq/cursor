@@ -5,6 +5,7 @@
 
 import type { IStorageService, AppData } from './storage';
 import { EMPTY_DATA, DATA_VERSION } from './storage';
+import { DEFAULT_STUDIO_PROFILE } from '@/types';
 
 const STORAGE_KEY = 'fa360_data';
 
@@ -31,6 +32,7 @@ function merge(raw: Partial<AppData>): AppData {
     specialists: Array.isArray(raw.specialists) ? raw.specialists : EMPTY_DATA.specialists,
     licenses: Array.isArray(raw.licenses) ? raw.licenses : EMPTY_DATA.licenses,
     constructionVisits: Array.isArray(raw.constructionVisits) ? raw.constructionVisits : EMPTY_DATA.constructionVisits,
+    studioProfile: raw.studioProfile ? { ...DEFAULT_STUDIO_PROFILE, ...raw.studioProfile, social: { ...DEFAULT_STUDIO_PROFILE.social, ...(raw.studioProfile.social ?? {}) } } : EMPTY_DATA.studioProfile,
     trashAssets: Array.isArray(raw.trashAssets) ? raw.trashAssets : EMPTY_DATA.trashAssets,
     trashPacks: Array.isArray(raw.trashPacks) ? raw.trashPacks : EMPTY_DATA.trashPacks,
     trashPosts: Array.isArray(raw.trashPosts) ? raw.trashPosts : EMPTY_DATA.trashPosts,
