@@ -2239,10 +2239,12 @@ export default function CalculatorPage() {
         return { nome, pct: p.pct, valor: v };
       }).filter(Boolean) as { nome: string; pct: number; valor: number }[],
     ];
-    if (valorEsp > 0) {
+    // Valor total das especialidades para o payload (inclui piscina)
+    const valorEspPayload = valorEsp + honorPoolTotal;
+    if (valorEspPayload > 0) {
       fasesPagamento.push({ nome: `${t('proposal.paymentPhasesEsp', lang)} — 100%`, isHeader: true });
-      fasesPagamento.push({ nome: t('specialties.deliver1', lang), pct: 50, valor: valorEsp * 0.5 });
-      fasesPagamento.push({ nome: t('specialties.deliver2', lang), pct: 50, valor: valorEsp * 0.5 });
+      fasesPagamento.push({ nome: t('specialties.deliver1', lang), pct: 50, valor: valorEspPayload * 0.5 });
+      fasesPagamento.push({ nome: t('specialties.deliver2', lang), pct: 50, valor: valorEspPayload * 0.5 });
     }
     const espComValor = ((TIPOLOGIA_ESPECIALIDADES[projectType] ?? []) as string[])
       .filter((id) => parseFloat(especialidadesValores[id] || '0') > 0)
@@ -2250,6 +2252,19 @@ export default function CalculatorPage() {
         nome: ESPECIALIDADES.find((e) => e.id === id)?.name ?? id,
         valor: parseFloat(especialidadesValores[id] || '0'),
       }));
+
+    // Adicionar especialidades de piscina ao payload (se selecionada)
+    if (honorPool !== 'nenhuma') {
+      const sizeMult = honorPoolSize === 'small' ? 0.85 : honorPoolSize === 'large' ? 1.35 : 1.0;
+      const typeMult = honorPool === 'overflow' ? 1.2 : 1.0;
+      const round = (v: number) => Math.round(v * sizeMult * typeMult / 25) * 25;
+      espComValor.push(
+        { nome: 'Arquitetura piscina', valor: round(CATALOGO_ADDONS.pool_arch_lic?.valor ?? 650) },
+        { nome: 'Estruturas + hidráulica piscina', valor: round(CATALOGO_ADDONS.pool_eng_lic?.valor ?? 1050) },
+        { nome: 'Inst. elétricas / IEBT piscina', valor: round(CATALOGO_ADDONS.pool_elec_lic?.valor ?? 450) },
+        { nome: 'Coordenação piscina', valor: round(CATALOGO_ADDONS.pool_coord_lic?.valor ?? 175) },
+      );
+    }
     const exclusoesLabels: string[] = [];
     Array.from(exclusoesSelecionadas).forEach((id) => {
       // Se o add-on moradia está ativo, remover a exclusão de moradias (já não se aplica)
@@ -2296,7 +2311,7 @@ export default function CalculatorPage() {
       despesasReemb: parseFloat(despesasReembolsaveis) || undefined,
       valorArq,
       especialidades: espComValor,
-      valorEsp,
+      valorEsp: valorEspPayload,
       extras: EXTRAS_PROPOSTA.filter((e) => parseFloat(extrasValores[e.id] || '0') > 0).map((e) => ({
         nome: e.nome,
         valor: parseFloat(extrasValores[e.id] || '0'),
