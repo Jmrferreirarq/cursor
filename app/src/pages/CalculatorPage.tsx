@@ -3730,7 +3730,7 @@ export default function CalculatorPage() {
                     className="w-full px-4 py-3 bg-muted border border-border rounded-lg focus:border-primary focus:outline-none"
                   >
                     <option value="">— Selecionar tipologia —</option>
-                    {['Habitação', 'Reabilitação', 'Comércio e Serviços', 'Indústria', 'Equipamentos', 'Loteamento', 'Urbanismo', 'Especiais', 'Apoios de Praia']
+                    {['Habitação', 'Reabilitação', 'Comércio e Serviços', 'Indústria', 'Equipamentos', 'Loteamento', 'Urbanismo', 'Especiais', 'Legalização', 'Apoios de Praia']
                       .filter((cat) => TIPOLOGIAS_HONORARIOS.some((t) => t.categoria === cat))
                       .map((cat) => (
                       <optgroup key={cat} label={cat}>
