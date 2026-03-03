@@ -525,8 +525,19 @@ Quando o utilizador pede para executar ações, inclui no final da tua resposta 
 Ações disponíveis:
 1. Criar proposta (importação de PDF):
 [AGENT_ACTIONS]
-{"actions":[{"type":"create_proposal","label":"Importar Proposta — NOME","data":{"clientName":"NOME","projectName":"PROJETO","projectType":"Habitação","reference":"REF","totalValue":0,"vatRate":23,"status":"sent","phases":[{"id":"p1","name":"Honorários","value":0,"description":"","selected":true}]}}]}
+{"actions":[{"type":"create_proposal","label":"Importar Proposta — NOME","data":{"clientName":"NOME","projectName":"PROJETO","projectType":"Habitação","reference":"REF","year":"AAAA","totalValue":0,"vatRate":23,"status":"sent","phases":[{"id":"p1","name":"Honorários","value":0,"description":"","selected":true}]}}]}
 [/AGENT_ACTIONS]
+
+REGRAS PARA O CAMPO "year" e "reference":
+- O nome do ficheiro PDF muitas vezes contém o número e ano da proposta. Exemplos de padrões comuns:
+  - "102_25 . Beatriz Xavier . Moradia.pdf"  →  reference="102/2025", year="2025"
+  - "97_22 . Cliente . Projeto.pdf"           →  reference="97/2022",  year="2022"
+  - "108/2023 Cliente.pdf"                    →  reference="108/2023", year="2023"
+  - "FA 97/2022_A.pdf"                        →  reference="97/2022",  year="2022"
+- Se o nome contiver padrão NNN_AA (ex: 102_25), converte o sufixo de 2 dígitos para 4 (25 → 2025).
+- Se o ano não estiver no nome, procura-o no conteúdo do PDF.
+- NUNCA uses o ano atual (2026) como fallback — usa o ano real da proposta.
+- O campo "year" deve ser sempre uma string com 4 dígitos (ex: "2025").
 
 2. Aceitar proposta:
 [AGENT_ACTIONS]

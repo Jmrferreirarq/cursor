@@ -264,6 +264,25 @@ export default function AgentPage() {
         const fallbackPhase = [{ id: 'ph-1', name: 'Honorários', description: '', value: Number(d.totalValue) || 0, selected: true }];
         const totalValue = Number(d.totalValue) || 0;
         const vatRate = Number(d.vatRate) || 23;
+
+        // Derivar o ano — prioridade: campo "year" da IA > ano na reference > fallback hoje
+        let createdAt = new Date().toISOString().slice(0, 10);
+        if (d.year) {
+          const y = String(d.year).trim();
+          const fullYear = y.length === 2 ? `20${y}` : y;
+          createdAt = `${fullYear}-01-01`;
+        } else {
+          const refStr = String(d.reference || '');
+          const yearMatch =
+            refStr.match(/\/(20\d{2})/) ||
+            refStr.match(/(20\d{2})/) ||
+            refStr.match(/[_/](\d{2})(?!\d)/);
+          if (yearMatch) {
+            const raw = yearMatch[1];
+            const fullYear = raw.length === 2 ? `20${raw}` : raw;
+            createdAt = `${fullYear}-01-01`;
+          }
+        }
         addProposal({
           id,
           clientId: '',
@@ -276,7 +295,7 @@ export default function AgentPage() {
           vatRate,
           totalWithVat: totalValue * (1 + vatRate / 100),
           status: String(d.status || 'sent') as 'draft'|'sent'|'accepted'|'rejected'|'expired'|'lost',
-          createdAt: new Date().toISOString().slice(0, 10),
+          createdAt,
         });
         toast.success(`Proposta de ${d.clientName} importada!`);
         const msg = createMessage('agent',
