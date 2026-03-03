@@ -1099,6 +1099,9 @@ export default function CalculatorPage() {
   const [area, setArea] = useState('');
   const [projectType, setProjectType] = useState('');
   const [complexity, setComplexity] = useState('');
+  // Add-on piscina no calculador de honorários
+  const [honorPool, setHonorPool] = useState<'nenhuma' | 'skimmer' | 'overflow'>('nenhuma');
+  const [honorPoolSize, setHonorPoolSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [valorObra, setValorObra] = useState('');
   const [pctHonor, setPctHonor] = useState('8');
   const [honorCap, setHonorCap] = useState('');
@@ -1711,6 +1714,24 @@ export default function CalculatorPage() {
     });
   }, [projectType, activeCalculator]);
 
+  // Auto-preenche sugestões de especialidades quando tipologia ou área mudam
+  useEffect(() => {
+    if (activeCalculator !== 'honorarios' || isLoteamento) return;
+    const areaRef = parseFloat(area) || 0;
+    if (areaRef <= 0) return;
+    const espIds = TIPOLOGIA_ESPECIALIDADES[projectType] ?? [];
+    if (espIds.length === 0) return;
+    const next: Record<string, string> = {};
+    for (const id of espIds) {
+      const sug = ESPECIALIDADES_SUGESTAO[id];
+      if (!sug) continue;
+      const variavel = sug.rate > 0 ? areaRef * sug.rate : 0;
+      const val = Math.round(Math.max(sug.minValor, variavel) / 50) * 50;
+      next[id] = String(val);
+    }
+    setEspecialidadesValores((prev) => ({ ...prev, ...next }));
+  }, [projectType, area, activeCalculator, isLoteamento]);
+
   // Atualiza designação do projeto quando a tipologia é selecionada
   useEffect(() => {
     if (activeCalculator !== 'honorarios') return;
@@ -2026,7 +2047,18 @@ export default function CalculatorPage() {
   const valorExtras = EXTRAS_PROPOSTA.reduce((s, e) => s + (parseFloat(extrasValores[e.id] || '0') || 0), 0);
   const moradiaAddonTotal = moradiaAddonCalc?.totalAddon ?? 0;
   const lotAddonsPoolTotal = isLoteamento ? calcularAddonsPool().total : 0;
-  const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal + lotAddonsPoolTotal;
+  // Piscina no calculador principal
+  const honorPoolTotal = (() => {
+    if (honorPool === 'nenhuma') return 0;
+    const base = (CATALOGO_ADDONS.pool_arch_lic?.valor ?? 650)
+      + (CATALOGO_ADDONS.pool_eng_lic?.valor ?? 1050)
+      + (CATALOGO_ADDONS.pool_elec_lic?.valor ?? 450)
+      + (CATALOGO_ADDONS.pool_coord_lic?.valor ?? 175);
+    const sizeMult = honorPoolSize === 'small' ? 0.85 : honorPoolSize === 'large' ? 1.35 : 1.0;
+    const typeMult = honorPool === 'overflow' ? 1.2 : 1.0;
+    return Math.round(base * sizeMult * typeMult / 50) * 50;
+  })();
+  const totalServicosSemIVA = valorArqBase + valorEsp + moradiaAddonTotal + lotAddonsPoolTotal + honorPoolTotal;
   // Desconto comercial: aplica-se sobre serviços (arq + esp + moradia addon), NÃO sobre despesas reembolsáveis
   const descontoValorCalc = descontoAtivo && descontoTipo ? Math.round(totalServicosSemIVA * (parseFloat(descontoPct) || 0) / 100) : 0;
   const totalServicosSemIVAComDesconto = totalServicosSemIVA - descontoValorCalc;
@@ -3880,6 +3912,46 @@ export default function CalculatorPage() {
                     </label>
                   </div>
                 )}
+
+                {/* --- ADD-ON PISCINA (calculador principal) --- */}
+                {!isLoteamento && (
+                  <div className="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-semibold text-cyan-400">Licenciamento de piscina</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">Inclui: Arq. + Estruturas/Hid. + IEBT + Coordenação</p>
+                      </div>
+                      <select
+                        value={honorPool}
+                        onChange={(e) => setHonorPool(e.target.value as typeof honorPool)}
+                        className="px-3 py-1.5 bg-muted border border-border rounded-lg text-sm"
+                      >
+                        <option value="nenhuma">Sem piscina</option>
+                        <option value="skimmer">Skimmer (standard)</option>
+                        <option value="overflow">Overflow (grelha perimetral)</option>
+                      </select>
+                    </div>
+                    {honorPool !== 'nenhuma' && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground">Dimensão:</span>
+                        {(['small', 'medium', 'large'] as const).map((s) => (
+                          <label key={s} className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="honorPoolSize"
+                              value={s}
+                              checked={honorPoolSize === s}
+                              onChange={() => setHonorPoolSize(s)}
+                              className="accent-cyan-500"
+                            />
+                            <span className="text-xs">{s === 'small' ? 'Pequena (<15m²)' : s === 'medium' ? 'Média (15–30m²)' : 'Grande (>30m²)'}</span>
+                          </label>
+                        ))}
+                        <span className="ml-auto text-sm font-semibold text-cyan-400">{honorPoolTotal.toLocaleString('pt-PT', { minimumFractionDigits: 2 })} €</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* --- SECCAO LOTEAMENTO --- */}
@@ -4935,6 +5007,12 @@ export default function CalculatorPage() {
                   <span className="text-muted-foreground">Especialidades</span>
                   <span className="font-semibold">{formatCurrency(valorEsp)}</span>
                 </div>
+                {honorPoolTotal > 0 && (
+                  <div className="flex justify-between items-center text-cyan-400">
+                    <span className="text-muted-foreground text-cyan-400">Piscina ({honorPool === 'overflow' ? 'Overflow' : 'Skimmer'} {honorPoolSize === 'small' ? 'Pequena' : honorPoolSize === 'large' ? 'Grande' : 'Média'})</span>
+                    <span className="font-semibold">{formatCurrency(honorPoolTotal)}</span>
+                  </div>
+                )}
                 {descontoAtivo && descontoValorCalc > 0 && (
                   <>
                     <div className="flex justify-between items-center pt-2 border-t border-primary/20">
