@@ -16,6 +16,9 @@ const PROJECT_TYPE_TO_TIP: Record<string, string> = {
   logistica: 'industrial', laboratorio: 'industrial', equipamentos: 'equipamento',
   reabilitacao: 'reabilitacao', reabilitacao_integral: 'reabilitacao',
   restauro: 'reabilitacao', interiores: 'reabilitacao', anexo: 'reabilitacao',
+  legalizacao_moradia: 'reabilitacao', legalizacao_edificio: 'reabilitacao',
+  legalizacao_comercio: 'reabilitacao', legalizacao_industria: 'industrial',
+  legalizacao_ampliacao: 'reabilitacao',
   urbanismo: 'loteamento', loteamento_urbano: 'loteamento',
   loteamento_industrial: 'loteamento', destaque_parcela: 'loteamento', reparcelamento: 'loteamento',
 };

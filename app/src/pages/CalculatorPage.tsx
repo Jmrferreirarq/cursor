@@ -526,6 +526,12 @@ const TIPOLOGIAS_HONORARIOS: { id: string; name: string; minValor: number; rate:
   { id: 'paisagismo', name: 'Arranjos exteriores', minValor: 2000, rate: 25, categoria: 'Especiais' },
   { id: 'anexo', name: 'Anexo / ampliação', minValor: 1200, rate: 30, categoria: 'Especiais' },
   { id: 'agricola', name: 'Agrícola / rural', minValor: 1500, rate: 22, categoria: 'Especiais' },
+  // Legalização — Art. 102.º RJUE (levantamento + projeto retroativo + telas finais)
+  { id: 'legalizacao_moradia', name: 'Legalização de moradia', minValor: 1800, rate: 22, categoria: 'Legalização' },
+  { id: 'legalizacao_edificio', name: 'Legalização de edifício', minValor: 2500, rate: 20, categoria: 'Legalização' },
+  { id: 'legalizacao_comercio', name: 'Legalização de comércio / serviços', minValor: 2000, rate: 22, categoria: 'Legalização' },
+  { id: 'legalizacao_industria', name: 'Legalização de indústria / armazém', minValor: 2200, rate: 20, categoria: 'Legalização' },
+  { id: 'legalizacao_ampliacao', name: 'Legalização de ampliação / anexo', minValor: 1200, rate: 18, categoria: 'Legalização' },
   // Loteamento / Operações urbanísticas
   { id: 'loteamento_urbano', name: 'Loteamento urbano', minValor: 4000, rate: 10, categoria: 'Loteamento' },
   { id: 'loteamento_industrial', name: 'Loteamento industrial / logístico', minValor: 3500, rate: 8, categoria: 'Loteamento' },
@@ -565,6 +571,12 @@ const CUSTOS_CONSTRUCAO_M2: Record<string, { min: number; med: number; max: numb
   reabilitacao: { min: 600, med: 900, max: 1300, duracao: '6-12 meses' },
   reabilitacao_integral: { min: 800, med: 1100, max: 1500, duracao: '10-16 meses' },
   restauro: { min: 1000, med: 1400, max: 2200, duracao: '12-24 meses' },
+  // Legalização — sem obra nova; valores indicativos de intervenções de regularização
+  legalizacao_moradia: { min: 150, med: 300, max: 600, duracao: '6-18 meses (processo cam.)' },
+  legalizacao_edificio: { min: 150, med: 300, max: 600, duracao: '9-24 meses (processo cam.)' },
+  legalizacao_comercio: { min: 100, med: 250, max: 500, duracao: '6-12 meses (processo cam.)' },
+  legalizacao_industria: { min: 100, med: 250, max: 500, duracao: '6-12 meses (processo cam.)' },
+  legalizacao_ampliacao: { min: 100, med: 200, max: 400, duracao: '4-12 meses (processo cam.)' },
   // Comércio e Serviços
   comercio: { min: 500, med: 800, max: 1200, duracao: '2-4 meses' },
   escritorio: { min: 450, med: 700, max: 1000, duracao: '2-4 meses' },
@@ -3746,6 +3758,9 @@ export default function CalculatorPage() {
                     equipamentos: 'equipamento',
                     reabilitacao: 'reabilitacao', reabilitacao_integral: 'reabilitacao',
                     restauro: 'reabilitacao', interiores: 'reabilitacao', anexo: 'reabilitacao',
+                    legalizacao_moradia: 'reabilitacao', legalizacao_edificio: 'reabilitacao',
+                    legalizacao_comercio: 'reabilitacao', legalizacao_industria: 'industrial',
+                    legalizacao_ampliacao: 'reabilitacao',
                     urbanismo: 'loteamento', loteamento_urbano: 'loteamento',
                     loteamento_industrial: 'loteamento', destaque_parcela: 'loteamento', reparcelamento: 'loteamento',
                   };
