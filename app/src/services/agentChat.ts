@@ -572,7 +572,7 @@ REGRAS CRÍTICAS:
   let fullUserMessage = userMessage;
   if (attachment) {
     if (attachment.type === 'pdf' && attachment.extractedText) {
-      fullUserMessage = `[PDF: "${attachment.fileName}" — ${attachment.pages} págs, ${attachment.sizeKB}KB]\n\nCONTEÚDO:\n${attachment.extractedText.slice(0, 12000)}${attachment.extractedText.length > 12000 ? '\n(truncado)' : ''}\n\nPEDIDO: ${userMessage || 'Analisa e importa se for uma proposta.'}`;
+      fullUserMessage = `[PDF: "${attachment.fileName}" — ${attachment.pages} págs, ${attachment.sizeKB}KB]\n\nCONTEÚDO:\n${attachment.extractedText.slice(0, 6000)}${attachment.extractedText.length > 6000 ? '\n(truncado)' : ''}\n\nPEDIDO: ${userMessage || 'Analisa e importa se for uma proposta.'}`;
     } else if (attachment.type === 'image') {
       fullUserMessage = `[Imagem: "${attachment.fileName}" — ${attachment.sizeKB}KB]\n\n${userMessage || 'Analisa esta imagem.'}`;
     }
@@ -583,9 +583,9 @@ REGRAS CRÍTICAS:
     content: string | Array<{ type: string; text?: string; image_url?: { url: string; detail: string } }>;
   }[] = [
     { role: 'system', content: systemPrompt },
-    ...history.slice(-8).map(m => ({
+    ...history.slice(-4).map(m => ({
       role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
-      content: m.content,
+      content: typeof m.content === 'string' ? m.content.slice(0, 1000) : m.content,
     })),
   ];
 
@@ -627,7 +627,12 @@ REGRAS CRÍTICAS:
     }
 
     return { content: cleanContent, actions: parsedActions };
-  } catch {
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    // Se falhou a processar um PDF, retornar mensagem informativa (AgentPage usa o extrator local como fallback)
+    if (attachment?.type === 'pdf') {
+      return { content: `⚠️ O AI não conseguiu processar o PDF (${errorMsg}). A tentar importação automática dos dados...`, actions: [] };
+    }
     return generateLocalResponse(matchIntent(userMessage).intent, appData);
   }
 }
