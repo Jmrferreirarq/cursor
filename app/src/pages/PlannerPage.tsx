@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar as CalendarIcon, LayoutGrid, Plus, ChevronLeft, ChevronRight,
   GripVertical, Image, Video, Trash2, Edit3, Send, Eye, Sparkles, Loader2,
@@ -13,6 +13,7 @@ import { validateCalendar, generateQueueItems, calculateScore } from '@/services
 import { hasApiKey, suggestFeedMix, feedMixToPosts } from '@/services/ai';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { imageUrlToPngBlob } from '@/lib/clipboardImage';
+import { PublishPanel } from '@/components/media/PublishPanel';
 import type { ContentPost, PostStatus, ContentChannel } from '@/types';
 
 function buildFullPost(copy: string, hashtags: string[], cta: string): string {
@@ -222,6 +223,7 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
   buildFullPost: (copy: string, hashtags: string[], cta: string) => string;
 }) {
   const [previewPost, setPreviewPost] = useState<ContentPost | null>(null);
+  const [publishPost, setPublishPost] = useState<ContentPost | null>(null);
 
   const grouped = useMemo(() => {
     const map: Record<string, ContentPost[]> = { inbox: [], generated: [], review: [], approved: [], scheduled: [], published: [] };
@@ -304,9 +306,16 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
                   {post.scheduledDate && <p className="text-[10px] text-muted-foreground">{new Date(post.scheduledDate).toLocaleDateString('pt-PT')}</p>}
                   {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => setPublishPost(post)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20"
+                      title="Publicar nas redes"
+                    >
+                      <Send className="w-3 h-3" /> Publicar
+                    </button>
                     {nextStatus && (
-                      <button onClick={() => movePost(post.id, nextStatus)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20">
-                        <Send className="w-3 h-3" /> Avançar
+                      <button onClick={() => movePost(post.id, nextStatus)} className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted text-muted-foreground text-[10px] font-medium hover:bg-muted/80">
+                        Avançar
                       </button>
                     )}
                     <button onClick={() => deletePost(post.id)} className="p-1 rounded-md hover:bg-destructive/10 text-destructive"><Trash2 className="w-3 h-3" /></button>
@@ -350,6 +359,12 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
               </div>
             ) : null}
             <div className="flex flex-wrap gap-2 pt-2">
+              <button
+                onClick={() => { setPreviewPost(null); setPublishPost(previewPost); }}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 w-full justify-center"
+              >
+                <Send className="w-4 h-4" /> Publicar nas Redes
+              </button>
               <button
                 onClick={async () => {
                   const fullPt = buildFullPost(previewPost.copyPt || '', previewPost.hashtags || [], previewPost.cta || '');
@@ -431,6 +446,19 @@ function KanbanView({ posts, assets, updatePost, deletePost, buildFullPost }: {
         )}
       </SheetContent>
     </Sheet>
+
+    <AnimatePresence>
+      {publishPost && (
+        <PublishPanel
+          post={publishPost}
+          onClose={() => setPublishPost(null)}
+          onUpdate={(patch) => {
+            updatePost(publishPost.id, patch);
+            setPublishPost((prev) => prev ? { ...prev, ...patch } : null);
+          }}
+        />
+      )}
+    </AnimatePresence>
     </>
   );
 }
