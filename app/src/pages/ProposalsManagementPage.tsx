@@ -151,13 +151,17 @@ export default function ProposalsManagementPage() {
   }, [proposals, filterStatus, filterYear, filterMinValue, filterMaxValue, search]);
 
   const proposalsByYear = useMemo(() => {
+    // Inicializa sempre com 2022–2026 (mesmo que vazios)
+    const DEFAULT_YEARS = ['2022', '2023', '2024', '2025', '2026'];
     const groups: Record<string, typeof proposals> = {};
+    DEFAULT_YEARS.forEach(y => { groups[y] = []; });
+
     filteredProposals.forEach(p => {
-      // Extrair ano da referência (ex: "97/2022" → "2022")
-      // Fallback para o ano de createdAt se a referência não tiver ano
       const year = getProposalYear(p);
       (groups[year] = groups[year] || []).push(p);
     });
+
+    // Ordenar por ano decrescente — todos os grupos aparecem (incluindo vazios do range padrão)
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [filteredProposals]);
 
